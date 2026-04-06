@@ -1,0 +1,205 @@
+[
+  {
+    "id": "env-01",
+    "question": "What is the purpose of the Environmental Management Act?",
+    "expected_act": "Environmental Management Act",
+    "expected_sections": ["3", "4"],
+    "expected_keywords": ["environment", "protection", "sustainable development"],
+    "difficulty": "easy"
+  },
+  {
+    "id": "env-02",
+    "question": "What are the penalties for polluting water sources under Zambian environmental law?",
+    "expected_act": "Environmental Management Act",
+    "expected_sections": ["56", "57", "58"],
+    "expected_keywords": ["pollution", "water", "penalty", "fine"],
+    "difficulty": "medium"
+  },
+  {
+    "id": "env-03",
+    "question": "What is the role of the Zambia Environmental Management Agency?",
+    "expected_act": "Environmental Management Act",
+    "expected_sections": ["7", "8", "9"],
+    "expected_keywords": ["Agency", "ZEMA", "functions", "duties"],
+    "difficulty": "easy"
+  },
+  {
+    "id": "env-04",
+    "question": "When is an Environmental Impact Assessment required in Zambia?",
+    "expected_act": "Environmental Management Act",
+    "expected_sections": ["29", "30"],
+    "expected_keywords": ["assessment", "impact", "EIA", "project"],
+    "difficulty": "medium"
+  },
+  {
+    "id": "env-05",
+    "question": "What happens if someone discharges hazardous waste without authorization?",
+    "expected_act": "Environmental Management Act",
+    "expected_sections": ["48", "49", "50"],
+    "expected_keywords": ["hazardous", "waste", "discharge", "offence"],
+    "difficulty": "medium"
+  },
+  {
+    "id": "env-06",
+    "question": "How does the Environmental Management Act handle air quality?",
+    "expected_act": "Environmental Management Act",
+    "expected_sections": ["42", "43", "44"],
+    "expected_keywords": ["air", "quality", "emission", "pollution"],
+    "difficulty": "medium"
+  },
+  {
+    "id": "env-07",
+    "question": "What is the Environmental Fund and how is it managed?",
+    "expected_act": "Environmental Management Act",
+    "expected_sections": ["16", "17"],
+    "expected_keywords": ["fund", "environmental", "management"],
+    "difficulty": "hard"
+  },
+  {
+    "id": "emp-01",
+    "question": "What is the minimum notice period for terminating employment in Zambia?",
+    "expected_act": "Employment Code Act",
+    "expected_sections": ["36", "37"],
+    "expected_keywords": ["notice", "termination", "period", "employment"],
+    "difficulty": "easy"
+  },
+  {
+    "id": "emp-02",
+    "question": "What are the rules around maternity leave in Zambian employment law?",
+    "expected_act": "Employment Code Act",
+    "expected_sections": ["41", "42", "43"],
+    "expected_keywords": ["maternity", "leave", "female", "pregnant"],
+    "difficulty": "medium"
+  },
+  {
+    "id": "emp-03",
+    "question": "What constitutes unfair dismissal under the Employment Code?",
+    "expected_act": "Employment Code Act",
+    "expected_sections": ["51", "52"],
+    "expected_keywords": ["unfair", "dismissal", "termination", "grounds"],
+    "difficulty": "medium"
+  },
+  {
+    "id": "emp-04",
+    "question": "What is the maximum number of working hours per week in Zambia?",
+    "expected_act": "Employment Code Act",
+    "expected_sections": ["30", "31"],
+    "expected_keywords": ["hours", "work", "maximum", "week"],
+    "difficulty": "easy"
+  },
+  {
+    "id": "emp-05",
+    "question": "What are the rules about child labour under Zambian law?",
+    "expected_act": "Employment Code Act",
+    "expected_sections": ["16", "17", "18"],
+    "expected_keywords": ["child", "young", "labour", "minimum age"],
+    "difficulty": "medium"
+  },
+  {
+    "id": "emp-06",
+    "question": "What is the legal requirement for written contracts of employment?",
+    "expected_act": "Employment Code Act",
+    "expected_sections": ["22", "23"],
+    "expected_keywords": ["contract", "written", "employment", "particulars"],
+    "difficulty": "easy"
+  },
+  {
+    "id": "emp-07",
+    "question": "How is redundancy handled under the Employment Code?",
+    "expected_act": "Employment Code Act",
+    "expected_sections": ["53", "54", "55"],
+    "expected_keywords": ["redundancy", "retrenchment", "consultation", "severance"],
+    "difficulty": "hard"
+  },
+  {
+    "id": "emp-08",
+    "question": "What are the rules on annual leave entitlement in Zambia?",
+    "expected_act": "Employment Code Act",
+    "expected_sections": ["39", "40"],
+    "expected_keywords": ["leave", "annual", "holiday", "days"],
+    "difficulty": "easy"
+  },
+  {
+    "id": "mine-01",
+    "question": "What types of mining licenses exist under Zambian law?",
+    "expected_act": "Mines and Minerals Development Act",
+    "expected_sections": ["18", "19", "20"],
+    "expected_keywords": ["licence", "mining", "exploration", "large-scale", "small-scale"],
+    "difficulty": "easy"
+  },
+  {
+    "id": "mine-02",
+    "question": "What are the penalties for mining without a license in Zambia?",
+    "expected_act": "Mines and Minerals Development Act",
+    "expected_sections": ["8", "9"],
+    "expected_keywords": ["without", "licence", "penalty", "offence", "illegal"],
+    "difficulty": "medium"
+  },
+  {
+    "id": "mine-03",
+    "question": "What are the environmental obligations of mining license holders?",
+    "expected_act": "Mines and Minerals Development Act",
+    "expected_sections": ["80", "81", "82"],
+    "expected_keywords": ["environment", "rehabilitation", "mine closure", "restoration"],
+    "difficulty": "medium"
+  },
+  {
+    "id": "mine-04",
+    "question": "How are mineral royalties calculated in Zambia?",
+    "expected_act": "Mines and Minerals Development Act",
+    "expected_sections": ["90", "91", "92"],
+    "expected_keywords": ["royalty", "mineral", "rate", "payment"],
+    "difficulty": "hard"
+  },
+  {
+    "id": "mine-05",
+    "question": "What rights do landowners have when mining operations occur on their land?",
+    "expected_act": "Mines and Minerals Development Act",
+    "expected_sections": ["11", "12", "13"],
+    "expected_keywords": ["land", "owner", "surface", "rights", "compensation"],
+    "difficulty": "hard"
+  },
+  {
+    "id": "mine-06",
+    "question": "What is the process for applying for an exploration licence?",
+    "expected_act": "Mines and Minerals Development Act",
+    "expected_sections": ["21", "22", "23"],
+    "expected_keywords": ["exploration", "licence", "application", "area"],
+    "difficulty": "medium"
+  },
+  {
+    "id": "mine-07",
+    "question": "What health and safety requirements apply to mining operations?",
+    "expected_act": "Mines and Minerals Development Act",
+    "expected_sections": ["70", "71", "72"],
+    "expected_keywords": ["health", "safety", "mine", "worker", "inspector"],
+    "difficulty": "medium"
+  },
+  {
+    "id": "cross-01",
+    "question": "How do Zambian mining regulations interact with environmental protection requirements?",
+    "expected_act": "Mines and Minerals Development Act",
+    "expected_sections": ["80", "81"],
+    "expected_keywords": ["environmental", "mining", "impact", "assessment"],
+    "difficulty": "hard",
+    "cross_act": true
+  },
+  {
+    "id": "cross-02",
+    "question": "What protections exist for workers in the mining industry regarding working hours and safety?",
+    "expected_act": "Employment Code Act",
+    "expected_sections": ["30", "31"],
+    "expected_keywords": ["worker", "mining", "hours", "safety"],
+    "difficulty": "hard",
+    "cross_act": true
+  },
+  {
+    "id": "neg-01",
+    "question": "What are the tax rates for corporations in Zambia?",
+    "expected_act": null,
+    "expected_sections": [],
+    "expected_keywords": [],
+    "difficulty": "negative",
+    "notes": "System should say it cannot answer - no tax legislation in corpus"
+  }
+]

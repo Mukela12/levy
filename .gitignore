@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Environment
+.env
+.env.local
+backend/.env
+frontend/.env.local
+
+# Build
+.next/
+out/
+dist/
+build/
+
+# IDE
+.DS_Store
+.idea/
+
+# Claude
+.claude/
+
+# Misc
+*.log
+.lint-relative-paths-results.txt
+.lychee-results.json
+supabase/.temp/
+temp_auto_push.bat
+temp_interactive_push.bat
+.gitignore
+branch_structure.json
