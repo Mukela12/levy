@@ -9,6 +9,7 @@ import { ChatInput } from '@/components/chat/chat-input'
 import { ChatMessage, ThinkingGlow } from '@/components/chat/chat-message'
 import { BriefPanel } from '@/components/chat/brief-panel'
 import { useRegisterBrief } from '@/components/chat/brief-context'
+import { usePdfViewer } from '@/components/chat/pdf-viewer-context'
 import type { ToolCallView } from '@/components/chat/tool-call-card'
 import { BookOpen, Search, FileText, Gavel } from 'lucide-react'
 import type { ChunkUsed, WebSource } from '@/lib/api'
@@ -58,6 +59,7 @@ export default function NewChatPage() {
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [accentLineWidth, setAccentLineWidth] = useState(0)
   const [webSearch, setWebSearch] = useState(false)
+  const pdf = usePdfViewer()
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { user, session } = useAuth()
   const router = useRouter()
@@ -305,6 +307,15 @@ export default function NewChatPage() {
                           toolCalls={msg.toolCalls}
                           timing={msg.timing}
                           isStreaming={isLastAssistant}
+                          onOpenCitation={(c) =>
+                            pdf.open({
+                              documentId: c.document_id,
+                              actName: c.act_name,
+                              pageStart: c.page_start,
+                              pageEnd: c.page_end,
+                              section: c.section,
+                            })
+                          }
                         />
                       )}
                     </div>

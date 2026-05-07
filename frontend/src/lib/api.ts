@@ -11,6 +11,7 @@ interface ChatResponse {
 
 interface ChunkUsed {
   id: string
+  document_id?: string
   act_name: string
   section: string
   part: string

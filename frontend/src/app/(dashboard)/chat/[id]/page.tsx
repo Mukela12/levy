@@ -8,6 +8,7 @@ import { ChatInput } from '@/components/chat/chat-input'
 import { ChatMessage, ThinkingGlow } from '@/components/chat/chat-message'
 import { BriefPanel } from '@/components/chat/brief-panel'
 import { useRegisterBrief } from '@/components/chat/brief-context'
+import { usePdfViewer } from '@/components/chat/pdf-viewer-context'
 import type { ToolCallView } from '@/components/chat/tool-call-card'
 import { Loader2 } from 'lucide-react'
 import type { ChunkUsed, WebSource } from '@/lib/api'
@@ -29,6 +30,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
   const [webSearch, setWebSearch] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { session } = useAuth()
+  const pdf = usePdfViewer()
 
   // Pass the raw messages state (stable reference). Mapping here creates a new
   // array every render and would render-loop with the provider's setState.
@@ -197,6 +199,15 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
                       toolCalls={msg.toolCalls}
                       timing={msg.timing}
                       isStreaming={isLastAssistant}
+                      onOpenCitation={(c) =>
+                        pdf.open({
+                          documentId: c.document_id,
+                          actName: c.act_name,
+                          pageStart: c.page_start,
+                          pageEnd: c.page_end,
+                          section: c.section,
+                        })
+                      }
                     />
                   )}
                 </div>

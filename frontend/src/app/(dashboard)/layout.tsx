@@ -8,6 +8,8 @@ import { SkyToggle } from '@/components/layout/sky-toggle'
 import { MenuToggleIcon } from '@/components/layout/menu-toggle-icon'
 import { BriefProvider, useBrief } from '@/components/chat/brief-context'
 import { BriefPanel } from '@/components/chat/brief-panel'
+import { PdfViewerProvider, usePdfViewer } from '@/components/chat/pdf-viewer-context'
+import { PdfViewer } from '@/components/chat/pdf-viewer'
 import { Scale, Loader2, X } from 'lucide-react'
 
 function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
@@ -17,6 +19,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const [isDark, setIsDark] = useState(true)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const brief = useBrief()
+  const pdf = usePdfViewer()
 
   useEffect(() => {
     if (!loading && !user) {
@@ -33,6 +36,13 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   // Close mobile sidebar on route change
   useEffect(() => {
     setMobileSidebarOpen(false)
+  }, [pathname])
+
+  // Close the PDF viewer when navigating between chats — the cited document
+  // is contextual to a single message, so dragging it across routes is noise.
+  useEffect(() => {
+    pdf.close()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
 
   // Lock body scroll while the mobile sidebar or brief sheet is open
@@ -135,6 +145,9 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
         </main>
       </div>
 
+      {/* PDF source viewer (right pane on desktop, fullscreen on mobile) */}
+      <PdfViewer citation={pdf.active} onClose={pdf.close} />
+
       {/* Mobile brief bottom sheet */}
       {brief.open && (
         <div className="lg:hidden fixed inset-0 z-50 flex flex-col">
@@ -171,7 +184,9 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <BriefProvider>
-      <DashboardLayoutInner>{children}</DashboardLayoutInner>
+      <PdfViewerProvider>
+        <DashboardLayoutInner>{children}</DashboardLayoutInner>
+      </PdfViewerProvider>
     </BriefProvider>
   )
 }

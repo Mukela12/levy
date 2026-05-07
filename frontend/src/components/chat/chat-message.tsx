@@ -16,6 +16,7 @@ interface ChatMessageProps {
   toolCalls?: ToolCallView[]
   timing?: { total_ms: number }
   isStreaming?: boolean
+  onOpenCitation?: (cite: ChunkUsed) => void
 }
 
 /**
@@ -56,6 +57,7 @@ export function ChatMessage({
   toolCalls,
   timing,
   isStreaming,
+  onOpenCitation,
 }: ChatMessageProps) {
   const [showCitations, setShowCitations] = useState(false)
   const [showWebSources, setShowWebSources] = useState(false)
@@ -140,13 +142,15 @@ export function ChatMessage({
             {showCitations && (
               <div className="space-y-1.5">
                 {citations.map((cite, i) => (
-                  <div
+                  <button
                     key={cite.id || i}
-                    className="px-3.5 py-3 rounded-lg bg-white/[0.02] border border-white/[0.05] space-y-1.5 hover:border-white/[0.08] transition-colors"
+                    type="button"
+                    onClick={() => onOpenCitation?.(cite)}
+                    className="w-full text-left px-3.5 py-3 rounded-lg bg-white/[0.02] border border-white/[0.05] space-y-1.5 hover:border-emerald-500/25 hover:bg-emerald-500/[0.025] transition-colors group"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-[12px] font-semibold text-emerald-400/80 truncate">
+                        <span className="text-[12px] font-semibold text-emerald-400/80 group-hover:text-emerald-400 truncate transition-colors">
                           {cite.act_name}
                         </span>
                         {cite.section && (
@@ -164,11 +168,11 @@ export function ChatMessage({
                       <p className="text-[11px] text-white/25 leading-relaxed line-clamp-2">{cite.content_preview}</p>
                     )}
                     {cite.page_start && (
-                      <p className="text-[10px] text-white/15">
-                        p.{cite.page_start}{cite.page_end && cite.page_end !== cite.page_start ? `–${cite.page_end}` : ''}
+                      <p className="text-[10px] text-white/15 group-hover:text-emerald-400/40 transition-colors">
+                        Open at p.{cite.page_start}{cite.page_end && cite.page_end !== cite.page_start ? `–${cite.page_end}` : ''} →
                       </p>
                     )}
-                  </div>
+                  </button>
                 ))}
               </div>
             )}

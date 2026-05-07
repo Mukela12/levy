@@ -153,6 +153,81 @@ async def chat_stream(request: ChatRequest):
     )
 
 
+@router.get("/documents/{document_id}/pdf")
+def get_document_pdf_url(document_id: str, expires_in: int = 3600):
+    """
+    Return a short-lived signed URL for the canonical PDF of a legal document.
+
+    The PDF lives in the private `legal-docs` Supabase Storage bucket; we mint
+    a signed URL on demand so the client (PDF.js viewer) can fetch it.
+    """
+    from ..db.supabase import get_db
+
+    db = get_db()
+    res = (
+        db.table("legal_documents")
+        .select("id, title, short_name, pdf_storage_path, pdf_page_count, canonical_url")
+        .eq("id", document_id)
+        .limit(1)
+        .execute()
+    )
+    if not res.data:
+        raise HTTPException(status_code=404, detail="document not found")
+    row = res.data[0]
+    storage_path = row.get("pdf_storage_path")
+    if not storage_path:
+        raise HTTPException(status_code=404, detail="no PDF stored for this document")
+
+    # storage_path is "legal-docs/<file>"; the storage SDK takes bucket + key
+    bucket, _, key = storage_path.partition("/")
+    try:
+        signed = db.storage.from_(bucket).create_signed_url(key, expires_in)
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"signed-url failed: {e}")
+
+    return {
+        "document_id": row["id"],
+        "title": row.get("title"),
+        "short_name": row.get("short_name"),
+        "page_count": row.get("pdf_page_count"),
+        "canonical_url": row.get("canonical_url"),
+        "signed_url": signed.get("signedURL") or signed.get("signed_url") or signed.get("signedUrl"),
+        "expires_in": expires_in,
+    }
+
+
+@router.get("/documents/by-title")
+def get_document_by_title(title: str):
+    """
+    Look up a document by exact or fuzzy title match — used by the chat UI when
+    a citation snapshot only knows the act name (not the document_id).
+    """
+    from ..db.supabase import get_db
+
+    db = get_db()
+    # Exact match first
+    res = (
+        db.table("legal_documents")
+        .select("id, title, short_name, pdf_storage_path, pdf_page_count")
+        .eq("title", title)
+        .limit(1)
+        .execute()
+    )
+    if not res.data:
+        # Fall back to ILIKE so 'REPUBLIC OF ZAMBIA THE COMPANIES ACT' still
+        # resolves to the new 'Companies Act, No. 10 of 2017' row.
+        res = (
+            db.table("legal_documents")
+            .select("id, title, short_name, pdf_storage_path, pdf_page_count")
+            .ilike("title", f"%{title.split()[-2] if len(title.split()) > 1 else title}%")
+            .limit(5)
+            .execute()
+        )
+    if not res.data:
+        raise HTTPException(status_code=404, detail="no document matched")
+    return {"matches": res.data}
+
+
 @router.get("/documents")
 def list_documents():
     """List all ingested documents and their stats."""

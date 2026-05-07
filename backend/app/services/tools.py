@@ -91,9 +91,11 @@ async def _search_corpus(query: str, top_k: int = 5, threshold: float | None = N
         act = meta.get("act_name") or "Unknown Act"
         section = meta.get("section_number") or ""
         part = meta.get("part_number") or ""
+        document_id = c.get("document_id")
         results.append(
             {
                 "chunk_id": c.get("id"),
+                "document_id": document_id,
                 "act_name": act,
                 "section": section,
                 "part": part,
@@ -106,6 +108,7 @@ async def _search_corpus(query: str, top_k: int = 5, threshold: float | None = N
         db_sources.append(
             {
                 "id": c.get("id"),
+                "document_id": document_id,
                 "act_name": act,
                 "section": section,
                 "part": part,
