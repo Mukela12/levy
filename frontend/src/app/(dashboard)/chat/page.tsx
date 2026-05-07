@@ -9,13 +9,16 @@ import { ChatInput } from '@/components/chat/chat-input'
 import { ChatMessage, ThinkingGlow } from '@/components/chat/chat-message'
 import { BriefPanel } from '@/components/chat/brief-panel'
 import { useRegisterBrief } from '@/components/chat/brief-context'
+import type { ToolCallView } from '@/components/chat/tool-call-card'
 import { BookOpen, Search, FileText, Gavel } from 'lucide-react'
-import type { ChunkUsed } from '@/lib/api'
+import type { ChunkUsed, WebSource } from '@/lib/api'
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
   citations?: ChunkUsed[]
+  webSources?: WebSource[]
+  toolCalls?: ToolCallView[]
   timing?: { total_ms: number }
 }
 
@@ -54,6 +57,7 @@ export default function NewChatPage() {
   const [loading, setLoading] = useState(false)
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [accentLineWidth, setAccentLineWidth] = useState(0)
+  const [webSearch, setWebSearch] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { user, session } = useAuth()
   const router = useRouter()
@@ -112,41 +116,73 @@ export default function NewChatPage() {
       await saveMessage(sid, 'user', question)
 
       // Add placeholder assistant message for streaming
-      const assistantMsg: Message = { role: 'assistant', content: '', citations: [] }
+      const assistantMsg: Message = { role: 'assistant', content: '', citations: [], toolCalls: [] }
       setMessages((prev) => [...prev, assistantMsg])
+
+      const updateLast = (patch: (m: Message) => Message) =>
+        setMessages((prev) => {
+          const updated = [...prev]
+          const last = updated[updated.length - 1]
+          updated[updated.length - 1] = patch(last)
+          return updated
+        })
 
       await streamQuery(
         question,
-        { token: session?.access_token },
-        (chunk) => {
-          setMessages((prev) => {
-            const updated = [...prev]
-            const last = updated[updated.length - 1]
-            updated[updated.length - 1] = { ...last, content: last.content + chunk }
-            return updated
-          })
-        },
-        (metadata) => {
-          setMessages((prev) => {
-            const updated = [...prev]
-            const last = updated[updated.length - 1]
-            updated[updated.length - 1] = {
+        { token: session?.access_token, webSearch },
+        undefined,
+        undefined,
+        {
+          onToken: (chunk) =>
+            updateLast((last) => ({ ...last, content: last.content + chunk })),
+          onToolCall: (call) =>
+            updateLast((last) => ({
               ...last,
-              citations: metadata.chunks_used,
-              timing: { total_ms: metadata.timing?.total_ms ?? 0 },
-            }
-            return updated
-          })
-
-          // Save the final assistant message
-          setMessages((prev) => {
-            const last = prev[prev.length - 1]
-            saveMessage(sid!, 'assistant', last.content, last.citations)
-            return prev
-          })
-
-          setLoading(false)
-        }
+              toolCalls: [
+                ...(last.toolCalls ?? []),
+                { ...call, status: 'running', db: [], web: [] },
+              ],
+            })),
+          onToolResult: (result) =>
+            updateLast((last) => ({
+              ...last,
+              toolCalls: (last.toolCalls ?? []).map((c) =>
+                c.id === result.id
+                  ? {
+                      ...c,
+                      status: result.ok ? 'ok' : 'error',
+                      durationMs: result.ms,
+                      db: result.db,
+                      web: result.web,
+                    }
+                  : c,
+              ),
+            })),
+          onDone: (metadata) => {
+            setMessages((prev) => {
+              const updated = [...prev]
+              const last = updated[updated.length - 1]
+              const finalMsg = {
+                ...last,
+                citations: metadata.chunks_used,
+                webSources: metadata.web_sources,
+                timing: { total_ms: metadata.timing?.total_ms ?? 0 },
+              }
+              updated[updated.length - 1] = finalMsg
+              saveMessage(sid!, 'assistant', finalMsg.content, finalMsg.citations)
+              return updated
+            })
+            setLoading(false)
+          },
+          onError: (msg) =>
+            updateLast((last) => ({
+              ...last,
+              content:
+                (last.content || '') +
+                (last.content ? '\n\n' : '') +
+                `_Error: ${msg}_`,
+            })),
+        },
       )
 
       // Update URL to session
@@ -228,7 +264,12 @@ export default function NewChatPage() {
             </div>
 
             <div className="w-full max-w-3xl relative z-10">
-              <ChatInput onSend={handleSend} disabled={loading} />
+              <ChatInput
+                onSend={handleSend}
+                disabled={loading}
+                webSearch={webSearch}
+                onWebSearchChange={setWebSearch}
+              />
             </div>
 
             <p className="mt-4 text-[10px] text-white/15 relative z-10 text-center">
@@ -244,16 +285,24 @@ export default function NewChatPage() {
             >
               <div className="max-w-3xl mx-auto space-y-6">
                 {messages.map((msg, i) => {
-                  const isLastAssistant = loading && i === messages.length - 1 && msg.role === 'assistant'
+                  const isLastAssistant =
+                    loading && i === messages.length - 1 && msg.role === 'assistant'
+                  const hasResearch = (msg.toolCalls?.length ?? 0) > 0
+                  // Show ThinkingGlow only when nothing is happening yet —
+                  // once the model has begun calling tools or streaming text,
+                  // render the live ChatMessage so the user sees the research
+                  // trail in real time.
+                  const showGlow = isLastAssistant && !msg.content && !hasResearch
                   return (
                     <div key={i}>
-                      {/* Show ThinkingGlow between user message and empty assistant response */}
-                      {isLastAssistant && !msg.content && <ThinkingGlow />}
-                      {(!isLastAssistant || msg.content) && (
+                      {showGlow && <ThinkingGlow />}
+                      {!showGlow && (
                         <ChatMessage
                           role={msg.role}
                           content={msg.content}
                           citations={msg.citations}
+                          webSources={msg.webSources}
+                          toolCalls={msg.toolCalls}
                           timing={msg.timing}
                           isStreaming={isLastAssistant}
                         />
@@ -274,7 +323,12 @@ export default function NewChatPage() {
                 }}
               >
                 <div className="pointer-events-auto max-w-3xl mx-auto">
-                  <ChatInput onSend={handleSend} disabled={loading} />
+                  <ChatInput
+                onSend={handleSend}
+                disabled={loading}
+                webSearch={webSearch}
+                onWebSearchChange={setWebSearch}
+              />
                   <p className="mt-2 text-center text-[10px] text-white/25">
                     Levy provides legal information, not legal advice.
                   </p>

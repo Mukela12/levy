@@ -19,6 +19,14 @@ class Settings(BaseSettings):
     # Anthropic (for chat)
     anthropic_api_key: str = ""
 
+    # Tavily (web search)
+    tavily_api_key: str = ""
+
+    # Agent loop
+    agent_max_iterations: int = 12
+    agent_tool_timeout_seconds: int = 25
+    agent_max_tool_result_chars: int = 8000
+
     # Embedding config
     embedding_provider: str = "voyage"  # "voyage" or "local"
     embedding_dimensions: int = 1024  # voyage-law-2 = 1024, local bge = 768

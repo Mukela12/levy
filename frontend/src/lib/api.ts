@@ -115,11 +115,59 @@ export async function uploadDocument(file: File, token?: string): Promise<{ stat
   return res.json()
 }
 
+export interface WebSource {
+  title?: string
+  url: string
+  snippet?: string
+  domain?: string
+  score?: number
+}
+
+export interface ToolCallEvent {
+  id: string
+  name: string
+  input: Record<string, unknown>
+}
+
+export interface ToolResultEvent {
+  id: string
+  name: string
+  ok: boolean
+  db: ChunkUsed[]
+  web: WebSource[]
+  ms: number
+}
+
+export interface AgentDoneMetadata {
+  chunks_used: ChunkUsed[]
+  web_sources: WebSource[]
+  timing: Record<string, number>
+  iterations?: number
+  usage?: { input_tokens: number; output_tokens: number }
+  model?: string
+}
+
+export interface StreamHandlers {
+  onThinking?: () => void
+  onToken?: (text: string) => void
+  onToolCall?: (call: ToolCallEvent) => void
+  onToolResult?: (result: ToolResultEvent) => void
+  onDone?: (metadata: AgentDoneMetadata) => void
+  onError?: (message: string) => void
+}
+
 export async function streamQuery(
   question: string,
-  options?: { model?: string; top_k?: number; token?: string },
-  onChunk?: (text: string) => void,
-  onDone?: (metadata: { chunks_used: ChunkUsed[]; timing: Record<string, number> }) => void
+  options?: {
+    model?: string
+    top_k?: number
+    token?: string
+    webSearch?: boolean
+    history?: Array<{ role: string; content: string }>
+  },
+  legacyOnChunk?: (text: string) => void,
+  legacyOnDone?: (metadata: AgentDoneMetadata) => void,
+  handlers?: StreamHandlers,
 ): Promise<void> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
   if (options?.token) headers['Authorization'] = `Bearer ${options.token}`
@@ -131,6 +179,8 @@ export async function streamQuery(
       query: question,
       model: options?.model,
       top_k: options?.top_k,
+      web_search: options?.webSearch ?? false,
+      history: options?.history,
     }),
   })
 
@@ -142,6 +192,14 @@ export async function streamQuery(
   const decoder = new TextDecoder()
   let buffer = ''
 
+  // Sources accumulator — emitted as a single block when the run ends.
+  let dbSources: ChunkUsed[] = []
+  let webSources: WebSource[] = []
+  let lastTiming: Record<string, number> | undefined
+  let lastUsage: AgentDoneMetadata['usage']
+  let lastIterations: number | undefined
+  let lastModel: string | undefined
+
   while (true) {
     const { done, value } = await reader.read()
     if (done) break
@@ -151,19 +209,56 @@ export async function streamQuery(
     buffer = lines.pop() || ''
 
     for (const line of lines) {
-      if (line.startsWith('data: ')) {
-        const data = line.slice(6)
-        if (data === '[DONE]') continue
-        try {
-          const parsed = JSON.parse(data)
-          if (parsed.type === 'token') onChunk?.(parsed.content)
-          if (parsed.type === 'done') onDone?.(parsed)
-        } catch {
-          // skip malformed lines
-        }
+      if (!line.startsWith('data: ')) continue
+      const data = line.slice(6)
+      if (data === '[DONE]') continue
+      let parsed: Record<string, unknown>
+      try {
+        parsed = JSON.parse(data)
+      } catch {
+        continue
+      }
+      switch (parsed.type) {
+        case 'thinking':
+          handlers?.onThinking?.()
+          break
+        case 'token':
+          legacyOnChunk?.(parsed.content as string)
+          handlers?.onToken?.(parsed.content as string)
+          break
+        case 'tool_call':
+          handlers?.onToolCall?.(parsed as unknown as ToolCallEvent)
+          break
+        case 'tool_result':
+          handlers?.onToolResult?.(parsed as unknown as ToolResultEvent)
+          break
+        case 'sources':
+          dbSources = ((parsed.db as ChunkUsed[]) ?? (parsed.chunks_used as ChunkUsed[]) ?? [])
+          webSources = (parsed.web as WebSource[]) ?? []
+          break
+        case 'done':
+          lastTiming = parsed.timing as Record<string, number>
+          lastUsage = parsed.usage as AgentDoneMetadata['usage']
+          lastIterations = parsed.iterations as number | undefined
+          lastModel = parsed.model as string | undefined
+          break
+        case 'error':
+          handlers?.onError?.(String(parsed.message ?? 'unknown error'))
+          break
       }
     }
   }
+
+  const meta: AgentDoneMetadata = {
+    chunks_used: dbSources,
+    web_sources: webSources,
+    timing: lastTiming ?? {},
+    iterations: lastIterations,
+    usage: lastUsage,
+    model: lastModel,
+  }
+  legacyOnDone?.(meta)
+  handlers?.onDone?.(meta)
 }
 
 // IRAC Brief Generation

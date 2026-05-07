@@ -15,6 +15,7 @@ from pydantic import BaseModel
 import json
 import time
 from ..services import rag
+from ..services.agent import run_agent
 from ..services.ingester import ingest_pdf
 from ..services.embedder import get_query_embedding
 from ..db.supabase import search_chunks
@@ -34,6 +35,8 @@ class ChatRequest(BaseModel):
     model: str | None = None
     top_k: int | None = None
     threshold: float | None = None
+    web_search: bool = False
+    history: list[dict] | None = None
 
 
 class SearchRequest(BaseModel):
@@ -92,58 +95,55 @@ def search(request: SearchRequest):
 
 
 @router.post("/chat/stream")
-def chat_stream(request: ChatRequest):
+async def chat_stream(request: ChatRequest):
     """
-    Streaming RAG pipeline — returns answer tokens via Server-Sent Events.
+    Agentic RAG pipeline. Server-Sent Events.
+
+    Drives the model through a tool-use loop with `search_corpus` always
+    available and Tavily-backed web tools added when `web_search=True`.
+
+    Event types streamed (each as `data: {json}\n\n`):
+      thinking, tool_call, tool_result, token, sources, done, error.
+
+    Backwards-compat: `token` and `sources` events keep the same shape the
+    pre-agent client already understands; new clients can additionally render
+    `tool_call`/`tool_result`.
     """
     if not request.query.strip():
         raise HTTPException(status_code=400, detail="Query cannot be empty")
 
-    settings = get_settings()
-    top_k = request.top_k or settings.retrieval_top_k
-    threshold = request.threshold or settings.similarity_threshold
-
-    def event_stream():
-        timing = {}
-
-        t0 = time.time()
-        query_embedding = get_query_embedding(request.query)
-        timing["embedding_ms"] = round((time.time() - t0) * 1000)
-
-        t0 = time.time()
-        chunks = search_chunks(query_embedding, top_k=top_k, threshold=threshold)
-        timing["retrieval_ms"] = round((time.time() - t0) * 1000)
-
-        user_message = build_context_prompt(request.query, chunks)
-
-        chunks_used = []
-        for chunk in chunks:
-            metadata = chunk.get("metadata", {})
-            chunks_used.append({
-                "id": chunk.get("id"),
-                "act_name": metadata.get("act_name", "Unknown"),
-                "section": metadata.get("section_number", ""),
-                "part": metadata.get("part_number", ""),
-                "page_start": chunk.get("page_start"),
-                "page_end": chunk.get("page_end"),
-                "similarity": round(chunk.get("similarity", 0), 4),
-                "content_preview": chunk.get("content", "")[:200] + "...",
-            })
-
-        yield f"data: {json.dumps({'type': 'sources', 'chunks_used': chunks_used})}\n\n"
-
-        t0 = time.time()
-        for text_chunk in generate_response_stream(
-            system_prompt=SYSTEM_PROMPT,
-            user_message=user_message,
+    async def event_stream():
+        async for event in run_agent(
+            user_query=request.query,
             model=request.model,
+            web_enabled=bool(request.web_search),
+            history=request.history,
         ):
-            yield f"data: {json.dumps({'type': 'token', 'content': text_chunk})}\n\n"
+            # The pre-agent client expects `chunks_used` on the sources event.
+            if event.get("type") == "sources":
+                payload = {
+                    "type": "sources",
+                    "db": event.get("db", []),
+                    "web": event.get("web", []),
+                    # Legacy field — first 8 db sources mapped to old shape
+                    "chunks_used": [
+                        {
+                            "id": s.get("id"),
+                            "act_name": s.get("act_name"),
+                            "section": s.get("section"),
+                            "part": s.get("part"),
+                            "page_start": s.get("page_start"),
+                            "page_end": s.get("page_end"),
+                            "similarity": s.get("similarity"),
+                            "content_preview": s.get("content_preview"),
+                        }
+                        for s in event.get("db", [])[:8]
+                    ],
+                }
+                yield f"data: {json.dumps(payload)}\n\n"
+            else:
+                yield f"data: {json.dumps(event)}\n\n"
 
-        timing["generation_ms"] = round((time.time() - t0) * 1000)
-        timing["total_ms"] = timing["embedding_ms"] + timing["retrieval_ms"] + timing["generation_ms"]
-
-        yield f"data: {json.dumps({'type': 'done', 'timing': timing, 'chunks_used': chunks_used})}\n\n"
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(

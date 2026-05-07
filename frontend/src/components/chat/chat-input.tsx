@@ -7,11 +7,24 @@ interface ChatInputProps {
   onSend: (message: string, options?: { webSearch?: boolean }) => void
   disabled?: boolean
   placeholder?: string
+  webSearch?: boolean
+  onWebSearchChange?: (next: boolean) => void
 }
 
-export function ChatInput({ onSend, disabled, placeholder = 'Ask about Zambian law...' }: ChatInputProps) {
+export function ChatInput({
+  onSend,
+  disabled,
+  placeholder = 'Ask about Zambian law...',
+  webSearch: webSearchProp,
+  onWebSearchChange,
+}: ChatInputProps) {
   const [message, setMessage] = useState('')
-  const [webSearch, setWebSearch] = useState(false)
+  const [webSearchInternal, setWebSearchInternal] = useState(false)
+  const webSearch = webSearchProp ?? webSearchInternal
+  const setWebSearch = (next: boolean) => {
+    if (onWebSearchChange) onWebSearchChange(next)
+    else setWebSearchInternal(next)
+  }
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {

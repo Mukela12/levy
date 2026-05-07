@@ -3,14 +3,17 @@
 import { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { ChevronDown, ChevronUp, FileText, Clock, Scale } from 'lucide-react'
+import { ChevronDown, ChevronUp, FileText, Clock, Scale, Globe, ExternalLink } from 'lucide-react'
 import { MatchBadge } from '@/components/ui/match-badge'
-import type { ChunkUsed } from '@/lib/api'
+import { ToolCallCard, type ToolCallView } from './tool-call-card'
+import type { ChunkUsed, WebSource } from '@/lib/api'
 
 interface ChatMessageProps {
   role: 'user' | 'assistant'
   content: string
   citations?: ChunkUsed[]
+  webSources?: WebSource[]
+  toolCalls?: ToolCallView[]
   timing?: { total_ms: number }
   isStreaming?: boolean
 }
@@ -45,8 +48,17 @@ function UserBubbleTail() {
   )
 }
 
-export function ChatMessage({ role, content, citations, timing, isStreaming }: ChatMessageProps) {
+export function ChatMessage({
+  role,
+  content,
+  citations,
+  webSources,
+  toolCalls,
+  timing,
+  isStreaming,
+}: ChatMessageProps) {
   const [showCitations, setShowCitations] = useState(false)
+  const [showWebSources, setShowWebSources] = useState(false)
 
   if (role === 'user') {
     return (
@@ -73,6 +85,15 @@ export function ChatMessage({ role, content, citations, timing, isStreaming }: C
   return (
     <div className="flex gap-3 px-4 md:px-0">
       <div className="flex-1 min-w-0 space-y-2.5">
+        {/* Tool-call cards (research trail) */}
+        {toolCalls && toolCalls.length > 0 && (
+          <div className="space-y-1.5">
+            {toolCalls.map((call) => (
+              <ToolCallCard key={call.id} call={call} />
+            ))}
+          </div>
+        )}
+
         {/* AI Card Container */}
         <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] border-l-[3px] border-l-emerald-500/40 px-4 py-4">
           {/* AI Avatar Header */}
@@ -148,6 +169,51 @@ export function ChatMessage({ role, content, citations, timing, isStreaming }: C
                       </p>
                     )}
                   </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Web sources */}
+        {webSources && webSources.length > 0 && (
+          <div className="space-y-2 pt-1">
+            <button
+              onClick={() => setShowWebSources(!showWebSources)}
+              className="flex items-center gap-1.5 text-[11px] text-white/25 hover:text-white/40 transition-colors"
+            >
+              <Globe className="w-3 h-3" />
+              <span>
+                {webSources.length} web source{webSources.length !== 1 ? 's' : ''}
+              </span>
+              {showWebSources ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            </button>
+
+            {showWebSources && (
+              <div className="space-y-1.5">
+                {webSources.map((src, i) => (
+                  <a
+                    key={(src.url || '') + i}
+                    href={src.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-start gap-2 px-3 py-2.5 rounded-lg bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.08] transition-colors"
+                  >
+                    <ExternalLink className="w-3 h-3 text-emerald-400/60 flex-shrink-0 mt-0.5" />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[12px] font-semibold text-white/75 group-hover:text-white truncate">
+                        {src.title || src.url}
+                      </div>
+                      {src.snippet && (
+                        <p className="text-[11px] text-white/30 leading-relaxed line-clamp-2 mt-0.5">
+                          {src.snippet}
+                        </p>
+                      )}
+                      <div className="text-[10px] text-emerald-400/50 mt-1 truncate">
+                        {src.domain || src.url}
+                      </div>
+                    </div>
+                  </a>
                 ))}
               </div>
             )}
