@@ -37,3 +37,4 @@ supabase/.temp/
 frontend/.vercel/
 frontend/.next/
 frontend/node_modules/
+.cache/
