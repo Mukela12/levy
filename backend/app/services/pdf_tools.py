@@ -585,8 +585,36 @@ async def export_thread_brief(
     md_lines.append(f"_Generated from a Levy consultation on {sess_row.get('created_at','')[:10]}._")
     md_lines.append("")
 
-    # Aggregate citations by document_id and merge page ranges.
+    # Aggregate citations by document_id and merge page ranges. Legacy
+    # citation snapshots (pre-Phase-2) only carry `act_name` — for those we
+    # fall back to a title lookup so the appendix still works on old threads.
     cite_spans: dict[str, dict] = {}  # doc_id -> {"act_name": ..., "spans": list[(ps,pe)]}
+    title_to_doc_id: dict[str, str | None] = {}
+
+    def _resolve_doc_id(act_name: str | None) -> str | None:
+        if not act_name:
+            return None
+        if act_name in title_to_doc_id:
+            return title_to_doc_id[act_name]
+        try:
+            res = (
+                db.table("legal_documents").select("id, title")
+                .eq("title", act_name).limit(1).execute()
+            )
+            if not res.data:
+                # Loose match — prior versions stored uppercased titles.
+                token = max(act_name.split(), key=len) if act_name.strip() else ""
+                if token:
+                    res = (
+                        db.table("legal_documents").select("id, title")
+                        .ilike("title", f"%{token}%").limit(1).execute()
+                    )
+            doc_id = res.data[0]["id"] if res.data else None
+        except Exception:
+            doc_id = None
+        title_to_doc_id[act_name] = doc_id
+        return doc_id
+
     for m in msgs:
         role = m.get("role")
         content = m.get("content") or ""
@@ -600,11 +628,13 @@ async def export_thread_brief(
             md_lines.append("")
             md_lines.append(_strip_user_thinking(content))
             for c in m.get("citations") or []:
-                doc_id = (c or {}).get("document_id") or (c or {}).get("id")  # legacy snapshots
+                if not isinstance(c, dict):
+                    continue
+                doc_id = c.get("document_id") or _resolve_doc_id(c.get("act_name"))
                 if not doc_id:
                     continue
-                ps = (c or {}).get("page_start")
-                pe = (c or {}).get("page_end") or ps
+                ps = c.get("page_start")
+                pe = c.get("page_end") or ps
                 if not ps:
                     continue
                 slot = cite_spans.setdefault(
