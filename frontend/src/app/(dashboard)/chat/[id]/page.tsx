@@ -26,10 +26,9 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { session } = useAuth()
 
-  useRegisterBrief(
-    messages.map((m) => ({ role: m.role, content: m.content })),
-    session?.access_token,
-  )
+  // Pass the raw messages state (stable reference). Mapping here creates a new
+  // array every render and would render-loop with the provider's setState.
+  useRegisterBrief(messages, session?.access_token)
 
   useEffect(() => {
     loadMessages()

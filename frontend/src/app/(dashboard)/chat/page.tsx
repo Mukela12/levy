@@ -58,11 +58,10 @@ export default function NewChatPage() {
   const { user, session } = useAuth()
   const router = useRouter()
 
-  // Expose messages to dashboard layout (Brief button + bottom sheet live there)
-  useRegisterBrief(
-    messages.map((m) => ({ role: m.role, content: m.content })),
-    session?.access_token,
-  )
+  // Expose the raw messages state (stable reference) to the layout-level
+  // Brief button + bottom sheet. Do NOT map here — that creates a new array
+  // every render and would loop with the provider's setState.
+  useRegisterBrief(messages, session?.access_token)
 
   // Animate accent line on mount
   useEffect(() => {
