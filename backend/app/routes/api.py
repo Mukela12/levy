@@ -202,6 +202,71 @@ def get_document_pdf_url(document_id: str, expires_in: int = 3600):
     }
 
 
+@router.post("/artifacts/sweep")
+def sweep_old_artifacts(older_than_days: int = 30, dry_run: bool = True):
+    """
+    Soft-archive artifacts older than `older_than_days` (default 30) by
+    stamping `archived_at`. With `dry_run=false`, also deletes the underlying
+    storage objects so we stop paying for them. Doesn't touch row metadata —
+    the artifact card in old chats still shows title/page count, but opening
+    it returns 410 once the storage object is gone.
+
+    Intended to be hit by an external cron (Railway scheduled job, Supabase
+    cron, or manually). Idempotent.
+    """
+    from ..db.supabase import get_db
+    from datetime import datetime, timedelta, timezone
+
+    db = get_db()
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=older_than_days)).isoformat()
+
+    # Candidates: rows older than cutoff that haven't been archived yet.
+    rows = (
+        db.table("artifacts")
+        .select("id, storage_path, archived_at, created_at")
+        .lt("created_at", cutoff)
+        .is_("archived_at", "null")
+        .limit(500)
+        .execute()
+    ).data or []
+
+    archived = 0
+    deleted_objects = 0
+    errors: list[str] = []
+
+    for row in rows:
+        if dry_run:
+            archived += 1
+            continue
+        # Delete the storage object first; if it fails we keep the row
+        # un-stamped so a later sweep retries.
+        path = row.get("storage_path") or ""
+        if path and path.startswith("artifacts/"):
+            key = path.split("/", 1)[1]
+            try:
+                db.storage.from_("artifacts").remove([key])
+                deleted_objects += 1
+            except Exception as e:  # noqa: BLE001
+                errors.append(f"{row['id']}: {e}")
+                continue
+        try:
+            db.table("artifacts").update(
+                {"archived_at": datetime.now(timezone.utc).isoformat()}
+            ).eq("id", row["id"]).execute()
+            archived += 1
+        except Exception as e:  # noqa: BLE001
+            errors.append(f"{row['id']}: row-update {e}")
+
+    return {
+        "candidates": len(rows),
+        "archived": archived,
+        "deleted_storage_objects": deleted_objects,
+        "errors": errors[:10],
+        "cutoff": cutoff,
+        "dry_run": dry_run,
+    }
+
+
 @router.get("/artifacts/{artifact_id}/pdf")
 def get_artifact_pdf_url(artifact_id: str, expires_in: int = 3600):
     """Signed URL for an agent-generated artifact PDF."""

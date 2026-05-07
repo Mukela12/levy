@@ -417,3 +417,324 @@ async def pdf_merge(
         "db_sources": [],
         "web_sources": [],
     }
+
+
+# ─── Tool: pdf_split ─────────────────────────────────────────────────────────
+
+
+async def pdf_split(
+    artifact_id: str | None = None,
+    document_id: str | None = None,
+    ranges: list[dict] | None = None,
+    title_prefix: str | None = None,
+    *,
+    owner_id: str | None = None,
+    session_id: str | None = None,
+) -> dict:
+    """
+    Split a PDF (artifact or corpus document) into multiple smaller artifacts.
+
+    `ranges` is a list of `{"page_start": N, "page_end": M, "title": "..."}`
+    descriptors. Each yields one artifact. If `title` is omitted on a range,
+    we synthesise `<title_prefix or 'Split'> — pp.N–M`.
+    """
+    if (artifact_id is None) == (document_id is None):
+        return {"result": {"error": "specify exactly one of artifact_id or document_id"}}
+    if not ranges:
+        return {"result": {"error": "ranges must be a non-empty list"}}
+
+    src_pdf = (
+        _download_artifact_pdf(artifact_id) if artifact_id
+        else _download_corpus_pdf(document_id or "")
+    )
+    reader = PdfReader(io.BytesIO(src_pdf))
+    total_pages = len(reader.pages)
+
+    # Resolve a sensible default title prefix.
+    db = get_db()
+    if not title_prefix:
+        if artifact_id:
+            r = db.table("artifacts").select("title").eq("id", artifact_id).limit(1).execute()
+            title_prefix = (r.data[0].get("title") if r.data else None) or "Split"
+        else:
+            r = db.table("legal_documents").select("short_name, title").eq("id", document_id).limit(1).execute()
+            title_prefix = (
+                (r.data[0].get("short_name") if r.data else None)
+                or (r.data[0].get("title") if r.data else None)
+                or "Split"
+            )
+
+    produced: list[dict] = []
+    for i, rng in enumerate(ranges):
+        try:
+            ps = max(1, int(rng.get("page_start") or 1))
+            pe = min(total_pages, int(rng.get("page_end") or total_pages))
+            if pe < ps:
+                produced.append({"index": i, "error": f"invalid range {ps}..{pe}"})
+                continue
+            writer = PdfWriter()
+            for p in range(ps - 1, pe):
+                writer.add_page(reader.pages[p])
+            out = io.BytesIO()
+            writer.write(out)
+            pdf_bytes = out.getvalue()
+            piece_title = (rng.get("title") or f"{title_prefix} — pp.{ps}–{pe}").strip()
+            row = _insert_artifact_row(
+                kind="pdf",
+                title=piece_title,
+                storage_path="artifacts/pending",
+                source="extracted",
+                size_bytes=len(pdf_bytes),
+                page_count=pe - ps + 1,
+                meta={
+                    "tool": "pdf_split",
+                    "source_artifact_id": artifact_id,
+                    "source_document_id": document_id,
+                    "page_start": ps,
+                    "page_end": pe,
+                },
+                owner_id=owner_id,
+                session_id=session_id,
+            )
+            storage_path = _upload_artifact_pdf(row["id"], pdf_bytes)
+            db.table("artifacts").update({"storage_path": storage_path}).eq("id", row["id"]).execute()
+            row["storage_path"] = storage_path
+            produced.append({
+                "artifact_id": row["id"],
+                "title": piece_title,
+                "page_start": ps,
+                "page_end": pe,
+                "page_count": pe - ps + 1,
+                "_artifact": row,
+            })
+        except Exception as e:  # noqa: BLE001
+            produced.append({"index": i, "error": str(e)})
+
+    # Surface every artifact as its own card via the agent loop's "artifact"
+    # event. The first one goes in `artifact`; the rest piggy-back via
+    # `extra_artifacts` so the loop emits them too.
+    succeeded = [p for p in produced if p.get("artifact_id")]
+    primary = succeeded[0]["_artifact"] if succeeded else None
+    extras = [p["_artifact"] for p in succeeded[1:]]
+    for p in produced:
+        p.pop("_artifact", None)
+
+    return {
+        "result": {
+            "produced": produced,
+            "count": len(succeeded),
+        },
+        "artifact": primary,
+        "extra_artifacts": extras,
+        "db_sources": [],
+        "web_sources": [],
+    }
+
+
+# ─── Tool: export_thread_brief ───────────────────────────────────────────────
+# The premium-edge feature: turn an entire chat thread into a polished PDF
+# brief with an appendix that includes the relevant page ranges from every
+# corpus document the assistant cited.
+
+
+def _strip_user_thinking(text: str) -> str:
+    """Light cleanup for the assistant's prose before embedding it in the brief.
+    Drops residual streaming artifacts (cursor pipes, isolated whitespace)."""
+    lines = [ln.rstrip() for ln in (text or "").splitlines()]
+    return "\n".join(ln for ln in lines if ln is not None)
+
+
+async def export_thread_brief(
+    session_id: str,
+    title: str | None = None,
+    include_appendix: bool = True,
+    *,
+    owner_id: str | None = None,
+) -> dict:
+    """
+    Compose a single PDF brief for the entire conversation:
+      1. Cover page (title + matter line + date).
+      2. Q&A transcript (each user question + the assistant's answer).
+      3. Appendix (when include_appendix=true): for every distinct corpus
+         document cited, pull the cited page ranges (deduped + merged into
+         contiguous spans) and append them to the PDF.
+    """
+    db = get_db()
+    sess = (
+        db.table("chat_sessions").select("id, title, user_id, created_at")
+        .eq("id", session_id).limit(1).execute()
+    )
+    if not sess.data:
+        return {"result": {"error": f"session {session_id} not found"}}
+    sess_row = sess.data[0]
+
+    msgs = (
+        db.table("chat_messages")
+        .select("role, content, citations, created_at")
+        .eq("session_id", session_id)
+        .order("created_at", desc=False)
+        .execute()
+    ).data or []
+
+    if not msgs:
+        return {"result": {"error": "thread is empty"}}
+
+    # ── Build the prose body in Markdown for weasyprint ─────────────────────
+    final_title = (title or sess_row.get("title") or "Levy Brief").strip() or "Levy Brief"
+    md_lines: list[str] = []
+    md_lines.append(f"_Generated from a Levy consultation on {sess_row.get('created_at','')[:10]}._")
+    md_lines.append("")
+
+    # Aggregate citations by document_id and merge page ranges.
+    cite_spans: dict[str, dict] = {}  # doc_id -> {"act_name": ..., "spans": list[(ps,pe)]}
+    for m in msgs:
+        role = m.get("role")
+        content = m.get("content") or ""
+        if role == "user":
+            md_lines.append("## " + (content.splitlines()[0][:120] if content else "(empty)"))
+            md_lines.append("")
+            md_lines.append(content)
+        elif role == "assistant":
+            md_lines.append("")
+            md_lines.append("**Levy AI:**")
+            md_lines.append("")
+            md_lines.append(_strip_user_thinking(content))
+            for c in m.get("citations") or []:
+                doc_id = (c or {}).get("document_id") or (c or {}).get("id")  # legacy snapshots
+                if not doc_id:
+                    continue
+                ps = (c or {}).get("page_start")
+                pe = (c or {}).get("page_end") or ps
+                if not ps:
+                    continue
+                slot = cite_spans.setdefault(
+                    doc_id,
+                    {"act_name": c.get("act_name"), "spans": []},
+                )
+                slot["spans"].append((int(ps), int(pe)))
+        md_lines.append("")
+        md_lines.append("---")
+        md_lines.append("")
+
+    body_md = "\n".join(md_lines).rstrip()
+
+    # ── Generate the prose PDF ──────────────────────────────────────────────
+    prose_bytes = _render_markdown_pdf(
+        title=final_title,
+        body_md=body_md,
+        subtitle="Compiled by Levy from this consultation.",
+    )
+    if not prose_bytes:
+        return {"result": {"error": "weasyprint produced no bytes"}}
+
+    appendix_pages_added = 0
+    appendix_index: list[dict] = []  # for the artifact meta record
+
+    # ── Optionally append cited corpus page-ranges ──────────────────────────
+    final_writer = PdfWriter()
+    for page in PdfReader(io.BytesIO(prose_bytes)).pages:
+        final_writer.add_page(page)
+
+    if include_appendix and cite_spans:
+        # Render an appendix cover page.
+        cover_md_lines = ["## Appendix", "", "Cited statutory excerpts, in the order cited:", ""]
+        # Sort docs by act name for stable order.
+        sorted_docs = sorted(cite_spans.items(), key=lambda kv: (kv[1].get("act_name") or "").lower())
+        for doc_id, info in sorted_docs:
+            spans = info.get("spans") or []
+            if not spans:
+                continue
+            # Merge overlapping/adjacent spans.
+            spans.sort()
+            merged: list[list[int]] = []
+            for ps, pe in spans:
+                if merged and ps <= merged[-1][1] + 1:
+                    merged[-1][1] = max(merged[-1][1], pe)
+                else:
+                    merged.append([ps, pe])
+            label = info.get("act_name") or "Source"
+            ranges_str = ", ".join(
+                f"pp.{ps}" if ps == pe else f"pp.{ps}–{pe}" for ps, pe in merged
+            )
+            cover_md_lines.append(f"- **{label}** — {ranges_str}")
+        cover_bytes = _render_markdown_pdf(
+            title=final_title,
+            body_md="\n".join(cover_md_lines),
+            subtitle="Appendix index",
+        )
+        for page in PdfReader(io.BytesIO(cover_bytes)).pages:
+            final_writer.add_page(page)
+
+        for doc_id, info in sorted_docs:
+            spans = info.get("spans") or []
+            if not spans:
+                continue
+            try:
+                doc_pdf = _download_corpus_pdf(doc_id)
+            except Exception:
+                continue
+            doc_reader = PdfReader(io.BytesIO(doc_pdf))
+            doc_pages = len(doc_reader.pages)
+            spans.sort()
+            merged: list[list[int]] = []
+            for ps, pe in spans:
+                if merged and ps <= merged[-1][1] + 1:
+                    merged[-1][1] = max(merged[-1][1], pe)
+                else:
+                    merged.append([ps, pe])
+            for ps, pe in merged:
+                ps = max(1, ps)
+                pe = min(doc_pages, pe)
+                if pe < ps:
+                    continue
+                for p in range(ps - 1, pe):
+                    final_writer.add_page(doc_reader.pages[p])
+                appendix_pages_added += pe - ps + 1
+                appendix_index.append({
+                    "document_id": doc_id,
+                    "act_name": info.get("act_name"),
+                    "page_start": ps,
+                    "page_end": pe,
+                })
+
+    out = io.BytesIO()
+    final_writer.write(out)
+    pdf_bytes = out.getvalue()
+    page_count = len(final_writer.pages)
+
+    row = _insert_artifact_row(
+        kind="pdf",
+        title=final_title,
+        storage_path="artifacts/pending",
+        source="generated",
+        size_bytes=len(pdf_bytes),
+        page_count=page_count,
+        meta={
+            "tool": "export_thread_brief",
+            "session_id": session_id,
+            "with_appendix": include_appendix,
+            "appendix_pages": appendix_pages_added,
+            "appendix_index": appendix_index,
+            "messages_included": len(msgs),
+        },
+        owner_id=owner_id or sess_row.get("user_id"),
+        session_id=session_id,
+    )
+    storage_path = _upload_artifact_pdf(row["id"], pdf_bytes)
+    db.table("artifacts").update({"storage_path": storage_path}).eq("id", row["id"]).execute()
+    row["storage_path"] = storage_path
+
+    return {
+        "result": {
+            "artifact_id": row["id"],
+            "title": final_title,
+            "kind": "pdf",
+            "page_count": page_count,
+            "size_bytes": len(pdf_bytes),
+            "appendix_pages": appendix_pages_added,
+            "documents_in_appendix": len(appendix_index),
+        },
+        "artifact": row,
+        "db_sources": [],
+        "web_sources": [],
+    }

@@ -244,6 +244,95 @@ async def _web_fetch(url: str) -> dict:
     }
 
 
+async def _web_crawl(start_url: str, max_pages: int = 4) -> dict:
+    """
+    Lightweight 1-hop crawl: fetches the start URL, extracts in-domain links,
+    fetches up to `max_pages` of them, and returns concatenated content. Only
+    follows links on the SAME domain as the start URL — keeps us safely
+    inside government and institutional sites we whitelisted.
+    """
+    settings = get_settings()
+    if not settings.tavily_api_key:
+        return {"result": {"error": "TAVILY_API_KEY not configured"}}
+
+    max_pages = max(1, min(int(max_pages or 4), 8))
+    start_domain = _extract_domain(start_url)
+    if not start_domain:
+        return {"result": {"error": f"could not parse domain from {start_url}"}}
+
+    pages: list[dict] = []
+    web_sources: list[dict] = []
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        # Fetch the seed page.
+        resp = await client.post(
+            "https://api.tavily.com/extract",
+            json={"api_key": settings.tavily_api_key, "urls": [start_url]},
+        )
+        if resp.status_code != 200:
+            return {"result": {"error": f"seed fetch {resp.status_code}: {resp.text[:200]}"}}
+        items = (resp.json().get("results") or [])
+        if not items:
+            return {"result": {"error": f"seed page returned no content", "url": start_url}}
+        seed = items[0]
+        seed_content = seed.get("raw_content", "")
+        pages.append({"url": start_url, "title": seed.get("title"), "content": seed_content})
+        web_sources.append({
+            "title": seed.get("title") or start_url, "url": start_url,
+            "snippet": seed_content[:300], "domain": start_domain,
+        })
+
+        # Pull in-domain links from the seed content; cheap heuristic via regex.
+        import re
+        candidates: list[str] = []
+        for m in re.finditer(r"https?://[^\s\"'<>]+", seed_content):
+            u = m.group(0).rstrip(".,)\"'")
+            if _extract_domain(u) == start_domain and u != start_url and u not in candidates:
+                candidates.append(u)
+            if len(candidates) >= max_pages:
+                break
+
+        # Fetch each follow-up.
+        for follow_url in candidates[:max_pages]:
+            try:
+                r = await client.post(
+                    "https://api.tavily.com/extract",
+                    json={"api_key": settings.tavily_api_key, "urls": [follow_url]},
+                )
+                if r.status_code != 200:
+                    continue
+                its = r.json().get("results") or []
+                if not its:
+                    continue
+                it = its[0]
+                content = it.get("raw_content", "")
+                pages.append({"url": follow_url, "title": it.get("title"), "content": content})
+                web_sources.append({
+                    "title": it.get("title") or follow_url, "url": follow_url,
+                    "snippet": content[:300], "domain": start_domain,
+                })
+            except Exception:
+                continue
+
+    # Trim per-page content so the model doesn't drown — we keep the URLs and
+    # the first ~3KB of each page, which is plenty for legal-context grounding.
+    trimmed = []
+    for p in pages:
+        c = p["content"] or ""
+        trimmed.append({
+            "url": p["url"],
+            "title": p.get("title"),
+            "length": len(c),
+            "content": c[:3000],
+        })
+
+    return {
+        "result": {"start_url": start_url, "domain": start_domain, "pages": trimmed, "count": len(trimmed)},
+        "db_sources": [],
+        "web_sources": web_sources,
+    }
+
+
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
 
@@ -307,6 +396,25 @@ def build_tool_registry(
             parts, title,
             owner_id=owner_id, session_id=session_id,
         )
+
+    async def _split(ranges, artifact_id=None, document_id=None, title_prefix=None):
+        return await pdf_tools.pdf_split(
+            artifact_id=artifact_id,
+            document_id=document_id,
+            ranges=ranges,
+            title_prefix=title_prefix,
+            owner_id=owner_id, session_id=session_id,
+        )
+
+    async def _export_brief(title=None, include_appendix=True):
+        if not session_id:
+            return {"result": {"error": "export_thread_brief requires an active chat session"}}
+        return await pdf_tools.export_thread_brief(
+            session_id=session_id,
+            title=title,
+            include_appendix=include_appendix,
+            owner_id=owner_id,
+        )
     tools: dict[str, ToolDefinition] = {
         "pdf_extract_pages": ToolDefinition(
             name="pdf_extract_pages",
@@ -354,6 +462,60 @@ def build_tool_registry(
                 "required": ["title", "content_markdown"],
             },
             handler=_generate,
+        ),
+        "pdf_split": ToolDefinition(
+            name="pdf_split",
+            description=(
+                "Split a PDF (a corpus document or an existing artifact) into "
+                "smaller PDFs by page ranges. Each range yields its own "
+                "artifact card. Use when the user asks for several focused "
+                "excerpts at once, e.g. 'give me sections 1-5, 12-18, and "
+                "30-34 of the Companies Act as separate PDFs'."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "document_id": {"type": "string", "description": "Source corpus document UUID."},
+                    "artifact_id": {"type": "string", "description": "OR — split an existing artifact instead."},
+                    "title_prefix": {"type": "string", "description": "Prefix for auto-generated piece titles."},
+                    "ranges": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "page_start": {"type": "integer"},
+                                "page_end": {"type": "integer"},
+                                "title": {"type": "string"},
+                            },
+                            "required": ["page_start", "page_end"],
+                        },
+                    },
+                },
+                "required": ["ranges"],
+            },
+            handler=_split,
+        ),
+        "export_thread_brief": ToolDefinition(
+            name="export_thread_brief",
+            description=(
+                "Compile the entire conversation into a single polished PDF "
+                "brief, with an appendix that includes the cited page ranges "
+                "from every corpus document referenced. Use when the user "
+                "asks to 'export this thread' / 'turn this into a brief' / "
+                "'save the consultation as a PDF'. Always preferable to "
+                "manually re-running pdf_generate."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "description": "Optional title; defaults to the session title."},
+                    "include_appendix": {
+                        "type": "boolean",
+                        "description": "Default true. Set false for a compact prose-only brief.",
+                    },
+                },
+            },
+            handler=_export_brief,
         ),
         "pdf_merge": ToolDefinition(
             name="pdf_merge",
@@ -471,6 +633,28 @@ def build_tool_registry(
                 "required": ["url"],
             },
             handler=_web_fetch,
+        )
+        tools["web_crawl"] = ToolDefinition(
+            name="web_crawl",
+            description=(
+                "Fetch a starting URL and follow up to N in-domain links from "
+                "it (1 hop, same hostname only). Use when one gov page hints "
+                "the answer is split across linked subpages — e.g. PACRA's "
+                "fees+forms hub or parliament.gov.zm act indexes. Returns "
+                "trimmed text from each page."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "start_url": {"type": "string"},
+                    "max_pages": {
+                        "type": "integer",
+                        "description": "Default 4, max 8. Includes the seed page.",
+                    },
+                },
+                "required": ["start_url"],
+            },
+            handler=_web_crawl,
         )
 
     return tools

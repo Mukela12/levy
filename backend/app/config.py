@@ -41,6 +41,10 @@ class Settings(BaseSettings):
     compaction_old_tool_result_max_chars: int = 800
     # Cheap, fast model for the summarisation pass itself.
     compaction_model: str = "claude-haiku-4-5-20251001"
+    # After a successful compaction, suppress further compactions in the same
+    # process for this many seconds — protects against hitting Haiku's
+    # 50K-input-tokens-per-minute rate limit when the agent loops fast.
+    compaction_cooldown_seconds: int = 60
 
     # Embedding config
     embedding_provider: str = "voyage"  # "voyage" or "local"

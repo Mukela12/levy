@@ -35,7 +35,13 @@ from .tools import (
 )
 
 
+import time as _time
+
 DEFAULT_MODEL = "claude-sonnet-4-20250514"
+
+# Per-process cooldown bookkeeping: session_id -> monotonic timestamp of last
+# compaction. Worker restarts wipe this naturally, which is fine.
+_LAST_COMPACTION: dict[str, float] = {}
 AGENT_SYSTEM_SUFFIX = """
 
 You are operating as an agent with tool access. Use tools to answer the user.
@@ -63,6 +69,22 @@ When to produce artifacts (PDFs the user can download):
 - `pdf_merge` — when the user wants to combine multiple sources, e.g.
   "compile a one-page memo plus the relevant Companies Act sections as an
   appendix". Pass parts in the order the final document should read.
+- `pdf_split` — when the user asks for several focused excerpts at once,
+  e.g. "give me sections 1-5, 12-18, and 30-34 of the Penal Code as
+  separate PDFs". Each range becomes its own artifact card.
+- `export_thread_brief` — when the user asks to "export this thread",
+  "save this consultation as a PDF", "turn this into a brief", or anything
+  semantically equivalent. Produces a single PDF: the Q&A transcript +
+  an appendix containing the cited page ranges from every corpus document
+  referenced in the thread. Always preferable to manually re-running
+  pdf_generate for an export.
+
+When to crawl the web instead of just searching:
+- `web_crawl` — when one gov-source page is clearly an index (forms+fees
+  hub, act listings) and the answer is one click in. Pass the seed URL
+  from a prior `gov_search` and the agent fetches that page plus up to
+  N in-domain links. Use sparingly; web_search/gov_search/web_fetch are
+  cheaper for most questions.
 
 Do NOT generate an artifact unless the user asked for one (explicitly or
 implicitly via "draft a memo", "extract sections", "make a one-pager",
@@ -151,10 +173,21 @@ async def run_agent(
                 }
             )
 
-        # Compact older history if we're approaching the model's window. The
-        # stored `messages` list is unchanged; we only swap in a compacted
-        # copy for THIS Anthropic call. Subsequent iterations get re-compacted.
-        compacted_messages, compaction_info = await compact_if_needed(messages)
+        # Compact older history if we're approaching the model's window —
+        # but respect the per-session cooldown so back-to-back tool rounds
+        # don't trigger Haiku's 50K-input-tokens/min rate limit.
+        cooldown_key = session_id or "_anon_"
+        last_at = _LAST_COMPACTION.get(cooldown_key)
+        in_cooldown = (
+            last_at is not None
+            and (_time.monotonic() - last_at) < settings.compaction_cooldown_seconds
+        )
+        if in_cooldown:
+            compacted_messages, compaction_info = messages, None
+        else:
+            compacted_messages, compaction_info = await compact_if_needed(messages)
+            if compaction_info and not compaction_info.get("error"):
+                _LAST_COMPACTION[cooldown_key] = _time.monotonic()
         if compaction_info:
             yield {"type": "compaction", **compaction_info}
 
@@ -246,6 +279,7 @@ async def run_agent(
             )
 
             artifact = envelope.get("artifact")
+            extras = envelope.get("extra_artifacts") or []
             yield {
                 "type": "tool_result",
                 "id": tool_id,
@@ -258,6 +292,8 @@ async def run_agent(
             }
             if artifact:
                 yield {"type": "artifact", "artifact": artifact}
+            for extra in extras:
+                yield {"type": "artifact", "artifact": extra}
 
             tool_results_content.append(
                 {
