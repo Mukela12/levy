@@ -96,10 +96,34 @@ export default function AppSidebar({ mobileSidebarOpen, onCloseMobile, isDark, o
       <div className="px-3 pb-3 flex-shrink-0">
         <Link
           href="/chat"
-          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white text-[13px] font-medium transition-colors active:scale-[0.98]"
+          className="group relative flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-[13px] font-medium text-white overflow-hidden transition-all duration-200 active:scale-[0.985] hover:-translate-y-px"
+          style={{
+            background:
+              'linear-gradient(180deg, rgb(16 185 129) 0%, rgb(5 150 105) 100%)',
+            boxShadow:
+              '0 1px 0 0 rgba(255,255,255,0.18) inset, 0 0 0 1px rgba(16,185,129,0.45), 0 8px 20px -8px rgba(16,185,129,0.55), 0 2px 6px -2px rgba(0,0,0,0.4)',
+          }}
         >
-          <MessageSquare className="w-3.5 h-3.5" />
-          New Consultation
+          {/* Top inner highlight */}
+          <span
+            aria-hidden
+            className="absolute inset-x-0 top-0 h-px"
+            style={{
+              background:
+                'linear-gradient(to right, transparent, rgba(255,255,255,0.45), transparent)',
+            }}
+          />
+          {/* Hover sheen */}
+          <span
+            aria-hidden
+            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            style={{
+              background:
+                'radial-gradient(120% 80% at 50% -10%, rgba(255,255,255,0.18) 0%, transparent 60%)',
+            }}
+          />
+          <MessageSquare className="w-3.5 h-3.5 relative z-10" />
+          <span className="relative z-10 tracking-[-0.005em]">New Consultation</span>
         </Link>
       </div>
 

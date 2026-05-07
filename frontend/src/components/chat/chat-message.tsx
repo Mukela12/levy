@@ -15,23 +15,56 @@ interface ChatMessageProps {
   isStreaming?: boolean
 }
 
+/**
+ * Inline SVG tail that grows naturally out of the bottom-right of the user
+ * bubble — replaces the previous "two orphan dots" effect that read as AI-generated.
+ *
+ * The path is a single curve drawn so the tail joins the bubble seamlessly
+ * (we use the same fill + stroke as the bubble) and tucks back into the
+ * bubble corner. Sized small (~14×14) so it feels like a whisper, not a
+ * decoration.
+ */
+function UserBubbleTail() {
+  return (
+    <svg
+      width="18"
+      height="14"
+      viewBox="0 0 18 14"
+      className="absolute -bottom-[6px] right-3 pointer-events-none"
+      aria-hidden="true"
+    >
+      {/* Tail body — same green-tinted glass as the bubble */}
+      <path
+        d="M0 0 C 4 6, 9 10, 16 12 C 11 12, 5 8, 2 0 Z"
+        fill="rgba(34, 197, 94, 0.08)"
+        stroke="rgba(34, 197, 94, 0.18)"
+        strokeWidth="0.75"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 export function ChatMessage({ role, content, citations, timing, isStreaming }: ChatMessageProps) {
   const [showCitations, setShowCitations] = useState(false)
 
   if (role === 'user') {
     return (
       <div className="flex justify-end px-4 md:px-0">
-        <div
-          className="max-w-[70%] px-5 py-3.5 text-[14px] leading-relaxed text-white/90 thought-bubble relative"
-          style={{
-            background: 'rgba(34, 197, 94, 0.08)',
-            border: '1px solid rgba(34, 197, 94, 0.12)',
-          }}
-        >
-          {content}
-          {/* Thought tail */}
-          <div className="absolute -bottom-2 right-6 w-3 h-3 rounded-full" style={{ background: 'rgba(34, 197, 94, 0.08)', border: '1px solid rgba(34, 197, 94, 0.12)' }} />
-          <div className="absolute -bottom-4 right-4 w-1.5 h-1.5 rounded-full" style={{ background: 'rgba(34, 197, 94, 0.06)', border: '1px solid rgba(34, 197, 94, 0.1)' }} />
+        <div className="relative max-w-[78%] md:max-w-[70%]">
+          <div
+            className="px-5 py-3.5 text-[14px] leading-relaxed text-white/90 rounded-2xl rounded-br-md relative"
+            style={{
+              background:
+                'linear-gradient(135deg, rgba(34, 197, 94, 0.10) 0%, rgba(34, 197, 94, 0.06) 100%)',
+              border: '1px solid rgba(34, 197, 94, 0.18)',
+              boxShadow:
+                '0 8px 24px -12px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
+            }}
+          >
+            {content}
+          </div>
+          <UserBubbleTail />
         </div>
       </div>
     )

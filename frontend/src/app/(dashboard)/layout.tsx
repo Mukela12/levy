@@ -6,14 +6,17 @@ import { useAuth } from '@/components/auth/auth-provider'
 import AppSidebar from '@/components/layout/app-sidebar'
 import { SkyToggle } from '@/components/layout/sky-toggle'
 import { MenuToggleIcon } from '@/components/layout/menu-toggle-icon'
-import { Scale, Loader2 } from 'lucide-react'
+import { BriefProvider, useBrief } from '@/components/chat/brief-context'
+import { BriefPanel } from '@/components/chat/brief-panel'
+import { Scale, Loader2, X } from 'lucide-react'
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
   const [isDark, setIsDark] = useState(true)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const brief = useBrief()
 
   useEffect(() => {
     if (!loading && !user) {
@@ -31,6 +34,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     setMobileSidebarOpen(false)
   }, [pathname])
+
+  // Lock body scroll while the mobile sidebar or brief sheet is open
+  // (otherwise the chat behind scrolls and lifts the top nav on iOS).
+  useEffect(() => {
+    const shouldLock = mobileSidebarOpen || brief.open
+    if (shouldLock) {
+      const prev = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => {
+        document.body.style.overflow = prev
+      }
+    }
+  }, [mobileSidebarOpen, brief.open])
 
   function toggleTheme() {
     const next = !isDark
@@ -87,8 +103,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </span>
         </div>
 
-        {/* Right: SkyToggle */}
-        <SkyToggle isDark={isDark} onToggle={toggleTheme} />
+        {/* Right: Brief button (chat pages w/ messages) + SkyToggle */}
+        <div className="flex items-center gap-2">
+          {brief.available && (
+            <button
+              onClick={() => brief.setOpen(true)}
+              className="lg:hidden h-8 w-8 rounded-full flex items-center justify-center text-emerald-400 transition-all active:scale-95"
+              style={{
+                background: 'color-mix(in oklab, rgb(34 197 94) 12%, transparent)',
+                border: '1px solid color-mix(in oklab, rgb(34 197 94) 22%, transparent)',
+              }}
+              aria-label="Open the Brief"
+            >
+              <Scale className="w-4 h-4" />
+            </button>
+          )}
+          <SkyToggle isDark={isDark} onToggle={toggleTheme} />
+        </div>
       </header>
 
       {/* ── Below top bar: sidebar + main content ── */}
@@ -103,6 +134,44 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {children}
         </main>
       </div>
+
+      {/* Mobile brief bottom sheet */}
+      {brief.open && (
+        <div className="lg:hidden fixed inset-0 z-50 flex flex-col">
+          <div
+            className="flex-1 bg-black/60 backdrop-blur-sm"
+            onClick={() => brief.setOpen(false)}
+          />
+          <div className="bg-[#0d0d0f] border-t border-white/[0.06] rounded-t-2xl max-h-[70vh] flex flex-col">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-white/[0.06]">
+              <span
+                className="text-xs font-bold tracking-[0.2em] uppercase text-emerald-400"
+                style={{ fontFamily: "'Playfair Display', serif" }}
+              >
+                The Brief
+              </span>
+              <button
+                onClick={() => brief.setOpen(false)}
+                className="p-1.5 rounded-lg hover:bg-white/[0.04] text-white/30 hover:text-white/60 transition-colors"
+                aria-label="Close the Brief"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto" style={{ overscrollBehavior: 'contain' }}>
+              <BriefPanel messages={brief.messages} token={brief.token} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+  )
+}
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <BriefProvider>
+      <DashboardLayoutInner>{children}</DashboardLayoutInner>
+    </BriefProvider>
   )
 }

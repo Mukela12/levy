@@ -42,16 +42,18 @@ export function ChatInput({ onSend, disabled, placeholder = 'Ask about Zambian l
   return (
     <div className="relative w-full max-w-3xl mx-auto">
       <div
-        className={`relative rounded-2xl transition-all duration-200 ${
-          hasContent ? 'border-emerald-500/30' : 'border-white/[0.06]'
-        }`}
+        className="relative rounded-2xl transition-all duration-200"
         style={{
-          background: 'rgba(255, 255, 255, 0.03)',
-          backdropFilter: 'blur(12px)',
+          background:
+            'color-mix(in oklab, rgb(20 20 22) 78%, transparent)',
+          backdropFilter: 'blur(22px) saturate(150%)',
+          WebkitBackdropFilter: 'blur(22px) saturate(150%)',
           border: hasContent
-            ? '1px solid rgba(34, 197, 94, 0.3)'
-            : '1px solid rgba(255, 255, 255, 0.06)',
-          boxShadow: '0 4px 24px -4px rgba(0, 0, 0, 0.3)',
+            ? '1px solid rgba(34, 197, 94, 0.35)'
+            : '1px solid rgba(255, 255, 255, 0.08)',
+          boxShadow: hasContent
+            ? '0 24px 60px -28px rgba(0,0,0,0.55), 0 8px 24px -12px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 4px rgba(34,197,94,0.08)'
+            : '0 24px 60px -28px rgba(0,0,0,0.55), 0 8px 24px -12px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.05)',
         }}
       >
         <textarea
@@ -84,11 +86,22 @@ export function ChatInput({ onSend, disabled, placeholder = 'Ask about Zambian l
           <button
             onClick={handleSubmit}
             disabled={!hasContent || disabled}
-            className={`flex items-center justify-center size-9 rounded-xl transition-all duration-200 active:scale-95 ${
+            aria-label="Send"
+            className="flex items-center justify-center size-9 rounded-xl transition-all duration-200 active:scale-95 disabled:cursor-not-allowed"
+            style={
               hasContent && !disabled
-                ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                : 'bg-white/[0.04] text-white/15 cursor-not-allowed'
-            }`}
+                ? {
+                    background:
+                      'linear-gradient(180deg, rgb(16 185 129) 0%, rgb(5 150 105) 100%)',
+                    color: 'white',
+                    boxShadow:
+                      '0 1px 0 0 rgba(255,255,255,0.2) inset, 0 0 0 1px rgba(16,185,129,0.45), 0 8px 20px -8px rgba(16,185,129,0.55)',
+                  }
+                : {
+                    background: 'rgba(255,255,255,0.04)',
+                    color: 'rgba(255,255,255,0.15)',
+                  }
+            }
           >
             {disabled ? (
               <Loader2 className="size-4 animate-spin" />

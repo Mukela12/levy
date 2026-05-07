@@ -8,7 +8,8 @@ import { streamQuery } from '@/lib/api'
 import { ChatInput } from '@/components/chat/chat-input'
 import { ChatMessage, ThinkingGlow } from '@/components/chat/chat-message'
 import { BriefPanel } from '@/components/chat/brief-panel'
-import { BookOpen, Search, FileText, Gavel, Scale, X } from 'lucide-react'
+import { useRegisterBrief } from '@/components/chat/brief-context'
+import { BookOpen, Search, FileText, Gavel } from 'lucide-react'
 import type { ChunkUsed } from '@/lib/api'
 
 interface Message {
@@ -52,11 +53,16 @@ export default function NewChatPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
   const [sessionId, setSessionId] = useState<string | null>(null)
-  const [showMobileBrief, setShowMobileBrief] = useState(false)
   const [accentLineWidth, setAccentLineWidth] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { user, session } = useAuth()
   const router = useRouter()
+
+  // Expose messages to dashboard layout (Brief button + bottom sheet live there)
+  useRegisterBrief(
+    messages.map((m) => ({ role: m.role, content: m.content })),
+    session?.access_token,
+  )
 
   // Animate accent line on mount
   useEffect(() => {
@@ -169,10 +175,10 @@ export default function NewChatPage() {
   return (
     <div className="flex flex-1 overflow-hidden" style={{ overscrollBehavior: 'none' }}>
       {/* Main chat area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 relative">
         {!hasMessages ? (
           /* ── Welcome State ── */
-          <div className="flex-1 flex flex-col items-center justify-center px-4 relative">
+          <div className="flex-1 flex flex-col items-center justify-center px-4 relative overflow-y-auto">
             {/* Subtle radial background */}
             <div
               className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[400px] pointer-events-none"
@@ -201,20 +207,20 @@ export default function NewChatPage() {
               </p>
             </div>
 
-            {/* Quick Action Cards - 2x2 grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-8 max-w-2xl w-full relative z-10">
+            {/* Quick Action Cards - 2x2 grid on every viewport */}
+            <div className="grid grid-cols-2 gap-2 sm:gap-2.5 mb-8 max-w-2xl w-full relative z-10">
               {quickActions.map((action, i) => (
                 <button
                   key={i}
                   onClick={() => handleSend(action.description)}
-                  className="flex items-start gap-3 p-4 rounded-xl text-left transition-all duration-200 group hover:scale-[1.01] active:scale-[0.99] border border-white/[0.06] bg-white/[0.02] hover:border-emerald-500/20 hover:bg-emerald-500/[0.04]"
+                  className="flex flex-col sm:flex-row items-start gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl text-left transition-all duration-200 group hover:scale-[1.01] active:scale-[0.99] border border-white/[0.06] bg-white/[0.02] hover:border-emerald-500/20 hover:bg-emerald-500/[0.04]"
                 >
-                  <action.icon className="w-5 h-5 text-white/20 group-hover:text-emerald-400/70 transition-colors flex-shrink-0 mt-0.5" />
-                  <div>
-                    <div className="text-[13px] font-medium text-white/60 group-hover:text-white/90 transition-colors">
+                  <action.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white/20 group-hover:text-emerald-400/70 transition-colors flex-shrink-0 mt-0.5" />
+                  <div className="min-w-0 w-full">
+                    <div className="text-[12px] sm:text-[13px] font-medium text-white/60 group-hover:text-white/90 transition-colors leading-tight">
                       {action.label}
                     </div>
-                    <div className="text-[11px] text-white/30 group-hover:text-white/50 transition-colors mt-0.5 leading-relaxed">
+                    <div className="text-[10.5px] sm:text-[11px] text-white/30 group-hover:text-white/50 transition-colors mt-1 leading-snug line-clamp-2">
                       {action.description}
                     </div>
                   </div>
@@ -226,7 +232,7 @@ export default function NewChatPage() {
               <ChatInput onSend={handleSend} disabled={loading} />
             </div>
 
-            <p className="mt-4 text-[10px] text-white/15 relative z-10">
+            <p className="mt-4 text-[10px] text-white/15 relative z-10 text-center">
               Levy provides legal information, not legal advice. Always consult a qualified lawyer.
             </p>
           </div>
@@ -234,7 +240,7 @@ export default function NewChatPage() {
           /* ── Chat State ── */
           <>
             <div
-              className="flex-1 overflow-y-auto py-6"
+              className="flex-1 overflow-y-auto pt-6 pb-40 md:pb-32"
               style={{ overscrollBehavior: 'none' }}
             >
               <div className="max-w-3xl mx-auto space-y-6">
@@ -259,11 +265,22 @@ export default function NewChatPage() {
                 <div ref={messagesEndRef} />
               </div>
             </div>
-            <div className="px-4 py-4 border-t border-white/[0.06]">
-              <ChatInput onSend={handleSend} disabled={loading} />
-              <p className="mt-2 text-center text-[10px] text-[#5a5a5f]">
-                Levy provides legal information, not legal advice.
-              </p>
+            {/* Floating glass dock — chat input */}
+            <div className="absolute inset-x-0 bottom-0 z-20 pointer-events-none">
+              <div
+                className="px-3 sm:px-4 pt-6 pb-[max(12px,env(safe-area-inset-bottom))]"
+                style={{
+                  background:
+                    'linear-gradient(to top, rgba(10,10,11,0.95) 0%, rgba(10,10,11,0.6) 60%, transparent 100%)',
+                }}
+              >
+                <div className="pointer-events-auto max-w-3xl mx-auto">
+                  <ChatInput onSend={handleSend} disabled={loading} />
+                  <p className="mt-2 text-center text-[10px] text-white/25">
+                    Levy provides legal information, not legal advice.
+                  </p>
+                </div>
+              </div>
             </div>
           </>
         )}
@@ -274,45 +291,6 @@ export default function NewChatPage() {
         <aside className="hidden lg:flex flex-col w-[280px] shrink-0 border-l border-white/[0.06] bg-[#0d0d0f]">
           <BriefPanel messages={messages.map(m => ({ role: m.role, content: m.content }))} token={session?.access_token} />
         </aside>
-      )}
-
-      {/* Mobile brief button - top right, only when conversation active */}
-      {hasMessages && (
-        <button
-          onClick={() => setShowMobileBrief(true)}
-          className="lg:hidden fixed top-1 right-14 z-40 w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 hover:bg-emerald-500/20 transition-colors"
-        >
-          <Scale size={16} />
-        </button>
-      )}
-
-      {/* Mobile brief bottom sheet */}
-      {showMobileBrief && (
-        <div className="lg:hidden fixed inset-0 z-50 flex flex-col">
-          <div
-            className="flex-1 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowMobileBrief(false)}
-          />
-          <div className="bg-[#0d0d0f] border-t border-white/[0.06] rounded-t-2xl max-h-[70vh] flex flex-col">
-            <div className="flex items-center justify-between px-5 py-3 border-b border-white/[0.06]">
-              <span
-                className="text-xs font-bold tracking-[0.2em] uppercase text-emerald-400"
-                style={{ fontFamily: "'Playfair Display', serif" }}
-              >
-                The Brief
-              </span>
-              <button
-                onClick={() => setShowMobileBrief(false)}
-                className="p-1.5 rounded-lg hover:bg-white/[0.04] text-white/30 hover:text-white/60 transition-colors"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto" style={{ overscrollBehavior: 'contain' }}>
-              <BriefPanel messages={messages.map(m => ({ role: m.role, content: m.content }))} token={session?.access_token} />
-            </div>
-          </div>
-        </div>
       )}
     </div>
   )
