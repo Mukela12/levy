@@ -22,6 +22,7 @@ interface Message {
   toolCalls?: ToolCallView[]
   artifacts?: ArtifactView[]
   timing?: { total_ms: number }
+  compaction?: { summarised_messages: number; tokens_before: number; tokens_after: number }
 }
 
 export default function ChatSessionPage({ params }: { params: Promise<{ id: string }> }) {
@@ -52,7 +53,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
     const supabase = createClient()
     const { data } = await supabase
       .from('chat_messages')
-      .select('role, content, citations, web_sources, artifacts')
+      .select('role, content, citations, web_sources, artifacts, compaction')
       .eq('session_id', id)
       .order('created_at', { ascending: true })
 
@@ -64,6 +65,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
           citations: m.citations as ChunkUsed[] | undefined,
           webSources: m.web_sources as WebSource[] | undefined,
           artifacts: m.artifacts as ArtifactView[] | undefined,
+          compaction: m.compaction as Message['compaction'] | undefined,
         }))
       )
     }
@@ -76,6 +78,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
     citations?: ChunkUsed[],
     webSources?: WebSource[],
     artifacts?: ArtifactView[],
+    compaction?: Message['compaction'],
   ) {
     const supabase = createClient()
     await supabase.from('chat_messages').insert({
@@ -85,6 +88,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
       citations: citations || null,
       web_sources: webSources || null,
       artifacts: artifacts || null,
+      compaction: compaction || null,
     })
   }
 
@@ -113,6 +117,12 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
           return updated
         })
 
+      // Send the conversation so far so the backend's compactor can see the
+      // full thread when deciding whether to summarise.
+      const history = messages
+        .filter((m) => m.content)
+        .map((m) => ({ role: m.role, content: m.content }))
+
       await streamQuery(
         question,
         {
@@ -121,6 +131,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
           userId: user?.id,
           sessionId: id,
           attachedDocIds: attachments.attachedIds,
+          history,
         },
         undefined,
         undefined,
@@ -156,6 +167,15 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
               if (existing.some((a) => a.id === artifact.id)) return last
               return { ...last, artifacts: [...existing, artifact] }
             }),
+          onCompaction: (info) =>
+            updateLast((last) => ({
+              ...last,
+              compaction: {
+                summarised_messages: info.summarised_messages,
+                tokens_before: info.tokens_before,
+                tokens_after: info.tokens_after,
+              },
+            })),
           onDone: (metadata) => {
             setMessages((prev) => {
               const updated = [...prev]
@@ -173,6 +193,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
                 finalMsg.citations,
                 finalMsg.webSources,
                 finalMsg.artifacts,
+                finalMsg.compaction,
               )
               return updated
             })
@@ -237,6 +258,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
                       artifacts={msg.artifacts}
                       timing={msg.timing}
                       isStreaming={isLastAssistant}
+                      compaction={msg.compaction}
                       onOpenCitation={(c) =>
                         pdf.open({
                           documentId: c.document_id,

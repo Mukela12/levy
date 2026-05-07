@@ -25,6 +25,7 @@ import anthropic
 
 from ..config import get_settings
 from ..prompts.legal_qa import SYSTEM_PROMPT
+from .compactor import compact_if_needed
 from .tools import (
     ToolCallRecord,
     build_tool_registry,
@@ -150,6 +151,13 @@ async def run_agent(
                 }
             )
 
+        # Compact older history if we're approaching the model's window. The
+        # stored `messages` list is unchanged; we only swap in a compacted
+        # copy for THIS Anthropic call. Subsequent iterations get re-compacted.
+        compacted_messages, compaction_info = await compact_if_needed(messages)
+        if compaction_info:
+            yield {"type": "compaction", **compaction_info}
+
         # Streaming call. Capture tool_use blocks as they finalize, and forward
         # text deltas as `token` events.
         final_message = None
@@ -158,7 +166,7 @@ async def run_agent(
                 model=model_name,
                 max_tokens=4096,
                 system=system_prompt,
-                messages=messages,
+                messages=compacted_messages,
                 tools=[] if cap_reached else tool_schemas,
             ) as stream:
                 async for event in stream:

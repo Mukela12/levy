@@ -27,6 +27,21 @@ class Settings(BaseSettings):
     agent_tool_timeout_seconds: int = 25
     agent_max_tool_result_chars: int = 8000
 
+    # Context management
+    # Trigger compaction when the running input-token total approaches Claude
+    # Sonnet 4's 200K window. We leave headroom for the new turn's tools +
+    # response generation.
+    compaction_threshold_tokens: int = 140_000
+    # Always keep this many trailing messages verbatim — only older ones get
+    # collapsed into the "thread brief".
+    compaction_keep_last_n: int = 6
+    # When a tool_result block in an older turn is bigger than this many
+    # characters, replace its content with a short stub before sending to the
+    # model. The full result still lives in chat_messages for the UI.
+    compaction_old_tool_result_max_chars: int = 800
+    # Cheap, fast model for the summarisation pass itself.
+    compaction_model: str = "claude-haiku-4-5-20251001"
+
     # Embedding config
     embedding_provider: str = "voyage"  # "voyage" or "local"
     embedding_dimensions: int = 1024  # voyage-law-2 = 1024, local bge = 768

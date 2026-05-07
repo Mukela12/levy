@@ -280,12 +280,23 @@ export interface AgentDoneMetadata {
   model?: string
 }
 
+export interface CompactionEvent {
+  tokens_before: number
+  tokens_after: number
+  summarised_messages: number
+  kept_messages: number
+  summary_chars?: number
+  model?: string
+  error?: string
+}
+
 export interface StreamHandlers {
   onThinking?: () => void
   onToken?: (text: string) => void
   onToolCall?: (call: ToolCallEvent) => void
   onToolResult?: (result: ToolResultEvent) => void
   onArtifact?: (artifact: ArtifactView) => void
+  onCompaction?: (event: CompactionEvent) => void
   onDone?: (metadata: AgentDoneMetadata) => void
   onError?: (message: string) => void
 }
@@ -377,6 +388,9 @@ export async function streamQuery(
           break
         case 'artifact':
           handlers?.onArtifact?.(parsed.artifact as ArtifactView)
+          break
+        case 'compaction':
+          handlers?.onCompaction?.(parsed as unknown as CompactionEvent)
           break
         case 'sources':
           dbSources = ((parsed.db as ChunkUsed[]) ?? (parsed.chunks_used as ChunkUsed[]) ?? [])

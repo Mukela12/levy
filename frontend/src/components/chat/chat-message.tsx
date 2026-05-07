@@ -18,6 +18,7 @@ interface ChatMessageProps {
   artifacts?: ArtifactView[]
   timing?: { total_ms: number }
   isStreaming?: boolean
+  compaction?: { summarised_messages: number; tokens_before: number; tokens_after: number }
   onOpenCitation?: (cite: ChunkUsed) => void
   onOpenArtifact?: (artifact: ArtifactView) => void
 }
@@ -61,6 +62,7 @@ export function ChatMessage({
   artifacts,
   timing,
   isStreaming,
+  compaction,
   onOpenCitation,
   onOpenArtifact,
 }: ChatMessageProps) {
@@ -92,6 +94,20 @@ export function ChatMessage({
   return (
     <div className="flex gap-3 px-4 md:px-0">
       <div className="flex-1 min-w-0 space-y-2.5">
+        {/* Compaction notice — appears once, only on the assistant turn that
+            triggered compaction. The Brief panel still has the full transcript. */}
+        {compaction && (
+          <div className="rounded-lg border border-emerald-500/15 bg-emerald-500/[0.04] px-3 py-2 text-[11px] text-emerald-300/80 flex items-center gap-2">
+            <Scale className="size-3 text-emerald-400/70" />
+            <span>
+              Earlier conversation summarised to keep the thread within context
+              ({compaction.summarised_messages} messages compressed,{' '}
+              {Math.round((compaction.tokens_before - compaction.tokens_after) / 1000)}K tokens reclaimed).
+              Full transcript preserved in the Brief.
+            </span>
+          </div>
+        )}
+
         {/* Tool-call cards (research trail) */}
         {toolCalls && toolCalls.length > 0 && (
           <div className="space-y-1.5">

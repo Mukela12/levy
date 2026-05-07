@@ -22,6 +22,7 @@ interface Message {
   toolCalls?: ToolCallView[]
   artifacts?: ArtifactView[]
   timing?: { total_ms: number }
+  compaction?: { summarised_messages: number; tokens_before: number; tokens_after: number }
 }
 
 function getGreeting(): string {
@@ -100,6 +101,7 @@ export default function NewChatPage() {
     citations?: ChunkUsed[],
     webSources?: WebSource[],
     artifacts?: ArtifactView[],
+    compaction?: Message['compaction'],
   ) {
     const supabase = createClient()
     await supabase.from('chat_messages').insert({
@@ -109,6 +111,7 @@ export default function NewChatPage() {
       citations: citations || null,
       web_sources: webSources || null,
       artifacts: artifacts || null,
+      compaction: compaction || null,
     })
   }
 
@@ -145,6 +148,12 @@ export default function NewChatPage() {
           return updated
         })
 
+      // Send the conversation so far so the backend's compactor can see the
+      // full thread when deciding whether to summarise.
+      const history = messages
+        .filter((m) => m.content)
+        .map((m) => ({ role: m.role, content: m.content }))
+
       await streamQuery(
         question,
         {
@@ -152,6 +161,7 @@ export default function NewChatPage() {
           webSearch,
           userId: user?.id,
           sessionId: sid,
+          history,
         },
         undefined,
         undefined,
@@ -187,6 +197,15 @@ export default function NewChatPage() {
               if (existing.some((a) => a.id === artifact.id)) return last
               return { ...last, artifacts: [...existing, artifact] }
             }),
+          onCompaction: (info) =>
+            updateLast((last) => ({
+              ...last,
+              compaction: {
+                summarised_messages: info.summarised_messages,
+                tokens_before: info.tokens_before,
+                tokens_after: info.tokens_after,
+              },
+            })),
           onDone: (metadata) => {
             setMessages((prev) => {
               const updated = [...prev]
@@ -205,6 +224,7 @@ export default function NewChatPage() {
                 finalMsg.citations,
                 finalMsg.webSources,
                 finalMsg.artifacts,
+                finalMsg.compaction,
               )
               return updated
             })
@@ -342,6 +362,7 @@ export default function NewChatPage() {
                           artifacts={msg.artifacts}
                           timing={msg.timing}
                           isStreaming={isLastAssistant}
+                          compaction={msg.compaction}
                           onOpenCitation={(c) =>
                             pdf.open({
                               documentId: c.document_id,
