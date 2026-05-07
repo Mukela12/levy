@@ -6,7 +6,8 @@ import remarkGfm from 'remark-gfm'
 import { ChevronDown, ChevronUp, FileText, Clock, Scale, Globe, ExternalLink } from 'lucide-react'
 import { MatchBadge } from '@/components/ui/match-badge'
 import { ToolCallCard, type ToolCallView } from './tool-call-card'
-import type { ChunkUsed, WebSource } from '@/lib/api'
+import { ArtifactCard } from './artifact-card'
+import type { ArtifactView, ChunkUsed, WebSource } from '@/lib/api'
 
 interface ChatMessageProps {
   role: 'user' | 'assistant'
@@ -14,9 +15,11 @@ interface ChatMessageProps {
   citations?: ChunkUsed[]
   webSources?: WebSource[]
   toolCalls?: ToolCallView[]
+  artifacts?: ArtifactView[]
   timing?: { total_ms: number }
   isStreaming?: boolean
   onOpenCitation?: (cite: ChunkUsed) => void
+  onOpenArtifact?: (artifact: ArtifactView) => void
 }
 
 /**
@@ -55,9 +58,11 @@ export function ChatMessage({
   citations,
   webSources,
   toolCalls,
+  artifacts,
   timing,
   isStreaming,
   onOpenCitation,
+  onOpenArtifact,
 }: ChatMessageProps) {
   const [showCitations, setShowCitations] = useState(false)
   const [showWebSources, setShowWebSources] = useState(false)
@@ -126,6 +131,15 @@ export function ChatMessage({
             )}
           </div>
         </div>
+
+        {/* Artifacts (generated/extracted/merged PDFs) */}
+        {artifacts && artifacts.length > 0 && (
+          <div className="space-y-2 pt-1">
+            {artifacts.map((art) => (
+              <ArtifactCard key={art.id} artifact={art} onOpen={() => onOpenArtifact?.(art)} />
+            ))}
+          </div>
+        )}
 
         {/* Citations */}
         {citations && citations.length > 0 && (

@@ -15,7 +15,9 @@ interface PdfDocMeta {
 }
 
 export interface PdfViewerCitation {
+  // Either a corpus document or an artifact:
   documentId?: string
+  artifactId?: string
   actName: string
   pageStart?: number
   pageEnd?: number
@@ -42,13 +44,24 @@ export function PdfViewer({ citation, onClose }: PdfViewerProps) {
     setPageNum(citation?.pageStart ?? 1)
   }, [citation?.documentId, citation?.actName, citation?.pageStart])
 
-  // Resolve document → signed URL.
+  // Resolve document/artifact → signed URL.
   useEffect(() => {
     if (!citation) return
     let cancelled = false
     setLoading(true)
     ;(async () => {
       try {
+        // Artifact path takes precedence — those are agent-generated PDFs.
+        if (citation.artifactId) {
+          const r = await fetch(`${API_URL}/api/artifacts/${citation.artifactId}/pdf`)
+          if (!r.ok) throw new Error((await r.text()) || `artifact ${r.status}`)
+          const j = (await r.json()) as PdfDocMeta & { kind?: string }
+          if (cancelled) return
+          setMeta(j)
+          setPageCount(j.page_count || 1)
+          return
+        }
+
         let documentId = citation.documentId
         if (!documentId) {
           // Fallback: look up by act name (older citation snapshots).

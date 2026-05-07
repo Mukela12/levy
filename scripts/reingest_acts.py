@@ -70,13 +70,19 @@ ACTS = [
      "url": "https://www.parliament.gov.zm/sites/default/files/documents/acts/The%20Public%20Procurement%20Act%20No.%208%202020.pdf"},
     {"db_title": "REPUBLIC OF ZAMBIA THE LANDS ACT",
      "label": "Lands Act, Cap. 184", "short_name": "Lands Act", "year": None,
-     "url": "https://media.zambialii.org/media/legislation/39615/source_file/6516fc140c65c2c9/lands-act.pdf"},
+     "url": "https://www.parliament.gov.zm/sites/default/files/documents/acts/Lands%20Act.pdf"},
     {"db_title": "REPUBLIC OF ZAMBIA THE LANDS AND DEEDS REGISTRY ACT",
      "label": "Lands and Deeds Registry Act, Cap. 185", "short_name": "Lands and Deeds Registry Act", "year": None,
      "url": "https://www.parliament.gov.zm/sites/default/files/documents/acts/Lands%20and%20Deeds%20Registry%20Act.pdf"},
     {"db_title": "THE CONSTITUTION OF ZAMBIA ACT, 2016",
-     "label": "Constitution of Zambia (Amendment) Act, 2016", "short_name": "Constitution", "year": 2016,
+     "label": "Constitution of Zambia (Amendment) Act, 2016", "short_name": "Constitution Amendment Act 2016", "year": 2016,
      "url": "https://www.parliament.gov.zm/sites/default/files/documents/acts/Constitution%20of%20Zambia%20Act%202016%20_0.pdf"},
+    # Consolidated Constitution (1991 base + 2016 amendments) — separate row,
+    # preferred source for research/citation. New entry with no existing db_title.
+    {"db_title": "Constitution of Zambia (Consolidated)",
+     "label": "Constitution of Zambia (Consolidated, 1991 with 2016 Amendments)",
+     "short_name": "Constitution of Zambia", "year": 2016,
+     "url": "https://www.constituteproject.org/constitution/Zambia_2016.pdf"},
 ]
 
 # Document rows that aren't legitimate Acts and should be deleted entirely.
@@ -123,16 +129,29 @@ def replace_chunks(db, document_id: str, chunks: list) -> None:
     db.table("legal_hierarchy").delete().eq("document_id", document_id).execute()
 
 
+def _scrub(s):
+    # Postgres text columns reject . Some PDFs (e.g. constituteproject's
+    # consolidated Constitution) contain stray NULs in extracted text — strip
+    # them before insert so the row is accepted.
+    if isinstance(s, str):
+        return s.replace("\x00", "")
+    if isinstance(s, dict):
+        return {k: _scrub(v) for k, v in s.items()}
+    if isinstance(s, list):
+        return [_scrub(v) for v in s]
+    return s
+
+
 def insert_chunk_rows(db, document_id: str, chunks: list, embeddings: list[list[float]]) -> int:
     rows = []
     for c, emb in zip(chunks, embeddings):
         # chunks are LegalChunk pydantic models from the chunker
         rows.append({
             "document_id": document_id,
-            "content": c.content,
-            "summary": c.summary,
+            "content": _scrub(c.content),
+            "summary": _scrub(c.summary),
             "embedding": emb,
-            "metadata": c.metadata,
+            "metadata": _scrub(c.metadata),
             "chunk_index": c.chunk_index,
             "page_start": c.page_start,
             "page_end": c.page_end,

@@ -25,6 +25,7 @@ import httpx
 from ..config import get_settings
 from ..db.supabase import search_chunks
 from .embedder import get_query_embedding
+from . import pdf_tools
 
 
 # ─── Curated source whitelist ────────────────────────────────────────────────
@@ -244,7 +245,12 @@ def _extract_domain(url: str) -> str:
 # ─── Registry ────────────────────────────────────────────────────────────────
 
 
-def build_tool_registry(*, web_enabled: bool) -> dict[str, ToolDefinition]:
+def build_tool_registry(
+    *,
+    web_enabled: bool,
+    owner_id: str | None = None,
+    session_id: str | None = None,
+) -> dict[str, ToolDefinition]:
     """
     Build the set of tools available to the agent for a given turn.
 
@@ -252,8 +258,111 @@ def build_tool_registry(*, web_enabled: bool) -> dict[str, ToolDefinition]:
     toggling the "Search" affordance in the chat input; this keeps Tavily costs
     pinned to explicit user intent and avoids surprise web calls during
     pure-statute questions.
+
+    PDF artifact tools (extract/generate/merge) are always available. They
+    write to the user's `artifacts` table so they appear in the chat as cards
+    and persist across reloads.
     """
+
+    # Adapter: bind owner/session into PDF tool handlers so the agent doesn't
+    # have to thread them in tool inputs.
+    async def _extract(document_id, page_start, page_end, title=None):
+        return await pdf_tools.pdf_extract_pages(
+            document_id, int(page_start), int(page_end), title,
+            owner_id=owner_id, session_id=session_id,
+        )
+
+    async def _generate(title, content_markdown, subtitle=None):
+        return await pdf_tools.pdf_generate(
+            title, content_markdown, subtitle,
+            owner_id=owner_id, session_id=session_id,
+        )
+
+    async def _merge(parts, title):
+        return await pdf_tools.pdf_merge(
+            parts, title,
+            owner_id=owner_id, session_id=session_id,
+        )
     tools: dict[str, ToolDefinition] = {
+        "pdf_extract_pages": ToolDefinition(
+            name="pdf_extract_pages",
+            description=(
+                "Extract a contiguous page range from a corpus document and "
+                "save it as a downloadable PDF artifact for the user. Use this "
+                "when the user asks for 'sections X to Y' of an Act, or wants "
+                "a focused excerpt to attach to something else. Get the "
+                "document_id from a prior search_corpus result."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "document_id": {"type": "string", "description": "UUID from search_corpus."},
+                    "page_start": {"type": "integer", "description": "1-indexed inclusive."},
+                    "page_end": {"type": "integer", "description": "1-indexed inclusive."},
+                    "title": {"type": "string", "description": "Optional override for the artifact's title."},
+                },
+                "required": ["document_id", "page_start", "page_end"],
+            },
+            handler=_extract,
+        ),
+        "pdf_generate": ToolDefinition(
+            name="pdf_generate",
+            description=(
+                "Render a polished PDF from Markdown. Use for legal memos, "
+                "IRAC briefs, summaries, or any content the user wants to "
+                "save / share. The output uses serif typography, A4 size, "
+                "automatic page numbers. Inline citations like '[Companies "
+                "Act, S.13] (p. 370)' render fine."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string"},
+                    "content_markdown": {
+                        "type": "string",
+                        "description": "Body content as Markdown (headings, lists, tables, blockquotes all supported).",
+                    },
+                    "subtitle": {
+                        "type": "string",
+                        "description": "Optional grey subtitle line under the heading (e.g. matter name, date).",
+                    },
+                },
+                "required": ["title", "content_markdown"],
+            },
+            handler=_generate,
+        ),
+        "pdf_merge": ToolDefinition(
+            name="pdf_merge",
+            description=(
+                "Concatenate multiple PDFs (existing artifacts and/or page "
+                "ranges from corpus documents) into a single new artifact. "
+                "Useful for assembling appendices: e.g. 'merge my generated "
+                "memo with sections 5-10 of the Companies Act'. Each part "
+                "must specify EITHER artifact_id OR document_id; if "
+                "document_id is given without page_start/page_end, the whole "
+                "document is included."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string"},
+                    "parts": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "artifact_id": {"type": "string"},
+                                "document_id": {"type": "string"},
+                                "page_start": {"type": "integer"},
+                                "page_end": {"type": "integer"},
+                            },
+                        },
+                    },
+                },
+                "required": ["title", "parts"],
+            },
+            handler=_merge,
+        ),
         "search_corpus": ToolDefinition(
             name="search_corpus",
             description=(

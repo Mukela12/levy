@@ -12,7 +12,7 @@ import { useRegisterBrief } from '@/components/chat/brief-context'
 import { usePdfViewer } from '@/components/chat/pdf-viewer-context'
 import type { ToolCallView } from '@/components/chat/tool-call-card'
 import { BookOpen, Search, FileText, Gavel } from 'lucide-react'
-import type { ChunkUsed, WebSource } from '@/lib/api'
+import type { ArtifactView, ChunkUsed, WebSource } from '@/lib/api'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -20,6 +20,7 @@ interface Message {
   citations?: ChunkUsed[]
   webSources?: WebSource[]
   toolCalls?: ToolCallView[]
+  artifacts?: ArtifactView[]
   timing?: { total_ms: number }
 }
 
@@ -92,13 +93,22 @@ export default function NewChatPage() {
     return data.id
   }
 
-  async function saveMessage(sid: string, role: string, content: string, citations?: ChunkUsed[]) {
+  async function saveMessage(
+    sid: string,
+    role: string,
+    content: string,
+    citations?: ChunkUsed[],
+    webSources?: WebSource[],
+    artifacts?: ArtifactView[],
+  ) {
     const supabase = createClient()
     await supabase.from('chat_messages').insert({
       session_id: sid,
       role,
       content,
       citations: citations || null,
+      web_sources: webSources || null,
+      artifacts: artifacts || null,
     })
   }
 
@@ -118,7 +128,13 @@ export default function NewChatPage() {
       await saveMessage(sid, 'user', question)
 
       // Add placeholder assistant message for streaming
-      const assistantMsg: Message = { role: 'assistant', content: '', citations: [], toolCalls: [] }
+      const assistantMsg: Message = {
+        role: 'assistant',
+        content: '',
+        citations: [],
+        toolCalls: [],
+        artifacts: [],
+      }
       setMessages((prev) => [...prev, assistantMsg])
 
       const updateLast = (patch: (m: Message) => Message) =>
@@ -131,7 +147,12 @@ export default function NewChatPage() {
 
       await streamQuery(
         question,
-        { token: session?.access_token, webSearch },
+        {
+          token: session?.access_token,
+          webSearch,
+          userId: user?.id,
+          sessionId: sid,
+        },
         undefined,
         undefined,
         {
@@ -160,6 +181,12 @@ export default function NewChatPage() {
                   : c,
               ),
             })),
+          onArtifact: (artifact) =>
+            updateLast((last) => {
+              const existing = last.artifacts ?? []
+              if (existing.some((a) => a.id === artifact.id)) return last
+              return { ...last, artifacts: [...existing, artifact] }
+            }),
           onDone: (metadata) => {
             setMessages((prev) => {
               const updated = [...prev]
@@ -171,7 +198,14 @@ export default function NewChatPage() {
                 timing: { total_ms: metadata.timing?.total_ms ?? 0 },
               }
               updated[updated.length - 1] = finalMsg
-              saveMessage(sid!, 'assistant', finalMsg.content, finalMsg.citations)
+              saveMessage(
+                sid!,
+                'assistant',
+                finalMsg.content,
+                finalMsg.citations,
+                finalMsg.webSources,
+                finalMsg.artifacts,
+              )
               return updated
             })
             setLoading(false)
@@ -305,6 +339,7 @@ export default function NewChatPage() {
                           citations={msg.citations}
                           webSources={msg.webSources}
                           toolCalls={msg.toolCalls}
+                          artifacts={msg.artifacts}
                           timing={msg.timing}
                           isStreaming={isLastAssistant}
                           onOpenCitation={(c) =>
@@ -314,6 +349,13 @@ export default function NewChatPage() {
                               pageStart: c.page_start,
                               pageEnd: c.page_end,
                               section: c.section,
+                            })
+                          }
+                          onOpenArtifact={(a) =>
+                            pdf.open({
+                              artifactId: a.id,
+                              actName: a.title,
+                              pageStart: 1,
                             })
                           }
                         />

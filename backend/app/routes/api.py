@@ -37,6 +37,8 @@ class ChatRequest(BaseModel):
     threshold: float | None = None
     web_search: bool = False
     history: list[dict] | None = None
+    user_id: str | None = None
+    session_id: str | None = None
 
 
 class SearchRequest(BaseModel):
@@ -118,6 +120,8 @@ async def chat_stream(request: ChatRequest):
             model=request.model,
             web_enabled=bool(request.web_search),
             history=request.history,
+            owner_id=request.user_id,
+            session_id=request.session_id,
         ):
             # The pre-agent client expects `chunks_used` on the sources event.
             if event.get("type") == "sources":
@@ -191,6 +195,46 @@ def get_document_pdf_url(document_id: str, expires_in: int = 3600):
         "short_name": row.get("short_name"),
         "page_count": row.get("pdf_page_count"),
         "canonical_url": row.get("canonical_url"),
+        "signed_url": signed.get("signedURL") or signed.get("signed_url") or signed.get("signedUrl"),
+        "expires_in": expires_in,
+    }
+
+
+@router.get("/artifacts/{artifact_id}/pdf")
+def get_artifact_pdf_url(artifact_id: str, expires_in: int = 3600):
+    """Signed URL for an agent-generated artifact PDF."""
+    from ..db.supabase import get_db
+
+    db = get_db()
+    res = (
+        db.table("artifacts")
+        .select("id, title, kind, storage_path, page_count, size_bytes, source, meta, created_at")
+        .eq("id", artifact_id)
+        .limit(1)
+        .execute()
+    )
+    if not res.data:
+        raise HTTPException(status_code=404, detail="artifact not found")
+    row = res.data[0]
+    storage_path = row.get("storage_path")
+    if not storage_path or storage_path == "artifacts/pending":
+        raise HTTPException(status_code=409, detail="artifact upload not finalized")
+
+    bucket, _, key = storage_path.partition("/")
+    try:
+        signed = db.storage.from_(bucket).create_signed_url(key, expires_in)
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"signed-url failed: {e}")
+
+    return {
+        "artifact_id": row["id"],
+        "title": row.get("title"),
+        "kind": row.get("kind"),
+        "page_count": row.get("page_count"),
+        "size_bytes": row.get("size_bytes"),
+        "source": row.get("source"),
+        "meta": row.get("meta"),
+        "created_at": row.get("created_at"),
         "signed_url": signed.get("signedURL") or signed.get("signed_url") or signed.get("signedUrl"),
         "expires_in": expires_in,
     }

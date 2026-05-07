@@ -52,9 +52,26 @@ Workflow — be decisive, not perfectionist:
 5. Do not invent statutes, sections, page numbers, or fees. If you don't have
    it, say so explicitly.
 
+When to produce artifacts (PDFs the user can download):
+- `pdf_extract_pages` — when the user asks for "sections X to Y" or "the
+  full text of the Companies Act provisions on directors". Use the
+  document_id and page numbers from a prior `search_corpus` result.
+- `pdf_generate` — when the user asks for a memo, brief, summary, opinion,
+  or any document-shaped artifact. Pass clean Markdown; headings, lists,
+  tables, and blockquotes all render. Always include a title.
+- `pdf_merge` — when the user wants to combine multiple sources, e.g.
+  "compile a one-page memo plus the relevant Companies Act sections as an
+  appendix". Pass parts in the order the final document should read.
+
+Do NOT generate an artifact unless the user asked for one (explicitly or
+implicitly via "draft a memo", "extract sections", "make a one-pager",
+"prepare a brief"). Plain Q&A doesn't need an artifact.
+
 Final answer format:
 - Prose with inline citations: `[Companies Act, S.13] (p. 370)` for corpus,
   bare URLs for web results.
+- If you produced an artifact, mention it briefly so the user knows to look
+  at the artifact card (don't paste the full content into the chat reply).
 - If the corpus didn't contain something, lead with what you DID find, then
   call out the gap, then suggest where the user can verify.
 """
@@ -66,12 +83,18 @@ async def run_agent(
     model: str | None = None,
     web_enabled: bool = False,
     history: list[dict] | None = None,
+    owner_id: str | None = None,
+    session_id: str | None = None,
 ) -> AsyncIterator[dict]:
     settings = get_settings()
     model_name = model or DEFAULT_MODEL
     client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
 
-    registry = build_tool_registry(web_enabled=web_enabled)
+    registry = build_tool_registry(
+        web_enabled=web_enabled,
+        owner_id=owner_id,
+        session_id=session_id,
+    )
     tool_schemas = to_anthropic_schema(registry)
 
     system_prompt = SYSTEM_PROMPT + AGENT_SYSTEM_SUFFIX
@@ -195,6 +218,7 @@ async def run_agent(
                 )
             )
 
+            artifact = envelope.get("artifact")
             yield {
                 "type": "tool_result",
                 "id": tool_id,
@@ -202,8 +226,11 @@ async def run_agent(
                 "ok": "error" not in (result if isinstance(result, dict) else {}),
                 "db": db,
                 "web": web,
+                "artifact": artifact,
                 "ms": elapsed_ms,
             }
+            if artifact:
+                yield {"type": "artifact", "artifact": artifact}
 
             tool_results_content.append(
                 {

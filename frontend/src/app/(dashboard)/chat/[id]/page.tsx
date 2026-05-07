@@ -11,7 +11,7 @@ import { useRegisterBrief } from '@/components/chat/brief-context'
 import { usePdfViewer } from '@/components/chat/pdf-viewer-context'
 import type { ToolCallView } from '@/components/chat/tool-call-card'
 import { Loader2 } from 'lucide-react'
-import type { ChunkUsed, WebSource } from '@/lib/api'
+import type { ArtifactView, ChunkUsed, WebSource } from '@/lib/api'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -19,6 +19,7 @@ interface Message {
   citations?: ChunkUsed[]
   webSources?: WebSource[]
   toolCalls?: ToolCallView[]
+  artifacts?: ArtifactView[]
   timing?: { total_ms: number }
 }
 
@@ -29,7 +30,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
   const [initialLoading, setInitialLoading] = useState(true)
   const [webSearch, setWebSearch] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const { session } = useAuth()
+  const { user, session } = useAuth()
   const pdf = usePdfViewer()
 
   // Pass the raw messages state (stable reference). Mapping here creates a new
@@ -49,7 +50,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
     const supabase = createClient()
     const { data } = await supabase
       .from('chat_messages')
-      .select('role, content, citations')
+      .select('role, content, citations, web_sources, artifacts')
       .eq('session_id', id)
       .order('created_at', { ascending: true })
 
@@ -59,19 +60,29 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
           role: m.role as 'user' | 'assistant',
           content: m.content,
           citations: m.citations as ChunkUsed[] | undefined,
+          webSources: m.web_sources as WebSource[] | undefined,
+          artifacts: m.artifacts as ArtifactView[] | undefined,
         }))
       )
     }
     setInitialLoading(false)
   }
 
-  async function saveMessage(role: string, content: string, citations?: ChunkUsed[]) {
+  async function saveMessage(
+    role: string,
+    content: string,
+    citations?: ChunkUsed[],
+    webSources?: WebSource[],
+    artifacts?: ArtifactView[],
+  ) {
     const supabase = createClient()
     await supabase.from('chat_messages').insert({
       session_id: id,
       role,
       content,
       citations: citations || null,
+      web_sources: webSources || null,
+      artifacts: artifacts || null,
     })
   }
 
@@ -83,7 +94,13 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
       await saveMessage('user', question)
 
       // Add placeholder assistant message for streaming
-      const assistantMsg: Message = { role: 'assistant', content: '', citations: [], toolCalls: [] }
+      const assistantMsg: Message = {
+        role: 'assistant',
+        content: '',
+        citations: [],
+        toolCalls: [],
+        artifacts: [],
+      }
       setMessages((prev) => [...prev, assistantMsg])
 
       const updateLast = (patch: (m: Message) => Message) =>
@@ -96,7 +113,12 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
 
       await streamQuery(
         question,
-        { token: session?.access_token, webSearch },
+        {
+          token: session?.access_token,
+          webSearch,
+          userId: user?.id,
+          sessionId: id,
+        },
         undefined,
         undefined,
         {
@@ -125,6 +147,12 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
                   : c,
               ),
             })),
+          onArtifact: (artifact) =>
+            updateLast((last) => {
+              const existing = last.artifacts ?? []
+              if (existing.some((a) => a.id === artifact.id)) return last
+              return { ...last, artifacts: [...existing, artifact] }
+            }),
           onDone: (metadata) => {
             setMessages((prev) => {
               const updated = [...prev]
@@ -136,7 +164,13 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
                 timing: { total_ms: metadata.timing?.total_ms ?? 0 },
               }
               updated[updated.length - 1] = finalMsg
-              saveMessage('assistant', finalMsg.content, finalMsg.citations)
+              saveMessage(
+                'assistant',
+                finalMsg.content,
+                finalMsg.citations,
+                finalMsg.webSources,
+                finalMsg.artifacts,
+              )
               return updated
             })
             setLoading(false)
@@ -197,6 +231,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
                       citations={msg.citations}
                       webSources={msg.webSources}
                       toolCalls={msg.toolCalls}
+                      artifacts={msg.artifacts}
                       timing={msg.timing}
                       isStreaming={isLastAssistant}
                       onOpenCitation={(c) =>
@@ -206,6 +241,13 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
                           pageStart: c.page_start,
                           pageEnd: c.page_end,
                           section: c.section,
+                        })
+                      }
+                      onOpenArtifact={(a) =>
+                        pdf.open({
+                          artifactId: a.id,
+                          actName: a.title,
+                          pageStart: 1,
                         })
                       }
                     />

@@ -130,12 +130,25 @@ export interface ToolCallEvent {
   input: Record<string, unknown>
 }
 
+export interface ArtifactView {
+  id: string
+  title: string
+  kind: 'pdf' | 'docx' | 'md' | 'txt'
+  source: 'generated' | 'extracted' | 'merged' | 'uploaded'
+  page_count?: number
+  size_bytes?: number
+  meta?: Record<string, unknown>
+  created_at?: string
+  storage_path?: string
+}
+
 export interface ToolResultEvent {
   id: string
   name: string
   ok: boolean
   db: ChunkUsed[]
   web: WebSource[]
+  artifact?: ArtifactView | null
   ms: number
 }
 
@@ -153,6 +166,7 @@ export interface StreamHandlers {
   onToken?: (text: string) => void
   onToolCall?: (call: ToolCallEvent) => void
   onToolResult?: (result: ToolResultEvent) => void
+  onArtifact?: (artifact: ArtifactView) => void
   onDone?: (metadata: AgentDoneMetadata) => void
   onError?: (message: string) => void
 }
@@ -165,6 +179,8 @@ export async function streamQuery(
     token?: string
     webSearch?: boolean
     history?: Array<{ role: string; content: string }>
+    userId?: string
+    sessionId?: string
   },
   legacyOnChunk?: (text: string) => void,
   legacyOnDone?: (metadata: AgentDoneMetadata) => void,
@@ -182,6 +198,8 @@ export async function streamQuery(
       top_k: options?.top_k,
       web_search: options?.webSearch ?? false,
       history: options?.history,
+      user_id: options?.userId,
+      session_id: options?.sessionId,
     }),
   })
 
@@ -232,6 +250,12 @@ export async function streamQuery(
           break
         case 'tool_result':
           handlers?.onToolResult?.(parsed as unknown as ToolResultEvent)
+          if ((parsed as { artifact?: ArtifactView }).artifact) {
+            handlers?.onArtifact?.((parsed as { artifact: ArtifactView }).artifact)
+          }
+          break
+        case 'artifact':
+          handlers?.onArtifact?.(parsed.artifact as ArtifactView)
           break
         case 'sources':
           dbSources = ((parsed.db as ChunkUsed[]) ?? (parsed.chunks_used as ChunkUsed[]) ?? [])
