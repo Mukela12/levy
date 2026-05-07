@@ -102,24 +102,32 @@ export function PdfViewer({ citation, onClose }: PdfViewerProps) {
       const container = containerRef.current
       if (!container || cancelled) return
 
-      // Clear previous render.
-      container.innerHTML = ''
-      const canvas = document.createElement('canvas')
-      const ctx = canvas.getContext('2d')!
-      const cssWidth = Math.min(container.clientWidth, 900) - 24
+      const cssWidth = Math.max(320, Math.min(container.clientWidth, 900) - 24)
       const baseViewport = page.getViewport({ scale: 1 })
       const scale = cssWidth / baseViewport.width
       const viewport = page.getViewport({ scale })
       const dpr = window.devicePixelRatio || 1
-      canvas.width = viewport.width * dpr
-      canvas.height = viewport.height * dpr
+
+      // Recommended pdfjs render path: use the `transform` option for DPI
+      // scaling so we don't have to call ctx.scale ourselves.
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.floor(viewport.width * dpr)
+      canvas.height = Math.floor(viewport.height * dpr)
       canvas.style.width = `${viewport.width}px`
       canvas.style.height = `${viewport.height}px`
       canvas.className = 'rounded-md shadow-[0_8px_32px_-12px_rgba(0,0,0,0.6)]'
-      ctx.scale(dpr, dpr)
-      container.appendChild(canvas)
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
 
-      await page.render({ canvasContext: ctx, viewport }).promise
+      // Replace previous render synchronously, then start the new one.
+      container.replaceChildren(canvas)
+
+      const transform = dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : undefined
+      await page.render({
+        canvasContext: ctx,
+        viewport,
+        ...(transform ? { transform } : {}),
+      } as Parameters<typeof page.render>[0]).promise
     })().catch((e) => {
       if (!cancelled) setError(String((e as Error).message || e))
     })
