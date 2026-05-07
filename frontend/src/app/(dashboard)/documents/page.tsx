@@ -1,177 +1,196 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '@/components/auth/auth-provider'
-import { getDocuments, uploadDocument } from '@/lib/api'
-import { FileText, Loader2, Upload, Search, FolderOpen, ChevronRight, X } from 'lucide-react'
-import type { DocumentInfo } from '@/lib/api'
+import { usePdfViewer } from '@/components/chat/pdf-viewer-context'
+import {
+  attachDocumentToSession,
+  detachDocumentFromSession,
+  listDocumentsForUser,
+  uploadDocument,
+  type DocumentsByVisibility,
+  type LibraryDocument,
+} from '@/lib/api'
+import {
+  BookOpen,
+  ExternalLink,
+  FileText,
+  Loader2,
+  Paperclip,
+  Search,
+  Upload,
+  UserRound,
+  X,
+} from 'lucide-react'
 
-interface FolderDef {
-  name: string
-  filter: (d: DocumentInfo) => boolean
+type Section = 'global' | 'owned'
+
+function formatPages(n?: number): string {
+  if (!n) return '—'
+  return `${n} page${n === 1 ? '' : 's'}`
 }
 
-const folders: FolderDef[] = [
-  { name: 'Case Files', filter: (d: DocumentInfo) => d.title.includes('Contract') || d.title.includes('Client') },
-  { name: 'Legislation', filter: (d: DocumentInfo) => d.title.includes('Act') || d.title.includes('Code') || d.title.includes('Constitution') },
-  { name: 'Other Documents', filter: (_d: DocumentInfo) => true },
-]
+function formatChunks(n?: number): string {
+  if (!n) return '—'
+  return `${n} chunk${n === 1 ? '' : 's'}`
+}
 
-function FolderCard({ name, count, onClick }: { name: string; count: number; onClick: () => void }) {
-  const [isHovered, setIsHovered] = useState(false)
-
+function DocumentRow({
+  doc,
+  onOpen,
+  rightSlot,
+}: {
+  doc: LibraryDocument
+  onOpen: () => void
+  rightSlot?: React.ReactNode
+}) {
   return (
-    <div
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onClick={onClick}
-      className="p-5 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:border-emerald-500/20 cursor-pointer transition-all duration-300"
-    >
-      {/* 3D folder visual on desktop */}
-      <div className="hidden md:flex items-center justify-center mb-4 h-28" style={{ perspective: '600px' }}>
-        <div className="relative w-24 h-20" style={{ transformStyle: 'preserve-3d' }}>
-          {/* Folder back */}
-          <div
-            className="absolute inset-0 rounded-lg bg-emerald-500/10 border border-emerald-500/15"
-            style={{
-              transform: 'rotateX(5deg)',
-              transformOrigin: 'bottom center',
-            }}
-          />
-
-          {/* Document cards fanning out */}
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className="absolute left-3 right-3 h-12 rounded bg-white/[0.04] border border-white/[0.08]"
-              style={{
-                bottom: '8px',
-                transform: isHovered
-                  ? `translateY(${-20 - i * 14}px) rotateX(-2deg) rotateZ(${(i - 1) * 4}deg)`
-                  : `translateY(${-2 - i * 2}px) rotateX(0deg) rotateZ(0deg)`,
-                transition: `transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) ${i * 0.05}s`,
-                transformOrigin: 'bottom center',
-                zIndex: i,
-              }}
-            >
-              <div className="p-1.5">
-                <div className="h-1 w-8 rounded-full bg-white/[0.06]" />
-                <div className="h-1 w-5 rounded-full bg-white/[0.04] mt-1" />
-              </div>
-            </div>
-          ))}
-
-          {/* Folder front flap */}
-          <div
-            className="absolute inset-x-0 bottom-0 h-14 rounded-lg rounded-tl-none bg-emerald-500/15 border border-emerald-500/20"
-            style={{
-              transform: isHovered ? 'rotateX(-35deg)' : 'rotateX(0deg)',
-              transformOrigin: 'bottom center',
-              transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              zIndex: 10,
-            }}
-          />
-
-          {/* Folder tab */}
-          <div
-            className="absolute top-0 left-0 w-10 h-3 rounded-t-md bg-emerald-500/15 border border-emerald-500/20 border-b-0"
-            style={{
-              transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
-              transition: 'transform 0.3s ease',
-            }}
-          />
+    <div className="group flex items-center gap-3 px-3.5 py-3 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:border-emerald-500/15 hover:bg-emerald-500/[0.02] transition-colors">
+      <button
+        type="button"
+        onClick={onOpen}
+        className="flex items-center gap-3 flex-1 min-w-0 text-left"
+      >
+        <span className="flex items-center justify-center size-9 rounded-lg bg-red-500/10 border border-red-500/20 flex-shrink-0">
+          <FileText size={15} className="text-red-400" />
+        </span>
+        <div className="flex-1 min-w-0">
+          <div className="text-[13px] font-medium text-white/85 truncate">{doc.title}</div>
+          <div className="text-[11px] text-white/30 mt-0.5 flex items-center gap-1.5">
+            {doc.year ? <span>{doc.year}</span> : null}
+            {doc.year ? <span className="text-white/15">·</span> : null}
+            <span>{formatPages(doc.pdf_page_count)}</span>
+            <span className="text-white/15">·</span>
+            <span>{formatChunks(doc.total_chunks)}</span>
+          </div>
         </div>
-      </div>
-
-      {/* Mobile: simple icon */}
-      <div className="flex md:hidden items-center gap-3 mb-2">
-        <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-          <FolderOpen size={18} className="text-emerald-400" />
-        </div>
-      </div>
-
-      <h3 className="text-[14px] font-semibold text-white/80">{name}</h3>
-      <p className="text-[12px] text-white/30 mt-0.5">{count} document{count !== 1 ? 's' : ''}</p>
+      </button>
+      <div className="flex items-center gap-2 flex-shrink-0">{rightSlot}</div>
     </div>
   )
 }
 
-function getFileIcon(title: string) {
-  const isPdf = title.toLowerCase().includes('.pdf') || !title.toLowerCase().includes('.doc')
-  return isPdf
-    ? { bg: 'bg-red-500/10 border-red-500/20', text: 'text-red-400', label: 'PDF' }
-    : { bg: 'bg-blue-500/10 border-blue-500/20', text: 'text-blue-400', label: 'DOCX' }
-}
-
 export default function DocumentsPage() {
-  const [documents, setDocuments] = useState<DocumentInfo[]>([])
+  const { user, session } = useAuth()
+  const pdf = usePdfViewer()
+  const [data, setData] = useState<DocumentsByVisibility | null>(null)
   const [loading, setLoading] = useState(true)
-  const [openFolder, setOpenFolder] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const { session } = useAuth()
+  const [section, setSection] = useState<Section>('global')
+  const [query, setQuery] = useState('')
+  const [attaching, setAttaching] = useState<Record<string, boolean>>({})
+  const [recentSessionId, setRecentSessionId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Resolve the most recent chat session so the user can attach uploads to a
+  // thread directly from the documents page. (We don't know which thread is
+  // "active" from this route, so we offer the latest one as the default.)
   useEffect(() => {
-    loadDocuments()
-  }, [])
-
-  async function loadDocuments() {
-    try {
-      const res = await getDocuments(session?.access_token)
-      setDocuments(res.details)
-    } catch {
+    if (!user?.id) return
+    ;(async () => {
       try {
-        const res = await getDocuments()
-        setDocuments(res.details)
+        const { createClient } = await import('@/lib/supabase')
+        const supabase = createClient()
+        const { data } = await supabase
+          .from('chat_sessions')
+          .select('id')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+        if (data && data[0]) setRecentSessionId(data[0].id)
       } catch {
-        setDocuments([])
+        // optional — attach UI just won't show
       }
+    })()
+  }, [user?.id])
+
+  async function reload() {
+    if (!user?.id) {
+      setLoading(false)
+      return
+    }
+    setLoading(true)
+    try {
+      const res = await listDocumentsForUser(user.id, recentSessionId ?? undefined)
+      setData(res)
+    } catch {
+      setData({ global: [], owned: [], attached: [], counts: { global: 0, owned: 0, attached: 0 } })
     } finally {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    reload()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, recentSessionId])
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
     setUploading(true)
     try {
-      await uploadDocument(file, session?.access_token)
-      await loadDocuments()
+      await uploadDocument(file, session?.access_token, user?.id)
+      await reload()
+      setSection('owned')
     } catch {
-      // upload failed silently
+      // surfaced via the loading state for now
     } finally {
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 
-  const filteredDocuments = documents.filter((d) =>
-    d.title.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  async function handleAttachToggle(doc: LibraryDocument) {
+    if (!recentSessionId) return
+    const isAttached = data?.attached.some((d) => d.id === doc.id)
+    setAttaching((prev) => ({ ...prev, [doc.id]: true }))
+    try {
+      if (isAttached) {
+        await detachDocumentFromSession(recentSessionId, doc.id)
+      } else {
+        await attachDocumentToSession(recentSessionId, doc.id)
+      }
+      await reload()
+    } catch {
+      // ignore
+    } finally {
+      setAttaching((prev) => ({ ...prev, [doc.id]: false }))
+    }
+  }
 
-  const currentFolder = openFolder ? folders.find((f) => f.name === openFolder) : null
-  const folderDocuments = currentFolder
-    ? filteredDocuments.filter(currentFolder.filter)
-    : filteredDocuments
+  const visible = useMemo(() => {
+    if (!data) return []
+    const list = section === 'global' ? data.global : data.owned
+    if (!query.trim()) return list
+    const q = query.toLowerCase()
+    return list.filter(
+      (d) => (d.title || '').toLowerCase().includes(q) || (d.short_name || '').toLowerCase().includes(q),
+    )
+  }, [data, section, query])
+
+  const attachedIds = useMemo(
+    () => new Set((data?.attached ?? []).map((d) => d.id)),
+    [data?.attached],
+  )
 
   return (
     <div className="flex-1 overflow-y-auto" style={{ overscrollBehavior: 'none' }}>
-      {/* Header */}
-      <div className="px-6 py-6 flex items-center justify-between">
-        <div>
-          <h1
-            className="text-2xl font-bold text-white/90"
-            style={{ fontFamily: "'Playfair Display', serif" }}
-          >
-            Documents
-          </h1>
-          <p className="text-[12px] text-white/30 mt-1">
-            Zambian legal documents indexed in the knowledge base
-          </p>
-        </div>
-        <div>
+      <div className="px-6 py-6 max-w-5xl mx-auto w-full">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 mb-6">
+          <div>
+            <h1
+              className="text-2xl font-bold text-white/90 tracking-tight"
+              style={{ fontFamily: "'Playfair Display', serif" }}
+            >
+              Documents
+            </h1>
+            <p className="text-[12px] text-white/35 mt-1">
+              The curated Zambian-law library is always available. Upload your own to make them searchable
+              for you, or attach them to a thread for one-off context.
+            </p>
+          </div>
           <input
             ref={fileInputRef}
             type="file"
@@ -181,117 +200,191 @@ export default function DocumentsPage() {
           />
           <button
             onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[13px] font-medium text-emerald-400 hover:bg-emerald-500/15 transition-colors disabled:opacity-50"
+            disabled={uploading || !user}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-[13px] font-medium text-white transition-all disabled:opacity-50"
+            style={{
+              background: 'linear-gradient(180deg, rgb(16 185 129) 0%, rgb(5 150 105) 100%)',
+              boxShadow:
+                '0 1px 0 0 rgba(255,255,255,0.18) inset, 0 0 0 1px rgba(16,185,129,0.45), 0 8px 20px -8px rgba(16,185,129,0.55)',
+            }}
           >
-            {uploading ? (
-              <Loader2 size={14} className="animate-spin" />
-            ) : (
-              <Upload size={14} />
-            )}
-            {uploading ? 'Uploading...' : 'Upload'}
+            {uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+            <span>{uploading ? 'Uploading…' : 'Upload PDF'}</span>
           </button>
         </div>
-      </div>
 
-      <div className="px-6 pb-8">
-        {/* Search */}
-        <div className="relative max-w-md mb-6">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20" />
-          <input
-            type="text"
-            placeholder="Search documents..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-[13px] text-white/80 placeholder:text-white/20 focus:outline-none focus:border-emerald-500/30 transition-colors"
+        {/* Section tabs + search */}
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
+          <SectionTab
+            active={section === 'global'}
+            onClick={() => setSection('global')}
+            Icon={BookOpen}
+            label="Global library"
+            count={data?.counts.global}
           />
+          <SectionTab
+            active={section === 'owned'}
+            onClick={() => setSection('owned')}
+            Icon={UserRound}
+            label="My uploads"
+            count={data?.counts.owned}
+          />
+          <div className="flex-1 min-w-[200px] max-w-sm relative">
+            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/25" />
+            <input
+              type="text"
+              placeholder="Filter by name…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] text-[12.5px] text-white/85 placeholder:text-white/20 focus:outline-none focus:border-emerald-500/30 transition-colors"
+            />
+          </div>
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-6 h-6 text-emerald-400 animate-spin" />
-          </div>
-        ) : (
-          <>
-            {/* Breadcrumb when inside a folder */}
-            {openFolder && (
-              <div className="flex items-center gap-1.5 mb-5 text-[12px]">
-                <button
-                  onClick={() => setOpenFolder(null)}
-                  className="text-white/30 hover:text-emerald-400 transition-colors"
-                >
-                  Documents
-                </button>
-                <ChevronRight size={10} className="text-white/15" />
-                <span className="text-white/60">{openFolder}</span>
-                <button
-                  onClick={() => setOpenFolder(null)}
-                  className="ml-2 p-0.5 rounded hover:bg-white/[0.05] text-white/20 hover:text-white/40 transition-colors"
-                >
-                  <X size={12} />
-                </button>
-              </div>
-            )}
-
-            {/* Folder grid (hidden when inside a folder) */}
-            {!openFolder && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
-                {folders.map((folder) => {
-                  const count = filteredDocuments.filter(folder.filter).length
-                  return (
-                    <FolderCard
-                      key={folder.name}
-                      name={folder.name}
-                      count={count}
-                      onClick={() => setOpenFolder(folder.name)}
-                    />
-                  )
-                })}
-              </div>
-            )}
-
-            {/* Document table */}
-            <div>
-              <h2 className="text-[11px] uppercase tracking-widest text-white/25 font-semibold mb-3">
-                {openFolder ? openFolder : 'All Documents'}
-              </h2>
-
-              {folderDocuments.length === 0 ? (
-                <p className="text-[13px] text-white/30 py-8 text-center">No documents found.</p>
-              ) : (
-                <div className="space-y-2">
-                  {folderDocuments.map((doc, i) => {
-                    const fileStyle = getFileIcon(doc.title)
-                    return (
-                      <div
-                        key={i}
-                        className="flex items-center gap-4 p-4 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:border-white/[0.1] transition-colors"
-                      >
-                        <div
-                          className={`w-10 h-10 rounded-lg ${fileStyle.bg} border flex items-center justify-center flex-shrink-0`}
-                        >
-                          <FileText size={16} className={fileStyle.text} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[13px] font-medium text-white/80 truncate">
-                            {doc.title}
-                          </p>
-                          <p className="text-[11px] text-white/25 mt-0.5">
-                            {doc.year ? `${doc.year}` : 'N/A'} &middot; {doc.total_sections} sections &middot; {doc.total_chunks} chunks
-                          </p>
-                        </div>
-                        <span className="text-[10px] px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 font-medium flex-shrink-0 border border-emerald-500/15">
-                          Indexed
-                        </span>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
+        {/* This-thread strip */}
+        {recentSessionId && (data?.attached.length ?? 0) > 0 && (
+          <div className="mb-5 rounded-xl px-4 py-3 border border-emerald-500/20 bg-emerald-500/[0.04]">
+            <div className="text-[10.5px] font-bold tracking-[0.18em] uppercase text-emerald-400 mb-2">
+              Attached to your most recent thread
             </div>
-          </>
+            <div className="flex flex-wrap gap-2">
+              {data!.attached.map((d) => (
+                <button
+                  key={d.id}
+                  type="button"
+                  onClick={() => handleAttachToggle(d)}
+                  disabled={!!attaching[d.id]}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[11.5px] text-emerald-100/90 hover:bg-emerald-500/20 transition-colors"
+                >
+                  <Paperclip size={11} />
+                  <span className="max-w-[180px] truncate">{d.title}</span>
+                  {attaching[d.id] ? <Loader2 size={11} className="animate-spin" /> : <X size={11} />}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Body */}
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="size-5 text-emerald-400 animate-spin" />
+          </div>
+        ) : visible.length === 0 ? (
+          <EmptyState section={section} hasUser={!!user} />
+        ) : (
+          <div className="space-y-1.5">
+            {visible.map((doc) => (
+              <DocumentRow
+                key={doc.id}
+                doc={doc}
+                onOpen={() =>
+                  pdf.open({
+                    documentId: doc.id,
+                    actName: doc.short_name || doc.title,
+                    pageStart: 1,
+                  })
+                }
+                rightSlot={
+                  <>
+                    {recentSessionId && (
+                      <button
+                        type="button"
+                        onClick={() => handleAttachToggle(doc)}
+                        disabled={!!attaching[doc.id]}
+                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] transition-colors ${
+                          attachedIds.has(doc.id)
+                            ? 'bg-emerald-500/15 border border-emerald-500/25 text-emerald-400'
+                            : 'bg-white/[0.04] border border-white/[0.06] text-white/55 hover:text-white/85 hover:border-white/[0.12]'
+                        }`}
+                      >
+                        {attaching[doc.id] ? (
+                          <Loader2 size={11} className="animate-spin" />
+                        ) : (
+                          <Paperclip size={11} />
+                        )}
+                        <span>{attachedIds.has(doc.id) ? 'Attached' : 'Attach'}</span>
+                      </button>
+                    )}
+                    {doc.canonical_url && (
+                      <a
+                        href={doc.canonical_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-white/25 hover:text-white/60 transition-colors p-1"
+                        title="Open canonical source"
+                      >
+                        <ExternalLink size={13} />
+                      </a>
+                    )}
+                  </>
+                }
+              />
+            ))}
+          </div>
         )}
       </div>
+    </div>
+  )
+}
+
+function SectionTab({
+  active,
+  onClick,
+  Icon,
+  label,
+  count,
+}: {
+  active: boolean
+  onClick: () => void
+  Icon: typeof BookOpen
+  label: string
+  count?: number
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12.5px] transition-colors border ${
+        active
+          ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-200'
+          : 'bg-white/[0.02] border-white/[0.06] text-white/55 hover:text-white/85 hover:border-white/[0.12]'
+      }`}
+    >
+      <Icon size={13} />
+      <span>{label}</span>
+      {typeof count === 'number' && (
+        <span className={`text-[10px] ${active ? 'text-emerald-300/80' : 'text-white/30'}`}>
+          {count}
+        </span>
+      )}
+    </button>
+  )
+}
+
+function EmptyState({ section, hasUser }: { section: Section; hasUser: boolean }) {
+  if (!hasUser) {
+    return (
+      <p className="text-[12.5px] text-white/35 py-12 text-center">
+        Sign in to upload your own documents.
+      </p>
+    )
+  }
+  if (section === 'global') {
+    return (
+      <p className="text-[12.5px] text-white/35 py-12 text-center">
+        The global library is empty.
+      </p>
+    )
+  }
+  return (
+    <div className="py-12 text-center text-white/40">
+      <Upload size={20} className="mx-auto mb-2.5 text-white/25" />
+      <p className="text-[13px]">You haven&apos;t uploaded any documents yet.</p>
+      <p className="text-[11.5px] text-white/25 mt-1">
+        Upload a PDF and it becomes searchable for you across all chats.
+      </p>
     </div>
   )
 }

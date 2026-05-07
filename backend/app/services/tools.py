@@ -78,12 +78,26 @@ class ToolCallRecord:
 # ─── search_corpus ───────────────────────────────────────────────────────────
 
 
-async def _search_corpus(query: str, top_k: int = 5, threshold: float | None = None) -> dict:
-    """Vector search across the ingested Zambian-law corpus."""
+async def _search_corpus(
+    query: str,
+    top_k: int = 5,
+    threshold: float | None = None,
+    *,
+    caller_user_id: str | None = None,
+    attached_doc_ids: list[str] | None = None,
+) -> dict:
+    """Vector search across the ingested Zambian-law corpus, scoped by caller."""
     settings = get_settings()
     threshold = threshold if threshold is not None else settings.similarity_threshold
     embedding = await asyncio.to_thread(get_query_embedding, query)
-    chunks = await asyncio.to_thread(search_chunks, embedding, top_k=top_k, threshold=threshold)
+    chunks = await asyncio.to_thread(
+        search_chunks,
+        embedding,
+        top_k=top_k,
+        threshold=threshold,
+        caller_user_id=caller_user_id,
+        attached_doc_ids=attached_doc_ids,
+    )
 
     results = []
     db_sources = []
@@ -250,6 +264,7 @@ def build_tool_registry(
     web_enabled: bool,
     owner_id: str | None = None,
     session_id: str | None = None,
+    attached_doc_ids: list[str] | None = None,
 ) -> dict[str, ToolDefinition]:
     """
     Build the set of tools available to the agent for a given turn.
@@ -263,6 +278,15 @@ def build_tool_registry(
     write to the user's `artifacts` table so they appear in the chat as cards
     and persist across reloads.
     """
+
+    # Adapter: bind caller scope into search_corpus so the agent automatically
+    # sees: global library + the user's uploads + this thread's attachments.
+    async def _scoped_search(query, top_k=5, threshold=None):
+        return await _search_corpus(
+            query, top_k=top_k, threshold=threshold,
+            caller_user_id=owner_id,
+            attached_doc_ids=attached_doc_ids,
+        )
 
     # Adapter: bind owner/session into PDF tool handlers so the agent doesn't
     # have to thread them in tool inputs.
@@ -366,10 +390,12 @@ def build_tool_registry(
         "search_corpus": ToolDefinition(
             name="search_corpus",
             description=(
-                "Semantic search across the ingested Zambian-law corpus (Acts, "
-                "regulations, statutes). Returns matching chunks with their Act "
-                "name, section/part numbers, and source page numbers. Always "
-                "prefer this over web search for statutory questions."
+                "Semantic search across the legal corpus visible to this user: "
+                "the curated global library of Zambian Acts + the user's own "
+                "uploaded documents + any documents attached to this chat "
+                "thread. Returns matching chunks with their Act name, section/"
+                "part numbers, and source page numbers. Always prefer this "
+                "over web search for statutory questions."
             ),
             input_schema={
                 "type": "object",
@@ -389,7 +415,7 @@ def build_tool_registry(
                 },
                 "required": ["query"],
             },
-            handler=_search_corpus,
+            handler=_scoped_search,
         ),
     }
 

@@ -9,8 +9,9 @@ import { ChatMessage, ThinkingGlow } from '@/components/chat/chat-message'
 import { BriefPanel } from '@/components/chat/brief-panel'
 import { useRegisterBrief } from '@/components/chat/brief-context'
 import { usePdfViewer } from '@/components/chat/pdf-viewer-context'
+import { useSessionAttachments } from '@/components/chat/use-session-attachments'
 import type { ToolCallView } from '@/components/chat/tool-call-card'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Paperclip, X } from 'lucide-react'
 import type { ArtifactView, ChunkUsed, WebSource } from '@/lib/api'
 
 interface Message {
@@ -32,6 +33,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { user, session } = useAuth()
   const pdf = usePdfViewer()
+  const attachments = useSessionAttachments(id)
 
   // Pass the raw messages state (stable reference). Mapping here creates a new
   // array every render and would render-loop with the provider's setState.
@@ -118,6 +120,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
           webSearch,
           userId: user?.id,
           sessionId: id,
+          attachedDocIds: attachments.attachedIds,
         },
         undefined,
         undefined,
@@ -268,6 +271,23 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
             }}
           >
             <div className="pointer-events-auto max-w-3xl mx-auto">
+              {attachments.attached.length > 0 && (
+                <div className="mb-2 flex flex-wrap gap-1.5 px-1">
+                  {attachments.attached.map((d) => (
+                    <button
+                      key={d.id}
+                      type="button"
+                      onClick={() => attachments.detach(d.id)}
+                      className="group flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-100/85 hover:bg-emerald-500/20 transition-colors"
+                      aria-label={`Detach ${d.title}`}
+                    >
+                      <Paperclip size={10} className="text-emerald-400/80" />
+                      <span className="max-w-[180px] truncate">{d.title}</span>
+                      <X size={10} className="text-emerald-400/40 group-hover:text-emerald-400/80" />
+                    </button>
+                  ))}
+                </div>
+              )}
               <ChatInput
                 onSend={handleSend}
                 disabled={loading}

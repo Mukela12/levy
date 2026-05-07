@@ -85,15 +85,34 @@ async def run_agent(
     history: list[dict] | None = None,
     owner_id: str | None = None,
     session_id: str | None = None,
+    attached_doc_ids: list[str] | None = None,
 ) -> AsyncIterator[dict]:
     settings = get_settings()
     model_name = model or DEFAULT_MODEL
     client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
 
+    # If a session is given, fetch its currently-attached docs from the DB so
+    # the model's corpus search automatically sees them. The frontend can also
+    # pass attached_doc_ids explicitly to short-circuit the lookup.
+    if session_id and attached_doc_ids is None:
+        try:
+            from ..db.supabase import get_db
+            res = (
+                get_db()
+                .table("chat_session_documents")
+                .select("document_id")
+                .eq("session_id", session_id)
+                .execute()
+            )
+            attached_doc_ids = [r["document_id"] for r in (res.data or [])]
+        except Exception:
+            attached_doc_ids = []
+
     registry = build_tool_registry(
         web_enabled=web_enabled,
         owner_id=owner_id,
         session_id=session_id,
+        attached_doc_ids=attached_doc_ids,
     )
     tool_schemas = to_anthropic_schema(registry)
 

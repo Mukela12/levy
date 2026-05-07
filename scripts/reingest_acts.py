@@ -118,7 +118,17 @@ def page_count(pdf_bytes: bytes) -> int:
         return len(pdf.pages)
 
 
-def db_lookup_doc(db, db_title: str) -> dict | None:
+def db_lookup_doc(db, *, db_title: str, pdf_hash: str | None = None) -> dict | None:
+    """
+    Find an existing legal_documents row to update. Prefer matching by
+    pdf_hash (stable across renames), fall back to the original db_title.
+    Avoids the duplicate-on-rerun bug where the script renamed the title and
+    a second run no longer matched.
+    """
+    if pdf_hash:
+        res = db.table("legal_documents").select("*").eq("pdf_hash", pdf_hash).limit(1).execute()
+        if res.data:
+            return res.data[0]
     res = db.table("legal_documents").select("*").eq("title", db_title).limit(1).execute()
     return res.data[0] if res.data else None
 
@@ -229,7 +239,7 @@ def main():
 
         # Find existing doc to keep its id (so chat citations referencing
         # document.title -> same id).
-        existing = db_lookup_doc(db, act["db_title"])
+        existing = db_lookup_doc(db, db_title=act["db_title"], pdf_hash=sha)
         if existing is None:
             ins = db.table("legal_documents").insert({
                 "title": act["label"],

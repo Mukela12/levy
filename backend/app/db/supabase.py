@@ -43,15 +43,34 @@ def insert_chunks(chunks: list[dict]) -> list[dict]:
     return all_results
 
 
-def search_chunks(query_embedding: list[float], top_k: int = 5, threshold: float = 0.7) -> list[dict]:
-    """Vector similarity search using pgvector via Supabase RPC."""
+def search_chunks(
+    query_embedding: list[float],
+    top_k: int = 5,
+    threshold: float = 0.7,
+    *,
+    caller_user_id: str | None = None,
+    attached_doc_ids: list[str] | None = None,
+) -> list[dict]:
+    """
+    Vector similarity search via Supabase RPC.
+
+    Visibility model:
+      - Global library (is_global=true) — always available.
+      - User uploads (owner_id = caller_user_id) — only that user's.
+      - Thread-attached (document.id in attached_doc_ids) — for the current thread.
+
+    When neither caller_user_id nor attached_doc_ids is provided, the RPC
+    behaves identically to the old global-only search.
+    """
     db = get_db()
     result = db.rpc(
-        "search_legal_chunks",
+        "search_legal_chunks_scoped",
         {
             "query_embedding": query_embedding,
             "match_count": top_k,
             "match_threshold": threshold,
+            "caller_user_id": caller_user_id,
+            "attached_doc_ids": attached_doc_ids or [],
         },
     ).execute()
     return result.data

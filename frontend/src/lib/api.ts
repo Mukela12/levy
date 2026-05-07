@@ -50,6 +50,64 @@ interface DocumentsResponse {
   details: DocumentInfo[]
 }
 
+export interface LibraryDocument {
+  id: string
+  title: string
+  short_name?: string
+  year?: number | null
+  document_type?: string
+  total_chunks?: number
+  pdf_page_count?: number
+  pdf_size_bytes?: number
+  pdf_storage_path?: string | null
+  canonical_url?: string | null
+  is_global: boolean
+  owner_id?: string | null
+  created_at?: string
+  attached_at?: string
+}
+
+export interface DocumentsByVisibility {
+  global: LibraryDocument[]
+  owned: LibraryDocument[]
+  attached: LibraryDocument[]
+  counts: { global: number; owned: number; attached: number }
+}
+
+export async function listDocumentsForUser(
+  userId?: string,
+  sessionId?: string,
+): Promise<DocumentsByVisibility> {
+  const params = new URLSearchParams()
+  if (userId) params.set('user_id', userId)
+  if (sessionId) params.set('session_id', sessionId)
+  const r = await fetch(`${API_URL}/api/documents?${params.toString()}`)
+  if (!r.ok) throw new Error(`documents ${r.status}`)
+  return r.json()
+}
+
+export async function attachDocumentToSession(sessionId: string, documentId: string): Promise<void> {
+  const r = await fetch(`${API_URL}/api/sessions/${sessionId}/documents/attach`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ document_id: documentId }),
+  })
+  if (!r.ok) throw new Error(`attach ${r.status}`)
+}
+
+export async function detachDocumentFromSession(sessionId: string, documentId: string): Promise<void> {
+  const r = await fetch(`${API_URL}/api/sessions/${sessionId}/documents/${documentId}`, {
+    method: 'DELETE',
+  })
+  if (!r.ok) throw new Error(`detach ${r.status}`)
+}
+
+export async function listSessionDocuments(sessionId: string): Promise<{ documents: LibraryDocument[] }> {
+  const r = await fetch(`${API_URL}/api/sessions/${sessionId}/documents`)
+  if (!r.ok) throw new Error(`session-docs ${r.status}`)
+  return r.json()
+}
+
 export async function sendQuery(
   question: string,
   options?: { model?: string; top_k?: number; threshold?: number; token?: string }
@@ -100,14 +158,17 @@ export async function getDocuments(token?: string): Promise<DocumentsResponse> {
   return res.json()
 }
 
-export async function uploadDocument(file: File, token?: string): Promise<{ status: string; document_id: string }> {
+export async function uploadDocument(file: File, token?: string, userId?: string): Promise<{ status: string; document_id: string }> {
   const headers: Record<string, string> = {}
   if (token) headers['Authorization'] = `Bearer ${token}`
 
   const formData = new FormData()
   formData.append('file', file)
 
-  const res = await fetch(`${API_URL}/api/documents/upload`, {
+  const url = userId
+    ? `${API_URL}/api/documents/upload?user_id=${encodeURIComponent(userId)}`
+    : `${API_URL}/api/documents/upload`
+  const res = await fetch(url, {
     method: 'POST',
     headers,
     body: formData,
@@ -181,6 +242,7 @@ export async function streamQuery(
     history?: Array<{ role: string; content: string }>
     userId?: string
     sessionId?: string
+    attachedDocIds?: string[]
   },
   legacyOnChunk?: (text: string) => void,
   legacyOnDone?: (metadata: AgentDoneMetadata) => void,
@@ -200,6 +262,7 @@ export async function streamQuery(
       history: options?.history,
       user_id: options?.userId,
       session_id: options?.sessionId,
+      attached_doc_ids: options?.attachedDocIds,
     }),
   })
 

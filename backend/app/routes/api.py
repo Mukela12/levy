@@ -39,6 +39,7 @@ class ChatRequest(BaseModel):
     history: list[dict] | None = None
     user_id: str | None = None
     session_id: str | None = None
+    attached_doc_ids: list[str] | None = None
 
 
 class SearchRequest(BaseModel):
@@ -122,6 +123,7 @@ async def chat_stream(request: ChatRequest):
             history=request.history,
             owner_id=request.user_id,
             session_id=request.session_id,
+            attached_doc_ids=request.attached_doc_ids,
         ):
             # The pre-agent client expects `chunks_used` on the sources event.
             if event.get("type") == "sources":
@@ -273,17 +275,126 @@ def get_document_by_title(title: str):
 
 
 @router.get("/documents")
-def list_documents():
-    """List all ingested documents and their stats."""
+def list_documents(user_id: str | None = None, session_id: str | None = None):
+    """
+    List documents visible to the caller, grouped by visibility:
+      - global   : the curated Zambian-law library
+      - owned    : documents this user uploaded
+      - attached : documents attached to the active chat session
+
+    Pass `user_id` to populate `owned` + `attached`. Without it, only `global`
+    is returned (used for public/unauthenticated listing).
+    """
+    from ..db.supabase import get_db
+
+    db = get_db()
+
+    cols = (
+        "id, title, short_name, year, document_type, total_chunks, "
+        "pdf_page_count, pdf_size_bytes, pdf_storage_path, canonical_url, "
+        "is_global, owner_id, created_at"
+    )
+
+    global_docs = (
+        db.table("legal_documents").select(cols).eq("is_global", True)
+        .order("title").execute().data or []
+    )
+
+    owned: list[dict] = []
+    if user_id:
+        owned = (
+            db.table("legal_documents").select(cols).eq("owner_id", user_id)
+            .order("created_at", desc=True).execute().data or []
+        )
+
+    attached: list[dict] = []
+    if session_id:
+        ids_res = (
+            db.table("chat_session_documents").select("document_id")
+            .eq("session_id", session_id).execute()
+        )
+        ids = [r["document_id"] for r in (ids_res.data or [])]
+        if ids:
+            attached = (
+                db.table("legal_documents").select(cols).in_("id", ids)
+                .order("title").execute().data or []
+            )
+
+    return {
+        "global": global_docs,
+        "owned": owned,
+        "attached": attached,
+        "counts": {
+            "global": len(global_docs),
+            "owned": len(owned),
+            "attached": len(attached),
+        },
+    }
+
+
+# ─── Per-thread document attachment ──────────────────────────────────────────
+
+
+class AttachDocRequest(BaseModel):
+    document_id: str
+
+
+@router.get("/sessions/{session_id}/documents")
+def list_session_documents(session_id: str):
+    """Documents currently attached to a chat session."""
+    from ..db.supabase import get_db
+    db = get_db()
+    ids_res = (
+        db.table("chat_session_documents").select("document_id, attached_at")
+        .eq("session_id", session_id).execute()
+    )
+    rows = ids_res.data or []
+    if not rows:
+        return {"documents": []}
+    ids = [r["document_id"] for r in rows]
+    docs = (
+        db.table("legal_documents")
+        .select("id, title, short_name, total_chunks, pdf_page_count, owner_id, is_global")
+        .in_("id", ids).execute().data or []
+    )
+    by_id = {d["id"]: d for d in docs}
+    return {
+        "documents": [
+            {**by_id[r["document_id"]], "attached_at": r["attached_at"]}
+            for r in rows if r["document_id"] in by_id
+        ],
+    }
+
+
+@router.post("/sessions/{session_id}/documents/attach")
+def attach_document(session_id: str, request: AttachDocRequest):
+    """Attach a document to a chat session so search_corpus can see it."""
+    from ..db.supabase import get_db
+    db = get_db()
+    # Idempotent — primary key is (session_id, document_id)
     try:
-        return rag.get_stats()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        db.table("chat_session_documents").upsert(
+            {"session_id": session_id, "document_id": request.document_id},
+        ).execute()
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=400, detail=str(e))
+    return {"status": "ok", "session_id": session_id, "document_id": request.document_id}
+
+
+@router.delete("/sessions/{session_id}/documents/{document_id}")
+def detach_document(session_id: str, document_id: str):
+    """Remove a document attachment from a chat session."""
+    from ..db.supabase import get_db
+    db = get_db()
+    db.table("chat_session_documents").delete().eq("session_id", session_id).eq(
+        "document_id", document_id
+    ).execute()
+    return {"status": "ok"}
 
 
 @router.post("/documents/upload")
-async def upload_document(file: UploadFile = File(...)):
-    """Upload and ingest a PDF document."""
+async def upload_document(file: UploadFile = File(...), user_id: str | None = None):
+    """Upload and ingest a PDF document. Stamps owner_id when provided."""
     if not file.filename or not file.filename.lower().endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Only PDF files are supported")
 
@@ -296,6 +407,20 @@ async def upload_document(file: UploadFile = File(...)):
 
         # Run ingestion pipeline
         result = ingest_pdf(tmp_path)
+
+        # Stamp ownership + non-global on user uploads.
+        doc = (result or {}).get("document") or {}
+        doc_id = doc.get("id")
+        if doc_id:
+            from ..db.supabase import get_db
+            patch = {"is_global": False}
+            if user_id:
+                patch["owner_id"] = user_id
+            try:
+                get_db().table("legal_documents").update(patch).eq("id", doc_id).execute()
+            except Exception:
+                # Non-fatal: ingestion succeeded, ownership stamp didn't.
+                pass
 
         # Clean up
         os.unlink(tmp_path)
