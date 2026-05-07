@@ -275,15 +275,19 @@ def get_document_by_title(title: str):
 
 
 @router.get("/documents")
-def list_documents(user_id: str | None = None, session_id: str | None = None):
+def list_documents(
+    user_id: str | None = None,
+    session_id: str | None = None,
+    folder_id: str | None = None,
+):
     """
-    List documents visible to the caller, grouped by visibility:
-      - global   : the curated Zambian-law library
-      - owned    : documents this user uploaded
-      - attached : documents attached to the active chat session
+    List documents visible to the caller.
 
-    Pass `user_id` to populate `owned` + `attached`. Without it, only `global`
-    is returned (used for public/unauthenticated listing).
+    - `global`   : the curated Zambian-law library (always available)
+    - `owned`    : documents this user uploaded; if `folder_id` is given,
+                   filtered to that folder. Pass `folder_id="unfiled"` to get
+                   the user's documents that are not in any folder.
+    - `attached` : documents attached to the active chat session
     """
     from ..db.supabase import get_db
 
@@ -292,7 +296,7 @@ def list_documents(user_id: str | None = None, session_id: str | None = None):
     cols = (
         "id, title, short_name, year, document_type, total_chunks, "
         "pdf_page_count, pdf_size_bytes, pdf_storage_path, canonical_url, "
-        "is_global, owner_id, created_at"
+        "is_global, owner_id, folder_id, created_at"
     )
 
     global_docs = (
@@ -302,10 +306,12 @@ def list_documents(user_id: str | None = None, session_id: str | None = None):
 
     owned: list[dict] = []
     if user_id:
-        owned = (
-            db.table("legal_documents").select(cols).eq("owner_id", user_id)
-            .order("created_at", desc=True).execute().data or []
-        )
+        q = db.table("legal_documents").select(cols).eq("owner_id", user_id)
+        if folder_id == "unfiled":
+            q = q.is_("folder_id", "null")
+        elif folder_id:
+            q = q.eq("folder_id", folder_id)
+        owned = q.order("created_at", desc=True).execute().data or []
 
     attached: list[dict] = []
     if session_id:
@@ -330,6 +336,108 @@ def list_documents(user_id: str | None = None, session_id: str | None = None):
             "attached": len(attached),
         },
     }
+
+
+# ─── Folders (user-created groupings of uploaded documents) ──────────────────
+
+
+class CreateFolderRequest(BaseModel):
+    user_id: str
+    name: str
+
+
+class RenameFolderRequest(BaseModel):
+    name: str
+
+
+class MoveDocumentRequest(BaseModel):
+    folder_id: str | None = None  # null = remove from any folder
+
+
+@router.get("/folders")
+def list_folders(user_id: str):
+    """Return the user's folders + a per-folder document count."""
+    from ..db.supabase import get_db
+    db = get_db()
+    folders = (
+        db.table("document_folders").select("id, name, created_at")
+        .eq("owner_id", user_id).order("created_at", desc=False).execute().data or []
+    )
+    # Count user docs per folder, plus an "unfiled" count for ones with folder_id null.
+    docs = (
+        db.table("legal_documents").select("id, folder_id").eq("owner_id", user_id)
+        .execute().data or []
+    )
+    counts: dict[str, int] = {}
+    unfiled = 0
+    for d in docs:
+        fid = d.get("folder_id")
+        if fid is None:
+            unfiled += 1
+        else:
+            counts[fid] = counts.get(fid, 0) + 1
+    return {
+        "folders": [
+            {**f, "doc_count": counts.get(f["id"], 0)} for f in folders
+        ],
+        "unfiled_count": unfiled,
+    }
+
+
+@router.post("/folders")
+def create_folder(request: CreateFolderRequest):
+    from ..db.supabase import get_db
+    db = get_db()
+    name = request.name.strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="name required")
+    try:
+        row = db.table("document_folders").insert(
+            {"owner_id": request.user_id, "name": name}
+        ).execute()
+    except Exception as e:  # noqa: BLE001
+        # Likely unique-name collision
+        raise HTTPException(status_code=409, detail=str(e))
+    return row.data[0] if row.data else {"status": "ok"}
+
+
+@router.patch("/folders/{folder_id}")
+def rename_folder(folder_id: str, request: RenameFolderRequest):
+    from ..db.supabase import get_db
+    name = request.name.strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="name required")
+    db = get_db()
+    db.table("document_folders").update(
+        {"name": name, "updated_at": "now()"}
+    ).eq("id", folder_id).execute()
+    return {"status": "ok"}
+
+
+@router.delete("/folders/{folder_id}")
+def delete_folder(folder_id: str, cascade: bool = False):
+    """Delete a folder. Documents inside are unfiled (folder_id=null), not removed,
+    unless cascade=true (which deletes their chunks + storage too — destructive)."""
+    from ..db.supabase import get_db
+    db = get_db()
+    if cascade:
+        # Delete all docs in the folder; chunks cascade via FK; PDFs in storage
+        # are NOT auto-cleaned here (leftover storage objects can be swept
+        # later in Phase 6 polish).
+        db.table("legal_documents").delete().eq("folder_id", folder_id).execute()
+    else:
+        db.table("legal_documents").update({"folder_id": None}).eq("folder_id", folder_id).execute()
+    db.table("document_folders").delete().eq("id", folder_id).execute()
+    return {"status": "ok", "cascade": cascade}
+
+
+@router.patch("/documents/{document_id}/folder")
+def move_document_to_folder(document_id: str, request: MoveDocumentRequest):
+    """Move a user-owned document into a folder (or clear by sending null)."""
+    from ..db.supabase import get_db
+    db = get_db()
+    db.table("legal_documents").update({"folder_id": request.folder_id}).eq("id", document_id).execute()
+    return {"status": "ok", "folder_id": request.folder_id}
 
 
 # ─── Per-thread document attachment ──────────────────────────────────────────
@@ -393,8 +501,12 @@ def detach_document(session_id: str, document_id: str):
 
 
 @router.post("/documents/upload")
-async def upload_document(file: UploadFile = File(...), user_id: str | None = None):
-    """Upload and ingest a PDF document. Stamps owner_id when provided."""
+async def upload_document(
+    file: UploadFile = File(...),
+    user_id: str | None = None,
+    folder_id: str | None = None,
+):
+    """Upload and ingest a PDF document. Stamps owner_id and (optionally) folder_id."""
     if not file.filename or not file.filename.lower().endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Only PDF files are supported")
 
@@ -413,9 +525,11 @@ async def upload_document(file: UploadFile = File(...), user_id: str | None = No
         doc_id = doc.get("id")
         if doc_id:
             from ..db.supabase import get_db
-            patch = {"is_global": False}
+            patch: dict = {"is_global": False}
             if user_id:
                 patch["owner_id"] = user_id
+            if folder_id:
+                patch["folder_id"] = folder_id
             try:
                 get_db().table("legal_documents").update(patch).eq("id", doc_id).execute()
             except Exception:

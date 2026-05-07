@@ -63,6 +63,7 @@ export interface LibraryDocument {
   canonical_url?: string | null
   is_global: boolean
   owner_id?: string | null
+  folder_id?: string | null
   created_at?: string
   attached_at?: string
 }
@@ -77,10 +78,12 @@ export interface DocumentsByVisibility {
 export async function listDocumentsForUser(
   userId?: string,
   sessionId?: string,
+  folderId?: string | null,
 ): Promise<DocumentsByVisibility> {
   const params = new URLSearchParams()
   if (userId) params.set('user_id', userId)
   if (sessionId) params.set('session_id', sessionId)
+  if (folderId) params.set('folder_id', folderId)
   const r = await fetch(`${API_URL}/api/documents?${params.toString()}`)
   if (!r.ok) throw new Error(`documents ${r.status}`)
   return r.json()
@@ -106,6 +109,54 @@ export async function listSessionDocuments(sessionId: string): Promise<{ documen
   const r = await fetch(`${API_URL}/api/sessions/${sessionId}/documents`)
   if (!r.ok) throw new Error(`session-docs ${r.status}`)
   return r.json()
+}
+
+// ─── Folders ────────────────────────────────────────────────────────────────
+
+export interface FolderRow {
+  id: string
+  name: string
+  created_at?: string
+  doc_count: number
+}
+
+export async function listFolders(userId: string): Promise<{ folders: FolderRow[]; unfiled_count: number }> {
+  const r = await fetch(`${API_URL}/api/folders?user_id=${encodeURIComponent(userId)}`)
+  if (!r.ok) throw new Error(`folders ${r.status}`)
+  return r.json()
+}
+
+export async function createFolder(userId: string, name: string): Promise<FolderRow> {
+  const r = await fetch(`${API_URL}/api/folders`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_id: userId, name }),
+  })
+  if (!r.ok) throw new Error((await r.text()) || `create folder ${r.status}`)
+  return r.json()
+}
+
+export async function renameFolder(folderId: string, name: string): Promise<void> {
+  const r = await fetch(`${API_URL}/api/folders/${folderId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  })
+  if (!r.ok) throw new Error(`rename ${r.status}`)
+}
+
+export async function deleteFolder(folderId: string, cascade = false): Promise<void> {
+  const r = await fetch(`${API_URL}/api/folders/${folderId}?cascade=${cascade}`, { method: 'DELETE' })
+  if (!r.ok) throw new Error(`delete ${r.status}`)
+}
+
+export async function moveDocumentToFolder(documentId: string, folderId: string | null): Promise<void> {
+  const r = await fetch(`${API_URL}/api/documents/${documentId}/folder`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ folder_id: folderId }),
+  })
+  if (!r.ok) throw new Error(`move ${r.status}`)
 }
 
 export async function sendQuery(
@@ -158,16 +209,23 @@ export async function getDocuments(token?: string): Promise<DocumentsResponse> {
   return res.json()
 }
 
-export async function uploadDocument(file: File, token?: string, userId?: string): Promise<{ status: string; document_id: string }> {
+export async function uploadDocument(
+  file: File,
+  token?: string,
+  userId?: string,
+  folderId?: string | null,
+): Promise<{ status: string; document_id: string }> {
   const headers: Record<string, string> = {}
   if (token) headers['Authorization'] = `Bearer ${token}`
 
   const formData = new FormData()
   formData.append('file', file)
 
-  const url = userId
-    ? `${API_URL}/api/documents/upload?user_id=${encodeURIComponent(userId)}`
-    : `${API_URL}/api/documents/upload`
+  const params = new URLSearchParams()
+  if (userId) params.set('user_id', userId)
+  if (folderId) params.set('folder_id', folderId)
+  const qs = params.toString()
+  const url = qs ? `${API_URL}/api/documents/upload?${qs}` : `${API_URL}/api/documents/upload`
   const res = await fetch(url, {
     method: 'POST',
     headers,
