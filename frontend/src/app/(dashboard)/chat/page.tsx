@@ -106,6 +106,7 @@ export default function NewChatPage() {
     artifacts?: ArtifactView[],
     compaction?: Message['compaction'],
     blocks?: MessageBlock[],
+    toolCalls?: ToolCallView[],
   ) {
     const supabase = createClient()
     await supabase.from('chat_messages').insert({
@@ -113,6 +114,7 @@ export default function NewChatPage() {
       role,
       content,
       blocks: blocks || null,
+      tool_calls: toolCalls || null,
       citations: citations || null,
       web_sources: webSources || null,
       artifacts: artifacts || null,
@@ -251,6 +253,7 @@ export default function NewChatPage() {
                   finalMsg.artifacts,
                   finalMsg.compaction,
                   finalMsg.blocks,
+                  finalMsg.toolCalls,
                 )
               }
               return updated

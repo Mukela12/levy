@@ -64,7 +64,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
     const supabase = createClient()
     const { data } = await supabase
       .from('chat_messages')
-      .select('role, content, blocks, citations, web_sources, artifacts, compaction')
+      .select('role, content, blocks, tool_calls, citations, web_sources, artifacts, compaction')
       .eq('session_id', id)
       .order('created_at', { ascending: true })
 
@@ -74,6 +74,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
           role: m.role as 'user' | 'assistant',
           content: m.content,
           blocks: m.blocks as MessageBlock[] | undefined,
+          toolCalls: m.tool_calls as ToolCallView[] | undefined,
           citations: m.citations as ChunkUsed[] | undefined,
           webSources: m.web_sources as WebSource[] | undefined,
           artifacts: m.artifacts as ArtifactView[] | undefined,
@@ -92,6 +93,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
     artifacts?: ArtifactView[],
     compaction?: Message['compaction'],
     blocks?: MessageBlock[],
+    toolCalls?: ToolCallView[],
   ) {
     const supabase = createClient()
     await supabase.from('chat_messages').insert({
@@ -99,6 +101,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
       role,
       content,
       blocks: blocks || null,
+      tool_calls: toolCalls || null,
       citations: citations || null,
       web_sources: webSources || null,
       artifacts: artifacts || null,
@@ -220,6 +223,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
                 finalMsg.artifacts,
                 finalMsg.compaction,
                 finalMsg.blocks,
+                finalMsg.toolCalls,
               )
               return updated
             })

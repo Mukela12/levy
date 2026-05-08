@@ -155,7 +155,21 @@ export function ChatMessage({
                   )
                 }
                 const call = (toolCalls || []).find((c) => c.id === block.toolCallId)
-                if (!call) return null
+                if (!call) {
+                  // Older saved messages may have block refs without the
+                  // matching toolCalls payload. Render a compact stub so the
+                  // chronological structure is preserved instead of dropping
+                  // the block silently.
+                  return (
+                    <div
+                      key={`tc-stub-${block.toolCallId}`}
+                      className="my-2.5 -mx-1 rounded-lg border border-white/[0.06] bg-white/[0.015] px-3 py-2 flex items-center gap-2 text-[11.5px] text-white/40"
+                    >
+                      <span className="size-1.5 rounded-full bg-emerald-400/40 inline-block" />
+                      Tool call (history)
+                    </div>
+                  )
+                }
                 return (
                   <div key={`tc-${block.toolCallId}`} className="my-2.5 -mx-1">
                     <ToolCallCard call={call} />
