@@ -12,12 +12,14 @@ import { useRegisterBrief } from '@/components/chat/brief-context'
 import { usePdfViewer } from '@/components/chat/pdf-viewer-context'
 import { useSessionAttachments } from '@/components/chat/use-session-attachments'
 import type { ToolCallView } from '@/components/chat/tool-call-card'
+import type { MessageBlock } from '@/components/chat/chat-message'
 import { Loader2, Paperclip, X } from 'lucide-react'
 import type { ArtifactView, ChunkUsed, WebSource } from '@/lib/api'
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
+  blocks?: MessageBlock[]
   citations?: ChunkUsed[]
   webSources?: WebSource[]
   toolCalls?: ToolCallView[]
@@ -62,7 +64,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
     const supabase = createClient()
     const { data } = await supabase
       .from('chat_messages')
-      .select('role, content, citations, web_sources, artifacts, compaction')
+      .select('role, content, blocks, citations, web_sources, artifacts, compaction')
       .eq('session_id', id)
       .order('created_at', { ascending: true })
 
@@ -71,6 +73,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
         data.map((m) => ({
           role: m.role as 'user' | 'assistant',
           content: m.content,
+          blocks: m.blocks as MessageBlock[] | undefined,
           citations: m.citations as ChunkUsed[] | undefined,
           webSources: m.web_sources as WebSource[] | undefined,
           artifacts: m.artifacts as ArtifactView[] | undefined,
@@ -88,12 +91,14 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
     webSources?: WebSource[],
     artifacts?: ArtifactView[],
     compaction?: Message['compaction'],
+    blocks?: MessageBlock[],
   ) {
     const supabase = createClient()
     await supabase.from('chat_messages').insert({
       session_id: id,
       role,
       content,
+      blocks: blocks || null,
       citations: citations || null,
       web_sources: webSources || null,
       artifacts: artifacts || null,
@@ -112,6 +117,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
       const assistantMsg: Message = {
         role: 'assistant',
         content: '',
+        blocks: [],
         citations: [],
         toolCalls: [],
         artifacts: [],
@@ -146,10 +152,20 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
         undefined,
         {
           onToken: (chunk) =>
-            updateLast((last) => ({ ...last, content: last.content + chunk })),
+            updateLast((last) => {
+              const blocks = [...(last.blocks ?? [])]
+              const tail = blocks[blocks.length - 1]
+              if (tail && tail.kind === 'text') {
+                blocks[blocks.length - 1] = { kind: 'text', text: tail.text + chunk }
+              } else {
+                blocks.push({ kind: 'text', text: chunk })
+              }
+              return { ...last, content: last.content + chunk, blocks }
+            }),
           onToolCall: (call) =>
             updateLast((last) => ({
               ...last,
+              blocks: [...(last.blocks ?? []), { kind: 'tool', toolCallId: call.id }],
               toolCalls: [
                 ...(last.toolCalls ?? []),
                 { ...call, status: 'running', db: [], web: [] },
@@ -203,6 +219,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
                 finalMsg.webSources,
                 finalMsg.artifacts,
                 finalMsg.compaction,
+                finalMsg.blocks,
               )
               return updated
             })
@@ -261,6 +278,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
                     <ChatMessage
                       role={msg.role}
                       content={msg.content}
+                      blocks={msg.blocks}
                       citations={msg.citations}
                       webSources={msg.webSources}
                       toolCalls={msg.toolCalls}

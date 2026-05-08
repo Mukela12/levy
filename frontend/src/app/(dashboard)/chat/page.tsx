@@ -12,12 +12,14 @@ import { BriefPanel } from '@/components/chat/brief-panel'
 import { useRegisterBrief } from '@/components/chat/brief-context'
 import { usePdfViewer } from '@/components/chat/pdf-viewer-context'
 import type { ToolCallView } from '@/components/chat/tool-call-card'
+import type { MessageBlock } from '@/components/chat/chat-message'
 import { BookOpen, Search, FileText, Gavel } from 'lucide-react'
 import type { ArtifactView, ChunkUsed, WebSource } from '@/lib/api'
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
+  blocks?: MessageBlock[]
   citations?: ChunkUsed[]
   webSources?: WebSource[]
   toolCalls?: ToolCallView[]
@@ -103,12 +105,14 @@ export default function NewChatPage() {
     webSources?: WebSource[],
     artifacts?: ArtifactView[],
     compaction?: Message['compaction'],
+    blocks?: MessageBlock[],
   ) {
     const supabase = createClient()
     await supabase.from('chat_messages').insert({
       session_id: sid,
       role,
       content,
+      blocks: blocks || null,
       citations: citations || null,
       web_sources: webSources || null,
       artifacts: artifacts || null,
@@ -141,6 +145,7 @@ export default function NewChatPage() {
       const assistantMsg: Message = {
         role: 'assistant',
         content: '',
+        blocks: [],
         citations: [],
         toolCalls: [],
         artifacts: [],
@@ -174,10 +179,22 @@ export default function NewChatPage() {
         undefined,
         {
           onToken: (chunk) =>
-            updateLast((last) => ({ ...last, content: last.content + chunk })),
+            updateLast((last) => {
+              // Append the chunk to the trailing text block, or start a new one
+              // if the last block is a tool call (means a new prose segment).
+              const blocks = [...(last.blocks ?? [])]
+              const tail = blocks[blocks.length - 1]
+              if (tail && tail.kind === 'text') {
+                blocks[blocks.length - 1] = { kind: 'text', text: tail.text + chunk }
+              } else {
+                blocks.push({ kind: 'text', text: chunk })
+              }
+              return { ...last, content: last.content + chunk, blocks }
+            }),
           onToolCall: (call) =>
             updateLast((last) => ({
               ...last,
+              blocks: [...(last.blocks ?? []), { kind: 'tool', toolCallId: call.id }],
               toolCalls: [
                 ...(last.toolCalls ?? []),
                 { ...call, status: 'running', db: [], web: [] },
@@ -233,6 +250,7 @@ export default function NewChatPage() {
                   finalMsg.webSources,
                   finalMsg.artifacts,
                   finalMsg.compaction,
+                  finalMsg.blocks,
                 )
               }
               return updated
@@ -381,6 +399,7 @@ export default function NewChatPage() {
                         <ChatMessage
                           role={msg.role}
                           content={msg.content}
+                          blocks={msg.blocks}
                           citations={msg.citations}
                           webSources={msg.webSources}
                           toolCalls={msg.toolCalls}

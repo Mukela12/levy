@@ -9,9 +9,20 @@ import { ToolCallCard, type ToolCallView } from './tool-call-card'
 import { ArtifactCard } from './artifact-card'
 import type { ArtifactView, ChunkUsed, WebSource } from '@/lib/api'
 
+/**
+ * A chronological "block" — either a chunk of streamed prose or a reference
+ * to a tool call by id. We render blocks in order so tool-call cards appear
+ * inline at the moment they fire (Claude Code / Codex style) rather than
+ * stacked above the answer.
+ */
+export type MessageBlock =
+  | { kind: 'text'; text: string }
+  | { kind: 'tool'; toolCallId: string }
+
 interface ChatMessageProps {
   role: 'user' | 'assistant'
   content: string
+  blocks?: MessageBlock[]
   citations?: ChunkUsed[]
   webSources?: WebSource[]
   toolCalls?: ToolCallView[]
@@ -56,6 +67,7 @@ function UserBubbleTail() {
 export function ChatMessage({
   role,
   content,
+  blocks,
   citations,
   webSources,
   toolCalls,
@@ -108,15 +120,6 @@ export function ChatMessage({
           </div>
         )}
 
-        {/* Tool-call cards (research trail) */}
-        {toolCalls && toolCalls.length > 0 && (
-          <div className="space-y-1.5">
-            {toolCalls.map((call) => (
-              <ToolCallCard key={call.id} call={call} />
-            ))}
-          </div>
-        )}
-
         {/* AI Card Container */}
         <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] border-l-[3px] border-l-emerald-500/40 px-4 py-4">
           {/* AI Avatar Header */}
@@ -132,18 +135,56 @@ export function ChatMessage({
             </span>
           </div>
 
-          {/* Content */}
+          {/* Content — Claude-Code/Codex style: tool-call cards interleave
+              chronologically with prose segments, so the user sees research
+              happen in real time. Legacy messages without `blocks` fall back
+              to a single text block + tool cards stacked above. */}
           <div className="text-[14px] leading-[1.7] text-white/75 [&_h2]:text-white/90 [&_h2]:text-[14.5px] [&_h2]:font-semibold [&_h2]:mt-4 [&_h2]:mb-1.5 [&_strong]:text-white/85 [&_li]:text-white/70 [&_li]:mb-1 [&_code]:text-emerald-400/70 [&_code]:bg-white/[0.04] [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-[12.5px] [&_p]:mb-2">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
-            {isStreaming && !content && (
+            {blocks && blocks.length > 0 ? (
+              blocks.map((block, idx) => {
+                if (block.kind === 'text') {
+                  if (!block.text) return null
+                  const isLastBlock = idx === blocks.length - 1
+                  return (
+                    <div key={`t-${idx}`}>
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{block.text}</ReactMarkdown>
+                      {isStreaming && isLastBlock && (
+                        <span className="inline-block w-px h-3.5 bg-white/40 animate-pulse ml-0.5" />
+                      )}
+                    </div>
+                  )
+                }
+                const call = (toolCalls || []).find((c) => c.id === block.toolCallId)
+                if (!call) return null
+                return (
+                  <div key={`tc-${block.toolCallId}`} className="my-2.5 -mx-1">
+                    <ToolCallCard call={call} />
+                  </div>
+                )
+              })
+            ) : (
+              <>
+                {/* Legacy fallback: tool cards above, then full content */}
+                {toolCalls && toolCalls.length > 0 && (
+                  <div className="space-y-1.5 mb-3 -mx-1">
+                    {toolCalls.map((call) => (
+                      <ToolCallCard key={call.id} call={call} />
+                    ))}
+                  </div>
+                )}
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+                {isStreaming && content && (
+                  <span className="inline-block w-px h-3.5 bg-white/40 animate-pulse ml-0.5" />
+                )}
+              </>
+            )}
+            {/* Three-dot pulse before any block has arrived */}
+            {isStreaming && !content && (!blocks || blocks.length === 0) && (
               <div className="flex items-center gap-1 py-2">
                 <span className="w-1 h-1 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: '0ms' }} />
                 <span className="w-1 h-1 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: '150ms' }} />
                 <span className="w-1 h-1 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
-            )}
-            {isStreaming && content && (
-              <span className="inline-block w-px h-3.5 bg-white/40 animate-pulse ml-0.5" />
             )}
           </div>
         </div>
