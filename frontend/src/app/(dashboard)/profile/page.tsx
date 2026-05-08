@@ -1,14 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '@/components/auth/auth-provider'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { ChevronRight, User, Lock, LogOut, Mail, Briefcase, CreditCard, Loader2 } from 'lucide-react'
 
 export default function ProfilePage() {
-  const { user, signOut } = useAuth()
+  const { user, signOut, loading: authLoading } = useAuth()
   const router = useRouter()
+
+  // Anonymous users have no profile to view — send them to login.
+  useEffect(() => {
+    if (!authLoading && !user) router.replace('/auth/login')
+  }, [user, authLoading, router])
   const [changingPassword, setChangingPassword] = useState(false)
   const [passwordSent, setPasswordSent] = useState(false)
 

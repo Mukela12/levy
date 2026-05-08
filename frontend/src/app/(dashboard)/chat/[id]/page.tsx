@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, use } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth/auth-provider'
 import { createClient } from '@/lib/supabase'
 import { streamQuery } from '@/lib/api'
@@ -32,9 +33,17 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
   const [initialLoading, setInitialLoading] = useState(true)
   const [webSearch, setWebSearch] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const { user, session } = useAuth()
+  const { user, session, loading: authLoading } = useAuth()
+  const router = useRouter()
   const pdf = usePdfViewer()
   const attachments = useSessionAttachments(id)
+
+  // Saved-thread routes require an account — anonymous users couldn't have
+  // created this session anyway. Bounce them to the home /chat (where they
+  // can chat anonymously) rather than to login, which is friendlier.
+  useEffect(() => {
+    if (!authLoading && !user) router.replace('/chat')
+  }, [user, authLoading, router])
 
   // Pass the raw messages state (stable reference). Mapping here creates a new
   // array every render and would render-loop with the provider's setState.

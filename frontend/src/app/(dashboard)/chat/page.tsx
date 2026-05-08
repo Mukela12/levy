@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth/auth-provider'
 import { createClient } from '@/lib/supabase'
@@ -120,15 +121,21 @@ export default function NewChatPage() {
     const userMsg: Message = { role: 'user', content: question }
     setMessages((prev) => [...prev, userMsg])
 
+    // Anonymous mode: keep everything in React state, never touch the DB.
+    // Signed-in users get the full session/save flow.
+    const isAnonymous = !user
+
     try {
-      // Create session if first message
+      // Create session if first message (signed-in only)
       let sid = sessionId
-      if (!sid) {
+      if (!sid && !isAnonymous) {
         sid = await createSession(question)
         setSessionId(sid)
       }
 
-      await saveMessage(sid, 'user', question)
+      if (sid && !isAnonymous) {
+        await saveMessage(sid, 'user', question)
+      }
 
       // Add placeholder assistant message for streaming
       const assistantMsg: Message = {
@@ -160,7 +167,7 @@ export default function NewChatPage() {
           token: session?.access_token,
           webSearch,
           userId: user?.id,
-          sessionId: sid,
+          sessionId: sid ?? undefined,
           history,
         },
         undefined,
@@ -217,15 +224,17 @@ export default function NewChatPage() {
                 timing: { total_ms: metadata.timing?.total_ms ?? 0 },
               }
               updated[updated.length - 1] = finalMsg
-              saveMessage(
-                sid!,
-                'assistant',
-                finalMsg.content,
-                finalMsg.citations,
-                finalMsg.webSources,
-                finalMsg.artifacts,
-                finalMsg.compaction,
-              )
+              if (sid && !isAnonymous) {
+                saveMessage(
+                  sid,
+                  'assistant',
+                  finalMsg.content,
+                  finalMsg.citations,
+                  finalMsg.webSources,
+                  finalMsg.artifacts,
+                  finalMsg.compaction,
+                )
+              }
               return updated
             })
             setLoading(false)
@@ -242,7 +251,9 @@ export default function NewChatPage() {
       )
 
       // Update URL to session
-      router.replace(`/chat/${sid}`, { scroll: false })
+      if (sid && !isAnonymous) {
+        router.replace(`/chat/${sid}`, { scroll: false })
+      }
     } catch (err) {
       const errorMsg: Message = {
         role: 'assistant',
@@ -261,7 +272,9 @@ export default function NewChatPage() {
   }
 
   const hasMessages = messages.length > 0
+  const isAnonymous = !user
   const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Counsel'
+  const greetingName = user ? displayName : 'there'
 
   return (
     <div className="flex flex-1 overflow-hidden" style={{ overscrollBehavior: 'none' }}>
@@ -288,7 +301,7 @@ export default function NewChatPage() {
                 className="text-3xl font-bold text-foreground tracking-tight"
                 style={{ fontFamily: "'Playfair Display', serif" }}
               >
-                {getGreeting()}, {displayName}
+                {getGreeting()}, {greetingName}
               </h1>
               <p
                 className="text-[15px] text-muted-foreground/60 italic"
@@ -296,6 +309,18 @@ export default function NewChatPage() {
               >
                 Your counsel awaits
               </p>
+              {isAnonymous && (
+                <p className="text-[12px] text-white/35 max-w-md mx-auto pt-1">
+                  Try a question — no account needed.
+                  <Link
+                    href="/auth/login"
+                    className="ml-1 text-emerald-400/80 hover:text-emerald-400 underline decoration-emerald-500/30 underline-offset-2"
+                  >
+                    Sign in to save your chats
+                  </Link>
+                  .
+                </p>
+              )}
             </div>
 
             {/* Quick Action Cards - 2x2 grid on every viewport */}

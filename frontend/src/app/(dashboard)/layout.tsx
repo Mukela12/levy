@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useAuth } from '@/components/auth/auth-provider'
 import AppSidebar from '@/components/layout/app-sidebar'
 import { SkyToggle } from '@/components/layout/sky-toggle'
@@ -14,18 +15,13 @@ import { Scale, Loader2, X } from 'lucide-react'
 
 function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
-  const router = useRouter()
   const pathname = usePathname()
   const [isDark, setIsDark] = useState(true)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const brief = useBrief()
   const pdf = usePdfViewer()
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/auth/login')
-    }
-  }, [user, loading, router])
+  // Anonymous users can use /chat freely (ChatGPT-style). Routes that need
+  // an account guard themselves (chat/[id], profile).
 
   // Initialize theme from document class
   useEffect(() => {
@@ -75,8 +71,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
       </div>
     )
   }
-
-  if (!user) return null
+  // No `if (!user) return null` — anonymous users get the same shell.
 
   // Derive a display name for the top bar
   const activeCaseName = pathname.startsWith('/chat/') ? 'Active Consultation' : 'Levy Counsel'
@@ -127,6 +122,21 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
             >
               <Scale className="w-4 h-4" />
             </button>
+          )}
+          {/* ChatGPT-style: account pill when signed in, Sign-in button when
+              anonymous. Sits where the avatar would normally live. */}
+          {!user && (
+            <Link
+              href="/auth/login"
+              className="h-8 px-3 inline-flex items-center rounded-full text-[12px] font-medium text-white transition-all active:scale-[0.98]"
+              style={{
+                background: 'linear-gradient(180deg, rgb(16 185 129) 0%, rgb(5 150 105) 100%)',
+                boxShadow:
+                  '0 1px 0 0 rgba(255,255,255,0.18) inset, 0 0 0 1px rgba(16,185,129,0.45), 0 4px 12px -4px rgba(16,185,129,0.45)',
+              }}
+            >
+              Sign in
+            </Link>
           )}
           <SkyToggle isDark={isDark} onToggle={toggleTheme} />
         </div>

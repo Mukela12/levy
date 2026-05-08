@@ -36,8 +36,10 @@ export default function AppSidebar({ mobileSidebarOpen, onCloseMobile, isDark, o
   const [casesExpanded, setCasesExpanded] = useState(true)
 
   useEffect(() => {
-    loadSessions()
-  }, [])
+    if (user?.id) loadSessions()
+    else setSessions([])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id])
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -130,8 +132,9 @@ export default function AppSidebar({ mobileSidebarOpen, onCloseMobile, isDark, o
       {/* Divider */}
       <div className="mx-3 h-px bg-white/[0.06] flex-shrink-0" />
 
-      {/* Cases Section */}
+      {/* Cases Section — hidden for anonymous users (no saved threads to show) */}
       <div className="flex-1 overflow-y-auto overscroll-contain px-2 py-2 min-h-0" style={{ overscrollBehavior: 'contain' }}>
+        {user && (
         <button
           onClick={() => setCasesExpanded(!casesExpanded)}
           className="w-full flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground/50 hover:text-muted-foreground/80 transition-colors"
@@ -139,8 +142,9 @@ export default function AppSidebar({ mobileSidebarOpen, onCloseMobile, isDark, o
           {casesExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
           Cases
         </button>
+        )}
 
-        {casesExpanded && (
+        {user && casesExpanded && (
           <div className="space-y-px mt-1">
             {sessions.map((session) => {
               const isActive = pathname === `/chat/${session.id}`
@@ -209,29 +213,53 @@ export default function AppSidebar({ mobileSidebarOpen, onCloseMobile, isDark, o
       {/* Divider */}
       <div className="mx-3 h-px bg-white/[0.06] flex-shrink-0" />
 
-      {/* Profile Section */}
+      {/* Profile / Sign-in section. ChatGPT-style: account pill when signed
+          in, persuasive sign-in CTA when anonymous. */}
       <div className="px-3 py-3 flex-shrink-0">
-        <Link href="/profile" className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 rounded-full bg-emerald-500/15 flex items-center justify-center flex-shrink-0 text-[12px] font-semibold text-emerald-500">
-            {userInitial}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div
-              className="text-[13px] font-medium text-foreground/80 truncate group-hover:text-foreground transition-colors"
-              style={{ fontFamily: "'Playfair Display', serif" }}
+        {user ? (
+          <>
+            <Link href="/profile" className="flex items-center gap-2.5 group">
+              <div className="w-8 h-8 rounded-full bg-emerald-500/15 flex items-center justify-center flex-shrink-0 text-[12px] font-semibold text-emerald-500">
+                {userInitial}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div
+                  className="text-[13px] font-medium text-foreground/80 truncate group-hover:text-foreground transition-colors"
+                  style={{ fontFamily: "'Playfair Display', serif" }}
+                >
+                  {userName}
+                </div>
+                <div className="text-[10px] text-muted-foreground/40">Legal Counsel</div>
+              </div>
+            </Link>
+            <button
+              onClick={signOut}
+              className="mt-2 w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors"
             >
-              {userName}
-            </div>
-            <div className="text-[10px] text-muted-foreground/40">Legal Counsel</div>
+              <LogOut className="w-3 h-3" />
+              Sign out
+            </button>
+          </>
+        ) : (
+          <div className="space-y-2">
+            <p className="text-[10.5px] text-white/40 leading-snug px-0.5">
+              Sign in to save consultations, upload private documents, and pick
+              up where you left off.
+            </p>
+            <Link
+              href="/auth/login"
+              className="flex items-center justify-center gap-1.5 w-full py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[12px] font-medium text-emerald-300 hover:bg-emerald-500/15 transition-colors"
+            >
+              Sign in
+            </Link>
+            <Link
+              href="/auth/signup"
+              className="flex items-center justify-center gap-1.5 w-full py-2 rounded-lg text-[12px] text-white/55 hover:text-white/85 transition-colors"
+            >
+              Create account
+            </Link>
           </div>
-        </Link>
-        <button
-          onClick={signOut}
-          className="mt-2 w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors"
-        >
-          <LogOut className="w-3 h-3" />
-          Sign out
-        </button>
+        )}
       </div>
     </div>
   )
