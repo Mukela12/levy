@@ -77,7 +77,7 @@ export default function NewChatPage() {
   const router = useRouter()
 
   // Expose the raw messages state (stable reference) to the layout-level
-  // Brief button + bottom sheet. Do NOT map here — that creates a new array
+  // Brief button + bottom sheet. Do NOT map here - that creates a new array
   // every render and would loop with the provider's setState.
   useRegisterBrief(messages, session?.access_token)
 
@@ -353,19 +353,19 @@ export default function NewChatPage() {
               {/* Personalized greeting */}
               <h1
                 className="text-3xl font-bold text-foreground tracking-tight"
-                style={{ fontFamily: "'Playfair Display', serif" }}
+                style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}
               >
                 {getGreeting()}, {greetingName}
               </h1>
               <p
                 className="text-[15px] text-muted-foreground/60 italic"
-                style={{ fontFamily: "'Playfair Display', serif" }}
+                style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}
               >
                 Your counsel awaits
               </p>
               {isAnonymous && (
                 <p className="text-[12px] text-white/35 max-w-md mx-auto pt-1">
-                  Try a question — no account needed.
+                  Try a question. No account needed.
                   <Link
                     href="/auth/login"
                     className="ml-1 text-emerald-400/80 hover:text-emerald-400 underline decoration-emerald-500/30 underline-offset-2"
@@ -425,7 +425,7 @@ export default function NewChatPage() {
                   const isLastAssistant =
                     loading && i === messages.length - 1 && msg.role === 'assistant'
                   const hasResearch = (msg.toolCalls?.length ?? 0) > 0
-                  // Show ThinkingGlow only when nothing is happening yet —
+                  // Show ThinkingGlow only when nothing is happening yet -
                   // once the model has begun calling tools or streaming text,
                   // render the live ChatMessage so the user sees the research
                   // trail in real time.
@@ -475,7 +475,7 @@ export default function NewChatPage() {
                 <div ref={messagesEndRef} />
               </div>
             </div>
-            {/* Floating glass dock — chat input */}
+            {/* Floating glass dock - chat input */}
             <div className="absolute inset-x-0 bottom-0 z-20 pointer-events-none">
               <div
                 className="px-3 sm:px-4 pt-6 pb-[max(12px,env(safe-area-inset-bottom))]"

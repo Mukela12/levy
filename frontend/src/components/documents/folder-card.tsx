@@ -37,7 +37,7 @@ export function FolderCard({ kind, name, count, description, onClick }: FolderCa
       onClick={onClick}
       className="group p-3.5 sm:p-5 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:border-emerald-500/20 transition-all duration-300 text-left w-full"
     >
-      {/* 3D folder visual — same on mobile + desktop, just slightly smaller on
+      {/* 3D folder visual - same on mobile + desktop, just slightly smaller on
           narrow viewports so two fit cleanly in a row. */}
       <div
         className="flex items-center justify-center mb-3 sm:mb-4 h-20 sm:h-28"
@@ -52,7 +52,7 @@ export function FolderCard({ kind, name, count, description, onClick }: FolderCa
             className="absolute inset-0 rounded-lg border"
             style={{ background: hue, borderColor: hueBorder, transform: 'rotateX(5deg)', transformOrigin: 'bottom center' }}
           />
-          {/* Document cards fanning out (skip for "new folder" — empty) */}
+          {/* Document cards fanning out (skip for "new folder" - empty) */}
           {!isNew &&
             [0, 1, 2].map((i) => (
               <div
@@ -111,7 +111,7 @@ export function FolderCard({ kind, name, count, description, onClick }: FolderCa
               aria-label="Curated, read-only"
             />
           )}
-          {/* Hidden — no longer using the simple-icon fallback now that the
+          {/* Hidden - no longer using the simple-icon fallback now that the
               3D visual is mobile-friendly. Keep the import alive. */}
           <span className="hidden">
             <FolderOpen size={1} className={accent} />

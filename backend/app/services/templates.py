@@ -113,20 +113,33 @@ _CONTENT_TYPES: dict[str, str] = {
 }
 
 
-def list_templates_for_owner(owner_id: str) -> list[dict]:
-    """Return all of the owner's templates with the columns surfaced in the UI."""
+def list_templates_for_owner(
+    owner_id: str,
+    folder_id: str | None = None,
+) -> list[dict]:
+    """Return the owner's templates, optionally filtered to one folder.
+
+    `folder_id` semantics:
+      - None        : every template (used for the suggest_templates ranker
+                      so all of the user's templates can match).
+      - "unfiled"   : templates with folder_id IS NULL.
+      - any UUID    : templates inside that folder.
+    """
     db = get_db()
-    rows = (
+    q = (
         db.table("templates")
         .select(
             "id, name, description, file_type, file_size_bytes, page_count, "
-            "preview_text, created_at, updated_at"
+            "preview_text, folder_id, created_at, updated_at"
         )
         .eq("owner_id", owner_id)
         .order("created_at", desc=True)
-        .execute()
-    ).data or []
-    return rows
+    )
+    if folder_id == "unfiled":
+        q = q.is_("folder_id", "null")
+    elif folder_id:
+        q = q.eq("folder_id", folder_id)
+    return q.execute().data or []
 
 
 def suggest_templates_for(owner_id: str, query: str | None) -> list[dict]:

@@ -46,7 +46,7 @@ export function BriefPanel({ messages, token }: BriefPanelProps) {
         <div>
           <h2
             className="text-xs font-bold tracking-[0.2em] uppercase text-emerald-400"
-            style={{ fontFamily: "'Playfair Display', serif" }}
+            style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}
           >
             The Brief
           </h2>
@@ -133,7 +133,7 @@ export function BriefPanel({ messages, token }: BriefPanelProps) {
                     </span>
                     <h3
                       className="text-sm font-semibold text-emerald-400"
-                      style={{ fontFamily: "'Playfair Display', serif" }}
+                      style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}
                     >
                       {title}
                     </h3>

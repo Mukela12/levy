@@ -31,6 +31,7 @@ import {
   Upload,
   X,
 } from 'lucide-react'
+import { CTA } from '@/components/ui/cta'
 
 // Sentinel ids used to address the two non-user-folder pseudo-folders.
 const FOLDER_GLOBAL = '__global__'
@@ -39,10 +40,10 @@ const FOLDER_UNFILED = '__unfiled__'
 type FolderId = string // user folder uuid OR one of the sentinels above
 
 function formatPages(n?: number) {
-  return n ? `${n} page${n === 1 ? '' : 's'}` : '—'
+  return n ? `${n} page${n === 1 ? '' : 's'}` : '-'
 }
 function formatChunks(n?: number) {
-  return n ? `${n} chunk${n === 1 ? '' : 's'}` : '—'
+  return n ? `${n} chunk${n === 1 ? '' : 's'}` : '-'
 }
 
 export default function DocumentsPage() {
@@ -147,7 +148,7 @@ export default function DocumentsPage() {
       setCreatingFolder(false)
       await reloadAll()
     } catch {
-      // collision (unique name) — keep dialog open
+      // collision (unique name) - keep dialog open
     }
   }
 
@@ -246,7 +247,7 @@ export default function DocumentsPage() {
           <div>
             <h1
               className="text-2xl font-bold text-white/90 tracking-tight"
-              style={{ fontFamily: "'Playfair Display', serif" }}
+              style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}
             >
               Documents
             </h1>
@@ -258,22 +259,31 @@ export default function DocumentsPage() {
                 : 'Browse the curated library or organise your own uploads into folders.'}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <input ref={fileInputRef} type="file" accept=".pdf" onChange={handleUpload} className="hidden" />
             {activeFolder && activeFolder !== FOLDER_GLOBAL && (
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading || !user}
-                className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-[13px] font-medium text-white transition-all disabled:opacity-50"
-                style={{
-                  background: 'linear-gradient(180deg, rgb(16 185 129) 0%, rgb(5 150 105) 100%)',
-                  boxShadow:
-                    '0 1px 0 0 rgba(255,255,255,0.18) inset, 0 0 0 1px rgba(16,185,129,0.45), 0 8px 20px -8px rgba(16,185,129,0.55)',
-                }}
-              >
-                {uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
-                <span>{uploading ? 'Uploading…' : 'Upload PDF'}</span>
-              </button>
+              <>
+                <CTA
+                  size="md"
+                  tone="primary"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading || !user}
+                  iconOnly
+                  startIcon={uploading ? <Loader2 className="animate-spin" /> : <Upload />}
+                  aria-label={uploading ? 'Uploading' : 'Upload PDF'}
+                  className="sm:hidden"
+                />
+                <CTA
+                  size="md"
+                  tone="primary"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading || !user}
+                  startIcon={uploading ? <Loader2 className="animate-spin" /> : <Upload />}
+                  className="hidden sm:inline-flex"
+                >
+                  {uploading ? 'Uploading' : 'Upload'}
+                </CTA>
+              </>
             )}
           </div>
         </div>
@@ -349,7 +359,7 @@ export default function DocumentsPage() {
                 <FolderCard
                   kind="new"
                   name="New folder"
-                  description="Group related documents — chat searches still see them all."
+                  description="Group related uploads. Chat still searches all of them."
                   onClick={() => setCreatingFolder(true)}
                 />
               </div>

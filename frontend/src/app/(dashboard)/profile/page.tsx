@@ -10,7 +10,7 @@ export default function ProfilePage() {
   const { user, signOut, loading: authLoading } = useAuth()
   const router = useRouter()
 
-  // Anonymous users have no profile to view — send them to login.
+  // Anonymous users have no profile to view - send them to login.
   useEffect(() => {
     if (!authLoading && !user) router.replace('/auth/login')
   }, [user, authLoading, router])
@@ -68,7 +68,7 @@ export default function ProfilePage() {
           </div>
           <h2
             className="text-xl font-bold text-white/90"
-            style={{ fontFamily: "'Playfair Display', serif" }}
+            style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}
           >
             {fullName}
           </h2>

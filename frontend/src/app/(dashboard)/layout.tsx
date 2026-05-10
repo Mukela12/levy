@@ -5,36 +5,29 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/components/auth/auth-provider'
 import AppSidebar from '@/components/layout/app-sidebar'
-import { SkyToggle } from '@/components/layout/sky-toggle'
 import { MenuToggleIcon } from '@/components/layout/menu-toggle-icon'
 import { BriefProvider, useBrief } from '@/components/chat/brief-context'
 import { BriefPanel } from '@/components/chat/brief-panel'
 import { PdfViewerProvider, usePdfViewer } from '@/components/chat/pdf-viewer-context'
 import { PdfViewer } from '@/components/chat/pdf-viewer'
 import { Scale, Loader2, X } from 'lucide-react'
+import { CTA } from '@/components/ui/cta'
 
 function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
   const pathname = usePathname()
-  const [isDark, setIsDark] = useState(true)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const brief = useBrief()
   const pdf = usePdfViewer()
   // Anonymous users can use /chat freely (ChatGPT-style). Routes that need
   // an account guard themselves (chat/[id], profile).
 
-  // Initialize theme from document class
-  useEffect(() => {
-    const hasDark = document.documentElement.classList.contains('dark')
-    setIsDark(hasDark)
-  }, [])
-
   // Close mobile sidebar on route change
   useEffect(() => {
     setMobileSidebarOpen(false)
   }, [pathname])
 
-  // Close the PDF viewer when navigating between chats — the cited document
+  // Close the PDF viewer when navigating between chats - the cited document
   // is contextual to a single message, so dragging it across routes is noise.
   useEffect(() => {
     pdf.close()
@@ -54,16 +47,6 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
     }
   }, [mobileSidebarOpen, brief.open])
 
-  function toggleTheme() {
-    const next = !isDark
-    setIsDark(next)
-    if (next) {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0a0a0b]">
@@ -71,7 +54,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
       </div>
     )
   }
-  // No `if (!user) return null` — anonymous users get the same shell.
+  // No `if (!user) return null` - anonymous users get the same shell.
 
   // Derive a display name for the top bar
   const activeCaseName = pathname.startsWith('/chat/') ? 'Active Consultation' : 'Levy Counsel'
@@ -91,7 +74,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
           </button>
           <span
             className="hidden md:block text-[13px] font-medium text-foreground/60 tracking-wide"
-            style={{ fontFamily: "'Playfair Display', serif" }}
+            style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}
           >
             {activeCaseName}
           </span>
@@ -102,7 +85,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
           <Scale className="w-4 h-4 text-emerald-500" />
           <span
             className="text-[16px] font-semibold tracking-[-0.02em] text-foreground"
-            style={{ fontFamily: "'Playfair Display', serif" }}
+            style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}
           >
             Levy
           </span>
@@ -126,19 +109,10 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
           {/* ChatGPT-style: account pill when signed in, Sign-in button when
               anonymous. Sits where the avatar would normally live. */}
           {!user && (
-            <Link
-              href="/auth/login"
-              className="h-8 px-3 inline-flex items-center rounded-full text-[12px] font-medium text-white transition-all active:scale-[0.98]"
-              style={{
-                background: 'linear-gradient(180deg, rgb(16 185 129) 0%, rgb(5 150 105) 100%)',
-                boxShadow:
-                  '0 1px 0 0 rgba(255,255,255,0.18) inset, 0 0 0 1px rgba(16,185,129,0.45), 0 4px 12px -4px rgba(16,185,129,0.45)',
-              }}
-            >
-              Sign in
+            <Link href="/auth/login" className="contents">
+              <CTA size="sm" tone="primary">Sign in</CTA>
             </Link>
           )}
-          <SkyToggle isDark={isDark} onToggle={toggleTheme} />
         </div>
       </header>
 
@@ -147,8 +121,6 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
         <AppSidebar
           mobileSidebarOpen={mobileSidebarOpen}
           onCloseMobile={() => setMobileSidebarOpen(false)}
-          isDark={isDark}
-          onToggleTheme={toggleTheme}
         />
         <main className="flex-1 flex flex-col overflow-hidden" style={{ overscrollBehavior: 'none' }}>
           {children}
@@ -169,7 +141,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
             <div className="flex items-center justify-between px-5 py-3 border-b border-white/[0.06]">
               <span
                 className="text-xs font-bold tracking-[0.2em] uppercase text-emerald-400"
-                style={{ fontFamily: "'Playfair Display', serif" }}
+                style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}
               >
                 The Brief
               </span>

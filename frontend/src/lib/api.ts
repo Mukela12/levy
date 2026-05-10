@@ -169,8 +169,16 @@ export interface TemplateRow {
   file_size_bytes?: number | null
   page_count?: number | null
   preview_text?: string | null
+  folder_id?: string | null
   created_at?: string
   updated_at?: string
+}
+
+export interface TemplateFolderRow {
+  id: string
+  name: string
+  created_at?: string
+  doc_count: number
 }
 
 export interface TemplateSuggestion {
@@ -182,20 +190,27 @@ export interface TemplateSuggestion {
   preview?: string
 }
 
-export async function listTemplates(userId: string): Promise<{ templates: TemplateRow[]; count: number }> {
-  const r = await fetch(`${API_URL}/api/templates?user_id=${encodeURIComponent(userId)}`)
+export async function listTemplates(
+  userId: string,
+  folderId?: string | null,
+): Promise<{ templates: TemplateRow[]; count: number }> {
+  const params = new URLSearchParams()
+  params.set('user_id', userId)
+  if (folderId) params.set('folder_id', folderId)
+  const r = await fetch(`${API_URL}/api/templates?${params.toString()}`)
   if (!r.ok) throw new Error(`templates ${r.status}`)
   return r.json()
 }
 
 export async function uploadTemplate(
   file: File,
-  options: { userId: string; name?: string; description?: string },
+  options: { userId: string; name?: string; description?: string; folderId?: string | null },
 ): Promise<{ template: TemplateRow }> {
   const params = new URLSearchParams()
   params.set('user_id', options.userId)
   if (options.name) params.set('name', options.name)
   if (options.description) params.set('description', options.description)
+  if (options.folderId) params.set('folder_id', options.folderId)
   const formData = new FormData()
   formData.append('file', file)
   const r = await fetch(`${API_URL}/api/templates/upload?${params.toString()}`, {
@@ -204,6 +219,50 @@ export async function uploadTemplate(
   })
   if (!r.ok) throw new Error((await r.text()) || `upload-template ${r.status}`)
   return r.json()
+}
+
+// Template folders
+export async function listTemplateFolders(
+  userId: string,
+): Promise<{ folders: TemplateFolderRow[]; unfiled_count: number }> {
+  const r = await fetch(`${API_URL}/api/template-folders?user_id=${encodeURIComponent(userId)}`)
+  if (!r.ok) throw new Error(`template-folders ${r.status}`)
+  return r.json()
+}
+
+export async function createTemplateFolder(userId: string, name: string): Promise<TemplateFolderRow> {
+  const r = await fetch(`${API_URL}/api/template-folders`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_id: userId, name }),
+  })
+  if (!r.ok) throw new Error((await r.text()) || `create template folder ${r.status}`)
+  return r.json()
+}
+
+export async function renameTemplateFolder(folderId: string, name: string): Promise<void> {
+  const r = await fetch(`${API_URL}/api/template-folders/${folderId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  })
+  if (!r.ok) throw new Error(`rename ${r.status}`)
+}
+
+export async function deleteTemplateFolder(folderId: string, cascade = false): Promise<void> {
+  const r = await fetch(`${API_URL}/api/template-folders/${folderId}?cascade=${cascade}`, {
+    method: 'DELETE',
+  })
+  if (!r.ok) throw new Error(`delete ${r.status}`)
+}
+
+export async function moveTemplateToFolder(templateId: string, folderId: string | null): Promise<void> {
+  const r = await fetch(`${API_URL}/api/templates/${templateId}/folder`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ folder_id: folderId }),
+  })
+  if (!r.ok) throw new Error(`move ${r.status}`)
 }
 
 export async function updateTemplate(id: string, patch: { name?: string; description?: string }): Promise<void> {
@@ -416,7 +475,7 @@ export async function streamQuery(
   const decoder = new TextDecoder()
   let buffer = ''
 
-  // Sources accumulator — emitted as a single block when the run ends.
+  // Sources accumulator - emitted as a single block when the run ends.
   let dbSources: ChunkUsed[] = []
   let webSources: WebSource[] = []
   let lastTiming: Record<string, number> | undefined

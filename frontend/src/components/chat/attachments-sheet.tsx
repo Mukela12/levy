@@ -28,7 +28,7 @@ interface AttachmentsSheetProps {
   sessionId: string | null | undefined
   /** ids currently attached to the session/staged for the next turn */
   attachedIds: Set<string>
-  /** toggle one document — caller decides whether to persist or stage */
+  /** toggle one document - caller decides whether to persist or stage */
   onToggle: (doc: LibraryDocument) => void | Promise<void>
 }
 

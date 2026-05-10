@@ -25,11 +25,9 @@ interface ChatSession {
 interface AppSidebarProps {
   mobileSidebarOpen: boolean
   onCloseMobile: () => void
-  isDark: boolean
-  onToggleTheme: () => void
 }
 
-export default function AppSidebar({ mobileSidebarOpen, onCloseMobile, isDark, onToggleTheme }: AppSidebarProps) {
+export default function AppSidebar({ mobileSidebarOpen, onCloseMobile }: AppSidebarProps) {
   const { user, signOut } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
@@ -88,52 +86,48 @@ export default function AppSidebar({ mobileSidebarOpen, onCloseMobile, isDark, o
         <Link href="/chat" className="flex items-center">
           <span
             className="text-[18px] font-semibold tracking-[-0.02em] text-foreground"
-            style={{ fontFamily: "'Playfair Display', serif" }}
+            style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}
           >
             Levy
           </span>
         </Link>
       </div>
 
-      {/* New Consultation Button */}
+      {/* New consultation */}
       <div className="px-3 pb-3 flex-shrink-0">
         <Link
           href="/chat"
-          className="group relative flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-[13px] font-medium text-white overflow-hidden transition-all duration-200 active:scale-[0.985] hover:-translate-y-px"
+          className="group/cta relative flex items-center justify-center gap-2 w-full h-10 rounded-xl text-[13px] font-medium text-emerald-50 overflow-hidden transition-all duration-200 active:translate-y-px tracking-tight"
           style={{
             background:
-              'linear-gradient(180deg, rgb(16 185 129) 0%, rgb(5 150 105) 100%)',
-            boxShadow:
-              '0 1px 0 0 rgba(255,255,255,0.18) inset, 0 0 0 1px rgba(16,185,129,0.45), 0 8px 20px -8px rgba(16,185,129,0.55), 0 2px 6px -2px rgba(0,0,0,0.4)',
+              'linear-gradient(180deg, rgba(20, 200, 140, 0.96) 0%, rgba(5, 150, 105, 0.96) 100%)',
+            boxShadow: [
+              '0 1px 0 0 rgba(255,255,255,0.22) inset',
+              '0 0 0 1px rgba(5,150,105,0.55)',
+              '0 8px 22px -10px rgba(16,185,129,0.55)',
+              '0 2px 6px -2px rgba(0,0,0,0.45)',
+            ].join(', '),
           }}
         >
-          {/* Top inner highlight */}
           <span
             aria-hidden
             className="absolute inset-x-0 top-0 h-px"
-            style={{
-              background:
-                'linear-gradient(to right, transparent, rgba(255,255,255,0.45), transparent)',
-            }}
+            style={{ background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.6), transparent)' }}
           />
-          {/* Hover sheen */}
           <span
             aria-hidden
-            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            style={{
-              background:
-                'radial-gradient(120% 80% at 50% -10%, rgba(255,255,255,0.18) 0%, transparent 60%)',
-            }}
+            className="absolute inset-0 opacity-0 group-hover/cta:opacity-100 transition-opacity duration-300"
+            style={{ background: 'radial-gradient(120% 80% at 50% -10%, rgba(255,255,255,0.22) 0%, transparent 60%)' }}
           />
           <MessageSquare className="w-3.5 h-3.5 relative z-10" />
-          <span className="relative z-10 tracking-[-0.005em]">New Consultation</span>
+          <span className="relative z-10">New chat</span>
         </Link>
       </div>
 
       {/* Divider */}
       <div className="mx-3 h-px bg-white/[0.06] flex-shrink-0" />
 
-      {/* Cases Section — hidden for anonymous users (no saved threads to show) */}
+      {/* Cases Section - hidden for anonymous users (no saved threads to show) */}
       <div className="flex-1 overflow-y-auto overscroll-contain px-2 py-2 min-h-0" style={{ overscrollBehavior: 'contain' }}>
         {user && (
         <button
@@ -146,7 +140,7 @@ export default function AppSidebar({ mobileSidebarOpen, onCloseMobile, isDark, o
         )}
 
         {user && casesExpanded && (
-          <div className="space-y-px mt-1">
+          <div className="space-y-px mt-1" suppressHydrationWarning>
             {sessions.map((session) => {
               const isActive = pathname === `/chat/${session.id}`
               return (
@@ -165,7 +159,7 @@ export default function AppSidebar({ mobileSidebarOpen, onCloseMobile, isDark, o
 
                   <Link href={`/chat/${session.id}`} className="flex-1 min-w-0">
                     <div className={`truncate font-medium ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
-                      {session.title || 'New Consultation'}
+                      {session.title || 'New chat'}
                     </div>
                     <div className="text-[10px] text-muted-foreground/40 mt-0.5">
                       {getTimeAgo(session.created_at)}
@@ -237,7 +231,7 @@ export default function AppSidebar({ mobileSidebarOpen, onCloseMobile, isDark, o
               <div className="flex-1 min-w-0">
                 <div
                   className="text-[13px] font-medium text-foreground/80 truncate group-hover:text-foreground transition-colors"
-                  style={{ fontFamily: "'Playfair Display', serif" }}
+                  style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}
                 >
                   {userName}
                 </div>
@@ -255,8 +249,7 @@ export default function AppSidebar({ mobileSidebarOpen, onCloseMobile, isDark, o
         ) : (
           <div className="space-y-2">
             <p className="text-[10.5px] text-white/40 leading-snug px-0.5">
-              Sign in to save consultations, upload private documents, and pick
-              up where you left off.
+              Sign in to save chats, upload your own documents, and pick up where you left off.
             </p>
             <Link
               href="/auth/login"

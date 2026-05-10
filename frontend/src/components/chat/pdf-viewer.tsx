@@ -35,7 +35,7 @@ interface PdfViewerProps {
 const SNAP_FULL = 0.92
 const SNAP_MID = 0.55
 const SNAP_PEEK = 0.16
-const DISMISS_VELOCITY = 700  // px/s — flick faster than this dismisses
+const DISMISS_VELOCITY = 700  // px/s - flick faster than this dismisses
 const DISMISS_DRAG_PX = 120   // dragging down >120px past peek dismisses
 
 export function PdfViewer({ citation, onClose }: PdfViewerProps) {
@@ -60,7 +60,7 @@ export function PdfViewer({ citation, onClose }: PdfViewerProps) {
     setLoading(true)
     ;(async () => {
       try {
-        // Artifact path takes precedence — those are agent-generated PDFs.
+        // Artifact path takes precedence - those are agent-generated PDFs.
         if (citation.artifactId) {
           const r = await fetch(`${API_URL}/api/artifacts/${citation.artifactId}/pdf`)
           if (!r.ok) throw new Error((await r.text()) || `artifact ${r.status}`)
@@ -165,7 +165,7 @@ export function PdfViewer({ citation, onClose }: PdfViewerProps) {
 
   const titleText = meta?.short_name || meta?.title || citation.actName
 
-  // Shared body — used by both desktop and mobile shells.
+  // Shared body - used by both desktop and mobile shells.
   const Body = (
     <>
       <div className="flex items-center justify-between gap-3 px-4 py-2 border-b border-white/[0.06] bg-white/[0.015] flex-shrink-0">
@@ -369,7 +369,7 @@ function PdfMobileSheet({
       className="md:hidden fixed left-0 right-0 bottom-0 z-40 bg-[#0a0a0b] border-t border-white/[0.06] rounded-t-2xl shadow-[0_-12px_40px_-10px_rgba(0,0,0,0.6)] flex flex-col"
       aria-label="PDF source viewer"
     >
-      {/* Drag handle row — only the handle and header initiate drag, so the
+      {/* Drag handle row - only the handle and header initiate drag, so the
           PDF body remains independently scrollable. */}
       <div
         className="flex items-center justify-center pt-2 pb-1 cursor-grab active:cursor-grabbing"
@@ -380,7 +380,7 @@ function PdfMobileSheet({
         <div className="h-1 w-10 rounded-full bg-white/20" />
       </div>
 
-      {/* Header — also a drag region so users can pull from the title area */}
+      {/* Header - also a drag region so users can pull from the title area */}
       <header
         className="flex items-start gap-3 px-4 py-2 pb-3 border-b border-white/[0.06] flex-shrink-0"
         style={{ touchAction: 'none' }}
@@ -427,7 +427,7 @@ function PdfMobileSheet({
         </button>
       </header>
 
-      {/* Body — hidden when peeking so a tiny height doesn't render a useless
+      {/* Body - hidden when peeking so a tiny height doesn't render a useless
           page-nav strip. Tapping the handle pops back to full. */}
       <div className={`flex flex-col flex-1 min-h-0 ${snap === 'peek' ? 'opacity-30 pointer-events-none' : ''}`}>
         {children}

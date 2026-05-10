@@ -672,13 +672,140 @@ class UpdateTemplateRequest(BaseModel):
     description: str | None = None
 
 
+class CreateTemplateFolderRequest(BaseModel):
+    user_id: str
+    name: str
+
+
+class RenameTemplateFolderRequest(BaseModel):
+    name: str
+
+
+class MoveTemplateRequest(BaseModel):
+    folder_id: str | None = None  # null clears the folder
+
+
 @router.get("/templates")
-def list_templates(user_id: str):
-    """List the user's uploaded templates."""
+def list_templates(user_id: str, folder_id: str | None = None):
+    """List the user's uploaded templates, optionally scoped to one folder."""
     from ..services.templates import list_templates_for_owner
 
-    rows = list_templates_for_owner(user_id)
+    rows = list_templates_for_owner(user_id, folder_id=folder_id)
     return {"templates": rows, "count": len(rows)}
+
+
+@router.get("/template-folders")
+def list_template_folders(user_id: str):
+    """Return the user's template folders + per-folder count + unfiled count."""
+    from ..db.supabase import get_db
+
+    db = get_db()
+    folders = (
+        db.table("template_folders")
+        .select("id, name, created_at")
+        .eq("owner_id", user_id)
+        .order("created_at", desc=False)
+        .execute()
+        .data
+        or []
+    )
+    rows = (
+        db.table("templates")
+        .select("id, folder_id")
+        .eq("owner_id", user_id)
+        .execute()
+        .data
+        or []
+    )
+    counts: dict[str, int] = {}
+    unfiled = 0
+    for r in rows:
+        fid = r.get("folder_id")
+        if fid is None:
+            unfiled += 1
+        else:
+            counts[fid] = counts.get(fid, 0) + 1
+    return {
+        "folders": [{**f, "doc_count": counts.get(f["id"], 0)} for f in folders],
+        "unfiled_count": unfiled,
+    }
+
+
+@router.post("/template-folders")
+def create_template_folder(req: CreateTemplateFolderRequest):
+    from ..db.supabase import get_db
+
+    name = req.name.strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="name required")
+    db = get_db()
+    try:
+        row = (
+            db.table("template_folders")
+            .insert({"owner_id": req.user_id, "name": name})
+            .execute()
+        )
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=409, detail=str(e))
+    return row.data[0] if row.data else {"status": "ok"}
+
+
+@router.patch("/template-folders/{folder_id}")
+def rename_template_folder(folder_id: str, req: RenameTemplateFolderRequest):
+    from ..db.supabase import get_db
+
+    name = req.name.strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="name required")
+    db = get_db()
+    db.table("template_folders").update(
+        {"name": name, "updated_at": "now()"}
+    ).eq("id", folder_id).execute()
+    return {"status": "ok"}
+
+
+@router.delete("/template-folders/{folder_id}")
+def delete_template_folder(folder_id: str, cascade: bool = False):
+    """Delete a template folder. By default the templates inside become
+    unfiled (folder_id=NULL). With cascade=true the templates are deleted too
+    (storage objects included)."""
+    from ..db.supabase import get_db
+
+    db = get_db()
+    if cascade:
+        # Pull storage paths first so we can clean blobs.
+        rows = (
+            db.table("templates")
+            .select("id, storage_path")
+            .eq("folder_id", folder_id)
+            .execute()
+            .data
+            or []
+        )
+        for row in rows:
+            path = row.get("storage_path") or ""
+            if path:
+                bucket, _, key = path.partition("/")
+                try:
+                    db.storage.from_(bucket).remove([key])
+                except Exception:
+                    pass
+        db.table("templates").delete().eq("folder_id", folder_id).execute()
+    else:
+        db.table("templates").update({"folder_id": None}).eq("folder_id", folder_id).execute()
+    db.table("template_folders").delete().eq("id", folder_id).execute()
+    return {"status": "ok", "cascade": cascade}
+
+
+@router.patch("/templates/{template_id}/folder")
+def move_template_to_folder(template_id: str, req: MoveTemplateRequest):
+    from ..db.supabase import get_db
+
+    db = get_db()
+    db.table("templates").update({"folder_id": req.folder_id}).eq(
+        "id", template_id
+    ).execute()
+    return {"status": "ok", "folder_id": req.folder_id}
 
 
 @router.post("/templates/upload")
@@ -687,6 +814,7 @@ async def upload_template(
     user_id: str | None = None,
     name: str | None = None,
     description: str | None = None,
+    folder_id: str | None = None,
 ):
     """
     Upload a template file (.docx | .pdf | .txt | .md).
@@ -743,6 +871,7 @@ async def upload_template(
                     "storage_path": storage_path,
                     "preview_text": preview or None,
                     "page_count": page_count,
+                    "folder_id": folder_id,
                 }
             )
             .execute()

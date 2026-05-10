@@ -13,7 +13,7 @@ import { TemplateSuggestions } from './template-suggestions'
 import type { ArtifactView, ChunkUsed, TemplateSuggestion, WebSource } from '@/lib/api'
 
 /**
- * A chronological "block" — either a chunk of streamed prose or a reference
+ * A chronological "block" - either a chunk of streamed prose or a reference
  * to a tool call by id. We render blocks in order so tool-call cards appear
  * inline at the moment they fire (Claude Code / Codex style) rather than
  * stacked above the answer.
@@ -83,7 +83,7 @@ export function ChatMessage({
   return (
     <div className="flex gap-3 px-4 md:px-0">
       <div className="flex-1 min-w-0 space-y-2.5">
-        {/* Compaction notice — appears once, only on the assistant turn that
+        {/* Compaction notice - appears once, only on the assistant turn that
             triggered compaction. The Brief panel still has the full transcript. */}
         {compaction && (
           <div className="rounded-lg border border-emerald-500/15 bg-emerald-500/[0.04] px-3 py-2 text-[11px] text-emerald-300/80 flex items-center gap-2">
@@ -106,13 +106,13 @@ export function ChatMessage({
             </div>
             <span
               className="text-[11px] font-medium text-white/30 tracking-wide uppercase"
-              style={{ fontFamily: "'Playfair Display', serif" }}
+              style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}
             >
               Levy AI
             </span>
           </div>
 
-          {/* Content — Claude-Code/Codex style: tool-call cards interleave
+          {/* Content - Claude-Code/Codex style: tool-call cards interleave
               chronologically with prose segments, so the user sees research
               happen in real time. Legacy messages without `blocks` fall back
               to a single text block + tool cards stacked above. */}

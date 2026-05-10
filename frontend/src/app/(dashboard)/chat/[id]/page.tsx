@@ -43,7 +43,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
   const pdf = usePdfViewer()
   const attachments = useSessionAttachments(id)
 
-  // Saved-thread routes require an account — anonymous users couldn't have
+  // Saved-thread routes require an account - anonymous users couldn't have
   // created this session anyway. Bounce them to the home /chat (where they
   // can chat anonymously) rather than to login, which is friendlier.
   useEffect(() => {
@@ -342,7 +342,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
             <div ref={messagesEndRef} />
           </div>
         </div>
-        {/* Floating glass dock — chat input */}
+        {/* Floating glass dock - chat input */}
         <div className="absolute inset-x-0 bottom-0 z-20 pointer-events-none">
           <div
             className="px-3 sm:px-4 pt-6 pb-[max(12px,env(safe-area-inset-bottom))]"

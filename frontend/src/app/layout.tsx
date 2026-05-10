@@ -7,7 +7,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 
 export const metadata: Metadata = {
-  title: 'Levy — AI Legal Assistant for Zambia',
+  title: 'Levy - AI Legal Assistant for Zambia',
   description: 'Ask questions about Zambian law and get answers grounded in actual legislation with citations.',
 }
 

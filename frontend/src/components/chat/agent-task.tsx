@@ -2,7 +2,7 @@
 
 /**
  * Renders one tool invocation as a nested "task" with its results listed as
- * subtasks below — visual style adapted from the AgentPlan reference component.
+ * subtasks below - visual style adapted from the AgentPlan reference component.
  *
  * Each subtask has an appropriate icon: FileText for corpus/document hits,
  * favicons for web hits (with a generic Globe fallback).
@@ -97,7 +97,7 @@ export function AgentTask({ call }: { call: ToolCallView }) {
             hasResults ? 'hover:bg-white/[0.025] cursor-pointer' : 'cursor-default'
           }`}
         >
-          {/* Status icon — animates between run/done states */}
+          {/* Status icon - animates between run/done states */}
           <span className="flex-shrink-0">
             <AnimatePresence mode="wait">
               <motion.div
@@ -170,7 +170,7 @@ export function AgentTask({ call }: { call: ToolCallView }) {
           )}
         </button>
 
-        {/* Subtasks — staggered reveal, with vertical dashed connector */}
+        {/* Subtasks - staggered reveal, with vertical dashed connector */}
         <AnimatePresence initial={false}>
           {expanded && hasResults && (
             <motion.div

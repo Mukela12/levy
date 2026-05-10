@@ -66,7 +66,7 @@ export function useBrief() {
  * Chat pages call this with their own messages state so the layout-level
  * Brief button + bottom sheet can read them. We deliberately accept the
  * caller's source array (NOT a `.map()` of it) so the effect's deps are
- * stable across renders — passing a fresh array each render would cause
+ * stable across renders - passing a fresh array each render would cause
  * an infinite render loop with the provider.
  */
 export function useRegisterBrief(messages: BriefMessage[], token?: string) {
