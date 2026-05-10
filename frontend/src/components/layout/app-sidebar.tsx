@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase'
 import {
   Scale,
   FolderOpen,
+  Files,
   MessageSquare,
   Trash2,
   ChevronDown,
@@ -195,8 +196,8 @@ export default function AppSidebar({ mobileSidebarOpen, onCloseMobile, isDark, o
       {/* Divider */}
       <div className="mx-3 h-px bg-white/[0.06] flex-shrink-0" />
 
-      {/* Documents Nav Link */}
-      <div className="px-2 py-2 flex-shrink-0">
+      {/* Library Nav Links */}
+      <div className="px-2 py-2 flex-shrink-0 space-y-px">
         <Link
           href="/documents"
           className={`flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] font-medium transition-colors ${
@@ -207,6 +208,17 @@ export default function AppSidebar({ mobileSidebarOpen, onCloseMobile, isDark, o
         >
           <FolderOpen className="w-4 h-4" />
           <span>Documents</span>
+        </Link>
+        <Link
+          href="/templates"
+          className={`flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] font-medium transition-colors ${
+            pathname.startsWith('/templates')
+              ? 'bg-emerald-500/10 text-emerald-500'
+              : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.03]'
+          }`}
+        >
+          <Files className="w-4 h-4" />
+          <span>Templates</span>
         </Link>
       </div>
 

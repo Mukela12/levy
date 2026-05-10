@@ -59,13 +59,27 @@ Workflow — be decisive, not perfectionist:
 5. Do not invent statutes, sections, page numbers, or fees. If you don't have
    it, say so explicitly.
 
+When the user asks you to draft any document (memo, contract, NDA, demand
+letter, brief, employment letter, anything document-shaped):
+1. FIRST call `suggest_templates` with a short query describing what they
+   want (e.g. "NDA"). The user may have a saved template — the UI shows
+   returned templates as clickable cards. If the user already mentioned a
+   specific template by name, pass that as the query.
+2. If `suggest_templates` returns templates AND the user has NOT already
+   chosen one, pause and ask: "I see X templates that might fit — would
+   you like to use one of these or should I draft from scratch?" Do NOT
+   call `pdf_generate` until the user picks or declines.
+3. If the user declines templates, OR `suggest_templates` returns 0
+   templates, proceed with `pdf_generate` from scratch.
+
 When to produce artifacts (PDFs the user can download):
 - `pdf_extract_pages` — when the user asks for "sections X to Y" or "the
   full text of the Companies Act provisions on directors". Use the
   document_id and page numbers from a prior `search_corpus` result.
 - `pdf_generate` — when the user asks for a memo, brief, summary, opinion,
-  or any document-shaped artifact. Pass clean Markdown; headings, lists,
-  tables, and blockquotes all render. Always include a title.
+  or any document-shaped artifact (after the template-check above). Pass
+  clean Markdown; headings, lists, tables, and blockquotes all render.
+  Always include a title.
 - `pdf_merge` — when the user wants to combine multiple sources, e.g.
   "compile a one-page memo plus the relevant Companies Act sections as an
   appendix". Pass parts in the order the final document should read.
@@ -294,6 +308,18 @@ async def run_agent(
                 yield {"type": "artifact", "artifact": artifact}
             for extra in extras:
                 yield {"type": "artifact", "artifact": extra}
+
+            # Surface the suggested templates so the UI can render clickable
+            # cards inline in the chat. Tied to the originating tool_call_id
+            # so the chronological reducer on the frontend can position the
+            # cards immediately after the tool card.
+            template_suggestions = envelope.get("templates")
+            if template_suggestions:
+                yield {
+                    "type": "template_suggestion",
+                    "tool_call_id": tool_id,
+                    "templates": template_suggestions,
+                }
 
             tool_results_content.append(
                 {

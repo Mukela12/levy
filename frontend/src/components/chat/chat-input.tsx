@@ -9,6 +9,10 @@ interface ChatInputProps {
   placeholder?: string
   webSearch?: boolean
   onWebSearchChange?: (next: boolean) => void
+  /** Click handler for the paperclip; when undefined the button stays hidden. */
+  onAttachClick?: () => void
+  /** Number of currently-attached docs; surfaced as a small badge. */
+  attachmentCount?: number
 }
 
 export function ChatInput({
@@ -17,6 +21,8 @@ export function ChatInput({
   placeholder = 'Ask about Zambian law...',
   webSearch: webSearchProp,
   onWebSearchChange,
+  onAttachClick,
+  attachmentCount = 0,
 }: ChatInputProps) {
   const [message, setMessage] = useState('')
   const [webSearchInternal, setWebSearchInternal] = useState(false)
@@ -81,8 +87,27 @@ export function ChatInput({
         />
         <div className="flex items-center justify-between px-3 pb-3">
           <div className="flex items-center gap-1">
-            <button className="flex items-center justify-center size-8 rounded-lg text-white/20 hover:text-white/50 hover:bg-white/[0.04] transition-all">
+            <button
+              type="button"
+              onClick={onAttachClick}
+              disabled={!onAttachClick || disabled}
+              aria-label={
+                attachmentCount > 0
+                  ? `Attached documents (${attachmentCount})`
+                  : 'Attach documents'
+              }
+              className={`relative flex items-center justify-center size-8 rounded-lg transition-all ${
+                attachmentCount > 0
+                  ? 'bg-emerald-500/12 text-emerald-400 border border-emerald-500/25'
+                  : 'text-white/20 hover:text-white/50 hover:bg-white/[0.04]'
+              } disabled:opacity-30 disabled:cursor-not-allowed`}
+            >
               <Paperclip className="size-4" />
+              {attachmentCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-[3px] rounded-full bg-emerald-500 text-[10px] leading-none font-semibold flex items-center justify-center text-white">
+                  {attachmentCount > 9 ? '9+' : attachmentCount}
+                </span>
+              )}
             </button>
             <button
               onClick={() => setWebSearch(!webSearch)}

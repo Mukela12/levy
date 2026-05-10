@@ -662,3 +662,182 @@ def generate_brief(request: BriefRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ─── Templates ───────────────────────────────────────────────────────────────
+
+
+class UpdateTemplateRequest(BaseModel):
+    name: str | None = None
+    description: str | None = None
+
+
+@router.get("/templates")
+def list_templates(user_id: str):
+    """List the user's uploaded templates."""
+    from ..services.templates import list_templates_for_owner
+
+    rows = list_templates_for_owner(user_id)
+    return {"templates": rows, "count": len(rows)}
+
+
+@router.post("/templates/upload")
+async def upload_template(
+    file: UploadFile = File(...),
+    user_id: str | None = None,
+    name: str | None = None,
+    description: str | None = None,
+):
+    """
+    Upload a template file (.docx | .pdf | .txt | .md).
+
+    Stored in the private `templates` Supabase Storage bucket; a row in the
+    `templates` table records owner + name + description + a preview of the
+    text content for the agent's `suggest_templates` tool.
+    """
+    if not user_id:
+        raise HTTPException(status_code=400, detail="user_id required")
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="file required")
+
+    from ..services.templates import (
+        TEMPLATES_BUCKET,
+        extract_preview,
+        file_type_for,
+        upload_to_storage,
+    )
+    from ..db.supabase import get_db
+
+    file_type = file_type_for(file.filename)
+    if not file_type:
+        raise HTTPException(
+            status_code=400,
+            detail="Unsupported file type. Use .docx, .pdf, .txt, or .md.",
+        )
+
+    content = await file.read()
+    size = len(content)
+    preview, page_count = extract_preview(content, file_type)
+
+    # Default name = filename without extension
+    template_name = (name or os.path.splitext(file.filename)[0]).strip()
+    if not template_name:
+        raise HTTPException(status_code=400, detail="name required")
+
+    try:
+        storage_path = upload_to_storage(content, file_type, user_id)
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"storage upload failed: {e}")
+
+    db = get_db()
+    try:
+        row = (
+            db.table("templates")
+            .insert(
+                {
+                    "owner_id": user_id,
+                    "name": template_name,
+                    "description": (description or "").strip() or None,
+                    "file_type": file_type,
+                    "file_size_bytes": size,
+                    "storage_path": storage_path,
+                    "preview_text": preview or None,
+                    "page_count": page_count,
+                }
+            )
+            .execute()
+        ).data
+    except Exception as e:  # noqa: BLE001
+        # Roll back the storage write so we don't leak orphan blobs.
+        try:
+            bucket, _, key = storage_path.partition("/")
+            db.storage.from_(bucket).remove([key])
+        except Exception:
+            pass
+        raise HTTPException(status_code=409, detail=str(e))
+
+    return {"template": row[0] if row else None}
+
+
+@router.patch("/templates/{template_id}")
+def update_template(template_id: str, req: UpdateTemplateRequest):
+    """Rename a template or update its description."""
+    from ..db.supabase import get_db
+
+    patch: dict = {"updated_at": "now()"}
+    if req.name is not None:
+        name = req.name.strip()
+        if not name:
+            raise HTTPException(status_code=400, detail="name cannot be empty")
+        patch["name"] = name
+    if req.description is not None:
+        patch["description"] = req.description.strip() or None
+
+    db = get_db()
+    db.table("templates").update(patch).eq("id", template_id).execute()
+    return {"status": "ok"}
+
+
+@router.delete("/templates/{template_id}")
+def delete_template(template_id: str):
+    """Delete a template (DB row + storage object)."""
+    from ..db.supabase import get_db
+
+    db = get_db()
+    res = (
+        db.table("templates")
+        .select("id, storage_path")
+        .eq("id", template_id)
+        .limit(1)
+        .execute()
+    )
+    if not res.data:
+        raise HTTPException(status_code=404, detail="template not found")
+    row = res.data[0]
+    path = row.get("storage_path") or ""
+    if path:
+        bucket, _, key = path.partition("/")
+        try:
+            db.storage.from_(bucket).remove([key])
+        except Exception:
+            # Storage delete is best-effort — never block row deletion.
+            pass
+    db.table("templates").delete().eq("id", template_id).execute()
+    return {"status": "ok"}
+
+
+@router.get("/templates/{template_id}/file")
+def get_template_signed_url(template_id: str, expires_in: int = 3600):
+    """Short-lived signed URL the frontend can use to download/preview the file."""
+    from ..db.supabase import get_db
+
+    db = get_db()
+    res = (
+        db.table("templates")
+        .select("id, name, file_type, storage_path, page_count, file_size_bytes")
+        .eq("id", template_id)
+        .limit(1)
+        .execute()
+    )
+    if not res.data:
+        raise HTTPException(status_code=404, detail="template not found")
+    row = res.data[0]
+    path = row.get("storage_path") or ""
+    if not path:
+        raise HTTPException(status_code=404, detail="template has no stored file")
+    bucket, _, key = path.partition("/")
+    try:
+        signed = db.storage.from_(bucket).create_signed_url(key, expires_in)
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"signed-url failed: {e}")
+    return {
+        "template_id": row["id"],
+        "name": row.get("name"),
+        "file_type": row.get("file_type"),
+        "page_count": row.get("page_count"),
+        "size_bytes": row.get("file_size_bytes"),
+        "signed_url": signed.get("signedURL")
+        or signed.get("signed_url")
+        or signed.get("signedUrl"),
+        "expires_in": expires_in,
+    }

@@ -11,10 +11,12 @@ import { ChatMessage, ThinkingGlow } from '@/components/chat/chat-message'
 import { BriefPanel } from '@/components/chat/brief-panel'
 import { useRegisterBrief } from '@/components/chat/brief-context'
 import { usePdfViewer } from '@/components/chat/pdf-viewer-context'
+import { AttachmentsSheet } from '@/components/chat/attachments-sheet'
 import type { ToolCallView } from '@/components/chat/tool-call-card'
 import type { MessageBlock } from '@/components/chat/chat-message'
-import { BookOpen, Search, FileText, Gavel } from 'lucide-react'
-import type { ArtifactView, ChunkUsed, WebSource } from '@/lib/api'
+import { attachDocumentToSession, type LibraryDocument } from '@/lib/api'
+import { BookOpen, Search, FileText, Gavel, Paperclip, X } from 'lucide-react'
+import type { ArtifactView, ChunkUsed, TemplateSuggestion, WebSource } from '@/lib/api'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -24,6 +26,7 @@ interface Message {
   webSources?: WebSource[]
   toolCalls?: ToolCallView[]
   artifacts?: ArtifactView[]
+  templateSuggestions?: Record<string, TemplateSuggestion[]>
   timing?: { total_ms: number }
   compaction?: { summarised_messages: number; tokens_before: number; tokens_after: number }
 }
@@ -64,6 +67,10 @@ export default function NewChatPage() {
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [accentLineWidth, setAccentLineWidth] = useState(0)
   const [webSearch, setWebSearch] = useState(false)
+  // Staged attachments for the very first message: persisted into the
+  // chat_session_documents join table once the session is created.
+  const [stagedAttachments, setStagedAttachments] = useState<LibraryDocument[]>([])
+  const [attachmentsOpen, setAttachmentsOpen] = useState(false)
   const pdf = usePdfViewer()
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { user, session } = useAuth()
@@ -137,6 +144,12 @@ export default function NewChatPage() {
       if (!sid && !isAnonymous) {
         sid = await createSession(question)
         setSessionId(sid)
+        // Apply any staged attachments to the new session.
+        if (stagedAttachments.length > 0) {
+          await Promise.all(
+            stagedAttachments.map((d) => attachDocumentToSession(sid!, d.id)),
+          )
+        }
       }
 
       if (sid && !isAnonymous) {
@@ -175,6 +188,7 @@ export default function NewChatPage() {
           webSearch,
           userId: user?.id,
           sessionId: sid ?? undefined,
+          attachedDocIds: stagedAttachments.map((d) => d.id),
           history,
         },
         undefined,
@@ -232,6 +246,25 @@ export default function NewChatPage() {
                 tokens_after: info.tokens_after,
               },
             })),
+          onTemplateSuggestion: (event) =>
+            updateLast((last) => {
+              const blocks = [...(last.blocks ?? [])]
+              if (
+                !blocks.some(
+                  (b) => b.kind === 'templates' && b.toolCallId === event.tool_call_id,
+                )
+              ) {
+                blocks.push({ kind: 'templates', toolCallId: event.tool_call_id })
+              }
+              return {
+                ...last,
+                blocks,
+                templateSuggestions: {
+                  ...(last.templateSuggestions ?? {}),
+                  [event.tool_call_id]: event.templates,
+                },
+              }
+            }),
           onDone: (metadata) => {
             setMessages((prev) => {
               const updated = [...prev]
@@ -371,6 +404,8 @@ export default function NewChatPage() {
                 disabled={loading}
                 webSearch={webSearch}
                 onWebSearchChange={setWebSearch}
+                onAttachClick={user ? () => setAttachmentsOpen(true) : undefined}
+                attachmentCount={stagedAttachments.length}
               />
             </div>
 
@@ -407,6 +442,7 @@ export default function NewChatPage() {
                           webSources={msg.webSources}
                           toolCalls={msg.toolCalls}
                           artifacts={msg.artifacts}
+                          templateSuggestions={msg.templateSuggestions}
                           timing={msg.timing}
                           isStreaming={isLastAssistant}
                           compaction={msg.compaction}
@@ -426,6 +462,11 @@ export default function NewChatPage() {
                               pageStart: 1,
                             })
                           }
+                          onUseTemplate={(t) =>
+                            handleSend(
+                              `Use my "${t.name}" template (id: ${t.id}) to draft this for me. Generate the document with pdf_generate using that template's structure as the basis.`,
+                            )
+                          }
                         />
                       )}
                     </div>
@@ -444,11 +485,32 @@ export default function NewChatPage() {
                 }}
               >
                 <div className="pointer-events-auto max-w-3xl mx-auto">
+                  {stagedAttachments.length > 0 && (
+                    <div className="mb-2 flex flex-wrap gap-1.5 px-1">
+                      {stagedAttachments.map((d) => (
+                        <button
+                          key={d.id}
+                          type="button"
+                          onClick={() =>
+                            setStagedAttachments((prev) => prev.filter((x) => x.id !== d.id))
+                          }
+                          className="group flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-100/85 hover:bg-emerald-500/20"
+                          aria-label={`Detach ${d.title}`}
+                        >
+                          <Paperclip size={10} className="text-emerald-400/80" />
+                          <span className="max-w-[180px] truncate">{d.title}</span>
+                          <X size={10} className="text-emerald-400/40 group-hover:text-emerald-400/80" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   <ChatInput
                 onSend={handleSend}
                 disabled={loading}
                 webSearch={webSearch}
                 onWebSearchChange={setWebSearch}
+                onAttachClick={user ? () => setAttachmentsOpen(true) : undefined}
+                attachmentCount={stagedAttachments.length}
               />
                   <p className="mt-2 text-center text-[10px] text-white/25">
                     Levy provides legal information, not legal advice.
@@ -466,6 +528,34 @@ export default function NewChatPage() {
           <BriefPanel messages={messages.map(m => ({ role: m.role, content: m.content }))} token={session?.access_token} />
         </aside>
       )}
+
+      <AttachmentsSheet
+        open={attachmentsOpen}
+        onClose={() => setAttachmentsOpen(false)}
+        userId={user?.id}
+        sessionId={sessionId}
+        attachedIds={new Set(stagedAttachments.map((d) => d.id))}
+        onToggle={async (doc) => {
+          // If a session already exists, persist; otherwise stage locally.
+          if (sessionId) {
+            const isAttached = stagedAttachments.some((d) => d.id === doc.id)
+            if (isAttached) {
+              setStagedAttachments((prev) => prev.filter((d) => d.id !== doc.id))
+              const { detachDocumentFromSession } = await import('@/lib/api')
+              await detachDocumentFromSession(sessionId, doc.id)
+            } else {
+              setStagedAttachments((prev) => [...prev, doc])
+              await attachDocumentToSession(sessionId, doc.id)
+            }
+          } else {
+            setStagedAttachments((prev) =>
+              prev.some((d) => d.id === doc.id)
+                ? prev.filter((d) => d.id !== doc.id)
+                : [...prev, doc],
+            )
+          }
+        }}
+      />
     </div>
   )
 }

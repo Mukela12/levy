@@ -26,6 +26,7 @@ from ..config import get_settings
 from ..db.supabase import search_chunks
 from .embedder import get_query_embedding
 from . import pdf_tools
+from . import templates as templates_service
 
 
 # ─── Curated source whitelist ────────────────────────────────────────────────
@@ -33,20 +34,34 @@ from . import pdf_tools
 # questions. The list is intentionally narrow; the model can fall back to
 # unrestricted web_search if nothing useful is found.
 GOV_ZM_DOMAINS: list[str] = [
+    # Legal & legislative
     "parliament.gov.zm",
     "lawsofzambia.com",
     "judiciaryzambia.com",
     "zambia.gov.zm",
     "moj.gov.zm",
     "pacra.org.zm",
+    "lazcouncil.org.zm",  # Law Association of Zambia
+    # Tax / finance / regulatory
     "minfin.gov.zm",
-    "mlg.gov.zm",
     "zra.org.zm",
     "boz.zm",
+    # Devolved governance / local
+    "mlg.gov.zm",
+    # Economic / sectoral
     "eiti.org",
     "zmeiti.com",
     "pmrc.org.zm",
-    "lazcouncil.org.zm",  # Law Association of Zambia
+    # Procurement & infrastructure (validated set imported from
+    # the Procura tender-intelligence pipeline; useful when answering
+    # questions about public procurement law, supplier debarments, AWPs)
+    "zppa.org.zm",
+    "eprocure.zppa.org.zm",
+    "rda.org.zm",
+    "zesco.co.zm",
+    # Statistics & digital governance
+    "zamstats.gov.zm",
+    "szi.gov.zm",
 ]
 
 
@@ -415,6 +430,48 @@ def build_tool_registry(
             include_appendix=include_appendix,
             owner_id=owner_id,
         )
+
+    async def _suggest_templates(query: str | None = None):
+        """Return up to 3 of the user's templates relevant to `query`."""
+        if not owner_id:
+            return {
+                "result": {
+                    "count": 0,
+                    "templates": [],
+                    "note": (
+                        "Anonymous user — templates require sign-in. "
+                        "Tell the user they can save reusable templates to "
+                        "their account at /templates after signing in."
+                    ),
+                },
+                "templates": [],
+            }
+        rows = await asyncio.to_thread(
+            templates_service.suggest_templates_for, owner_id, query
+        )
+        compact = [
+            {
+                "id": r["id"],
+                "name": r["name"],
+                "description": r.get("description") or "",
+                "file_type": r["file_type"],
+                "page_count": r.get("page_count"),
+                # Preview for the UI card (~2 lines worth of text).
+                "preview": (r.get("preview_text") or "")[:240],
+                # Full preview text the agent reads to draft from. Capped at
+                # 1800 chars to keep tool-result payloads tight.
+                "content": (r.get("preview_text") or "")[:1800],
+            }
+            for r in rows
+        ]
+        return {
+            "result": {"count": len(compact), "templates": compact},
+            "db_sources": [],
+            "web_sources": [],
+            # Surfaced separately by the agent loop so the UI can render
+            # clickable suggestion cards inline in the chat.
+            "templates": compact,
+        }
     tools: dict[str, ToolDefinition] = {
         "pdf_extract_pages": ToolDefinition(
             name="pdf_extract_pages",
@@ -548,6 +605,35 @@ def build_tool_registry(
                 "required": ["title", "parts"],
             },
             handler=_merge,
+        ),
+        "suggest_templates": ToolDefinition(
+            name="suggest_templates",
+            description=(
+                "List up to 3 of the user's saved document templates that look "
+                "relevant to a drafting request. Use this BEFORE pdf_generate "
+                "or any other artifact tool when the user asks you to draft, "
+                "write, or prepare any document (memo, contract, NDA, demand "
+                "letter, brief, etc.) — even if they didn't mention templates "
+                "explicitly. The UI shows the returned templates as clickable "
+                "cards. If the user already named a specific template, pass "
+                "that as the `query`. The tool returns a `templates` array; "
+                "if it's empty, the user has no templates and you should "
+                "proceed normally with pdf_generate."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": (
+                            "Free-text describing what the user wants to draft "
+                            "(e.g. 'employment offer letter', 'NDA'). Used to "
+                            "rank the user's templates by keyword relevance."
+                        ),
+                    },
+                },
+            },
+            handler=_suggest_templates,
         ),
         "search_corpus": ToolDefinition(
             name="search_corpus",

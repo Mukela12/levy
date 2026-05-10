@@ -159,6 +159,73 @@ export async function moveDocumentToFolder(documentId: string, folderId: string 
   if (!r.ok) throw new Error(`move ${r.status}`)
 }
 
+// ─── Templates ──────────────────────────────────────────────────────────────
+
+export interface TemplateRow {
+  id: string
+  name: string
+  description?: string | null
+  file_type: 'docx' | 'pdf' | 'txt' | 'md'
+  file_size_bytes?: number | null
+  page_count?: number | null
+  preview_text?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
+export interface TemplateSuggestion {
+  id: string
+  name: string
+  description?: string
+  file_type: 'docx' | 'pdf' | 'txt' | 'md'
+  page_count?: number | null
+  preview?: string
+}
+
+export async function listTemplates(userId: string): Promise<{ templates: TemplateRow[]; count: number }> {
+  const r = await fetch(`${API_URL}/api/templates?user_id=${encodeURIComponent(userId)}`)
+  if (!r.ok) throw new Error(`templates ${r.status}`)
+  return r.json()
+}
+
+export async function uploadTemplate(
+  file: File,
+  options: { userId: string; name?: string; description?: string },
+): Promise<{ template: TemplateRow }> {
+  const params = new URLSearchParams()
+  params.set('user_id', options.userId)
+  if (options.name) params.set('name', options.name)
+  if (options.description) params.set('description', options.description)
+  const formData = new FormData()
+  formData.append('file', file)
+  const r = await fetch(`${API_URL}/api/templates/upload?${params.toString()}`, {
+    method: 'POST',
+    body: formData,
+  })
+  if (!r.ok) throw new Error((await r.text()) || `upload-template ${r.status}`)
+  return r.json()
+}
+
+export async function updateTemplate(id: string, patch: { name?: string; description?: string }): Promise<void> {
+  const r = await fetch(`${API_URL}/api/templates/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch),
+  })
+  if (!r.ok) throw new Error(`update-template ${r.status}`)
+}
+
+export async function deleteTemplate(id: string): Promise<void> {
+  const r = await fetch(`${API_URL}/api/templates/${id}`, { method: 'DELETE' })
+  if (!r.ok) throw new Error(`delete-template ${r.status}`)
+}
+
+export async function getTemplateSignedUrl(id: string): Promise<{ signed_url: string; name: string; file_type: string }> {
+  const r = await fetch(`${API_URL}/api/templates/${id}/file`)
+  if (!r.ok) throw new Error(`template-url ${r.status}`)
+  return r.json()
+}
+
 export async function sendQuery(
   question: string,
   options?: { model?: string; top_k?: number; threshold?: number; token?: string }
@@ -290,6 +357,11 @@ export interface CompactionEvent {
   error?: string
 }
 
+export interface TemplateSuggestionEvent {
+  tool_call_id: string
+  templates: TemplateSuggestion[]
+}
+
 export interface StreamHandlers {
   onThinking?: () => void
   onToken?: (text: string) => void
@@ -297,6 +369,7 @@ export interface StreamHandlers {
   onToolResult?: (result: ToolResultEvent) => void
   onArtifact?: (artifact: ArtifactView) => void
   onCompaction?: (event: CompactionEvent) => void
+  onTemplateSuggestion?: (event: TemplateSuggestionEvent) => void
   onDone?: (metadata: AgentDoneMetadata) => void
   onError?: (message: string) => void
 }
@@ -391,6 +464,9 @@ export async function streamQuery(
           break
         case 'compaction':
           handlers?.onCompaction?.(parsed as unknown as CompactionEvent)
+          break
+        case 'template_suggestion':
+          handlers?.onTemplateSuggestion?.(parsed as unknown as TemplateSuggestionEvent)
           break
         case 'sources':
           dbSources = ((parsed.db as ChunkUsed[]) ?? (parsed.chunks_used as ChunkUsed[]) ?? [])

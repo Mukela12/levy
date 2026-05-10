@@ -38,3 +38,11 @@ frontend/.vercel/
 frontend/.next/
 frontend/node_modules/
 .cache/
+
+# Local-only artifacts from session-recovery dumps
+.session-recovery/
+
+# TypeScript incremental build info
+frontend/tsconfig.tsbuildinfo
+frontend/.eslintcache
+

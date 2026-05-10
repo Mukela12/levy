@@ -13,6 +13,7 @@ import {
   ExternalLink,
   Link as LinkIcon,
 } from 'lucide-react'
+import { Favicon } from './favicon'
 
 export interface ToolCallView {
   id: string
@@ -141,9 +142,12 @@ export function ToolCallCard({ call }: { call: ToolCallView }) {
                   rel="noopener noreferrer"
                   className="group flex items-start gap-2 text-[11px] hover:bg-white/[0.02] -mx-1 px-1 py-1 rounded"
                 >
-                  <ExternalLink className="size-3 text-white/30 flex-shrink-0 mt-0.5" />
+                  <Favicon domain={s.domain} url={s.url} size={12} className="text-white/30 flex-shrink-0 mt-0.5" />
                   <div className="min-w-0 flex-1">
-                    <div className="text-white/70 truncate">{s.title || s.url}</div>
+                    <div className="text-white/70 truncate flex items-center gap-1">
+                      <span className="truncate">{s.title || s.url}</span>
+                      <ExternalLink className="size-2.5 text-white/25 group-hover:text-emerald-400/70 flex-shrink-0" />
+                    </div>
                     <div className="text-white/30 text-[10px] truncate">{s.domain || s.url}</div>
                   </div>
                 </a>

@@ -11,10 +11,11 @@ import { BriefPanel } from '@/components/chat/brief-panel'
 import { useRegisterBrief } from '@/components/chat/brief-context'
 import { usePdfViewer } from '@/components/chat/pdf-viewer-context'
 import { useSessionAttachments } from '@/components/chat/use-session-attachments'
+import { AttachmentsSheet } from '@/components/chat/attachments-sheet'
 import type { ToolCallView } from '@/components/chat/tool-call-card'
 import type { MessageBlock } from '@/components/chat/chat-message'
 import { Loader2, Paperclip, X } from 'lucide-react'
-import type { ArtifactView, ChunkUsed, WebSource } from '@/lib/api'
+import type { ArtifactView, ChunkUsed, TemplateSuggestion, WebSource } from '@/lib/api'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -24,6 +25,7 @@ interface Message {
   webSources?: WebSource[]
   toolCalls?: ToolCallView[]
   artifacts?: ArtifactView[]
+  templateSuggestions?: Record<string, TemplateSuggestion[]>
   timing?: { total_ms: number }
   compaction?: { summarised_messages: number; tokens_before: number; tokens_after: number }
 }
@@ -34,6 +36,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
   const [webSearch, setWebSearch] = useState(false)
+  const [attachmentsOpen, setAttachmentsOpen] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { user, session, loading: authLoading } = useAuth()
   const router = useRouter()
@@ -204,6 +207,25 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
                 tokens_after: info.tokens_after,
               },
             })),
+          onTemplateSuggestion: (event) =>
+            updateLast((last) => {
+              const blocks = [...(last.blocks ?? [])]
+              if (
+                !blocks.some(
+                  (b) => b.kind === 'templates' && b.toolCallId === event.tool_call_id,
+                )
+              ) {
+                blocks.push({ kind: 'templates', toolCallId: event.tool_call_id })
+              }
+              return {
+                ...last,
+                blocks,
+                templateSuggestions: {
+                  ...(last.templateSuggestions ?? {}),
+                  [event.tool_call_id]: event.templates,
+                },
+              }
+            }),
           onDone: (metadata) => {
             setMessages((prev) => {
               const updated = [...prev]
@@ -287,6 +309,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
                       webSources={msg.webSources}
                       toolCalls={msg.toolCalls}
                       artifacts={msg.artifacts}
+                      templateSuggestions={msg.templateSuggestions}
                       timing={msg.timing}
                       isStreaming={isLastAssistant}
                       compaction={msg.compaction}
@@ -305,6 +328,11 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
                           actName: a.title,
                           pageStart: 1,
                         })
+                      }
+                      onUseTemplate={(t) =>
+                        handleSend(
+                          `Use my "${t.name}" template (id: ${t.id}) to draft this for me. Generate the document with pdf_generate using that template's structure as the basis.`,
+                        )
                       }
                     />
                   )}
@@ -346,6 +374,8 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
                 disabled={loading}
                 webSearch={webSearch}
                 onWebSearchChange={setWebSearch}
+                onAttachClick={user ? () => setAttachmentsOpen(true) : undefined}
+                attachmentCount={attachments.attached.length}
               />
               <p className="mt-2 text-center text-[10px] text-white/25">
                 Levy provides legal information, not legal advice.
@@ -361,6 +391,19 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
           <BriefPanel messages={messages.map(m => ({ role: m.role, content: m.content }))} token={session?.access_token} />
         </aside>
       )}
+
+      <AttachmentsSheet
+        open={attachmentsOpen}
+        onClose={() => setAttachmentsOpen(false)}
+        userId={user?.id}
+        sessionId={id}
+        attachedIds={new Set(attachments.attachedIds)}
+        onToggle={async (doc) => {
+          const isAttached = attachments.attached.some((d) => d.id === doc.id)
+          if (isAttached) await attachments.detach(doc.id)
+          else await attachments.attach(doc.id)
+        }}
+      />
     </div>
   )
 }

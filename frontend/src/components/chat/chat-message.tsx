@@ -6,8 +6,11 @@ import remarkGfm from 'remark-gfm'
 import { ChevronDown, ChevronUp, FileText, Clock, Scale, Globe, ExternalLink } from 'lucide-react'
 import { MatchBadge } from '@/components/ui/match-badge'
 import { ToolCallCard, type ToolCallView } from './tool-call-card'
+import { AgentTask } from './agent-task'
 import { ArtifactCard } from './artifact-card'
-import type { ArtifactView, ChunkUsed, WebSource } from '@/lib/api'
+import { Favicon } from './favicon'
+import { TemplateSuggestions } from './template-suggestions'
+import type { ArtifactView, ChunkUsed, TemplateSuggestion, WebSource } from '@/lib/api'
 
 /**
  * A chronological "block" — either a chunk of streamed prose or a reference
@@ -18,6 +21,7 @@ import type { ArtifactView, ChunkUsed, WebSource } from '@/lib/api'
 export type MessageBlock =
   | { kind: 'text'; text: string }
   | { kind: 'tool'; toolCallId: string }
+  | { kind: 'templates'; toolCallId: string }
 
 interface ChatMessageProps {
   role: 'user' | 'assistant'
@@ -27,41 +31,13 @@ interface ChatMessageProps {
   webSources?: WebSource[]
   toolCalls?: ToolCallView[]
   artifacts?: ArtifactView[]
+  templateSuggestions?: Record<string, TemplateSuggestion[]>
   timing?: { total_ms: number }
   isStreaming?: boolean
   compaction?: { summarised_messages: number; tokens_before: number; tokens_after: number }
   onOpenCitation?: (cite: ChunkUsed) => void
   onOpenArtifact?: (artifact: ArtifactView) => void
-}
-
-/**
- * Inline SVG tail that grows naturally out of the bottom-right of the user
- * bubble — replaces the previous "two orphan dots" effect that read as AI-generated.
- *
- * The path is a single curve drawn so the tail joins the bubble seamlessly
- * (we use the same fill + stroke as the bubble) and tucks back into the
- * bubble corner. Sized small (~14×14) so it feels like a whisper, not a
- * decoration.
- */
-function UserBubbleTail() {
-  return (
-    <svg
-      width="18"
-      height="14"
-      viewBox="0 0 18 14"
-      className="absolute -bottom-[6px] right-3 pointer-events-none"
-      aria-hidden="true"
-    >
-      {/* Tail body — same green-tinted glass as the bubble */}
-      <path
-        d="M0 0 C 4 6, 9 10, 16 12 C 11 12, 5 8, 2 0 Z"
-        fill="rgba(34, 197, 94, 0.08)"
-        stroke="rgba(34, 197, 94, 0.18)"
-        strokeWidth="0.75"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
+  onUseTemplate?: (template: TemplateSuggestion) => void
 }
 
 export function ChatMessage({
@@ -72,11 +48,13 @@ export function ChatMessage({
   webSources,
   toolCalls,
   artifacts,
+  templateSuggestions,
   timing,
   isStreaming,
   compaction,
   onOpenCitation,
   onOpenArtifact,
+  onUseTemplate,
 }: ChatMessageProps) {
   const [showCitations, setShowCitations] = useState(false)
   const [showWebSources, setShowWebSources] = useState(false)
@@ -84,9 +62,9 @@ export function ChatMessage({
   if (role === 'user') {
     return (
       <div className="flex justify-end px-4 md:px-0">
-        <div className="relative max-w-[78%] md:max-w-[70%]">
+        <div className="max-w-[78%] md:max-w-[70%]">
           <div
-            className="px-5 py-3.5 text-[14px] leading-relaxed text-white/90 rounded-2xl rounded-br-md relative"
+            className="px-5 py-3.5 text-[14px] leading-relaxed text-white/90 rounded-2xl"
             style={{
               background:
                 'linear-gradient(135deg, rgba(34, 197, 94, 0.10) 0%, rgba(34, 197, 94, 0.06) 100%)',
@@ -97,7 +75,6 @@ export function ChatMessage({
           >
             {content}
           </div>
-          <UserBubbleTail />
         </div>
       </div>
     )
@@ -154,6 +131,17 @@ export function ChatMessage({
                     </div>
                   )
                 }
+                if (block.kind === 'templates') {
+                  const suggestions = templateSuggestions?.[block.toolCallId] || []
+                  if (suggestions.length === 0) return null
+                  return (
+                    <TemplateSuggestions
+                      key={`ts-${block.toolCallId}`}
+                      templates={suggestions}
+                      onUseTemplate={(t) => onUseTemplate?.(t)}
+                    />
+                  )
+                }
                 const call = (toolCalls || []).find((c) => c.id === block.toolCallId)
                 if (!call) {
                   // Older saved messages may have block refs without the
@@ -172,7 +160,7 @@ export function ChatMessage({
                 }
                 return (
                   <div key={`tc-${block.toolCallId}`} className="my-2.5 -mx-1">
-                    <ToolCallCard call={call} />
+                    <AgentTask call={call} />
                   </div>
                 )
               })
@@ -286,12 +274,17 @@ export function ChatMessage({
                     href={src.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group flex items-start gap-2 px-3 py-2.5 rounded-lg bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.08] transition-colors"
+                    className="group flex items-start gap-2.5 px-3 py-2.5 rounded-lg bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.08] transition-colors"
                   >
-                    <ExternalLink className="w-3 h-3 text-emerald-400/60 flex-shrink-0 mt-0.5" />
+                    <span className="flex items-center justify-center size-5 rounded bg-white/[0.04] border border-white/[0.05] flex-shrink-0 mt-0.5">
+                      <Favicon domain={src.domain} url={src.url} size={12} className="text-white/50" />
+                    </span>
                     <div className="min-w-0 flex-1">
-                      <div className="text-[12px] font-semibold text-white/75 group-hover:text-white truncate">
-                        {src.title || src.url}
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[12px] font-semibold text-white/75 group-hover:text-white truncate">
+                          {src.title || src.url}
+                        </span>
+                        <ExternalLink className="w-2.5 h-2.5 text-white/25 group-hover:text-emerald-400/70 flex-shrink-0" />
                       </div>
                       {src.snippet && (
                         <p className="text-[11px] text-white/30 leading-relaxed line-clamp-2 mt-0.5">
