@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/components/auth/auth-provider'
@@ -19,6 +19,15 @@ export default function SignUpPage() {
   const [success, setSuccess] = useState(false)
   const { signUp } = useAuth()
   const router = useRouter()
+
+  // Email confirmation is disabled on the project, so a successful signUp
+  // returns an active session and the user is already authenticated. We show
+  // a quick confirmation, then drop them into /chat.
+  useEffect(() => {
+    if (!success) return
+    const t = setTimeout(() => router.push('/chat'), 1500)
+    return () => clearTimeout(t)
+  }, [success, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -46,13 +55,19 @@ export default function SignUpPage() {
               <div className="mx-auto w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-5 glow-green">
                 <CheckCircle className="w-7 h-7 text-emerald-400" />
               </div>
-              <h1 className="text-2xl font-bold text-white mb-2">Check Your Email</h1>
-              <p className="text-[14px] text-white/40 mb-6">
-                We&apos;ve sent a confirmation link to <span className="text-white/70">{email}</span>
+              <h1 className="text-2xl font-semibold text-white mb-2 tracking-tight">
+                Welcome to Levy
+              </h1>
+              <p className="text-[13.5px] text-white/45 mb-1">
+                Signed up as
               </p>
-              <Button onClick={() => router.push('/auth/login')} className="w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold">
-                Back to Sign In
-              </Button>
+              <p className="text-[15px] text-white/85 mb-6 break-all">
+                {email}
+              </p>
+              <div className="inline-flex items-center gap-2 text-[12.5px] text-emerald-400/80">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Signing you in</span>
+              </div>
             </div>
           ) : (
             <>
