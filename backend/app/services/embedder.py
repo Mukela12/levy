@@ -1,16 +1,18 @@
 """
 Embedding Service — Multi-provider embedding system with automatic fallback.
 
-Provider priority:
-  1. Voyage AI (voyage-law-2) — Legal-optimized, 1024 dims, best for Zambian law
-  2. Local (BAAI/bge-base-en-v1.5) — Free fallback, 768 dims, runs on CPU
+Providers:
+  1. Voyage AI (voyage-law-2) — Legal-optimized, 1024 dims.
+  2. OpenAI (text-embedding-3-small) — Configurable dimensions; the project
+     uses 768 to match the existing pgvector(768) schema.
+  3. Local (BAAI/bge-base-en-v1.5) — Free fallback, 768 dims, CPU.
 
-The system tries Voyage first. If it fails (rate limit, network, quota exhausted),
-it automatically falls back to the local model. This is the Circuit Breaker pattern.
+The selected provider is set by `EMBEDDING_PROVIDER` in .env. Each provider
+falls back to local on hard failure (rate limit, network, quota).
 
-IMPORTANT: All chunks in a single database must use the SAME embedding provider,
-because vectors from different models are NOT comparable. If you switch providers,
-you must re-ingest all documents.
+IMPORTANT: All chunks in a single database must use the SAME embedding provider
+AND the same dimensions, because vectors from different models are NOT
+comparable. Switching providers means re-ingesting all documents.
 """
 
 import time
@@ -18,6 +20,7 @@ from ..config import get_settings
 
 # Lazy-loaded clients (initialized on first use)
 _voyage_client = None
+_openai_client = None
 _local_model = None
 
 
@@ -49,6 +52,39 @@ def _voyage_embed(texts: list[str], input_type: str = "document") -> list[list[f
         result = client.embed(batch, model="voyage-law-2", input_type=input_type)
         all_embeddings.extend(result.embeddings)
 
+    return all_embeddings
+
+
+# ─── OpenAI Provider ─────────────────────────────────────────────────────
+
+def _get_openai_client():
+    global _openai_client
+    if _openai_client is None:
+        from openai import OpenAI
+        settings = get_settings()
+        _openai_client = OpenAI(api_key=settings.openai_api_key)
+    return _openai_client
+
+
+def _openai_embed(texts: list[str]) -> list[list[float]]:
+    """
+    Generate embeddings using OpenAI text-embedding-3-small (or whatever
+    `openai_embedding_model` is configured), reduced to the configured
+    `embedding_dimensions` so the vectors fit the existing pgvector schema.
+    """
+    client = _get_openai_client()
+    settings = get_settings()
+    model = settings.openai_embedding_model
+    dims = settings.embedding_dimensions
+
+    all_embeddings: list[list[float]] = []
+    # OpenAI handles batches; cap at 256 to stay comfortably under the
+    # 8192-token-per-request input budget for short legal chunks.
+    batch_size = 256
+    for i in range(0, len(texts), batch_size):
+        batch = texts[i : i + batch_size]
+        resp = client.embeddings.create(model=model, input=batch, dimensions=dims)
+        all_embeddings.extend([d.embedding for d in resp.data])
     return all_embeddings
 
 
@@ -96,6 +132,19 @@ def get_embeddings(texts: list[str], batch_size: int = 128) -> list[list[float]]
             print(f"  Falling back to local model...")
             return _local_embed(texts)
 
+    elif provider == "openai":
+        try:
+            print(f"  Using OpenAI ({settings.openai_embedding_model}) for {len(texts)} texts...")
+            t0 = time.time()
+            result = _openai_embed(texts)
+            elapsed = time.time() - t0
+            print(f"  OpenAI: {len(result)} embeddings in {elapsed:.1f}s ({len(result[0])} dims)")
+            return result
+        except Exception as e:
+            print(f"  OpenAI failed: {e}")
+            print(f"  Falling back to local model...")
+            return _local_embed(texts)
+
     elif provider == "local":
         print(f"  Using local model for {len(texts)} texts...")
         t0 = time.time()
@@ -123,6 +172,13 @@ def get_query_embedding(query: str) -> list[float]:
             return result[0]
         except Exception as e:
             print(f"  Voyage query embedding failed: {e}, using local fallback")
+            return _local_embed([query])[0]
+
+    elif provider == "openai":
+        try:
+            return _openai_embed([query])[0]
+        except Exception as e:
+            print(f"  OpenAI query embedding failed: {e}, using local fallback")
             return _local_embed([query])[0]
 
     elif provider == "local":

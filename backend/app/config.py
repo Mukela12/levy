@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     # Voyage AI (for embeddings — legal-optimized)
     voyage_api_key: str = ""
 
+    # OpenAI (for embeddings — text-embedding-3-small w/ configurable dims)
+    openai_api_key: str = ""
+
     # Anthropic (for chat)
     anthropic_api_key: str = ""
 
@@ -47,8 +50,12 @@ class Settings(BaseSettings):
     compaction_cooldown_seconds: int = 60
 
     # Embedding config
-    embedding_provider: str = "voyage"  # "voyage" or "local"
-    embedding_dimensions: int = 1024  # voyage-law-2 = 1024, local bge = 768
+    # Providers: "voyage" (voyage-law-2, 1024 dims) | "openai"
+    # (text-embedding-3-small, configurable to 768 to match schema) | "local"
+    # (BAAI/bge-base-en-v1.5, 768 dims).
+    embedding_provider: str = "openai"
+    embedding_dimensions: int = 768
+    openai_embedding_model: str = "text-embedding-3-small"
 
     # RAG config
     retrieval_top_k: int = 5
