@@ -25,10 +25,23 @@ import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth/auth-provider'
+import { createClient } from '@/lib/supabase'
 import { ArrowRight, X } from 'lucide-react'
 import { LevyLogo } from '@/components/ui/levy-logo'
 
+/**
+ * Completion is tracked in TWO places so it survives the right things:
+ *   • localStorage flag — browser-scoped; survives reloads and re-visits
+ *     even for anonymous users, and is the only signal we have for them.
+ *   • Supabase user_metadata.onboarded_at — account-scoped; survives across
+ *     browsers and devices once the user is signed in.
+ *
+ * The check on auto-open reads BOTH (user_metadata wins for signed-in
+ * users). The Done/Skip handler writes BOTH (best-effort on the metadata
+ * update; localStorage is the always-on fallback).
+ */
 const STORAGE_KEY = 'levy_onboarding_v2'
+const METADATA_FIELD = 'onboarded_at'
 
 interface Step {
   /** Element selector to spotlight. If omitted (or none is currently visible)
@@ -129,7 +142,7 @@ export function OnboardingTour({
   const [step, setStep] = useState(0)
   const [mounted, setMounted] = useState(false)
 
-  // Auto-open once per browser after auth resolves.
+  // Auto-open once per (browser AND account) after auth resolves.
   useEffect(() => {
     setMounted(true)
     if (loading) return
@@ -139,16 +152,54 @@ export function OnboardingTour({
       return
     }
     if (typeof window === 'undefined') return
-    const seen = window.localStorage.getItem(STORAGE_KEY)
-    if (!seen && pathname.startsWith('/chat')) {
+    const localSeen = !!window.localStorage.getItem(STORAGE_KEY)
+
+    // Signed-in: user_metadata is the source of truth so the tour follows
+    // them across browsers and devices.
+    if (user) {
+      const accountSeen = !!user.user_metadata?.[METADATA_FIELD]
+      if (accountSeen) {
+        // Make sure local also reflects this — saves a redundant DB read
+        // on every reload.
+        if (!localSeen) window.localStorage.setItem(STORAGE_KEY, 'done')
+        return
+      }
+      // The user finished the tour in this browser (e.g. while anonymous)
+      // but their account doesn't know yet. Backfill silently so the next
+      // device they sign in on doesn't replay it.
+      if (localSeen) {
+        const supabase = createClient()
+        supabase.auth
+          .updateUser({ data: { [METADATA_FIELD]: new Date().toISOString() } })
+          .catch(() => {})
+        return
+      }
+      if (pathname.startsWith('/chat')) {
+        setOpen(true)
+        setStep(0)
+      }
+      return
+    }
+
+    // Anonymous: localStorage is all we have.
+    if (!localSeen && pathname.startsWith('/chat')) {
       setOpen(true)
       setStep(0)
     }
-  }, [loading, pathname, forceOpen])
+  }, [loading, pathname, forceOpen, user])
 
   function finish() {
     if (typeof window !== 'undefined') {
       window.localStorage.setItem(STORAGE_KEY, 'done')
+    }
+    if (user) {
+      // Best-effort. If it fails (network blip) we still have the local
+      // flag and the user will not see the tour on this browser; the next
+      // load on this browser also backfills.
+      const supabase = createClient()
+      supabase.auth
+        .updateUser({ data: { [METADATA_FIELD]: new Date().toISOString() } })
+        .catch(() => {})
     }
     setMobileMenuOpen?.(false)
     setOpen(false)
@@ -165,9 +216,6 @@ export function OnboardingTour({
   function back() {
     setStep((s) => Math.max(0, s - 1))
   }
-
-  // user reference kept for future per-account gating
-  void user
 
   if (!mounted || !open) return null
   return createPortal(
