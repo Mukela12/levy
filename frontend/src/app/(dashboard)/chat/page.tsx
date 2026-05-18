@@ -16,6 +16,7 @@ import type { ToolCallView } from '@/components/chat/tool-call-card'
 import type { MessageBlock } from '@/components/chat/chat-message'
 import { attachDocumentToSession, type LibraryDocument } from '@/lib/api'
 import { BookOpen, Search, FileText, Gavel, Paperclip, X } from 'lucide-react'
+import { LevyLogo } from '@/components/ui/levy-logo'
 import type { ArtifactView, ChunkUsed, TemplateSuggestion, WebSource } from '@/lib/api'
 
 interface Message {
@@ -344,6 +345,11 @@ export default function NewChatPage() {
             />
 
             <div className="text-center mb-8 space-y-4 relative z-10">
+              {/* Levy logo, centered above the accent line */}
+              <div className="flex justify-center mb-3">
+                <LevyLogo size={56} className="opacity-90" />
+              </div>
+
               {/* Emerald accent line - animates width */}
               <div
                 className="mx-auto h-[2px] rounded-full bg-gradient-to-r from-transparent via-emerald-500/60 to-transparent mb-6 transition-all duration-1000 ease-out"
