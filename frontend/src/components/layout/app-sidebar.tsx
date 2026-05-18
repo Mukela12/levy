@@ -6,7 +6,6 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth/auth-provider'
 import { createClient } from '@/lib/supabase'
 import {
-  Scale,
   FolderOpen,
   Files,
   MessageSquare,
@@ -15,6 +14,7 @@ import {
   ChevronRight,
   LogOut,
 } from 'lucide-react'
+import { LevyLogo } from '@/components/ui/levy-logo'
 
 interface ChatSession {
   id: string
@@ -80,9 +80,7 @@ export default function AppSidebar({ mobileSidebarOpen, onCloseMobile }: AppSide
     <div className="flex flex-col h-full">
       {/* Logo Section */}
       <div className="flex items-center gap-2.5 px-4 h-[56px] flex-shrink-0">
-        <div className="w-8 h-8 rounded-full bg-emerald-500/15 flex items-center justify-center flex-shrink-0">
-          <Scale className="w-4 h-4 text-emerald-500" />
-        </div>
+        <LevyLogo size={28} className="flex-shrink-0" />
         <Link href="/chat" className="flex items-center">
           <span
             className="text-[18px] font-semibold tracking-[-0.02em] text-foreground"
@@ -97,6 +95,7 @@ export default function AppSidebar({ mobileSidebarOpen, onCloseMobile }: AppSide
       <div className="px-3 pb-3 flex-shrink-0">
         <Link
           href="/chat"
+          data-tour="new-chat"
           className="group/cta relative flex items-center justify-center gap-2 w-full h-10 rounded-xl text-[13px] font-medium text-emerald-50 overflow-hidden transition-all duration-200 active:translate-y-px tracking-tight"
           style={{
             background:
@@ -194,6 +193,7 @@ export default function AppSidebar({ mobileSidebarOpen, onCloseMobile }: AppSide
       <div className="px-2 py-2 flex-shrink-0 space-y-px">
         <Link
           href="/documents"
+          data-tour="nav-documents"
           className={`flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] font-medium transition-colors ${
             pathname.startsWith('/documents')
               ? 'bg-emerald-500/10 text-emerald-500'
@@ -205,6 +205,7 @@ export default function AppSidebar({ mobileSidebarOpen, onCloseMobile }: AppSide
         </Link>
         <Link
           href="/templates"
+          data-tour="nav-templates"
           className={`flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] font-medium transition-colors ${
             pathname.startsWith('/templates')
               ? 'bg-emerald-500/10 text-emerald-500'

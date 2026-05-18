@@ -12,11 +12,14 @@ import { PdfViewerProvider, usePdfViewer } from '@/components/chat/pdf-viewer-co
 import { PdfViewer } from '@/components/chat/pdf-viewer'
 import { Scale, Loader2, X } from 'lucide-react'
 import { CTA } from '@/components/ui/cta'
+import { LevyLogo } from '@/components/ui/levy-logo'
+import { OnboardingTour } from '@/components/onboarding/onboarding-tour'
 
 function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
   const pathname = usePathname()
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const [tourReplay, setTourReplay] = useState(0)
   const brief = useBrief()
   const pdf = usePdfViewer()
   // Anonymous users can use /chat freely (ChatGPT-style). Routes that need
@@ -82,7 +85,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
 
         {/* Center: "Levy" logo on mobile */}
         <div className="md:hidden flex items-center gap-1.5">
-          <Scale className="w-4 h-4 text-emerald-500" />
+          <LevyLogo size={22} />
           <span
             className="text-[16px] font-semibold tracking-[-0.02em] text-foreground"
             style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}
@@ -129,6 +132,27 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
 
       {/* PDF source viewer (right pane on desktop, fullscreen on mobile) */}
       <PdfViewer citation={pdf.active} onClose={pdf.close} />
+
+      {/* Onboarding tour. Auto-runs once per browser; the key bump lets the
+          profile page or a help button force a replay by incrementing it. */}
+      <OnboardingTour key={tourReplay} forceOpen={tourReplay > 0} onClose={() => setTourReplay(0)} />
+
+      {/* Take the tour again — small floating affordance on dashboard pages */}
+      {pathname.startsWith('/chat') && (
+        <button
+          type="button"
+          onClick={() => {
+            if (typeof window !== 'undefined') window.localStorage.removeItem('levy_onboarding_v1')
+            setTourReplay((n) => n + 1)
+          }}
+          className="hidden md:inline-flex fixed bottom-3 left-3 z-30 items-center gap-1.5 px-2.5 h-7 rounded-full text-[11px] text-white/40 hover:text-white/75 bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.06] transition-colors"
+          aria-label="Replay onboarding tour"
+          title="Replay onboarding tour"
+        >
+          ?
+          <span>Tour</span>
+        </button>
+      )}
 
       {/* Mobile brief bottom sheet */}
       {brief.open && (

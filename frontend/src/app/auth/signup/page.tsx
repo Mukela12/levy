@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { EtherealShadow } from '@/components/ui/ethereal-shadow'
 import { TextShimmer } from '@/components/ui/text-shimmer'
-import { Loader2, CheckCircle, Scale } from 'lucide-react'
+import { Loader2, CheckCircle } from 'lucide-react'
+import { LevyLogo } from '@/components/ui/levy-logo'
 
 export default function SignUpPage() {
   const [fullName, setFullName] = useState('')
@@ -73,7 +74,7 @@ export default function SignUpPage() {
             <>
               <div className="text-center mb-8">
                 <div className="mx-auto w-12 h-12 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mb-5">
-                  <Scale className="w-6 h-6 text-emerald-400" />
+                  <LevyLogo size={32} />
                 </div>
                 <h1 className="text-2xl font-bold text-white mb-1">Create Account</h1>
                 <TextShimmer className="text-sm" duration={3}>

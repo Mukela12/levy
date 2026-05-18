@@ -59,7 +59,7 @@ export function ChatInput({
   const hasContent = message.trim().length > 0
 
   return (
-    <div className="relative w-full max-w-3xl mx-auto">
+    <div className="relative w-full max-w-3xl mx-auto" data-tour="chat-input">
       <div
         className="relative rounded-2xl transition-all duration-200"
         style={{
@@ -91,6 +91,7 @@ export function ChatInput({
               type="button"
               onClick={onAttachClick}
               disabled={!onAttachClick || disabled}
+              data-tour="attachments"
               aria-label={
                 attachmentCount > 0
                   ? `Attached documents (${attachmentCount})`
@@ -111,6 +112,7 @@ export function ChatInput({
             </button>
             <button
               onClick={() => setWebSearch(!webSearch)}
+              data-tour="web-search"
               className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all ${
                 webSearch
                   ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
