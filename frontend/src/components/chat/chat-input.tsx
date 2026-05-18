@@ -59,8 +59,9 @@ export function ChatInput({
   const hasContent = message.trim().length > 0
 
   return (
-    <div className="relative w-full max-w-3xl mx-auto" data-tour="chat-input">
+    <div className="relative w-full max-w-3xl mx-auto">
       <div
+        data-tour="chat-input"
         className="relative rounded-2xl transition-all duration-200"
         style={{
           background:

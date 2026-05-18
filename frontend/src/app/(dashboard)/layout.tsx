@@ -70,6 +70,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+            data-tour-control="menu"
             className="md:hidden p-1.5 rounded-lg hover:bg-white/[0.04] text-foreground transition-colors"
             aria-label="Toggle menu"
           >
@@ -134,15 +135,25 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
       <PdfViewer citation={pdf.active} onClose={pdf.close} />
 
       {/* Onboarding tour. Auto-runs once per browser; the key bump lets the
-          profile page or a help button force a replay by incrementing it. */}
-      <OnboardingTour key={tourReplay} forceOpen={tourReplay > 0} onClose={() => setTourReplay(0)} />
+          profile page or a help button force a replay by incrementing it.
+          The tour drives the mobile sidebar open/closed on sidebar steps. */}
+      <OnboardingTour
+        key={tourReplay}
+        forceOpen={tourReplay > 0}
+        mobileMenuOpen={mobileSidebarOpen}
+        setMobileMenuOpen={setMobileSidebarOpen}
+        onClose={() => setTourReplay(0)}
+      />
 
       {/* Take the tour again — small floating affordance on dashboard pages */}
       {pathname.startsWith('/chat') && (
         <button
           type="button"
           onClick={() => {
-            if (typeof window !== 'undefined') window.localStorage.removeItem('levy_onboarding_v1')
+            if (typeof window !== 'undefined') {
+              window.localStorage.removeItem('levy_onboarding_v1')
+              window.localStorage.removeItem('levy_onboarding_v2')
+            }
             setTourReplay((n) => n + 1)
           }}
           className="hidden md:inline-flex fixed bottom-3 left-3 z-30 items-center gap-1.5 px-2.5 h-7 rounded-full text-[11px] text-white/40 hover:text-white/75 bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.06] transition-colors"
