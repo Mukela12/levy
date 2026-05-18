@@ -365,7 +365,7 @@ def _extract_domain(url: str) -> str:
 
 def build_tool_registry(
     *,
-    web_enabled: bool,
+    web_enabled: bool = True,
     owner_id: str | None = None,
     session_id: str | None = None,
     attached_doc_ids: list[str] | None = None,
@@ -373,14 +373,14 @@ def build_tool_registry(
     """
     Build the set of tools available to the agent for a given turn.
 
-    `search_corpus` is always available. The web tools are gated on the user
-    toggling the "Search" affordance in the chat input; this keeps Tavily costs
-    pinned to explicit user intent and avoids surprise web calls during
-    pure-statute questions.
+    Web tools (gov_search / web_search / web_fetch / web_crawl) are always
+    registered now so the model can escalate to the open web on its own when
+    the corpus comes up empty. The chat-input "Search" toggle remains useful
+    as a HINT to the system prompt (when the user explicitly turns it on the
+    agent prefers web sources earlier), but it no longer gates availability.
 
-    PDF artifact tools (extract/generate/merge) are always available. They
-    write to the user's `artifacts` table so they appear in the chat as cards
-    and persist across reloads.
+    `search_corpus` is always available. PDF artifact tools (extract /
+    generate / merge / split / export brief) are also always available.
     """
 
     # Adapter: bind caller scope into search_corpus so the agent automatically
@@ -667,7 +667,9 @@ def build_tool_registry(
         ),
     }
 
-    if web_enabled:
+    # Web tools — always registered. The agent decides when to use them.
+    _ = web_enabled  # kept for backwards compat with the kwarg
+    if True:
         tools["gov_search"] = ToolDefinition(
             name="gov_search",
             description=(

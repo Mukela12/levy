@@ -19,7 +19,6 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
   const pathname = usePathname()
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
-  const [tourReplay, setTourReplay] = useState(0)
   const brief = useBrief()
   const pdf = usePdfViewer()
   // Anonymous users can use /chat freely (ChatGPT-style). Routes that need
@@ -138,32 +137,13 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
           profile page or a help button force a replay by incrementing it.
           The tour drives the mobile sidebar open/closed on sidebar steps. */}
       <OnboardingTour
-        key={tourReplay}
-        forceOpen={tourReplay > 0}
         mobileMenuOpen={mobileSidebarOpen}
         setMobileMenuOpen={setMobileSidebarOpen}
-        onClose={() => setTourReplay(0)}
       />
 
-      {/* Take the tour again — small floating affordance on dashboard pages */}
-      {pathname.startsWith('/chat') && (
-        <button
-          type="button"
-          onClick={() => {
-            if (typeof window !== 'undefined') {
-              window.localStorage.removeItem('levy_onboarding_v1')
-              window.localStorage.removeItem('levy_onboarding_v2')
-            }
-            setTourReplay((n) => n + 1)
-          }}
-          className="hidden md:inline-flex fixed bottom-3 left-3 z-30 items-center gap-1.5 px-2.5 h-7 rounded-full text-[11px] text-white/40 hover:text-white/75 bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.06] transition-colors"
-          aria-label="Replay onboarding tour"
-          title="Replay onboarding tour"
-        >
-          ?
-          <span>Tour</span>
-        </button>
-      )}
+      {/* (The replay-tour button was removed because it crowded the sign-in /
+          create-account buttons in the sidebar. The tour can still be
+          replayed via the Profile page if we add an entry point later.) */}
 
       {/* Mobile brief bottom sheet */}
       {brief.open && (

@@ -86,10 +86,6 @@ export default function DocumentsPage() {
   }, [user?.id])
 
   async function reloadAll() {
-    if (!user?.id) {
-      setLoading(false)
-      return
-    }
     setLoading(true)
     try {
       const folderId =
@@ -98,9 +94,15 @@ export default function DocumentsPage() {
           : activeFolder === FOLDER_UNFILED
           ? 'unfiled'
           : activeFolder ?? null
+      // The global library is public; anonymous users can still browse it.
+      // Only the folder list + user uploads are gated on user.id.
       const [docs, folderRes] = await Promise.all([
-        listDocumentsForUser(user.id, recentSessionId ?? undefined, folderId ?? undefined),
-        listFolders(user.id),
+        listDocumentsForUser(
+          user?.id,
+          recentSessionId ?? undefined,
+          folderId ?? undefined,
+        ),
+        user?.id ? listFolders(user.id) : Promise.resolve({ folders: [], unfiled_count: 0 }),
       ])
       setData(docs)
       setFolders(folderRes.folders)
