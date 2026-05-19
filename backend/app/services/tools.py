@@ -472,6 +472,17 @@ def build_tool_registry(
             # clickable suggestion cards inline in the chat.
             "templates": compact,
         }
+    def _fetch_template(template_id: str | None) -> dict | None:
+        """Look up a user-owned template, swallowing errors so a missing or
+        cross-owner template just gracefully falls back to the default
+        format rather than failing the draft."""
+        if not template_id or not owner_id:
+            return None
+        try:
+            return templates_service.get_template_by_id(owner_id, template_id)
+        except Exception:  # noqa: BLE001
+            return None
+
     async def _draft_summons(
         procedural_mode: str,
         court_division: str,
@@ -488,6 +499,7 @@ def build_tool_registry(
         applicant_address: str | None = None,
         respondent_address: str | None = None,
         return_date_note: str | None = None,
+        template_id: str | None = None,
     ):
         """Draft the originating process (Summons / Notice of Motion / etc.)
         for a Zambian court application and store it as a PDF artifact.
@@ -648,7 +660,11 @@ def build_tool_registry(
                 '</div>'
             )
 
+        template = _fetch_template(template_id)
+        letterhead = pdf_tools.render_template_letterhead(template)
+
         body_md = "\n\n".join([
+            letterhead,
             heading_html,
             title_line,
             pursuant_line,
@@ -690,6 +706,7 @@ def build_tool_registry(
         exhibits: list[dict] | None = None,
         commissioner_name: str | None = None,
         sworn_at_city: str | None = None,
+        template_id: str | None = None,
     ):
         """Draft an Affidavit in Support and store as a PDF artifact.
 
@@ -828,7 +845,11 @@ def build_tool_registry(
                 + '</table>'
             )
 
+        template = _fetch_template(template_id)
+        letterhead = pdf_tools.render_template_letterhead(template)
+
         body_md = "\n\n".join([
+            letterhead,
             heading_html,
             doc_title,
             deposition_opening,
@@ -866,6 +887,7 @@ def build_tool_registry(
         authorities_statutes: list[str] | None = None,
         counsel_name: str | None = None,
         counsel_firm: str | None = None,
+        template_id: str | None = None,
     ):
         """Draft Skeletal Arguments in support of an application.
 
@@ -1010,7 +1032,11 @@ def build_tool_registry(
             f'Counsel for the {applicant_role.capitalize()}</p>'
         )
 
+        template = _fetch_template(template_id)
+        letterhead = pdf_tools.render_template_letterhead(template)
+
         body_md = "\n\n".join([
+            letterhead,
             heading_html,
             doc_title,
             intro_section,
@@ -1048,6 +1074,7 @@ def build_tool_registry(
         counsel_name: str | None = None,
         counsel_firm: str | None = None,
         firm_address: str | None = None,
+        template_id: str | None = None,
     ):
         """Draft a Draft Order for endorsement and save as PDF artifact.
 
@@ -1144,7 +1171,11 @@ def build_tool_registry(
             '</div>'
         )
 
+        template = _fetch_template(template_id)
+        letterhead = pdf_tools.render_template_letterhead(template)
+
         body_md = "\n\n".join([
+            letterhead,
             heading_html,
             doc_title,
             upon_recital,
@@ -1614,6 +1645,10 @@ def build_tool_registry(
                         "type": "string",
                         "description": "Optional override for the return-date phrase (default: 'on a date to be appointed by the Honourable Court').",
                     },
+                    "template_id": {
+                        "type": "string",
+                        "description": "ID of one of the user's saved templates (returned by `suggest_templates`). When provided, the tool prepends the template's letterhead (centred, with the firm name + address + boilerplate from the template's preview text) above the court caption so the draft carries the chambers' branding. Leave empty to render in the default house format.",
+                    },
                 },
                 "required": [
                     "procedural_mode",
@@ -1713,6 +1748,10 @@ def build_tool_registry(
                         "type": "string",
                         "description": "City where the affidavit will be sworn. Defaults to Lusaka.",
                     },
+                    "template_id": {
+                        "type": "string",
+                        "description": "ID of one of the user's saved templates (returned by `suggest_templates`). When provided, the tool prepends the template's letterhead above the court caption. Leave empty to render in the default house format.",
+                    },
                 },
                 "required": [
                     "procedural_mode",
@@ -1803,6 +1842,10 @@ def build_tool_registry(
                     },
                     "counsel_name": {"type": "string"},
                     "counsel_firm": {"type": "string"},
+                    "template_id": {
+                        "type": "string",
+                        "description": "ID of one of the user's saved templates (returned by `suggest_templates`). When provided, the tool prepends the template's letterhead above the court caption. Leave empty to render in the default house format.",
+                    },
                 },
                 "required": [
                     "procedural_mode",
@@ -1859,6 +1902,10 @@ def build_tool_registry(
                     "counsel_name": {"type": "string"},
                     "counsel_firm": {"type": "string"},
                     "firm_address": {"type": "string"},
+                    "template_id": {
+                        "type": "string",
+                        "description": "ID of one of the user's saved templates (returned by `suggest_templates`). When provided, the tool prepends the template's letterhead above the court caption. Leave empty to render in the default house format.",
+                    },
                 },
                 "required": [
                     "procedural_mode",

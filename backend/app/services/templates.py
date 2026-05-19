@@ -184,6 +184,30 @@ def suggest_templates_for(owner_id: str, query: str | None) -> list[dict]:
     return top
 
 
+def get_template_by_id(owner_id: str, template_id: str) -> dict | None:
+    """Fetch a single template owned by `owner_id` by its UUID.
+
+    Returns None if not found OR not owned by the caller. The drafting
+    tools use this to look up the template's name + preview text so they
+    can render the firm's chambers letterhead into the artifact.
+    """
+    if not owner_id or not template_id:
+        return None
+    db = get_db()
+    res = (
+        db.table("templates")
+        .select(
+            "id, name, description, file_type, page_count, preview_text"
+        )
+        .eq("owner_id", owner_id)
+        .eq("id", template_id)
+        .limit(1)
+        .execute()
+    )
+    rows = res.data or []
+    return rows[0] if rows else None
+
+
 def _created_ts(row: dict) -> float:
     raw = row.get("created_at") or ""
     try:

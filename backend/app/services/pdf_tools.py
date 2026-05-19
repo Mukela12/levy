@@ -418,6 +418,48 @@ _REGISTRY_INFO: dict[str, tuple[str, str, str, str]] = {
 }
 
 
+def render_template_letterhead(template: dict | None) -> str:
+    """Render a chambers letterhead block from a user's template, if any.
+
+    The user uploads a Word/PDF/TXT template (their firm's letterhead, with
+    address + contact info + boilerplate). At upload time we extract a
+    preview_text (~2000 chars). We render the first ~12 non-empty lines of
+    that preview as a centered block above the court caption — that's the
+    visible "branding" the user wants on their drafts. Line breaks are
+    preserved so addresses + contact info still read correctly.
+
+    Returns the empty string when no template is supplied or it has no
+    usable preview content.
+    """
+    if not template:
+        return ""
+    preview = (template.get("preview_text") or "").strip()
+    if not preview:
+        return ""
+
+    lines = [ln.strip() for ln in preview.splitlines() if ln.strip()]
+    head_lines = lines[:12]
+    if not head_lines:
+        return ""
+
+    name = (template.get("name") or "").strip()
+    e = _html_escape
+    inner = "<br/>".join(e(ln) for ln in head_lines)
+    badge = (
+        f'<div style="text-align:right;font-size:9pt;color:#666;font-style:italic;margin-top:-4pt;margin-bottom:8pt;">'
+        f'Drafted using your &ldquo;{e(name)}&rdquo; template'
+        f'</div>'
+    ) if name else ""
+
+    return (
+        '<div style="text-align:center;font-size:10.5pt;line-height:1.4;'
+        'margin-bottom:14pt;padding-bottom:10pt;border-bottom:1px solid #000;">'
+        f'{inner}'
+        '</div>'
+        f'{badge}'
+    )
+
+
 def render_court_heading(
     *,
     court_division: str,

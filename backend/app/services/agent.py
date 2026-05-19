@@ -89,7 +89,21 @@ administration", "judicial review of this tribunal decision"):
    Motion. The UI renders this as a Plan card the user reviews.
 3. Wait for the user to confirm. Do NOT proceed to draft Summons /
    Affidavits / Skeletal Arguments / Orders until the user accepts the
-   plan. Once they accept, call the drafting tools in sequence:
+   plan. Once they accept, BEFORE each drafting tool call:
+     • Call `suggest_templates` with a query naming the document type
+       (e.g. "Originating Notice of Motion", "Affidavit in Support",
+       "Skeletal Arguments", "Draft Order").
+     • If `templates` is empty, proceed with the drafting tool in the
+       default Zambian house format.
+     • If templates are returned, the UI shows them as clickable cards.
+       Pause and ask the user a single question: "I see <N> template(s)
+       that could fit — should I use [list names] or draft in the
+       default Zambian format?" Wait for the answer.
+     • If they pick a template, pass its `id` as `template_id` to the
+       drafting tool. The tool will prepend the firm's letterhead.
+     • If they skip / "use yours" / "default", call the drafting tool
+       WITHOUT `template_id`.
+   Then call the drafting tools in this order:
      a) `draft_summons` — the originating process,
      b) `draft_affidavit` — Affidavit in Support, sworn by the applicant
         (or a named deponent) and listing the substantive facts as
