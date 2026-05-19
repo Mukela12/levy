@@ -674,6 +674,183 @@ def build_tool_registry(
             session_id=session_id,
         )
 
+    async def _draft_affidavit(
+        procedural_mode: str,
+        court_division: str,
+        applicant_name: str,
+        respondent_name: str,
+        deponent_name: str,
+        deponent_address: str,
+        deponent_occupation: str,
+        facts: list[str],
+        deponent_role: str = "Applicant",
+        deponent_gender: str = "adult",
+        supporting_document: str | None = None,
+        cause_number: str | None = None,
+        exhibits: list[dict] | None = None,
+        commissioner_name: str | None = None,
+        sworn_at_city: str | None = None,
+    ):
+        """Draft an Affidavit in Support and store as a PDF artifact.
+
+        Uses the same Zambian court caption as the summons, then the standard
+        deposition opening, then numbered THAT-statements (one per `facts`
+        item), then the swear-clause + Commissioner for Oaths block, then an
+        exhibits index if any are supplied.
+        """
+        from datetime import datetime
+
+        mode = (procedural_mode or "").strip()
+        applicant = (applicant_name or "").strip()
+        respondent = (respondent_name or "").strip()
+        deponent = (deponent_name or "").strip()
+        cleaned_facts = [f.strip() for f in (facts or []) if f and f.strip()]
+        cleaned_exhibits = [
+            {
+                "label": (e.get("label") or "").strip(),
+                "description": (e.get("description") or "").strip(),
+            }
+            for e in (exhibits or [])
+            if e and (e.get("label") or e.get("description"))
+        ]
+
+        if not mode:
+            return {"result": {"error": "procedural_mode required"}}
+        if not deponent:
+            return {"result": {"error": "deponent_name required"}}
+        if not (deponent_address or "").strip():
+            return {"result": {"error": "deponent_address required"}}
+        if not (deponent_occupation or "").strip():
+            return {"result": {"error": "deponent_occupation required"}}
+        if not cleaned_facts:
+            return {"result": {"error": "facts must be a non-empty list"}}
+
+        mode_lower = mode.lower()
+        if "petition" in mode_lower:
+            applicant_role, respondent_role = "PETITIONER", "RESPONDENT"
+        elif "writ" in mode_lower or "originating summons" in mode_lower:
+            applicant_role, respondent_role = "PLAINTIFF", "DEFENDANT"
+        else:
+            applicant_role, respondent_role = "APPLICANT", "RESPONDENT"
+
+        heading_html = pdf_tools.render_court_heading(
+            court_division=court_division,
+            cause_number=cause_number,
+            applicant_name=applicant or "[APPLICANT NAME]",
+            respondent_name=respondent or "[RESPONDENT NAME]",
+            applicant_role=applicant_role,
+            respondent_role=respondent_role,
+        )
+
+        support_doc = (supporting_document or mode).strip()
+        doc_title = f'<div class="doc-title">AFFIDAVIT IN SUPPORT OF {support_doc.upper()}</div>'
+
+        gender_phrase = (deponent_gender or "adult").strip()
+        # Allow either a bare gender word ("male", "female") or a pre-composed
+        # phrase like "adult Zambian male of full legal capacity".
+        if gender_phrase.lower() in {"male", "female"}:
+            gender_phrase = f"adult Zambian {gender_phrase.lower()}"
+        gender_article = "an" if gender_phrase[:1].lower() in {"a", "e", "i", "o", "u"} else "a"
+
+        deposition_opening = (
+            f'<p class="recital">'
+            f'I, <strong>{deponent.upper()}</strong>, '
+            f'of <em>{deponent_address}</em>, '
+            f'in the Republic of Zambia, '
+            f'{gender_article} {gender_phrase} of full legal capacity, '
+            f'{deponent_occupation}, '
+            f'do solemnly and sincerely make oath and state as follows:'
+            f'</p>'
+        )
+
+        # The first numbered paragraph is canonical: identifies the deponent
+        # and the source of their knowledge. We prepend it automatically so
+        # the agent doesn't have to remember.
+        role = (deponent_role or "Applicant").strip()
+        first_para = (
+            f"THAT I am the {role} in this matter and the facts deposed to "
+            f"herein are within my personal knowledge save where stated "
+            f"otherwise to be true to the best of my knowledge, information "
+            f"and belief."
+        )
+        all_facts = [first_para] + cleaned_facts + [
+            f"THAT I make this Affidavit in support of the {support_doc} "
+            f"filed herewith and I verily pray that this Honourable Court "
+            f"may be pleased to grant the orders sought therein."
+        ]
+
+        # Ensure each fact starts with "THAT " in caps for the Zambian style.
+        def _that(text: str) -> str:
+            t = text.lstrip()
+            if not t.upper().startswith("THAT"):
+                t = "THAT " + t
+            # Add trailing period if missing.
+            if not t.rstrip().endswith((".", "?", "!")):
+                t = t.rstrip() + "."
+            return t
+
+        facts_html = (
+            "<ol>"
+            + "".join(f"<li>{_that(f)}</li>" for f in all_facts)
+            + "</ol>"
+        )
+
+        sworn_city = (sworn_at_city or "Lusaka").strip()
+        day = datetime.utcnow().day
+        if 10 <= day % 100 <= 20:
+            ord_suffix = "th"
+        else:
+            ord_suffix = {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
+        today = datetime.utcnow().strftime(f"%-d{ord_suffix} day of %B, %Y")
+
+        jurat = (
+            f'<p class="dated">SWORN at <strong>{sworn_city}</strong> '
+            f'this {today}.</p>'
+            '<div class="sig-line"></div>'
+            f'<p><strong>{deponent.upper()}</strong><br/>(DEPONENT)</p>'
+            '<p class="dated"><strong>BEFORE ME:</strong></p>'
+            '<div class="sig-line"></div>'
+            f'<p><strong>{(commissioner_name or "[COMMISSIONER FOR OATHS]").upper()}</strong><br/>'
+            'COMMISSIONER FOR OATHS</p>'
+        )
+
+        exhibits_html = ""
+        if cleaned_exhibits:
+            rows = "".join(
+                f'<tr><td><strong>"{e["label"] or "MB" + str(i+1)}"</strong></td>'
+                f'<td>{e["description"]}</td></tr>'
+                for i, e in enumerate(cleaned_exhibits)
+            )
+            exhibits_html = (
+                '<div class="doc-title" style="font-size:11pt;text-decoration:none;margin-top:20pt;">EXHIBITS</div>'
+                '<table style="width:100%;">'
+                + rows
+                + '</table>'
+            )
+
+        body_md = "\n\n".join([
+            heading_html,
+            doc_title,
+            deposition_opening,
+            facts_html,
+            jurat,
+            exhibits_html,
+        ])
+
+        artifact_title = (
+            f"Affidavit in Support — {applicant or deponent} v {respondent}"
+            if respondent and len(applicant or deponent) < 30 and len(respondent) < 30
+            else f"Affidavit in Support — {deponent}"
+        )
+
+        return await pdf_tools.pdf_generate_legal(
+            title=artifact_title,
+            body_markdown=body_md,
+            meta_tool="draft_affidavit",
+            owner_id=owner_id,
+            session_id=session_id,
+        )
+
     async def _recommend_application(
         cause_of_action: str,
         procedural_mode: str,
@@ -1035,6 +1212,108 @@ def build_tool_registry(
                 ],
             },
             handler=_draft_summons,
+        ),
+        "draft_affidavit": ToolDefinition(
+            name="draft_affidavit",
+            description=(
+                "Draft an Affidavit in Support and save it as a PDF artifact. "
+                "Call AFTER `draft_summons` (or alongside it as part of the "
+                "bundle). Renders the same court caption + parties block as "
+                "the summons, then the standard Zambian deposition opening "
+                "('I, [DEPONENT], of [ADDRESS], …, do solemnly and sincerely "
+                "make oath and state as follows:'), then numbered THAT-"
+                "statements, then the jurat (SWORN at … BEFORE ME …), then "
+                "an exhibits index.\n\n"
+                "The first and last numbered paragraphs are added "
+                "automatically: the first one says the deponent is the "
+                "Applicant/Respondent and the facts are within their personal "
+                "knowledge; the last one prays the Court grant the orders in "
+                "the originating process. Pass the substantive facts in "
+                "between via `facts` — each item becomes one numbered "
+                "paragraph. Prefix with 'THAT' is optional (added if "
+                "missing).\n\n"
+                "Exhibits: each exhibit is {label, description}; the label is "
+                "the deponent's-initials + index (e.g. 'MB1', 'MB2'). The "
+                "tool only renders the exhibits index — the actual exhibit "
+                "PDFs are merged later by `draft_application_bundle`."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "procedural_mode": {
+                        "type": "string",
+                        "description": "Originating-process type — same value as passed to draft_summons.",
+                    },
+                    "court_division": {
+                        "type": "string",
+                    },
+                    "applicant_name": {"type": "string"},
+                    "respondent_name": {"type": "string"},
+                    "cause_number": {
+                        "type": "string",
+                        "description": "Must match the one used by draft_summons. Leave empty for a placeholder.",
+                    },
+                    "deponent_name": {
+                        "type": "string",
+                        "description": "The person swearing the affidavit. Usually the applicant; sometimes a witness or counsel's clerk.",
+                    },
+                    "deponent_address": {
+                        "type": "string",
+                        "description": "Full address of the deponent — e.g. 'Plot 1234, Kabulonga, Lusaka'.",
+                    },
+                    "deponent_occupation": {
+                        "type": "string",
+                        "description": "Occupation phrase — e.g. 'an accountant', 'a marketing executive', 'unemployed'.",
+                    },
+                    "deponent_role": {
+                        "type": "string",
+                        "description": "Role of the deponent in the matter (Applicant, Respondent, Petitioner, Witness). Defaults to Applicant.",
+                    },
+                    "deponent_gender": {
+                        "type": "string",
+                        "description": "Bare gender word ('male' or 'female') OR a pre-composed phrase like 'adult Zambian male of full legal capacity'.",
+                    },
+                    "facts": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Substantive THAT-paragraphs. One per fact. Prefix 'THAT' optional. The intro and prayer paragraphs are added automatically.",
+                    },
+                    "supporting_document": {
+                        "type": "string",
+                        "description": "Document this Affidavit supports — defaults to the procedural_mode (e.g. 'Originating Notice of Motion').",
+                    },
+                    "exhibits": {
+                        "type": "array",
+                        "description": "Exhibits index entries. Each item: {label, description}. Label defaults to deponent-initials + index.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "label": {"type": "string"},
+                                "description": {"type": "string"},
+                            },
+                        },
+                    },
+                    "commissioner_name": {
+                        "type": "string",
+                        "description": "Optional — fills the COMMISSIONER FOR OATHS slot. Leave empty for a placeholder.",
+                    },
+                    "sworn_at_city": {
+                        "type": "string",
+                        "description": "City where the affidavit will be sworn. Defaults to Lusaka.",
+                    },
+                },
+                "required": [
+                    "procedural_mode",
+                    "court_division",
+                    "applicant_name",
+                    "respondent_name",
+                    "deponent_name",
+                    "deponent_address",
+                    "deponent_occupation",
+                    "facts",
+                ],
+            },
+            handler=_draft_affidavit,
         ),
         "suggest_templates": ToolDefinition(
             name="suggest_templates",

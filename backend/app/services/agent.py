@@ -89,10 +89,14 @@ administration", "judicial review of this tribunal decision"):
    Motion. The UI renders this as a Plan card the user reviews.
 3. Wait for the user to confirm. Do NOT proceed to draft Summons /
    Affidavits / Skeletal Arguments / Orders until the user accepts the
-   plan. Once they accept, call the drafting tools in sequence — start
-   with `draft_summons` (the originating process). For drafting tools you
-   MUST have the parties' real names; if the user hasn't given them, ask
-   first rather than inventing placeholders.
+   plan. Once they accept, call the drafting tools in sequence:
+     a) `draft_summons` — the originating process,
+     b) `draft_affidavit` — Affidavit in Support, sworn by the applicant
+        (or a named deponent) and listing the substantive facts as
+        THAT-paragraphs and any exhibits (`{label, description}`).
+   You MUST have the parties' real names and the deponent's address +
+   occupation before calling these tools — if the user hasn't given them,
+   ask first rather than inventing placeholders.
 
 Standard Zambian filing heading you'll need to use throughout the
 drafting tools:
