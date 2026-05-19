@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { FileText, Download, Loader2, Layers, Scissors, Sparkles } from 'lucide-react'
+import { FileText, Download, Loader2, Layers, Scissors } from 'lucide-react'
+import { LevyLogo } from '@/components/ui/levy-logo'
 import type { ArtifactView } from '@/lib/api'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
@@ -11,8 +12,14 @@ interface ArtifactCardProps {
   onOpen?: () => void
 }
 
-const SOURCE_META: Record<ArtifactView['source'], { label: string; Icon: typeof FileText }> = {
-  generated: { label: 'Generated', Icon: Sparkles },
+// For agent-generated PDFs we show the Levy mark instead of a Lucide icon —
+// hence the slightly odd union type. The Icon is rendered with className,
+// LevyLogo with size, so we branch at the render site.
+const SOURCE_META: Record<
+  ArtifactView['source'],
+  { label: string; Icon: typeof FileText | null }
+> = {
+  generated: { label: 'Generated', Icon: null },
   extracted: { label: 'Extracted', Icon: Scissors },
   merged: { label: 'Merged', Icon: Layers },
   uploaded: { label: 'Uploaded', Icon: FileText },
@@ -75,7 +82,7 @@ export function ArtifactCard({ artifact, onOpen }: ArtifactCardProps) {
         </span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 text-[10px] font-medium tracking-[0.16em] uppercase text-emerald-400/80">
-            <Icon className="size-3" />
+            {Icon ? <Icon className="size-3" /> : <LevyLogo size={12} />}
             <span>{meta.label} PDF</span>
           </div>
           <div className="text-[14px] font-semibold text-white/85 mt-0.5 truncate">

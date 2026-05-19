@@ -16,8 +16,8 @@ import {
   Gavel,
   Scale,
   ScrollText,
-  Sparkles,
 } from 'lucide-react'
+import { LevyLogo } from '@/components/ui/levy-logo'
 import type { ApplicationPlan } from '@/lib/api'
 
 interface ApplicationPlanCardProps {
@@ -49,7 +49,7 @@ export function ApplicationPlanCard({
         className="w-full flex items-center gap-2 px-3.5 py-2.5 text-left hover:bg-emerald-500/[0.04] transition-colors"
       >
         <span className="flex items-center justify-center size-6 rounded-md bg-emerald-500/10">
-          <Sparkles size={12} className="text-emerald-400" />
+          <LevyLogo size={14} />
         </span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-emerald-300/80">
