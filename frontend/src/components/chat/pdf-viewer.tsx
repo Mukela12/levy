@@ -45,6 +45,22 @@ export function PdfViewer({ citation, onClose }: PdfViewerProps) {
   const [error, setError] = useState<string | null>(null)
   const [pageNum, setPageNum] = useState<number>(1)
   const [pageCount, setPageCount] = useState<number>(1)
+  // Only one shell can mount at a time — otherwise the desktop + mobile
+  // bodies both render `<div ref={containerRef}>`, the ref ends up
+  // pointing to the last-mounted (mobile, `md:hidden`) element, and the
+  // imperatively-appended pdfjs canvas is added to an invisible div.
+  const [isDesktop, setIsDesktop] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true
+    return window.matchMedia('(min-width: 768px)').matches
+  })
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 768px)')
+    const handler = () => setIsDesktop(mql.matches)
+    handler()
+    mql.addEventListener('change', handler)
+    return () => mql.removeEventListener('change', handler)
+  }, [])
+
 
   // Reset state when citation changes (or panel closes).
   useEffect(() => {
@@ -54,18 +70,30 @@ export function PdfViewer({ citation, onClose }: PdfViewerProps) {
   }, [citation?.documentId, citation?.actName, citation?.pageStart])
 
   // Resolve document/artifact → signed URL.
+  // Keyed by stable identity to avoid re-running on parent re-renders that
+  // pass a new object literal with the same content. Then we use an
+  // AbortController for actual in-flight cancellation rather than a
+  // closure-captured boolean (which doesn't actually cancel the fetch and
+  // races with React 18+ StrictMode's double-invoked effects).
+  const citationKey = citation
+    ? `${citation.artifactId || ''}::${citation.documentId || ''}::${citation.actName || ''}`
+    : ''
+
   useEffect(() => {
     if (!citation) return
-    let cancelled = false
+    const controller = new AbortController()
     setLoading(true)
+    setError(null)
     ;(async () => {
       try {
-        // Artifact path takes precedence - those are agent-generated PDFs.
         if (citation.artifactId) {
-          const r = await fetch(`${API_URL}/api/artifacts/${citation.artifactId}/pdf`)
+          const r = await fetch(
+            `${API_URL}/api/artifacts/${citation.artifactId}/pdf`,
+            { signal: controller.signal },
+          )
           if (!r.ok) throw new Error((await r.text()) || `artifact ${r.status}`)
           const j = (await r.json()) as PdfDocMeta & { kind?: string }
-          if (cancelled) return
+          if (controller.signal.aborted) return
           setMeta(j)
           setPageCount(j.page_count || 1)
           return
@@ -73,34 +101,40 @@ export function PdfViewer({ citation, onClose }: PdfViewerProps) {
 
         let documentId = citation.documentId
         if (!documentId) {
-          // Fallback: look up by act name (older citation snapshots).
           const r = await fetch(
             `${API_URL}/api/documents/by-title?title=${encodeURIComponent(citation.actName)}`,
+            { signal: controller.signal },
           )
           if (!r.ok) throw new Error(`title lookup ${r.status}`)
           const j = await r.json()
           documentId = j.matches?.[0]?.id
           if (!documentId) throw new Error('no matching document')
         }
-        const r = await fetch(`${API_URL}/api/documents/${documentId}/pdf`)
+        const r = await fetch(
+          `${API_URL}/api/documents/${documentId}/pdf`,
+          { signal: controller.signal },
+        )
         if (!r.ok) {
           const text = await r.text()
           throw new Error(text || `pdf url ${r.status}`)
         }
         const j = (await r.json()) as PdfDocMeta
-        if (cancelled) return
+        if (controller.signal.aborted) return
         setMeta(j)
         setPageCount(j.page_count || 1)
       } catch (e) {
-        if (!cancelled) setError(String((e as Error).message || e))
+        // AbortError is expected during dev StrictMode double-invoke; ignore.
+        if ((e as { name?: string })?.name === 'AbortError') return
+        if (!controller.signal.aborted) setError(String((e as Error).message || e))
       } finally {
-        if (!cancelled) setLoading(false)
+        if (!controller.signal.aborted) setLoading(false)
       }
     })()
     return () => {
-      cancelled = true
+      controller.abort()
     }
-  }, [citation])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [citationKey])
 
   // Render with pdfjs once we have the URL.
   useEffect(() => {
@@ -239,6 +273,7 @@ export function PdfViewer({ citation, onClose }: PdfViewerProps) {
   return (
     <>
       {/* ── Desktop: right-side aside ── */}
+      {isDesktop && (
       <aside
         className="hidden md:flex fixed inset-y-0 right-0 z-40 w-full max-w-[640px] flex-col border-l border-white/[0.06] bg-[#0a0a0b] shadow-[0_0_60px_-10px_rgba(0,0,0,0.5)]"
         style={{ pointerEvents: 'auto' }}
@@ -277,8 +312,10 @@ export function PdfViewer({ citation, onClose }: PdfViewerProps) {
         </header>
         {Body}
       </aside>
+      )}
 
       {/* ── Mobile: draggable bottom-sheet ── */}
+      {!isDesktop && (
       <PdfMobileSheet
         title={titleText}
         subtitle={headerSubtitle}
@@ -287,6 +324,7 @@ export function PdfViewer({ citation, onClose }: PdfViewerProps) {
       >
         {Body}
       </PdfMobileSheet>
+      )}
     </>
   )
 }

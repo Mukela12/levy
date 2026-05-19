@@ -156,7 +156,11 @@ export default function AppSidebar({ mobileSidebarOpen, onCloseMobile }: AppSide
                     isActive ? 'bg-emerald-500' : 'bg-white/20'
                   }`} />
 
-                  <Link href={`/chat/${session.id}`} className="flex-1 min-w-0">
+                  <Link
+                    href={`/chat/${session.id}`}
+                    prefetch={false}
+                    className="flex-1 min-w-0"
+                  >
                     <div className={`truncate font-medium ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
                       {session.title || 'New chat'}
                     </div>
