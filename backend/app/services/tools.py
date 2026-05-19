@@ -1035,6 +1035,139 @@ def build_tool_registry(
             session_id=session_id,
         )
 
+    async def _draft_order(
+        procedural_mode: str,
+        court_division: str,
+        applicant_name: str,
+        respondent_name: str,
+        orders: list[str],
+        urgency: str = "inter_partes",
+        cause_number: str | None = None,
+        supporting_deponent: str | None = None,
+        costs_direction: str | None = None,
+        counsel_name: str | None = None,
+        counsel_firm: str | None = None,
+        firm_address: str | None = None,
+    ):
+        """Draft a Draft Order for endorsement and save as PDF artifact.
+
+        Standard form: UPON-recital → IT IS HEREBY ORDERED THAT → numbered
+        orders → costs direction → DATED line → JUDGE signature line →
+        Drawn by chambers block.
+        """
+        mode = (procedural_mode or "").strip()
+        applicant = (applicant_name or "").strip()
+        respondent = (respondent_name or "").strip()
+        cleaned_orders = [o.strip() for o in (orders or []) if o and o.strip()]
+
+        if not mode:
+            return {"result": {"error": "procedural_mode required"}}
+        if not applicant:
+            return {"result": {"error": "applicant_name required"}}
+        if not respondent:
+            return {"result": {"error": "respondent_name required"}}
+        if not cleaned_orders:
+            return {"result": {"error": "orders must be a non-empty list"}}
+
+        is_ex_parte = (urgency or "").strip().lower() == "ex_parte" or "ex parte" in mode.lower()
+        mode_lower = mode.lower()
+        if "petition" in mode_lower:
+            applicant_role, respondent_role = "PETITIONER", "RESPONDENT"
+        elif "writ" in mode_lower or "originating summons" in mode_lower:
+            applicant_role, respondent_role = "PLAINTIFF", "DEFENDANT"
+        else:
+            applicant_role, respondent_role = "APPLICANT", "RESPONDENT"
+
+        heading_html = pdf_tools.render_court_heading(
+            court_division=court_division,
+            cause_number=cause_number,
+            applicant_name=applicant,
+            respondent_name=respondent,
+            applicant_role=applicant_role,
+            respondent_role=respondent_role,
+        )
+
+        doc_title = '<div class="doc-title">DRAFT ORDER</div>'
+
+        deponent = (supporting_deponent or applicant).strip()
+        if is_ex_parte:
+            hearing_clause = (
+                f"AND UPON hearing Counsel for the {applicant_role.capitalize()} ex parte"
+            )
+        else:
+            hearing_clause = (
+                f"AND UPON hearing Counsel for the {applicant_role.capitalize()} "
+                f"and Counsel for the {respondent_role.capitalize()} (or no appearance entered)"
+            )
+        upon_recital = (
+            f'<p class="recital">'
+            f'UPON the application by way of {mode} filed by the '
+            f'{applicant_role.capitalize()} herein '
+            f'AND UPON reading the Affidavit in Support sworn by '
+            f'<strong>{deponent}</strong> together with the Skeletal Arguments '
+            f'filed herewith {hearing_clause}:'
+            f'</p>'
+        )
+
+        ordered_heading = (
+            '<p style="text-align:center;font-weight:700;letter-spacing:1pt;'
+            'text-transform:uppercase;margin:14pt 0 8pt 0;">'
+            'IT IS HEREBY ORDERED THAT:</p>'
+        )
+
+        orders_with_costs = list(cleaned_orders)
+        if costs_direction is None or not costs_direction.strip():
+            costs_direction = "The costs of and incidental to this application shall be in the cause."
+        orders_with_costs.append(costs_direction.strip())
+
+        orders_html = (
+            "<ol>"
+            + "".join(f"<li>{o}</li>" for o in orders_with_costs)
+            + "</ol>"
+        )
+
+        dated_block = (
+            '<p class="dated">DATED at Lusaka this ______ day of '
+            '________________________, 20____.</p>'
+            '<div class="sig-line"></div>'
+            '<p><strong>JUDGE</strong></p>'
+        )
+
+        drawn_by = (
+            '<div class="served">'
+            '<p><strong>Drawn by:</strong><br/>'
+            f'{counsel_name or "[COUNSEL NAME]"}<br/>'
+            f'{counsel_firm or "[FIRM NAME / CHAMBERS]"}<br/>'
+            f'{firm_address or "[FIRM ADDRESS]"}<br/>'
+            f'Counsel for the {applicant_role.capitalize()}'
+            '</p>'
+            '</div>'
+        )
+
+        body_md = "\n\n".join([
+            heading_html,
+            doc_title,
+            upon_recital,
+            ordered_heading,
+            orders_html,
+            dated_block,
+            drawn_by,
+        ])
+
+        artifact_title = (
+            f"Draft Order — {applicant} v {respondent}"
+            if respondent and len(applicant) < 30 and len(respondent) < 30
+            else "Draft Order"
+        )
+
+        return await pdf_tools.pdf_generate_legal(
+            title=artifact_title,
+            body_markdown=body_md,
+            meta_tool="draft_order",
+            owner_id=owner_id,
+            session_id=session_id,
+        )
+
     async def _recommend_application(
         cause_of_action: str,
         procedural_mode: str,
@@ -1588,6 +1721,59 @@ def build_tool_registry(
                 ],
             },
             handler=_draft_skeletal,
+        ),
+        "draft_order": ToolDefinition(
+            name="draft_order",
+            description=(
+                "Draft a Draft Order for the Judge to endorse, and save as a "
+                "PDF artifact. This is the fourth and final document in the "
+                "application bundle. Call AFTER `draft_skeletal`. Renders the "
+                "standard form: same court caption + parties block, "
+                "'DRAFT ORDER' title, the UPON-recital (which references the "
+                "Originating Process + Affidavit + Skeletal Arguments + the "
+                "hearing), 'IT IS HEREBY ORDERED THAT:', the numbered orders "
+                "(reliefs the Applicant prays for, phrased in the imperative "
+                "the Judge would actually write), a costs direction, dated "
+                "line, JUDGE signature line, and a Drawn-by chambers block."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "procedural_mode": {"type": "string"},
+                    "court_division": {"type": "string"},
+                    "applicant_name": {"type": "string"},
+                    "respondent_name": {"type": "string"},
+                    "cause_number": {"type": "string"},
+                    "urgency": {
+                        "type": "string",
+                        "enum": ["ex_parte", "inter_partes"],
+                    },
+                    "orders": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Numbered orders the Judge would make. Phrased in the imperative ('That the Respondent's dismissal of the Applicant is declared null and void.'). Mirror the reliefs from the originating process but in the voice of the Court.",
+                    },
+                    "supporting_deponent": {
+                        "type": "string",
+                        "description": "Name of the deponent referenced in the UPON-reading clause. Defaults to the applicant.",
+                    },
+                    "costs_direction": {
+                        "type": "string",
+                        "description": "Costs paragraph appended after the substantive orders. Default: 'The costs of and incidental to this application shall be in the cause.' Common alternatives: 'paid by the Respondent', 'reserved'.",
+                    },
+                    "counsel_name": {"type": "string"},
+                    "counsel_firm": {"type": "string"},
+                    "firm_address": {"type": "string"},
+                },
+                "required": [
+                    "procedural_mode",
+                    "court_division",
+                    "applicant_name",
+                    "respondent_name",
+                    "orders",
+                ],
+            },
+            handler=_draft_order,
         ),
         "suggest_templates": ToolDefinition(
             name="suggest_templates",
