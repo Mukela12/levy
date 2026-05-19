@@ -35,6 +35,16 @@ import uuid
 from pathlib import Path
 
 import httpx
+import warnings
+# We intentionally use verify=False for downloads from gov sites with
+# misconfigured cert chains. Mute the per-request warning so the script's
+# output stays readable.
+warnings.filterwarnings("ignore", message="Unverified HTTPS request")
+try:
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+except Exception:
+    pass
 
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO / "backend"))
@@ -195,32 +205,118 @@ def tavily_search(query: str, *, include_domains: list[str] | None = None, max_r
     return r.json().get("results", []) or []
 
 
+# Words in the URL path that flag a PDF as commentary / opinion / press
+# release / blog rather than the canonical Act text.
+COMMENTARY_BLACKLIST = re.compile(
+    r"(?i)/(?:policy-brief|commentary|opinion|analysis|summary|explainer|"
+    r"guide|press|news|blog|newsletter|report|review|paper|brief|articles)/?|"
+    r"-(?:summary|explainer|analysis|brief|commentary|guide)-",
+)
+
+# ZambiaLII canonical Act URLs end with "/source" (which redirects to the
+# actual PDF). We accept these even though they don't have a .pdf suffix.
+# Statutory Instruments (path contains "/act/si/") are NOT the parent Act,
+# so we still reject those — we want the full Act text, not an SI.
+ZAMBIALII_SOURCE = re.compile(r"^https?://(?:www\.)?(?:media\.)?zambialii\.org/akn/zm/act/(?!si/)[^?#]*?/source(?:\?.*)?$", re.IGNORECASE)
+
+# Hostnames we trust most for canonical Act text. Higher priority = picked first.
+HOST_PRIORITY = [
+    "zambialii.org",
+    "media.zambialii.org",
+    "parliament.gov.zm",
+    "lawsofzambia.com",
+    "moj.gov.zm",
+    "zambia.gov.zm",
+]
+
+
+def _score_url(u: str) -> int:
+    """Higher is better. Negative if the URL looks like commentary."""
+    if COMMENTARY_BLACKLIST.search(u):
+        return -1000
+    score = 0
+    lower = u.lower()
+    # PDF-ness (direct .pdf wins, ZambiaLII /source is a close second)
+    if lower.endswith(".pdf"):
+        score += 50
+    elif ZAMBIALII_SOURCE.match(u):
+        score += 45
+    # Trusted host
+    for i, host in enumerate(HOST_PRIORITY):
+        if host in lower:
+            score += 100 - i * 5
+            break
+    # Looks like the Act text (path contains 'act', 'cap', or 'code')
+    if re.search(r"/(?:act|cap|code)[s_/-]", lower):
+        score += 10
+    return score
+
+
+def _is_likely_pdf(u: str) -> bool:
+    return u.lower().endswith(".pdf") or bool(ZAMBIALII_SOURCE.match(u))
+
+
 def pick_pdf_url(results: list[dict]) -> str | None:
+    """Choose the most likely-canonical PDF among Tavily results."""
+    candidates: list[tuple[int, str]] = []
     for r in results:
         u = (r.get("url") or "").strip()
-        if u.lower().endswith(".pdf"):
-            return u
-    # Some pages link to a PDF — Tavily's preview content sometimes contains
-    # the .pdf reference. Cheap heuristic on raw content.
-    for r in results:
-        c = (r.get("content") or "")
-        m = re.search(r"https?://[^\s\"'<>]+\.pdf", c)
-        if m:
-            return m.group(0)
-    return None
+        if u and _is_likely_pdf(u):
+            candidates.append((_score_url(u), u))
+        c = r.get("content") or ""
+        for m in re.finditer(r"https?://[^\s\"'<>]+\.pdf", c):
+            candidates.append((_score_url(m.group(0)), m.group(0)))
+    if not candidates:
+        return None
+    candidates.sort(key=lambda x: x[0], reverse=True)
+    top_score, top_url = candidates[0]
+    if top_score <= 0:
+        return None
+    return top_url
 
 
 def find_pdf_url(act: dict) -> str | None:
     for q in act["queries"]:
-        # First try restricted to gov domains
+        # Restricted to gov / institutional domains first
         url = pick_pdf_url(tavily_search(q, include_domains=GOV_DOMAINS))
         if url:
             return url
-        # Then fall back to wide search; still scoped by query
+        # Open web fallback, still scored / filtered the same way
         url = pick_pdf_url(tavily_search(q))
         if url:
             return url
     return None
+
+
+def looks_like_the_act(content: bytes, title: str) -> bool:
+    """Reject obvious-non-Acts before they hit the ingester.
+
+    Checks:
+      - At least 8 pages (real Acts are longer; SIs and amendments are short).
+      - Title keywords actually appear in the first ~3 pages of text.
+    """
+    try:
+        from pypdf import PdfReader
+        reader = PdfReader(io.BytesIO(content))
+        pages = len(reader.pages)
+        if pages < 8:
+            print(f"    only {pages} pages; likely an SI / amendment, not the parent Act.")
+            return False
+        first = " ".join(page.extract_text() or "" for page in reader.pages[: min(3, pages)])
+    except Exception:
+        return True  # don't reject on parse error; let ingester decide
+    if not first.strip():
+        return True
+    lower = first.lower()
+    title_words = re.findall(r"[A-Za-z]{4,}", title)
+    keep = [w.lower() for w in title_words if w.lower() not in {"act", "code", "of", "and", "cap", "the", "from"}]
+    if not keep:
+        return True
+    matched = sum(1 for w in keep if w in lower)
+    if matched < max(1, len(keep) // 2):
+        print(f"    title-word match too low ({matched}/{len(keep)}); rejecting.")
+        return False
+    return True
 
 
 # ── Download + ingest ────────────────────────────────────────────────────────
@@ -281,18 +377,29 @@ def patch_global_metadata(document_id: str, storage_path: str, page_count: int, 
 
 
 def download(url: str) -> bytes | None:
+    # Several Zambian gov hosts (notably parliament.gov.zm) serve an
+    # incomplete certificate chain that the macOS/certifi bundle won't
+    # validate. The content is a public PDF; relax verification rather
+    # than skip the whole site.
     try:
-        r = httpx.get(url, timeout=60, follow_redirects=True, headers={"User-Agent": "Mozilla/5.0 LevyIngest/1.0"})
+        r = httpx.get(
+            url,
+            timeout=60,
+            follow_redirects=True,
+            verify=False,
+            headers={"User-Agent": "Mozilla/5.0 LevyIngest/1.0"},
+        )
     except Exception as e:  # noqa: BLE001
         print(f"    download error: {e}")
         return None
     if r.status_code != 200:
         print(f"    download {r.status_code}")
         return None
-    if not r.content or len(r.content) < 5_000:
-        print(f"    suspiciously small ({len(r.content)} bytes)")
+    if not r.content or len(r.content) < 50_000:
+        # A real Act PDF is rarely under 50 KB. Tiny PDFs are usually a
+        # Statutory Instrument or amendment, not the parent Act.
+        print(f"    suspiciously small ({len(r.content)} bytes); rejecting.")
         return None
-    # Make sure it really is a PDF
     if not r.content.startswith(b"%PDF"):
         print(f"    not a PDF (magic bytes={r.content[:8]!r})")
         return None
@@ -331,6 +438,18 @@ def main() -> int:
                 continue
             path.write_bytes(content)
         size_bytes = len(content)
+
+        # Step 2b — confirm the PDF text mentions the Act we asked for.
+        # Tavily sometimes lets policy-brief / summary PDFs through that
+        # the URL filter doesn't catch.
+        if not looks_like_the_act(content, title):
+            print("    ✗ PDF text doesn't match title; rejecting.")
+            try:
+                path.unlink()
+            except Exception:
+                pass
+            results.append({"title": title, "status": "rejected-not-the-act", "url": url})
+            continue
 
         # Step 3 — dedupe
         pdf_hash = hashlib.sha256(content).hexdigest()

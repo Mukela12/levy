@@ -133,17 +133,27 @@ def get_embeddings(texts: list[str], batch_size: int = 128) -> list[list[float]]
             return _local_embed(texts)
 
     elif provider == "openai":
-        try:
-            print(f"  Using OpenAI ({settings.openai_embedding_model}) for {len(texts)} texts...")
-            t0 = time.time()
-            result = _openai_embed(texts)
-            elapsed = time.time() - t0
-            print(f"  OpenAI: {len(result)} embeddings in {elapsed:.1f}s ({len(result[0])} dims)")
-            return result
-        except Exception as e:
-            print(f"  OpenAI failed: {e}")
-            print(f"  Falling back to local model...")
-            return _local_embed(texts)
+        # Retry up to 3 times — most failures are transient connection blips.
+        # We DO NOT silently fall back to the local model because its vectors
+        # are incompatible with OpenAI's. Mixing the two corrupts the corpus.
+        last_err: Exception | None = None
+        for attempt in range(1, 4):
+            try:
+                print(f"  Using OpenAI ({settings.openai_embedding_model}) for {len(texts)} texts (attempt {attempt})...")
+                t0 = time.time()
+                result = _openai_embed(texts)
+                elapsed = time.time() - t0
+                print(f"  OpenAI: {len(result)} embeddings in {elapsed:.1f}s ({len(result[0])} dims)")
+                return result
+            except Exception as e:
+                last_err = e
+                print(f"  OpenAI attempt {attempt} failed: {e}")
+                if attempt < 3:
+                    time.sleep(2 * attempt)
+        # Out of retries — raise. The caller decides whether to skip the
+        # document or escalate; never embed half a document with the wrong
+        # provider.
+        raise RuntimeError(f"OpenAI embedding failed after 3 attempts: {last_err}")
 
     elif provider == "local":
         print(f"  Using local model for {len(texts)} texts...")
@@ -175,11 +185,16 @@ def get_query_embedding(query: str) -> list[float]:
             return _local_embed([query])[0]
 
     elif provider == "openai":
-        try:
-            return _openai_embed([query])[0]
-        except Exception as e:
-            print(f"  OpenAI query embedding failed: {e}, using local fallback")
-            return _local_embed([query])[0]
+        # Same no-silent-fallback policy as get_embeddings.
+        last_err: Exception | None = None
+        for attempt in range(1, 4):
+            try:
+                return _openai_embed([query])[0]
+            except Exception as e:
+                last_err = e
+                if attempt < 3:
+                    time.sleep(1 * attempt)
+        raise RuntimeError(f"OpenAI query embedding failed: {last_err}")
 
     elif provider == "local":
         return _local_embed([query])[0]

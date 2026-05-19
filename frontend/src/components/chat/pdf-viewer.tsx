@@ -211,7 +211,23 @@ export function PdfViewer({ citation, onClose }: PdfViewerProps) {
           </div>
         )}
         {error && (
-          <div className="text-[12.5px] text-amber-400/80 max-w-md py-12 px-6">{error}</div>
+          <div className="max-w-md py-12 px-6 text-center">
+            <p className="text-[13px] text-amber-400/85 mb-1">This PDF couldn't be rendered.</p>
+            <p className="text-[11.5px] text-white/45 leading-relaxed mb-3">
+              Some scanned or password-protected files don't render in-browser. You can still download the original.
+            </p>
+            {meta?.signed_url && (
+              <a
+                href={meta.signed_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11.5px] bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 hover:bg-emerald-500/15"
+              >
+                Open in new tab
+              </a>
+            )}
+            <p className="text-[10.5px] text-white/25 mt-4 break-all">{error}</p>
+          </div>
         )}
         {!loading && !error && (
           <div ref={containerRef} className="w-full flex justify-center py-3 px-3" />
