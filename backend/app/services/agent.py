@@ -94,6 +94,13 @@ administration", "judicial review of this tribunal decision"):
      b) `draft_affidavit` — Affidavit in Support, sworn by the applicant
         (or a named deponent) and listing the substantive facts as
         THAT-paragraphs and any exhibits (`{label, description}`).
+     c) `draft_skeletal` — Skeletal Arguments in support, IRAC-structured
+        (Introduction / Issues / Submissions / Prayer / List of
+        Authorities). Cite the same statutory sections you retrieved via
+        `search_corpus` and the Zambian cases that govern the cause of
+        action (use the citations the user references or the ones from
+        gov_search). Each submission block: {title, paragraphs[],
+        citations[]}.
    You MUST have the parties' real names and the deponent's address +
    occupation before calling these tools — if the user hasn't given them,
    ask first rather than inventing placeholders.

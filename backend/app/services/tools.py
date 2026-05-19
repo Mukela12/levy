@@ -851,6 +851,190 @@ def build_tool_registry(
             session_id=session_id,
         )
 
+    async def _draft_skeletal(
+        procedural_mode: str,
+        court_division: str,
+        applicant_name: str,
+        respondent_name: str,
+        introduction: str,
+        issues: list[str],
+        submissions: list[dict],
+        prayer: str,
+        supporting_document: str | None = None,
+        cause_number: str | None = None,
+        authorities_cases: list[str] | None = None,
+        authorities_statutes: list[str] | None = None,
+        counsel_name: str | None = None,
+        counsel_firm: str | None = None,
+    ):
+        """Draft Skeletal Arguments in support of an application.
+
+        Renders the IRAC-style structure Zambian counsel use: Introduction →
+        Issues for Determination → Submissions (one per issue, with
+        authorities woven in) → Prayer → List of Authorities → signature.
+        """
+        mode = (procedural_mode or "").strip()
+        applicant = (applicant_name or "").strip()
+        respondent = (respondent_name or "").strip()
+        cleaned_issues = [i.strip() for i in (issues or []) if i and i.strip()]
+        cleaned_subs = [
+            {
+                "title": (s.get("title") or "").strip(),
+                "paragraphs": [p.strip() for p in (s.get("paragraphs") or []) if p and p.strip()],
+                "citations": [c.strip() for c in (s.get("citations") or []) if c and c.strip()],
+            }
+            for s in (submissions or [])
+            if s
+        ]
+        cases = [c.strip() for c in (authorities_cases or []) if c and c.strip()]
+        statutes = [s.strip() for s in (authorities_statutes or []) if s and s.strip()]
+
+        if not mode:
+            return {"result": {"error": "procedural_mode required"}}
+        if not introduction or not introduction.strip():
+            return {"result": {"error": "introduction required"}}
+        if not cleaned_issues:
+            return {"result": {"error": "issues must be a non-empty list"}}
+        if not cleaned_subs:
+            return {"result": {"error": "submissions must be a non-empty list"}}
+        if not prayer or not prayer.strip():
+            return {"result": {"error": "prayer required"}}
+
+        mode_lower = mode.lower()
+        if "petition" in mode_lower:
+            applicant_role, respondent_role = "PETITIONER", "RESPONDENT"
+        elif "writ" in mode_lower or "originating summons" in mode_lower:
+            applicant_role, respondent_role = "PLAINTIFF", "DEFENDANT"
+        else:
+            applicant_role, respondent_role = "APPLICANT", "RESPONDENT"
+
+        heading_html = pdf_tools.render_court_heading(
+            court_division=court_division,
+            cause_number=cause_number,
+            applicant_name=applicant or "[APPLICANT NAME]",
+            respondent_name=respondent or "[RESPONDENT NAME]",
+            applicant_role=applicant_role,
+            respondent_role=respondent_role,
+        )
+
+        support_doc = (supporting_document or mode).strip()
+        doc_title = (
+            f'<div class="doc-title">SKELETAL ARGUMENTS IN SUPPORT OF '
+            f'{support_doc.upper()}</div>'
+        )
+
+        # 1.0 Introduction
+        intro_paragraphs = [
+            f'<p>{p}</p>'
+            for p in introduction.strip().split("\n\n")
+            if p.strip()
+        ]
+        intro_section = (
+            '<h2 style="text-align:left;letter-spacing:0;font-size:12pt;'
+            'margin-top:14pt;">1.0 INTRODUCTION</h2>'
+            + "".join(
+                f'<p><strong>1.{i+1}</strong> {p[3:-4] if p.startswith("<p>") and p.endswith("</p>") else p}</p>'
+                for i, p in enumerate(intro_paragraphs)
+            )
+        )
+
+        # 2.0 Issues for Determination
+        issues_section = (
+            '<h2 style="text-align:left;letter-spacing:0;font-size:12pt;'
+            'margin-top:14pt;">2.0 ISSUES FOR DETERMINATION</h2>'
+            + "".join(
+                f'<p><strong>2.{i+1}</strong> {issue}</p>'
+                for i, issue in enumerate(cleaned_issues)
+            )
+        )
+
+        # 3.0 Submissions — one block per submission item.
+        sub_blocks = []
+        for s_idx, sub in enumerate(cleaned_subs):
+            title = sub["title"] or f"Submission on Issue {s_idx + 1}"
+            sub_blocks.append(
+                f'<h3 style="text-align:left;font-size:11.5pt;margin-top:12pt;">'
+                f'3.{s_idx + 1} {title}</h3>'
+            )
+            for p_idx, para in enumerate(sub["paragraphs"]):
+                sub_blocks.append(
+                    f'<p><strong>3.{s_idx + 1}.{p_idx + 1}</strong> {para}</p>'
+                )
+            if sub["citations"]:
+                cites = "; ".join(sub["citations"])
+                sub_blocks.append(
+                    f'<p style="font-style:italic;margin-left:18pt;">'
+                    f'Authority: {cites}</p>'
+                )
+        submissions_section = (
+            '<h2 style="text-align:left;letter-spacing:0;font-size:12pt;'
+            'margin-top:14pt;">3.0 SUBMISSIONS</h2>'
+            + "".join(sub_blocks)
+        )
+
+        # 4.0 Prayer
+        prayer_section = (
+            '<h2 style="text-align:left;letter-spacing:0;font-size:12pt;'
+            'margin-top:14pt;">4.0 PRAYER</h2>'
+            f'<p><strong>4.1</strong> {prayer.strip()}</p>'
+        )
+
+        # List of Authorities
+        authorities_section_parts = []
+        if cases or statutes:
+            authorities_section_parts.append(
+                '<h2 style="text-align:left;letter-spacing:0;font-size:12pt;'
+                'margin-top:14pt;">LIST OF AUTHORITIES</h2>'
+            )
+        if cases:
+            authorities_section_parts.append(
+                '<p style="margin-bottom:4pt;"><strong>Cases:</strong></p>'
+            )
+            authorities_section_parts.append(
+                "<ol>" + "".join(f"<li>{c}</li>" for c in cases) + "</ol>"
+            )
+        if statutes:
+            authorities_section_parts.append(
+                '<p style="margin-bottom:4pt;"><strong>Statutes & Rules:</strong></p>'
+            )
+            authorities_section_parts.append(
+                "<ol>" + "".join(f"<li>{s}</li>" for s in statutes) + "</ol>"
+            )
+        authorities_section = "".join(authorities_section_parts)
+
+        # Signature
+        signature = (
+            '<div class="sig-line"></div>'
+            f'<p><strong>{(counsel_name or "[COUNSEL NAME]").upper()}</strong><br/>'
+            f'{counsel_firm or "[FIRM NAME / CHAMBERS]"}<br/>'
+            f'Counsel for the {applicant_role.capitalize()}</p>'
+        )
+
+        body_md = "\n\n".join([
+            heading_html,
+            doc_title,
+            intro_section,
+            issues_section,
+            submissions_section,
+            prayer_section,
+            authorities_section,
+            signature,
+        ])
+
+        artifact_title = (
+            f"Skeletal Arguments — {applicant} v {respondent}"
+            if respondent and len(applicant) < 30 and len(respondent) < 30
+            else "Skeletal Arguments"
+        )
+
+        return await pdf_tools.pdf_generate_legal(
+            title=artifact_title,
+            body_markdown=body_md,
+            meta_tool="draft_skeletal",
+            owner_id=owner_id,
+            session_id=session_id,
+        )
+
     async def _recommend_application(
         cause_of_action: str,
         procedural_mode: str,
@@ -1314,6 +1498,96 @@ def build_tool_registry(
                 ],
             },
             handler=_draft_affidavit,
+        ),
+        "draft_skeletal": ToolDefinition(
+            name="draft_skeletal",
+            description=(
+                "Draft Skeletal Arguments in support of an application and "
+                "save as a PDF artifact. Call AFTER `draft_summons` and "
+                "`draft_affidavit` (the affidavit lays out the facts; "
+                "skeletal arguments lay out the law). Uses the IRAC-style "
+                "structure Zambian counsel use:\n\n"
+                "  1.0 INTRODUCTION       — short paragraphs framing the matter\n"
+                "  2.0 ISSUES FOR DETERMINATION — numbered 'Whether…' questions\n"
+                "  3.0 SUBMISSIONS        — one block per submission, "
+                "                            each with paragraphs + cited authorities\n"
+                "  4.0 PRAYER             — what the Court is asked to do\n"
+                "  LIST OF AUTHORITIES    — cases + statutes, separated\n\n"
+                "Pull statutory citations from a prior `search_corpus` so "
+                "they reference the actual section text. Case citations "
+                "should use Zambian form where available (Appeal No., SCZ "
+                "Appeal No., Supreme Court Judgment No., etc.)."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "procedural_mode": {"type": "string"},
+                    "court_division": {"type": "string"},
+                    "applicant_name": {"type": "string"},
+                    "respondent_name": {"type": "string"},
+                    "cause_number": {"type": "string"},
+                    "supporting_document": {
+                        "type": "string",
+                        "description": "Document this Skeletal supports — defaults to procedural_mode.",
+                    },
+                    "introduction": {
+                        "type": "string",
+                        "description": "Introductory paragraphs as plain prose. Use double-newlines between paragraphs; the tool numbers them 1.1, 1.2, etc.",
+                    },
+                    "issues": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Numbered 'Whether X' questions for the Court to decide.",
+                    },
+                    "submissions": {
+                        "type": "array",
+                        "description": "One block per submission. Each: {title, paragraphs[], citations[]}. Title becomes the heading (e.g. 'The dismissal was substantively unfair'). Paragraphs become 3.X.Y numbered points. Citations are listed under the paragraphs in italics.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "title": {"type": "string"},
+                                "paragraphs": {
+                                    "type": "array",
+                                    "items": {"type": "string"},
+                                },
+                                "citations": {
+                                    "type": "array",
+                                    "items": {"type": "string"},
+                                    "description": "Statute citations or case names backing the submission.",
+                                },
+                            },
+                            "required": ["paragraphs"],
+                        },
+                    },
+                    "prayer": {
+                        "type": "string",
+                        "description": "Final prayer paragraph — usually 'WHEREFORE the Applicant prays…' or 'For the reasons above the Applicant respectfully prays that this Honourable Court grants the orders sought…'",
+                    },
+                    "authorities_cases": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Cases relied upon, formatted in Zambian citation style.",
+                    },
+                    "authorities_statutes": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Statutes / Rules relied upon (Acts, sections, Order numbers).",
+                    },
+                    "counsel_name": {"type": "string"},
+                    "counsel_firm": {"type": "string"},
+                },
+                "required": [
+                    "procedural_mode",
+                    "court_division",
+                    "applicant_name",
+                    "respondent_name",
+                    "introduction",
+                    "issues",
+                    "submissions",
+                    "prayer",
+                ],
+            },
+            handler=_draft_skeletal,
         ),
         "suggest_templates": ToolDefinition(
             name="suggest_templates",
