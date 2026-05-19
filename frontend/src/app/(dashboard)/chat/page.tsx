@@ -17,7 +17,13 @@ import type { MessageBlock } from '@/components/chat/chat-message'
 import { attachDocumentToSession, type LibraryDocument } from '@/lib/api'
 import { BookOpen, Search, FileText, Gavel, Paperclip, X } from 'lucide-react'
 import { LevyLogo } from '@/components/ui/levy-logo'
-import type { ArtifactView, ChunkUsed, TemplateSuggestion, WebSource } from '@/lib/api'
+import type {
+  ApplicationPlan,
+  ArtifactView,
+  ChunkUsed,
+  TemplateSuggestion,
+  WebSource,
+} from '@/lib/api'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -28,6 +34,7 @@ interface Message {
   toolCalls?: ToolCallView[]
   artifacts?: ArtifactView[]
   templateSuggestions?: Record<string, TemplateSuggestion[]>
+  applicationPlans?: Record<string, ApplicationPlan>
   timing?: { total_ms: number }
   compaction?: { summarised_messages: number; tokens_before: number; tokens_after: number }
 }
@@ -250,12 +257,21 @@ export default function NewChatPage() {
           onTemplateSuggestion: (event) =>
             updateLast((last) => {
               const blocks = [...(last.blocks ?? [])]
-              if (
-                !blocks.some(
-                  (b) => b.kind === 'templates' && b.toolCallId === event.tool_call_id,
-                )
-              ) {
-                blocks.push({ kind: 'templates', toolCallId: event.tool_call_id })
+              const existing = blocks.findIndex(
+                (b) => b.kind === 'templates' && b.toolCallId === event.tool_call_id,
+              )
+              if (existing >= 0) {
+                blocks[existing] = {
+                  kind: 'templates',
+                  toolCallId: event.tool_call_id,
+                  templates: event.templates,
+                }
+              } else {
+                blocks.push({
+                  kind: 'templates',
+                  toolCallId: event.tool_call_id,
+                  templates: event.templates,
+                })
               }
               return {
                 ...last,
@@ -263,6 +279,34 @@ export default function NewChatPage() {
                 templateSuggestions: {
                   ...(last.templateSuggestions ?? {}),
                   [event.tool_call_id]: event.templates,
+                },
+              }
+            }),
+          onApplicationPlan: (event) =>
+            updateLast((last) => {
+              const blocks = [...(last.blocks ?? [])]
+              const existing = blocks.findIndex(
+                (b) => b.kind === 'application_plan' && b.toolCallId === event.tool_call_id,
+              )
+              if (existing >= 0) {
+                blocks[existing] = {
+                  kind: 'application_plan',
+                  toolCallId: event.tool_call_id,
+                  plan: event.plan,
+                }
+              } else {
+                blocks.push({
+                  kind: 'application_plan',
+                  toolCallId: event.tool_call_id,
+                  plan: event.plan,
+                })
+              }
+              return {
+                ...last,
+                blocks,
+                applicationPlans: {
+                  ...(last.applicationPlans ?? {}),
+                  [event.tool_call_id]: event.plan,
                 },
               }
             }),
@@ -449,6 +493,7 @@ export default function NewChatPage() {
                           toolCalls={msg.toolCalls}
                           artifacts={msg.artifacts}
                           templateSuggestions={msg.templateSuggestions}
+                          applicationPlans={msg.applicationPlans}
                           timing={msg.timing}
                           isStreaming={isLastAssistant}
                           compaction={msg.compaction}
@@ -473,6 +518,22 @@ export default function NewChatPage() {
                               `Use my "${t.name}" template (id: ${t.id}) to draft this for me. Generate the document with pdf_generate using that template's structure as the basis.`,
                             )
                           }
+                          onDraftBundle={(plan) =>
+                            handleSend(
+                              `Proceed with the plan. Draft the full application bundle for me: ${plan.documents_to_file.join(', ')}. Apply the heading and party block consistent with a Zambian ${plan.procedural_mode} in the ${plan.court_division}. Cause number is "[CAUSE NUMBER TO BE ALLOCATED]" unless I gave you one earlier.`,
+                            )
+                          }
+                          onDraftIndividual={(plan, kind) => {
+                            const map: Record<string, string> = {
+                              summons: 'the Originating Notice of Motion / Summons',
+                              affidavit: 'the Affidavit in Support',
+                              skeletal: 'the Skeletal Arguments',
+                              order: 'the Draft Order',
+                            }
+                            handleSend(
+                              `Proceed with the plan. Draft ${map[kind]} only, using the Zambian ${plan.procedural_mode} format for the ${plan.court_division}. Cause number is "[CAUSE NUMBER TO BE ALLOCATED]" unless I gave you one earlier.`,
+                            )
+                          }}
                         />
                       )}
                     </div>

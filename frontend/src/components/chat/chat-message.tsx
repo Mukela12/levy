@@ -10,7 +10,14 @@ import { AgentTask } from './agent-task'
 import { ArtifactCard } from './artifact-card'
 import { Favicon } from './favicon'
 import { TemplateSuggestions } from './template-suggestions'
-import type { ArtifactView, ChunkUsed, TemplateSuggestion, WebSource } from '@/lib/api'
+import { ApplicationPlanCard } from './application-plan-card'
+import type {
+  ApplicationPlan,
+  ArtifactView,
+  ChunkUsed,
+  TemplateSuggestion,
+  WebSource,
+} from '@/lib/api'
 
 /**
  * A chronological "block" - either a chunk of streamed prose or a reference
@@ -21,7 +28,8 @@ import type { ArtifactView, ChunkUsed, TemplateSuggestion, WebSource } from '@/l
 export type MessageBlock =
   | { kind: 'text'; text: string }
   | { kind: 'tool'; toolCallId: string }
-  | { kind: 'templates'; toolCallId: string }
+  | { kind: 'templates'; toolCallId: string; templates?: TemplateSuggestion[] }
+  | { kind: 'application_plan'; toolCallId: string; plan?: ApplicationPlan }
 
 interface ChatMessageProps {
   role: 'user' | 'assistant'
@@ -32,12 +40,15 @@ interface ChatMessageProps {
   toolCalls?: ToolCallView[]
   artifacts?: ArtifactView[]
   templateSuggestions?: Record<string, TemplateSuggestion[]>
+  applicationPlans?: Record<string, ApplicationPlan>
   timing?: { total_ms: number }
   isStreaming?: boolean
   compaction?: { summarised_messages: number; tokens_before: number; tokens_after: number }
   onOpenCitation?: (cite: ChunkUsed) => void
   onOpenArtifact?: (artifact: ArtifactView) => void
   onUseTemplate?: (template: TemplateSuggestion) => void
+  onDraftBundle?: (plan: ApplicationPlan) => void
+  onDraftIndividual?: (plan: ApplicationPlan, kind: 'summons' | 'affidavit' | 'skeletal' | 'order') => void
 }
 
 export function ChatMessage({
@@ -49,12 +60,15 @@ export function ChatMessage({
   toolCalls,
   artifacts,
   templateSuggestions,
+  applicationPlans,
   timing,
   isStreaming,
   compaction,
   onOpenCitation,
   onOpenArtifact,
   onUseTemplate,
+  onDraftBundle,
+  onDraftIndividual,
 }: ChatMessageProps) {
   const [showCitations, setShowCitations] = useState(false)
   const [showWebSources, setShowWebSources] = useState(false)
@@ -132,13 +146,32 @@ export function ChatMessage({
                   )
                 }
                 if (block.kind === 'templates') {
-                  const suggestions = templateSuggestions?.[block.toolCallId] || []
+                  const suggestions =
+                    block.templates ??
+                    templateSuggestions?.[block.toolCallId] ??
+                    []
                   if (suggestions.length === 0) return null
                   return (
                     <TemplateSuggestions
                       key={`ts-${block.toolCallId}`}
                       templates={suggestions}
                       onUseTemplate={(t) => onUseTemplate?.(t)}
+                    />
+                  )
+                }
+                if (block.kind === 'application_plan') {
+                  const plan = block.plan ?? applicationPlans?.[block.toolCallId]
+                  if (!plan) return null
+                  return (
+                    <ApplicationPlanCard
+                      key={`ap-${block.toolCallId}`}
+                      plan={plan}
+                      onDraftBundle={onDraftBundle ? () => onDraftBundle(plan) : undefined}
+                      onDraftIndividual={
+                        onDraftIndividual
+                          ? (kind) => onDraftIndividual(plan, kind)
+                          : undefined
+                      }
                     />
                   )
                 }

@@ -421,6 +421,23 @@ export interface TemplateSuggestionEvent {
   templates: TemplateSuggestion[]
 }
 
+export interface ApplicationPlan {
+  cause_of_action: string
+  procedural_mode: string
+  court_division: string
+  urgency: 'ex_parte' | 'inter_partes'
+  reliefs: string[]
+  documents_to_file: string[]
+  statutory_basis?: string[]
+  authorities?: string[]
+  notes?: string | null
+}
+
+export interface ApplicationPlanEvent {
+  tool_call_id: string
+  plan: ApplicationPlan
+}
+
 export interface StreamHandlers {
   onThinking?: () => void
   onToken?: (text: string) => void
@@ -429,6 +446,7 @@ export interface StreamHandlers {
   onArtifact?: (artifact: ArtifactView) => void
   onCompaction?: (event: CompactionEvent) => void
   onTemplateSuggestion?: (event: TemplateSuggestionEvent) => void
+  onApplicationPlan?: (event: ApplicationPlanEvent) => void
   onDone?: (metadata: AgentDoneMetadata) => void
   onError?: (message: string) => void
 }
@@ -526,6 +544,9 @@ export async function streamQuery(
           break
         case 'template_suggestion':
           handlers?.onTemplateSuggestion?.(parsed as unknown as TemplateSuggestionEvent)
+          break
+        case 'application_plan':
+          handlers?.onApplicationPlan?.(parsed as unknown as ApplicationPlanEvent)
           break
         case 'sources':
           dbSources = ((parsed.db as ChunkUsed[]) ?? (parsed.chunks_used as ChunkUsed[]) ?? [])

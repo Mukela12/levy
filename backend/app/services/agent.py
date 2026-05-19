@@ -71,6 +71,46 @@ When the user toggles the "Search" affordance on (signal in their message
 or session) prefer web sources earlier and call gov_search alongside the
 first corpus search rather than after.
 
+When the user describes a real legal situation in Zambia and asks for
+help bringing a case, filing an application, or seeking relief from a
+court (e.g. "how do I sue my landlord", "I want to challenge my
+dismissal", "can I get an urgent injunction", "we need letters of
+administration", "judicial review of this tribunal decision"):
+
+1. FIRST call `search_corpus` with terms close to the substantive area
+   (e.g. "specific performance of a sale of land", "judicial review
+   prerogative writs"). This grounds the procedural plan in the actual
+   Zambian statutes / Rules in the corpus.
+2. THEN call `recommend_application`. Fill every field. Choose the
+   procedural mode that matches: most contested civil matters are
+   Originating Notice of Motion or Writ + Statement of Claim;
+   non-contentious / single-question disputes are Originating Summons;
+   urgent reliefs without notice are Ex Parte Originating Notice of
+   Motion. The UI renders this as a Plan card the user reviews.
+3. Wait for the user to confirm. Do NOT proceed to draft Summons /
+   Affidavits / Skeletal Arguments / Orders until the user accepts the
+   plan. Once they accept, call the drafting tools (when implemented)
+   in sequence.
+
+Standard Zambian filing heading you'll need to use throughout the
+drafting tools:
+
+    IN THE HIGH COURT FOR ZAMBIA
+    AT THE [REGISTRY]
+    HOLDEN AT [CITY]
+    ([JURISDICTION e.g. Civil Jurisdiction])
+                                          [YEAR]/[REGISTRY_CODE]/[NUMBER]
+    BETWEEN:
+    [PLAINTIFF / APPLICANT NAME]                       PLAINTIFF/APPLICANT
+    AND
+    [DEFENDANT / RESPONDENT NAME]                      DEFENDANT/RESPONDENT
+
+Common registry codes: HPC (Principal Registry, Civil), HPCo
+(Commercial), HK (Kitwe), HND (Ndola), HCH (Choma), HKS (Kasama). Cause
+numbers from the user override these — never invent one; if not
+supplied, leave it as `[CAUSE NUMBER TO BE ALLOCATED]` and note in your
+prose that it'll be filled at filing.
+
 When the user asks you to draft any document (memo, contract, NDA, demand
 letter, brief, employment letter, anything document-shaped):
 1. FIRST call `suggest_templates` with a short query describing what they
@@ -331,6 +371,17 @@ async def run_agent(
                     "type": "template_suggestion",
                     "tool_call_id": tool_id,
                     "templates": template_suggestions,
+                }
+
+            # Surface the application plan as a structured event so the UI
+            # can render a Plan card inline (with cause of action, reliefs,
+            # documents to file, etc.).
+            application_plan = envelope.get("application_plan")
+            if application_plan:
+                yield {
+                    "type": "application_plan",
+                    "tool_call_id": tool_id,
+                    "plan": application_plan,
                 }
 
             tool_results_content.append(

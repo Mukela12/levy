@@ -472,6 +472,49 @@ def build_tool_registry(
             # clickable suggestion cards inline in the chat.
             "templates": compact,
         }
+    async def _recommend_application(
+        cause_of_action: str,
+        procedural_mode: str,
+        court_division: str,
+        urgency: str,
+        reliefs: list[str],
+        documents_to_file: list[str],
+        statutory_basis: list[str] | None = None,
+        authorities: list[str] | None = None,
+        notes: str | None = None,
+    ):
+        """Pure passthrough: the agent reasons about the plan, calls this tool
+        with the structured result, and the frontend renders a plan card.
+
+        The handler validates shape and emits an `application_plan` event via
+        the tool envelope's `application_plan` field, which the agent loop
+        forwards over SSE."""
+        plan = {
+            "cause_of_action": (cause_of_action or "").strip(),
+            "procedural_mode": (procedural_mode or "").strip(),
+            "court_division": (court_division or "").strip(),
+            "urgency": (urgency or "inter_partes").strip(),
+            "reliefs": [r.strip() for r in (reliefs or []) if r and r.strip()],
+            "documents_to_file": [d.strip() for d in (documents_to_file or []) if d and d.strip()],
+            "statutory_basis": [s.strip() for s in (statutory_basis or []) if s and s.strip()],
+            "authorities": [a.strip() for a in (authorities or []) if a and a.strip()],
+            "notes": (notes or "").strip() or None,
+        }
+        if not plan["cause_of_action"] or not plan["procedural_mode"]:
+            return {
+                "result": {
+                    "error": "cause_of_action and procedural_mode are required",
+                },
+            }
+        return {
+            "result": {"plan": plan, "ok": True},
+            "db_sources": [],
+            "web_sources": [],
+            # Surfaced separately by the agent loop as an `application_plan`
+            # event so the UI can render a structured plan card inline.
+            "application_plan": plan,
+        }
+
     tools: dict[str, ToolDefinition] = {
         "pdf_extract_pages": ToolDefinition(
             name="pdf_extract_pages",
@@ -605,6 +648,93 @@ def build_tool_registry(
                 "required": ["title", "parts"],
             },
             handler=_merge,
+        ),
+        "recommend_application": ToolDefinition(
+            name="recommend_application",
+            description=(
+                "Propose the structured plan for a Zambian-court application "
+                "BEFORE drafting any documents. Use this whenever the user "
+                "describes a legal situation and wants help filing — e.g. "
+                "'how do I sue X', 'I want an injunction', 'we need to "
+                "challenge an unlawful arrest', 'apply for letters of "
+                "administration', 'judicial review of a tribunal decision'.\n\n"
+                "Fill the fields based on facts the user gave and corpus / "
+                "web research you've done in this turn. The UI renders this "
+                "as a Plan card the user can confirm before you call the "
+                "drafting tools.\n\n"
+                "PROCEDURAL MODE must be one of: 'Originating Notice of "
+                "Motion', 'Originating Summons', 'Writ of Summons + "
+                "Statement of Claim', 'Ex Parte Originating Notice of "
+                "Motion', 'Petition', 'Inter Partes Summons', 'Ex Parte "
+                "Summons', 'Notice of Motion'.\n\n"
+                "COURT DIVISION must be one of: 'Principal Registry, Civil', "
+                "'Principal Registry, Commercial', 'Principal Registry, "
+                "Family and Children', 'Industrial Relations Division', "
+                "'Constitutional Court', 'Court of Appeal', 'Subordinate "
+                "Court'.\n\n"
+                "URGENCY: 'ex_parte' (relief sought without notice to the "
+                "respondent) or 'inter_partes' (with notice).\n\n"
+                "RELIEFS: a numbered list of the orders prayed for, each in "
+                "the imperative voice ('An order that the Respondent...'). "
+                "DOCUMENTS_TO_FILE: list each filing the user will need "
+                "(usually 'Originating Notice of Motion / Summons', "
+                "'Affidavit in Support', 'Skeletal Arguments', 'Draft "
+                "Order')."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "cause_of_action": {
+                        "type": "string",
+                        "description": "Named cause of action (e.g. 'Judicial review of an administrative decision', 'Application for habeas corpus', 'Specific performance of a sale-of-land contract', 'Unfair dismissal claim under the Employment Code Act, 2019').",
+                    },
+                    "procedural_mode": {
+                        "type": "string",
+                        "description": "One of the enumerated modes.",
+                    },
+                    "court_division": {
+                        "type": "string",
+                        "description": "Which Registry / Division of the High Court (or other court) the application should be filed in.",
+                    },
+                    "urgency": {
+                        "type": "string",
+                        "enum": ["ex_parte", "inter_partes"],
+                    },
+                    "reliefs": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Numbered prayers for orders.",
+                    },
+                    "documents_to_file": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Filings the user must prepare (Affidavit in Support, Skeletal Arguments, etc.).",
+                    },
+                    "statutory_basis": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Acts and sections grounding the application (e.g. 'Companies Act, 2017, Section 84', 'Order 53 of the Rules of the Supreme Court').",
+                    },
+                    "authorities": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Cases the user should be ready to cite. Zambian citation form preferred (e.g. 'Attorney-General v Clarke (Appeal No. 96A/2004)').",
+                    },
+                    "notes": {
+                        "type": "string",
+                        "description": "Short caveats or timing notes (e.g. limitation period, fee, urgency considerations).",
+                    },
+                },
+                "required": [
+                    "cause_of_action",
+                    "procedural_mode",
+                    "court_division",
+                    "urgency",
+                    "reliefs",
+                    "documents_to_file",
+                ],
+            },
+            handler=_recommend_application,
         ),
         "suggest_templates": ToolDefinition(
             name="suggest_templates",
