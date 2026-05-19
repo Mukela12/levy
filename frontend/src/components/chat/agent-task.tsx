@@ -21,7 +21,12 @@ import {
   Link as LinkIcon,
   ExternalLink,
   FileText,
+  FilePen,
+  Scale,
+  Gavel,
+  Files as FilesIcon,
   Sparkles,
+  ClipboardList,
 } from 'lucide-react'
 import { Favicon } from './favicon'
 import type { ToolCallView } from './tool-call-card'
@@ -35,12 +40,23 @@ const TOOL_META: Record<
   web_search: { label: 'Web search', verb: 'Searching the web', Icon: GlobeIcon },
   web_fetch: { label: 'Read page', verb: 'Reading page', Icon: LinkIcon },
   web_crawl: { label: 'Crawl site', verb: 'Crawling site', Icon: LinkIcon },
-  pdf_extract_pages: { label: 'Extract pages', verb: 'Extracting pages', Icon: FileText },
-  pdf_generate: { label: 'Generate PDF', verb: 'Drafting document', Icon: FileText },
-  pdf_split: { label: 'Split PDF', verb: 'Splitting PDF', Icon: FileText },
-  pdf_merge: { label: 'Merge PDFs', verb: 'Merging PDFs', Icon: FileText },
-  export_thread_brief: { label: 'Export brief', verb: 'Exporting thread brief', Icon: FileText },
+  // PDF tooling — give each one a verb that tells the user what Levy is
+  // doing right now ("Drafting the Affidavit in Support…") rather than a
+  // generic "Running tool" string. Same pattern as the corpus-search row.
+  pdf_extract_pages: { label: 'Extract pages', verb: 'Extracting pages from the corpus', Icon: FileText },
+  pdf_generate: { label: 'Generate PDF', verb: 'Drafting your document as a PDF', Icon: FilePen },
+  pdf_split: { label: 'Split PDF', verb: 'Splitting the PDF into parts', Icon: FileText },
+  pdf_merge: { label: 'Merge PDFs', verb: 'Merging PDFs', Icon: FilesIcon },
+  export_thread_brief: { label: 'Export brief', verb: 'Exporting the thread as a brief', Icon: FileText },
   suggest_templates: { label: 'Templates', verb: 'Finding matching templates', Icon: Sparkles },
+  // Application-drafting tools — these are the slowest and benefit most
+  // from a clear "working on…" indicator.
+  recommend_application: { label: 'Plan', verb: 'Planning the application', Icon: ClipboardList },
+  draft_summons: { label: 'Summons', verb: 'Drafting the Originating Notice of Motion', Icon: FilePen },
+  draft_affidavit: { label: 'Affidavit', verb: 'Drafting the Affidavit in Support', Icon: FilePen },
+  draft_skeletal: { label: 'Skeletal', verb: 'Drafting Skeletal Arguments', Icon: Scale },
+  draft_order: { label: 'Draft Order', verb: 'Drafting the Draft Order', Icon: Gavel },
+  draft_application_bundle: { label: 'Bundle', verb: 'Assembling the application bundle', Icon: FilesIcon },
 }
 
 function describeArg(name: string, input: Record<string, unknown>): string {
@@ -48,6 +64,22 @@ function describeArg(name: string, input: Record<string, unknown>): string {
   if (typeof input?.url === 'string') return input.url as string
   if (typeof input?.start_url === 'string') return input.start_url as string
   if (typeof input?.title === 'string') return input.title as string
+  // Drafting tools: surface "X v Y" so the user can see which matter the
+  // tool is working on at a glance, rather than a wall of key=value pairs.
+  if (
+    name === 'draft_summons' ||
+    name === 'draft_affidavit' ||
+    name === 'draft_skeletal' ||
+    name === 'draft_order' ||
+    name === 'draft_application_bundle' ||
+    name === 'recommend_application'
+  ) {
+    const a = (input?.applicant_name || input?.cause_of_action || '') as string
+    const r = (input?.respondent_name || '') as string
+    if (a && r) return `${a} v ${r}`
+    if (a) return a
+    return ''
+  }
   return Object.entries(input || {})
     .filter(([k]) => k !== 'top_k' && k !== 'threshold' && k !== 'max_results')
     .map(([k, v]) => `${k}=${typeof v === 'string' ? v : JSON.stringify(v)}`)
