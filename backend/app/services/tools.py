@@ -472,6 +472,208 @@ def build_tool_registry(
             # clickable suggestion cards inline in the chat.
             "templates": compact,
         }
+    async def _draft_summons(
+        procedural_mode: str,
+        court_division: str,
+        applicant_name: str,
+        respondent_name: str,
+        reliefs: list[str],
+        urgency: str = "inter_partes",
+        cause_of_action: str | None = None,
+        cause_number: str | None = None,
+        statutory_basis: list[str] | None = None,
+        supporting_deponent: str | None = None,
+        counsel_name: str | None = None,
+        counsel_firm: str | None = None,
+        applicant_address: str | None = None,
+        respondent_address: str | None = None,
+        return_date_note: str | None = None,
+    ):
+        """Draft the originating process (Summons / Notice of Motion / etc.)
+        for a Zambian court application and store it as a PDF artifact.
+
+        Follows the standard heading + parties block, then the document-type
+        recital, then the numbered reliefs, then the cross-reference to the
+        Affidavit in Support and Skeletal Arguments, then the date / signature
+        block / address for service."""
+        from datetime import datetime
+
+        mode = (procedural_mode or "").strip()
+        applicant = (applicant_name or "").strip()
+        respondent = (respondent_name or "").strip()
+        cleaned_reliefs = [r.strip() for r in (reliefs or []) if r and r.strip()]
+
+        if not mode:
+            return {"result": {"error": "procedural_mode required"}}
+        if not applicant:
+            return {"result": {"error": "applicant_name required"}}
+        if not respondent:
+            return {"result": {"error": "respondent_name required"}}
+        if not cleaned_reliefs:
+            return {"result": {"error": "reliefs must be a non-empty list"}}
+
+        is_ex_parte = (urgency or "").strip().lower() == "ex_parte" or "ex parte" in mode.lower()
+
+        # Determine party-role labels for the parties block. Originating
+        # Summons in Zambia uses Plaintiff/Defendant; Notice of Motion uses
+        # Applicant/Respondent; Petition uses Petitioner/Respondent.
+        mode_lower = mode.lower()
+        if "petition" in mode_lower:
+            applicant_role, respondent_role = "PETITIONER", "RESPONDENT"
+        elif "writ" in mode_lower or "statement of claim" in mode_lower:
+            applicant_role, respondent_role = "PLAINTIFF", "DEFENDANT"
+        elif "originating summons" in mode_lower:
+            applicant_role, respondent_role = "PLAINTIFF", "DEFENDANT"
+        else:
+            applicant_role, respondent_role = "APPLICANT", "RESPONDENT"
+
+        heading_html = pdf_tools.render_court_heading(
+            court_division=court_division,
+            cause_number=cause_number,
+            applicant_name=applicant,
+            respondent_name=respondent,
+            applicant_role=applicant_role,
+            respondent_role=respondent_role,
+        )
+
+        # Document-type recital: the wording differs by procedural mode.
+        title_line = f'<div class="doc-title">{mode.upper()}</div>'
+
+        pursuant_line = ""
+        if statutory_basis:
+            joined = "; ".join(s.strip() for s in statutory_basis if s and s.strip())
+            if joined:
+                pursuant_line = (
+                    f'<p style="text-align:center; font-style:italic;">'
+                    f'(Pursuant to {joined})'
+                    f'</p>'
+                )
+
+        ex_parte_phrase = "EX PARTE " if is_ex_parte else ""
+        return_phrase = (
+            return_date_note.strip()
+            if return_date_note and return_date_note.strip()
+            else "on a date to be appointed by the Honourable Court"
+        )
+
+        if "originating summons" in mode_lower:
+            opening_recital = (
+                f'<p class="recital">'
+                f'LET <strong>{respondent}</strong> '
+                f'of <em>{respondent_address or "[address for service]"}</em>, '
+                f'within fourteen (14) days after the service of this Summons on you, '
+                f'inclusive of the day of such service, cause an appearance to be entered '
+                f'on your behalf to this Summons, which is issued at the suit of '
+                f'<strong>{applicant}</strong>, the Applicant herein, '
+                f'who seeks the following orders:'
+                f'</p>'
+            )
+        elif "petition" in mode_lower:
+            opening_recital = (
+                f'<p class="recital">'
+                f'The Petition of <strong>{applicant}</strong> respectfully showeth that '
+                f'the Petitioner seeks the following orders against '
+                f'<strong>{respondent}</strong>:'
+                f'</p>'
+            )
+        else:
+            opening_recital = (
+                f'<p class="recital">'
+                f'TAKE NOTICE that {return_phrase}, '
+                f'Counsel for the {applicant_role.capitalize()} will {ex_parte_phrase}'
+                f'move this Honourable Court for the following orders:'
+                f'</p>'
+            )
+
+        reliefs_html = (
+            "<ol>"
+            + "".join(f"<li>{r}</li>" for r in cleaned_reliefs)
+            + "</ol>"
+        )
+
+        # Cross-reference to supporting documents.
+        deponent = (supporting_deponent or applicant).strip()
+        if "originating summons" in mode_lower or "petition" in mode_lower:
+            support_clause = (
+                f'<p>This {mode} is supported by the Affidavit of <strong>{deponent}</strong> '
+                f'sworn and filed herewith, together with Skeletal Arguments in support.</p>'
+            )
+        else:
+            support_clause = (
+                f'<p>AND TAKE FURTHER NOTICE that this application is supported by '
+                f'the Affidavit of <strong>{deponent}</strong> sworn and filed herewith, '
+                f'together with Skeletal Arguments in support of the application.</p>'
+            )
+
+        today = datetime.utcnow().strftime("%d{suffix} day of %B, %Y")
+        # crude ordinal — not life-critical, the law firm normally fills the
+        # day at filing anyway.
+        day = datetime.utcnow().day
+        if 10 <= day % 100 <= 20:
+            suffix = "th"
+        else:
+            suffix = {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
+        dated_line = (
+            f'<p class="dated">DATED at {{city}} this {today.format(suffix=suffix)}.</p>'
+        ).format(city=(applicant_address or "Lusaka"))
+
+        signature_block = (
+            '<div class="sig-line"></div>'
+            f'<p><strong>{(counsel_name or "[COUNSEL NAME]").upper()}</strong><br/>'
+            f'{counsel_firm or "[FIRM NAME / CHAMBERS]"}<br/>'
+            f'Counsel for the {applicant_role.capitalize()}</p>'
+        )
+
+        # Address for service: required for inter partes filings.
+        if not is_ex_parte:
+            served = (
+                '<div class="served">'
+                '<p><strong>To:</strong><br/>'
+                'The Registrar<br/>'
+                'High Court of Zambia<br/>'
+                'Lusaka, Zambia</p>'
+                '<p><strong>AND TO:</strong><br/>'
+                f'{respondent}<br/>'
+                f'{respondent_address or "[address for service]"}</p>'
+                '</div>'
+            )
+        else:
+            served = (
+                '<div class="served">'
+                '<p><strong>To:</strong><br/>'
+                'The Registrar<br/>'
+                'High Court of Zambia<br/>'
+                'Lusaka, Zambia</p>'
+                '<p><em>(Ex parte application — service on the Respondent dispensed with pending the leave of the Court.)</em></p>'
+                '</div>'
+            )
+
+        body_md = "\n\n".join([
+            heading_html,
+            title_line,
+            pursuant_line,
+            opening_recital,
+            reliefs_html,
+            support_clause,
+            dated_line,
+            signature_block,
+            served,
+        ])
+
+        artifact_title = (
+            f"{mode} — {applicant} v {respondent}"
+            if len(applicant) < 30 and len(respondent) < 30
+            else mode
+        )
+
+        return await pdf_tools.pdf_generate_legal(
+            title=artifact_title,
+            body_markdown=body_md,
+            meta_tool="draft_summons",
+            owner_id=owner_id,
+            session_id=session_id,
+        )
+
     async def _recommend_application(
         cause_of_action: str,
         procedural_mode: str,
@@ -735,6 +937,104 @@ def build_tool_registry(
                 ],
             },
             handler=_recommend_application,
+        ),
+        "draft_summons": ToolDefinition(
+            name="draft_summons",
+            description=(
+                "Draft the originating process for a Zambian-court application "
+                "and save it as a PDF artifact. Use AFTER the user has "
+                "confirmed the plan from `recommend_application`. Renders the "
+                "standard Zambian court caption (IN THE HIGH COURT FOR ZAMBIA "
+                "/ AT THE [REGISTRY] / HOLDEN AT [CITY] / jurisdiction line), "
+                "the cause number, the BETWEEN parties block, the document "
+                "title (e.g. 'ORIGINATING NOTICE OF MOTION'), the recital "
+                "('TAKE NOTICE that...' or 'LET [respondent]...' depending on "
+                "mode), the numbered reliefs, the cross-reference to the "
+                "Affidavit in Support and Skeletal Arguments, the dated line, "
+                "signature block, and address for service.\n\n"
+                "Fill `procedural_mode` and `court_division` from the "
+                "confirmed plan. If the user did not give you the parties' "
+                "names, ask first — do not invent them. If the user did not "
+                "give a cause number, leave `cause_number` empty and the tool "
+                "renders `[YEAR]/[REGISTRY_CODE]/[NUMBER]` for the law firm "
+                "to fill at filing."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "procedural_mode": {
+                        "type": "string",
+                        "description": "The originating process type, copied from the confirmed plan (e.g. 'Originating Notice of Motion', 'Ex Parte Originating Notice of Motion', 'Originating Summons', 'Writ of Summons + Statement of Claim', 'Petition').",
+                    },
+                    "court_division": {
+                        "type": "string",
+                        "description": "Court division copied from the confirmed plan.",
+                    },
+                    "urgency": {
+                        "type": "string",
+                        "enum": ["ex_parte", "inter_partes"],
+                        "description": "Copied from the confirmed plan.",
+                    },
+                    "applicant_name": {
+                        "type": "string",
+                        "description": "The party bringing the application (Plaintiff / Applicant / Petitioner). Use the user's real name where given; otherwise ask before drafting.",
+                    },
+                    "respondent_name": {
+                        "type": "string",
+                        "description": "The party the relief is sought against.",
+                    },
+                    "reliefs": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Numbered prayers for orders. Each entry should be a complete sentence in the imperative ('An order that...').",
+                    },
+                    "cause_of_action": {
+                        "type": "string",
+                        "description": "Short label for the cause of action (e.g. 'Unfair dismissal under the Employment Code Act, 2019').",
+                    },
+                    "cause_number": {
+                        "type": "string",
+                        "description": "Cause number in the form YEAR/REGISTRY_CODE/NUMBER. Leave empty if not yet allocated — the tool will render a placeholder.",
+                    },
+                    "statutory_basis": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Acts / sections / Rules the application is brought under. Rendered as a 'Pursuant to ...' italic line under the document title.",
+                    },
+                    "supporting_deponent": {
+                        "type": "string",
+                        "description": "Name of the person who will swear the supporting Affidavit. Defaults to the applicant if omitted.",
+                    },
+                    "counsel_name": {
+                        "type": "string",
+                        "description": "Counsel's name for the signature block. Leave empty for a placeholder.",
+                    },
+                    "counsel_firm": {
+                        "type": "string",
+                        "description": "Counsel's firm / chambers for the signature block.",
+                    },
+                    "applicant_address": {
+                        "type": "string",
+                        "description": "Applicant's address — used in the 'Dated at [city] ...' line; falls back to 'Lusaka'.",
+                    },
+                    "respondent_address": {
+                        "type": "string",
+                        "description": "Respondent's address for service. Required for inter partes applications; ignored for ex parte.",
+                    },
+                    "return_date_note": {
+                        "type": "string",
+                        "description": "Optional override for the return-date phrase (default: 'on a date to be appointed by the Honourable Court').",
+                    },
+                },
+                "required": [
+                    "procedural_mode",
+                    "court_division",
+                    "applicant_name",
+                    "respondent_name",
+                    "reliefs",
+                ],
+            },
+            handler=_draft_summons,
         ),
         "suggest_templates": ToolDefinition(
             name="suggest_templates",

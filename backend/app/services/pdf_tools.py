@@ -263,6 +263,69 @@ def _render_markdown_pdf(title: str, body_md: str, subtitle: str | None = None) 
     return pdf_bytes or b""
 
 
+# Court-document stylesheet. Lawyers expect plain black serif text, centered
+# captions for the court header, all-caps document titles, justified prose,
+# and the cause number aligned right of the heading block.
+_LEGAL_CSS = """
+@page {
+  size: A4;
+  margin: 25mm 22mm 25mm 25mm;
+  @bottom-center {
+    content: counter(page) " of " counter(pages);
+    font-family: "Liberation Serif", "Times New Roman", serif;
+    font-size: 9pt;
+    color: #555;
+  }
+}
+html { font-family: "Liberation Serif", "Times New Roman", serif; font-size: 12pt; line-height: 1.55; color: #000; }
+p { margin: 0 0 8pt 0; text-align: justify; }
+h1, h2, h3 { font-weight: 700; text-align: center; margin: 14pt 0 8pt 0; }
+h1 { font-size: 13.5pt; letter-spacing: 0.5pt; }
+h2 { font-size: 12.5pt; letter-spacing: 0.3pt; }
+h3 { font-size: 12pt; }
+ol, ul { margin: 0 0 8pt 22pt; padding: 0; }
+li { margin-bottom: 4pt; text-align: justify; }
+hr { border: none; border-top: 1px solid #000; margin: 10pt 0; }
+table { border-collapse: collapse; margin: 0; width: 100%; }
+table.heading td { border: none; padding: 0; vertical-align: top; }
+table.parties td { border: none; padding: 2pt 0; vertical-align: top; }
+table.parties td.right { text-align: right; font-weight: 700; }
+.court-caption { text-align: center; font-weight: 700; line-height: 1.45; }
+.court-caption .line { text-transform: uppercase; letter-spacing: 0.4pt; }
+.court-caption .jurisdiction { font-weight: 400; font-style: italic; text-transform: none; }
+.cause-number { text-align: right; font-weight: 700; margin-top: 4pt; }
+.between { font-weight: 700; margin: 10pt 0 6pt 0; }
+.doc-title { text-align: center; text-transform: uppercase; font-weight: 700; font-size: 13pt; letter-spacing: 1pt; margin: 18pt 0 10pt 0; text-decoration: underline; }
+.recital { margin: 12pt 0 12pt 0; }
+.dated { margin-top: 28pt; }
+.sig-line { border-bottom: 1px solid #000; width: 60%; margin-top: 30pt; }
+.served { margin-top: 18pt; }
+.served strong { display: block; margin-bottom: 4pt; }
+"""
+
+
+def _render_legal_pdf(body_md: str) -> bytes:
+    """Render a court-document Markdown body into a PDF, no auto h1.
+
+    Differs from `_render_markdown_pdf` in two ways: (1) it does NOT prepend
+    an `<h1>title</h1>` — the caller controls every byte of the heading via
+    Markdown / raw HTML; (2) it ships the legal-doc CSS instead of the memo
+    stylesheet (serif throughout, centered captions, all-black text).
+    """
+    body_html = md_lib.markdown(
+        body_md,
+        extensions=["extra", "tables", "sane_lists"],
+    )
+    full_html = f"""<!doctype html>
+<html><head><meta charset="utf-8"></head>
+<body>
+  {body_html}
+</body></html>"""
+
+    pdf_bytes = HTML(string=full_html).write_pdf(stylesheets=[CSS(string=_LEGAL_CSS)])
+    return pdf_bytes or b""
+
+
 def _html_escape(s: str) -> str:
     return (
         s.replace("&", "&amp;")
@@ -311,6 +374,138 @@ async def pdf_generate(
         meta={
             "tool": "pdf_generate",
             "subtitle": subtitle,
+            "slug": _slug(title),
+        },
+        owner_id=owner_id,
+        session_id=session_id,
+    )
+    storage_path = _upload_artifact_pdf(row["id"], pdf_bytes)
+    get_db().table("artifacts").update({"storage_path": storage_path}).eq("id", row["id"]).execute()
+    row["storage_path"] = storage_path
+
+    return {
+        "result": {
+            "artifact_id": row["id"],
+            "title": title,
+            "kind": "pdf",
+            "page_count": page_count,
+            "size_bytes": len(pdf_bytes),
+        },
+        "artifact": row,
+        "db_sources": [],
+        "web_sources": [],
+    }
+
+
+# ─── Helper: Zambian court-document rendering ────────────────────────────────
+
+
+_REGISTRY_INFO: dict[str, tuple[str, str, str, str]] = {
+    "Principal Registry, Civil":
+        ("PRINCIPAL REGISTRY", "LUSAKA", "HP", "Civil Jurisdiction"),
+    "Principal Registry, Commercial":
+        ("PRINCIPAL REGISTRY, COMMERCIAL DIVISION", "LUSAKA", "HPC", "Commercial Jurisdiction"),
+    "Principal Registry, Family and Children":
+        ("PRINCIPAL REGISTRY, FAMILY AND CHILDREN DIVISION", "LUSAKA", "HPF", "Family Jurisdiction"),
+    "Industrial Relations Division":
+        ("INDUSTRIAL RELATIONS DIVISION", "LUSAKA", "IRCLP", "Industrial Relations Jurisdiction"),
+    "Constitutional Court":
+        ("CONSTITUTIONAL COURT", "LUSAKA", "CCZ", "Constitutional Jurisdiction"),
+    "Court of Appeal":
+        ("COURT OF APPEAL", "LUSAKA", "CAZ", "Civil Appellate Jurisdiction"),
+    "Subordinate Court":
+        ("SUBORDINATE COURT", "LUSAKA", "SC", ""),
+}
+
+
+def render_court_heading(
+    *,
+    court_division: str,
+    cause_number: str | None,
+    applicant_name: str,
+    respondent_name: str,
+    applicant_role: str = "APPLICANT",
+    respondent_role: str = "RESPONDENT",
+) -> str:
+    """Return the Zambian court-document caption + parties block as HTML.
+
+    Pass this through to a Markdown body — the Markdown renderer keeps HTML
+    intact. The output relies on the `.court-caption`, `.cause-number`, and
+    `.parties` classes that ship with `_LEGAL_CSS`.
+    """
+    info = _REGISTRY_INFO.get(court_division)
+    if info:
+        registry, city, code, jurisdiction = info
+    else:
+        registry = court_division.upper()
+        city = "LUSAKA"
+        code = "HP"
+        jurisdiction = "Civil Jurisdiction"
+
+    cn = (cause_number or "").strip()
+    if not cn:
+        year = time.gmtime().tm_year
+        cn = f"{year}/{code}/[NUMBER]"
+
+    e = _html_escape
+    jurisdiction_html = (
+        f'<div class="jurisdiction">({e(jurisdiction)})</div>' if jurisdiction else ""
+    )
+    return (
+        '<div class="court-caption">'
+        '<div class="line">IN THE HIGH COURT FOR ZAMBIA</div>'
+        f'<div class="line">AT THE {e(registry)}</div>'
+        f'<div class="line">HOLDEN AT {e(city)}</div>'
+        f'{jurisdiction_html}'
+        '</div>'
+        f'<div class="cause-number">Cause No. {e(cn)}</div>'
+        '<div class="between">B E T W E E N:</div>'
+        '<table class="parties">'
+        f'<tr><td>{e(applicant_name)}</td><td class="right">{e(applicant_role)}</td></tr>'
+        '<tr><td>AND</td><td></td></tr>'
+        f'<tr><td>{e(respondent_name)}</td><td class="right">{e(respondent_role)}</td></tr>'
+        '</table>'
+    )
+
+
+async def pdf_generate_legal(
+    *,
+    title: str,
+    body_markdown: str,
+    meta_tool: str = "pdf_generate_legal",
+    owner_id: str | None = None,
+    session_id: str | None = None,
+) -> dict:
+    """Render a Zambian court document body (caption + parties + prose) as PDF.
+
+    The caller is responsible for producing the full body — including the
+    caption — typically by concatenating `render_court_heading(...)` with the
+    document-specific prose. `title` is used for the artifact card / DB row;
+    it does NOT get auto-injected into the rendered PDF.
+    """
+    if not title.strip():
+        return {"result": {"error": "title required"}}
+    if not body_markdown.strip():
+        return {"result": {"error": "body_markdown required"}}
+
+    pdf_bytes = _render_legal_pdf(body_md=body_markdown)
+    if not pdf_bytes:
+        return {"result": {"error": "weasyprint produced no bytes"}}
+
+    try:
+        page_count = len(PdfReader(io.BytesIO(pdf_bytes)).pages)
+    except Exception:
+        page_count = None
+
+    row = _insert_artifact_row(
+        kind="pdf",
+        title=title,
+        storage_path="artifacts/pending",
+        source="generated",
+        size_bytes=len(pdf_bytes),
+        page_count=page_count,
+        meta={
+            "tool": meta_tool,
             "slug": _slug(title),
         },
         owner_id=owner_id,
