@@ -1168,6 +1168,101 @@ def build_tool_registry(
             session_id=session_id,
         )
 
+    async def _draft_application_bundle(
+        summons_artifact_id: str,
+        affidavit_artifact_id: str,
+        skeletal_artifact_id: str,
+        order_artifact_id: str,
+        applicant_name: str,
+        respondent_name: str,
+        cause_of_action: str | None = None,
+        procedural_mode: str | None = None,
+        court_division: str | None = None,
+        cause_number: str | None = None,
+        include_cover: bool = True,
+    ):
+        """Merge the four application documents into one bundled PDF.
+
+        Order: (optional cover) → Summons → Affidavit in Support → Skeletal
+        Arguments → Draft Order. The cover page lists the matter, the
+        documents inside, and the cause number.
+        """
+        from datetime import datetime
+
+        applicant = (applicant_name or "").strip()
+        respondent = (respondent_name or "").strip()
+        if not applicant:
+            return {"result": {"error": "applicant_name required"}}
+        if not respondent:
+            return {"result": {"error": "respondent_name required"}}
+
+        parts: list[dict] = []
+
+        if include_cover:
+            today = datetime.utcnow().strftime("%-d %B %Y")
+            cover_md = "\n\n".join([
+                '<div class="court-caption">'
+                '<div class="line">IN THE HIGH COURT FOR ZAMBIA</div>'
+                + (f'<div class="line">{(court_division or "").upper()}</div>' if court_division else "")
+                + '</div>',
+                f'<div class="cause-number">Cause No. {cause_number or "[CAUSE NUMBER TO BE ALLOCATED]"}</div>',
+                '<div class="between">B E T W E E N:</div>',
+                '<table class="parties">'
+                f'<tr><td>{applicant}</td><td class="right">APPLICANT</td></tr>'
+                '<tr><td>AND</td><td></td></tr>'
+                f'<tr><td>{respondent}</td><td class="right">RESPONDENT</td></tr>'
+                '</table>',
+                '<div class="doc-title">APPLICATION BUNDLE</div>',
+                (
+                    '<p style="text-align:center;font-style:italic;margin-top:14pt;">'
+                    f'{cause_of_action or "Application"} '
+                    f'{("by way of " + procedural_mode) if procedural_mode else ""}'
+                    '</p>'
+                ),
+                '<p style="margin-top:24pt;"><strong>This bundle contains:</strong></p>',
+                '<ol>'
+                f'<li>{procedural_mode or "Originating Process"}</li>'
+                '<li>Affidavit in Support</li>'
+                '<li>Skeletal Arguments</li>'
+                '<li>Draft Order</li>'
+                '</ol>',
+                f'<p class="dated">Filed: {today}</p>',
+            ])
+
+            cover = await pdf_tools.pdf_generate_legal(
+                title=f"Application Bundle Cover — {applicant} v {respondent}",
+                body_markdown=cover_md,
+                meta_tool="application_bundle_cover",
+                owner_id=owner_id,
+                session_id=session_id,
+            )
+            cover_id = (cover.get("result") or {}).get("artifact_id")
+            if cover_id:
+                parts.append({"artifact_id": cover_id})
+
+        for aid in [
+            summons_artifact_id,
+            affidavit_artifact_id,
+            skeletal_artifact_id,
+            order_artifact_id,
+        ]:
+            if not aid or not aid.strip():
+                return {"result": {"error": "all four artifact_ids are required"}}
+            parts.append({"artifact_id": aid.strip()})
+
+        bundle_title = (
+            f"Application Bundle — {applicant} v {respondent}"
+            if len(applicant) < 30 and len(respondent) < 30
+            else "Application Bundle"
+        )
+
+        return await pdf_tools.pdf_merge(
+            parts=parts,
+            title=bundle_title,
+            owner_id=owner_id,
+            session_id=session_id,
+        )
+
     async def _recommend_application(
         cause_of_action: str,
         procedural_mode: str,
@@ -1774,6 +1869,58 @@ def build_tool_registry(
                 ],
             },
             handler=_draft_order,
+        ),
+        "draft_application_bundle": ToolDefinition(
+            name="draft_application_bundle",
+            description=(
+                "Merge the four application documents — Summons, Affidavit "
+                "in Support, Skeletal Arguments, Draft Order — into a single "
+                "bundled PDF artifact in the order they're handed up at "
+                "filing. Optionally prepends a cover page with the matter, "
+                "the parties, cause number, and an index. Call this AFTER "
+                "all four drafting tools have run successfully. Pass the "
+                "artifact_id returned by each of the four draft tools."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "summons_artifact_id": {
+                        "type": "string",
+                        "description": "artifact_id returned by `draft_summons`.",
+                    },
+                    "affidavit_artifact_id": {
+                        "type": "string",
+                        "description": "artifact_id returned by `draft_affidavit`.",
+                    },
+                    "skeletal_artifact_id": {
+                        "type": "string",
+                        "description": "artifact_id returned by `draft_skeletal`.",
+                    },
+                    "order_artifact_id": {
+                        "type": "string",
+                        "description": "artifact_id returned by `draft_order`.",
+                    },
+                    "applicant_name": {"type": "string"},
+                    "respondent_name": {"type": "string"},
+                    "cause_of_action": {"type": "string"},
+                    "procedural_mode": {"type": "string"},
+                    "court_division": {"type": "string"},
+                    "cause_number": {"type": "string"},
+                    "include_cover": {
+                        "type": "boolean",
+                        "description": "Defaults true. Set false to skip the cover page if the user just wants the four documents concatenated.",
+                    },
+                },
+                "required": [
+                    "summons_artifact_id",
+                    "affidavit_artifact_id",
+                    "skeletal_artifact_id",
+                    "order_artifact_id",
+                    "applicant_name",
+                    "respondent_name",
+                ],
+            },
+            handler=_draft_application_bundle,
         ),
         "suggest_templates": ToolDefinition(
             name="suggest_templates",

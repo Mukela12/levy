@@ -106,6 +106,10 @@ administration", "judicial review of this tribunal decision"):
         in the voice of the Court ('That … is declared null and void.')
         rather than the prayer voice. Costs default to 'in the cause' —
         only override when the user wants otherwise.
+     e) `draft_application_bundle` — merge the four artifact_ids into
+        ONE bundled PDF in filing order (Summons → Affidavit → Skeletal
+        → Order) with a cover page. Always do this last so the user has
+        one file to hand-up at the registry.
    You MUST have the parties' real names and the deponent's address +
    occupation before calling these tools — if the user hasn't given them,
    ask first rather than inventing placeholders.
