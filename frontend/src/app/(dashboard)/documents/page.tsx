@@ -37,6 +37,28 @@ import { CTA } from '@/components/ui/cta'
 const FOLDER_GLOBAL = '__global__'
 const FOLDER_UNFILED = '__unfiled__'
 
+// Human-readable labels + accent colours for the non-Act document types
+// that now sit alongside statutes in the global library. Acts get no
+// badge — they're the default and would just add noise to the listing.
+const TYPE_LABEL: Record<string, string> = {
+  form: 'Form',
+  application: 'Application',
+  guide: 'Guide',
+  fee_schedule: 'Fees',
+  court_rule: 'Court rule',
+  checklist: 'Checklist',
+  circular: 'Circular',
+}
+const TYPE_BADGE: Record<string, string> = {
+  form: 'bg-emerald-500/10 border border-emerald-500/25 text-emerald-300',
+  application: 'bg-sky-500/10 border border-sky-500/25 text-sky-300',
+  guide: 'bg-amber-500/10 border border-amber-500/25 text-amber-300',
+  fee_schedule: 'bg-fuchsia-500/10 border border-fuchsia-500/25 text-fuchsia-300',
+  court_rule: 'bg-indigo-500/10 border border-indigo-500/25 text-indigo-300',
+  checklist: 'bg-teal-500/10 border border-teal-500/25 text-teal-300',
+  circular: 'bg-orange-500/10 border border-orange-500/25 text-orange-300',
+}
+
 type FolderId = string // user folder uuid OR one of the sentinels above
 
 function formatPages(n?: number) {
@@ -418,7 +440,16 @@ export default function DocumentsPage() {
                           <FileText size={15} className="text-red-400" />
                         </span>
                         <div className="flex-1 min-w-0">
-                          <div className="text-[13px] font-medium text-white/85 truncate">{doc.title}</div>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="text-[13px] font-medium text-white/85 truncate">{doc.title}</div>
+                            {doc.document_type && doc.document_type !== 'act' && (
+                              <span
+                                className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[9.5px] font-medium uppercase tracking-wider flex-shrink-0 ${TYPE_BADGE[doc.document_type] || 'bg-white/[0.06] border border-white/[0.08] text-white/55'}`}
+                              >
+                                {TYPE_LABEL[doc.document_type] || doc.document_type}
+                              </span>
+                            )}
+                          </div>
                           <div className="text-[11px] text-white/30 mt-0.5 flex items-center gap-1.5">
                             {doc.year ? <span>{doc.year}</span> : null}
                             {doc.year ? <span className="text-white/15">·</span> : null}
