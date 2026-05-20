@@ -17,10 +17,22 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import re
+import warnings
 from dataclasses import dataclass, field
 from typing import Any, Awaitable, Callable
 
 import httpx
+
+# Several Zambian gov hosts serve incomplete cert chains. We catch the
+# verify-disabled fallback case in _web_fetch — mute the per-request
+# urllib3 warning so the agent log stays readable.
+warnings.filterwarnings("ignore", message="Unverified HTTPS request")
+try:
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+except Exception:
+    pass
 
 from ..config import get_settings
 from ..db.supabase import search_chunks
@@ -226,37 +238,140 @@ async def _web_search(query: str, max_results: int = 5) -> dict:
 
 async def _web_fetch(url: str) -> dict:
     """
-    Fetch a URL and return cleaned text content. Uses Tavily's /extract endpoint
-    (no separate readability dependency, avoids JS rendering needs).
+    Fetch a URL and return cleaned text content.
+
+    First tries Tavily's /extract endpoint (fast, handles JS rendering and
+    delivers cleaned text). When Tavily can't reach the host — common on
+    Zambian gov sites that ship a broken cert chain — falls back to a
+    direct httpx fetch with verify=False, strips HTML to plain text, and
+    returns that instead. Without the fallback the agent ends up reporting
+    "no content extracted" for half the gov sources and gives up.
     """
     settings = get_settings()
-    if not settings.tavily_api_key:
-        return {"result": {"error": "TAVILY_API_KEY not configured"}}
 
-    payload = {"api_key": settings.tavily_api_key, "urls": [url]}
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        resp = await client.post("https://api.tavily.com/extract", json=payload)
-        if resp.status_code != 200:
-            return {"result": {"error": f"Tavily extract {resp.status_code}: {resp.text[:200]}"}}
-        data = resp.json()
+    tavily_error: str | None = None
+    if settings.tavily_api_key:
+        try:
+            payload = {"api_key": settings.tavily_api_key, "urls": [url]}
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                resp = await client.post(
+                    "https://api.tavily.com/extract", json=payload
+                )
+            if resp.status_code == 200:
+                data = resp.json()
+                items = data.get("results") or []
+                if items:
+                    item = items[0]
+                    raw = item.get("raw_content", "")
+                    if raw.strip():
+                        return {
+                            "result": {"url": url, "content": raw, "length": len(raw)},
+                            "db_sources": [],
+                            "web_sources": [
+                                {
+                                    "title": item.get("title") or url,
+                                    "url": url,
+                                    "snippet": raw[:300],
+                                    "domain": _extract_domain(url),
+                                }
+                            ],
+                        }
+                # Tavily returned 200 but no usable content — record the
+                # failure reason if any so we can include it in the final
+                # error when the fallback also fails.
+                failed = (data.get("failed_results") or [{}])[0]
+                tavily_error = failed.get("error") or "no content extracted"
+            else:
+                tavily_error = f"Tavily extract {resp.status_code}: {resp.text[:120]}"
+        except Exception as e:  # noqa: BLE001
+            tavily_error = f"Tavily extract exception: {e}"
 
-    items = data.get("results") or []
-    if not items:
-        return {"result": {"error": "no content extracted", "url": url}}
-    item = items[0]
-    raw = item.get("raw_content", "")
+    # Direct-fetch fallback. Several Zambian gov hosts (parliament.gov.zm
+    # in particular) serve an incomplete certificate chain that public
+    # extraction APIs reject; we accept the cert because the content is
+    # a public web page either way.
+    direct_error: str | None = None
+    try:
+        async with httpx.AsyncClient(
+            timeout=30.0,
+            follow_redirects=True,
+            verify=False,
+            headers={"User-Agent": "Mozilla/5.0 LevyFetch/1.0"},
+        ) as client:
+            dr = await client.get(url)
+        if dr.status_code != 200:
+            direct_error = f"direct fetch {dr.status_code}"
+        else:
+            text = _html_to_text(dr.text)
+            if text.strip():
+                return {
+                    "result": {
+                        "url": url,
+                        "content": text,
+                        "length": len(text),
+                        "fallback": "direct",
+                    },
+                    "db_sources": [],
+                    "web_sources": [
+                        {
+                            "title": _extract_html_title(dr.text) or url,
+                            "url": url,
+                            "snippet": text[:300],
+                            "domain": _extract_domain(url),
+                        }
+                    ],
+                }
+            direct_error = "direct fetch returned empty page"
+    except Exception as e:  # noqa: BLE001
+        direct_error = f"direct fetch exception: {e}"
+
     return {
-        "result": {"url": url, "content": raw, "length": len(raw)},
-        "db_sources": [],
-        "web_sources": [
-            {
-                "title": item.get("title") or url,
-                "url": url,
-                "snippet": raw[:300],
-                "domain": _extract_domain(url),
-            }
-        ],
+        "result": {
+            "error": " | ".join(filter(None, [tavily_error, direct_error]))
+            or "could not fetch",
+            "url": url,
+        }
     }
+
+
+def _html_to_text(html: str) -> str:
+    """Strip script/style + tags from a raw HTML page and collapse whitespace.
+
+    Best-effort regex pass — we don't ship BeautifulSoup just for this.
+    For Zambian gov pages (mostly Drupal / WordPress server-rendered HTML)
+    the result is more than enough to feed to the model.
+    """
+    if not html:
+        return ""
+    # Drop script + style blocks entirely.
+    html = re.sub(r"<script[^>]*>.*?</script>", " ", html, flags=re.S | re.I)
+    html = re.sub(r"<style[^>]*>.*?</style>", " ", html, flags=re.S | re.I)
+    # Decode common entities cheaply.
+    html = (
+        html.replace("&nbsp;", " ")
+        .replace("&amp;", "&")
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&quot;", '"')
+        .replace("&#39;", "'")
+    )
+    # Block-level tags → newlines (keeps paragraph structure for the model).
+    html = re.sub(r"</?(p|div|br|li|h\d|tr|td|th)[^>]*>", "\n", html, flags=re.I)
+    # Strip any remaining tags.
+    text = re.sub(r"<[^>]+>", " ", html)
+    # Collapse whitespace.
+    text = re.sub(r"\s+\n", "\n", text)
+    text = re.sub(r"\n\s+", "\n", text)
+    text = re.sub(r" {2,}", " ", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()[:12000]  # plenty for the model; trim runaway pages
+
+
+def _extract_html_title(html: str) -> str | None:
+    m = re.search(r"<title[^>]*>(.*?)</title>", html or "", flags=re.S | re.I)
+    if not m:
+        return None
+    return re.sub(r"\s+", " ", m.group(1)).strip() or None
 
 
 async def _web_crawl(start_url: str, max_pages: int = 4) -> dict:
