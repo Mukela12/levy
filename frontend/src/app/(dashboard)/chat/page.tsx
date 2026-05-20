@@ -15,7 +15,19 @@ import { AttachmentsSheet } from '@/components/chat/attachments-sheet'
 import type { ToolCallView } from '@/components/chat/tool-call-card'
 import type { MessageBlock } from '@/components/chat/chat-message'
 import { attachDocumentToSession, type LibraryDocument } from '@/lib/api'
-import { BookOpen, Search, FileText, Gavel, Paperclip, X } from 'lucide-react'
+import {
+  BookOpen,
+  Search,
+  FileText,
+  Gavel,
+  Paperclip,
+  X,
+  TrendingUp,
+  Globe,
+  Leaf,
+  Home,
+  Banknote,
+} from 'lucide-react'
 import { LevyLogo } from '@/components/ui/levy-logo'
 import type {
   ApplicationPlan,
@@ -46,26 +58,57 @@ function getGreeting(): string {
   return 'Good evening'
 }
 
+// Eight practice areas, ordered by how often the test users actually
+// reached for them. Each prompt is a single focused question so the
+// agent answers it directly instead of unrolling a four-section essay.
 const quickActions = [
   {
-    icon: Gavel,
-    label: 'Criminal Law',
-    description: 'Rights of arrested persons in Zambia',
+    icon: TrendingUp,
+    label: 'Investment Law',
+    description:
+      'What is the minimum investment threshold for foreign investors in Zambia, and which incentives apply?',
+  },
+  {
+    icon: Globe,
+    label: 'International Law',
+    description:
+      'How are international treaties enforced in Zambian courts, and what jurisdiction applies to cross-border disputes?',
   },
   {
     icon: BookOpen,
     label: 'Company Registration',
-    description: 'How to register a company with PACRA',
+    description:
+      'What are the steps and forms required to register a private limited company with PACRA?',
   },
   {
     icon: Search,
     label: 'Employment Law',
-    description: 'Employment Code on termination',
+    description:
+      'What does Section 52 of the Employment Code Act require for a valid termination of employment?',
   },
   {
-    icon: FileText,
+    icon: Gavel,
+    label: 'Criminal Law',
+    description:
+      'What are the constitutional rights of an arrested person in Zambia?',
+  },
+  {
+    icon: Banknote,
+    label: 'Tax Law',
+    description:
+      'What are the current corporate income tax rates and turnover-tax thresholds in Zambia?',
+  },
+  {
+    icon: Home,
+    label: 'Property Law',
+    description:
+      'How is land tenure regulated under the Lands Act, and what is the procedure for converting customary land?',
+  },
+  {
+    icon: Leaf,
     label: 'Environmental',
-    description: 'Environmental requirements for mining',
+    description:
+      'Which environmental impact assessment requirements apply to a mining operation in Zambia?',
   },
 ]
 
@@ -427,23 +470,23 @@ export default function NewChatPage() {
               )}
             </div>
 
-            {/* Quick Action Cards - 2x2 grid on every viewport */}
-            <div className="grid grid-cols-2 gap-2 sm:gap-2.5 mb-8 max-w-2xl w-full relative z-10">
+            {/* Practice-area starter cards. Eight areas in 2 columns on
+                mobile / 4 on desktop. Each card shows the area label only
+                — the long descriptions live on hover (title tooltip) so
+                the grid feels calm at first glance and only reveals the
+                example question when the user actually points at one. */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 mb-8 max-w-3xl w-full relative z-10">
               {quickActions.map((action, i) => (
                 <button
                   key={i}
                   onClick={() => handleSend(action.description)}
-                  className="flex flex-col sm:flex-row items-start gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl text-left transition-all duration-200 group hover:scale-[1.01] active:scale-[0.99] border border-white/[0.06] bg-white/[0.02] hover:border-emerald-500/20 hover:bg-emerald-500/[0.04]"
+                  title={action.description}
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-left transition-colors duration-150 group border border-white/[0.06] bg-white/[0.02] hover:border-emerald-500/20 hover:bg-emerald-500/[0.04]"
                 >
-                  <action.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white/20 group-hover:text-emerald-400/70 transition-colors flex-shrink-0 mt-0.5" />
-                  <div className="min-w-0 w-full">
-                    <div className="text-[12px] sm:text-[13px] font-medium text-white/60 group-hover:text-white/90 transition-colors leading-tight">
-                      {action.label}
-                    </div>
-                    <div className="text-[10.5px] sm:text-[11px] text-white/30 group-hover:text-white/50 transition-colors mt-1 leading-snug line-clamp-2">
-                      {action.description}
-                    </div>
-                  </div>
+                  <action.icon className="w-4 h-4 text-white/25 group-hover:text-emerald-400/70 transition-colors flex-shrink-0" />
+                  <span className="text-[12px] font-medium text-white/60 group-hover:text-white/90 transition-colors truncate">
+                    {action.label}
+                  </span>
                 </button>
               ))}
             </div>
