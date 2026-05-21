@@ -13,6 +13,12 @@ interface ChatInputProps {
   onAttachClick?: () => void
   /** Number of currently-attached docs; surfaced as a small badge. */
   attachmentCount?: number
+  /**
+   * Imperatively seed the textarea (e.g. the "Review my draft" starter
+   * pre-fills a primer so the user pastes their draft right after, instead
+   * of firing an empty turn). Bump `nonce` to re-trigger with the same text.
+   */
+  seed?: { text: string; nonce: number }
 }
 
 export function ChatInput({
@@ -23,6 +29,7 @@ export function ChatInput({
   onWebSearchChange,
   onAttachClick,
   attachmentCount = 0,
+  seed,
 }: ChatInputProps) {
   const [message, setMessage] = useState('')
   const [webSearchInternal, setWebSearchInternal] = useState(false)
@@ -40,6 +47,22 @@ export function ChatInput({
       textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`
     }
   }, [message])
+
+  // Seed the box + drop the caret at the end so the user can paste/type
+  // straight after the primer. Keyed on nonce so repeat clicks re-seed.
+  useEffect(() => {
+    if (!seed || !seed.text) return
+    setMessage(seed.text)
+    const el = textareaRef.current
+    if (el) {
+      el.focus()
+      requestAnimationFrame(() => {
+        el.selectionStart = el.selectionEnd = el.value.length
+        el.scrollTop = el.scrollHeight
+      })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seed?.nonce])
 
   const handleSubmit = () => {
     if (message.trim() && !disabled) {

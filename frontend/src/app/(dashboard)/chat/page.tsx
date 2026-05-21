@@ -27,6 +27,7 @@ import {
   Leaf,
   Home,
   Banknote,
+  FileSearch,
 } from 'lucide-react'
 import { LevyLogo } from '@/components/ui/levy-logo'
 import type {
@@ -118,6 +119,13 @@ export default function NewChatPage() {
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [accentLineWidth, setAccentLineWidth] = useState(0)
   const [webSearch, setWebSearch] = useState(false)
+  // Seed payload for the input box (used by the "Review my draft" starter,
+  // which pre-fills a primer so the lawyer pastes their own text rather
+  // than firing an empty turn).
+  const [inputSeed, setInputSeed] = useState<{ text: string; nonce: number }>({
+    text: '',
+    nonce: 0,
+  })
   // Staged attachments for the very first message: persisted into the
   // chat_session_documents join table once the session is created.
   const [stagedAttachments, setStagedAttachments] = useState<LibraryDocument[]>([])
@@ -475,7 +483,7 @@ export default function NewChatPage() {
                 — the long descriptions live on hover (title tooltip) so
                 the grid feels calm at first glance and only reveals the
                 example question when the user actually points at one. */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 mb-8 max-w-3xl w-full relative z-10">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 mb-3 max-w-3xl w-full relative z-10">
               {quickActions.map((action, i) => (
                 <button
                   key={i}
@@ -491,6 +499,33 @@ export default function NewChatPage() {
               ))}
             </div>
 
+            {/* Review-my-work starter — distinct from the Q&A cards because it
+                pre-fills the box with a primer and lets the lawyer paste their
+                own draft (the "criticise my work / find gaps" workflow). */}
+            <button
+              onClick={() =>
+                setInputSeed((s) => ({
+                  text:
+                    'Please review the following draft and give me a candid critique — ' +
+                    'strengths, gaps and missing provisions, any enforceability or legal ' +
+                    'issues (with citations to Zambian law), and language/style fixes. ' +
+                    'Then offer to produce a clean revised version.\n\n--- MY DRAFT ---\n',
+                  nonce: s.nonce + 1,
+                }))
+              }
+              className="mb-6 max-w-3xl w-full flex items-center gap-2.5 px-3.5 py-3 rounded-lg text-left transition-colors duration-150 group border border-emerald-500/20 bg-emerald-500/[0.04] hover:border-emerald-500/35 hover:bg-emerald-500/[0.07] relative z-10"
+            >
+              <FileSearch className="w-4 h-4 text-emerald-400/70 flex-shrink-0" />
+              <span className="flex-1 min-w-0">
+                <span className="block text-[12.5px] font-medium text-white/85">
+                  Review my draft
+                </span>
+                <span className="block text-[11px] text-white/40 truncate">
+                  Paste a contract, affidavit or submission — Levy critiques it and finds gaps
+                </span>
+              </span>
+            </button>
+
             <div className="w-full max-w-3xl relative z-10">
               <ChatInput
                 onSend={handleSend}
@@ -499,8 +534,18 @@ export default function NewChatPage() {
                 onWebSearchChange={setWebSearch}
                 onAttachClick={user ? () => setAttachmentsOpen(true) : undefined}
                 attachmentCount={stagedAttachments.length}
+                seed={inputSeed}
               />
             </div>
+
+            {/* Breadth cue — the curated library is far bigger than the eight
+                cards suggest; lawyers told us it "felt limited to four areas". */}
+            <Link
+              href="/documents"
+              className="mt-4 text-[11.5px] text-white/35 hover:text-emerald-400/80 transition-colors relative z-10"
+            >
+              Browse 190+ Zambian Acts, forms &amp; government documents →
+            </Link>
 
             <p className="mt-4 text-[10px] text-white/15 relative z-10 text-center">
               Levy provides legal information, not legal advice. Always consult a qualified lawyer.

@@ -265,10 +265,17 @@ FORMS: list[dict] = [
         "title": "Zambia Development Agency Investor Application",
         "short_name": "ZDA Investor Application",
         "description": (
-            "Application for registration as an investor under the Zambia Development Agency "
-            "Act. Foreign investors meeting the minimum investment threshold (USD 250,000 in "
-            "most sectors, higher for priority and Multi-Facility Economic Zones) qualify for "
-            "tax and non-tax incentives."
+            "Application for registration as an investor. Governing law is now the "
+            "Investment, Trade and Business Development Act No. 18 of 2022 (the 'ITBD Act', "
+            "commenced 13 January 2023) with the Zambia Development Agency Act No. 17 of 2022 "
+            "— these repealed the old ZDA Act No. 11 of 2006. Minimum investment for the full "
+            "incentive package: USD 1,000,000 for a wholly foreign-owned enterprise; "
+            "USD 500,000 citizen-influenced (5-25% Zambian); USD 150,000 citizen-empowered "
+            "(25.1-50%); USD 100,000 citizen-owned (>=50.1%); USD 50,000 for a 100% "
+            "Zambian-owned priority-sector business. These incentive thresholds are separate "
+            "from the Department of Immigration's Investor's Permit thresholds (USD 250,000 "
+            "new business / USD 150,000 to join an existing one) under the Immigration and "
+            "Deportation Act No. 18 of 2010."
         ),
         "document_type": "application",
         "category": "investment",
@@ -283,9 +290,14 @@ FORMS: list[dict] = [
         "title": "ZDA Investor Guide — Doing Business in Zambia",
         "short_name": "ZDA Investor Guide",
         "description": (
-            "Official ZDA guide to investing in Zambia: sector overviews, incentives, the "
-            "MFEZ regime, minimum investment thresholds, repatriation of profits, and "
-            "step-by-step setup procedures for foreign investors."
+            "Official ZDA guide to investing in Zambia: sector overviews, the incentive "
+            "regime, the MFEZ scheme, and step-by-step setup for foreign investors. Incentive "
+            "thresholds are set by the Investment, Trade and Business Development Act No. 18 "
+            "of 2022 (commenced Jan 2023), which repealed the ZDA Act No. 11 of 2006: the "
+            "full incentive package needs USD 1,000,000 for a wholly foreign-owned enterprise "
+            "(lower tiers down to USD 50,000 for a 100% Zambian-owned priority-sector "
+            "business). Foreign investors hold land on 99-year leasehold; Zambia has no "
+            "exchange controls so profits and dividends may be freely repatriated."
         ),
         "document_type": "guide",
         "category": "investment",
