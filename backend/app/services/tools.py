@@ -1409,6 +1409,39 @@ def build_tool_registry(
             session_id=session_id,
         )
 
+    async def _draft_legal_document(
+        title: str,
+        body_markdown: str,
+        template_id: str | None = None,
+    ):
+        """Render any non-litigation Zambian legal instrument (contract,
+        deed, lease, power of attorney, will, statutory declaration, board
+        resolution, demand letter, MOU, etc.) as a PDF in the formal legal
+        layout (serif, justified, execution blocks).
+
+        The agent composes the full body in Markdown following the Zambian
+        drafting playbook in the system prompt — parties block, recitals,
+        operative clauses, and the correct execution/attestation block for
+        the instrument type. For court applications use the dedicated
+        draft_summons / draft_affidavit / draft_skeletal / draft_order
+        tools instead; this is for everything else."""
+        if not title or not title.strip():
+            return {"result": {"error": "title required"}}
+        if not body_markdown or not body_markdown.strip():
+            return {"result": {"error": "body_markdown required"}}
+
+        template = _fetch_template(template_id)
+        letterhead = pdf_tools.render_template_letterhead(template)
+        body = "\n\n".join(filter(None, [letterhead, body_markdown]))
+
+        return await pdf_tools.pdf_generate_legal(
+            title=title.strip(),
+            body_markdown=body,
+            meta_tool="draft_legal_document",
+            owner_id=owner_id,
+            session_id=session_id,
+        )
+
     async def _recommend_application(
         cause_of_action: str,
         procedural_mode: str,
@@ -1672,6 +1705,54 @@ def build_tool_registry(
                 ],
             },
             handler=_recommend_application,
+        ),
+        "draft_legal_document": ToolDefinition(
+            name="draft_legal_document",
+            description=(
+                "Draft any NON-litigation Zambian legal instrument as a PDF "
+                "in formal legal layout. Use for: contract of sale of land, "
+                "deed of assignment, lease / tenancy agreement, employment "
+                "contract, contract for services, power of attorney, will, "
+                "statutory declaration, board resolution, shareholders' "
+                "agreement, memorandum of understanding, demand / letter "
+                "before action, deed of guarantee, loan / facility "
+                "agreement, settlement / consent, and similar.\n\n"
+                "DO NOT use this for court applications — those have "
+                "dedicated tools (draft_summons / draft_affidavit / "
+                "draft_skeletal / draft_order / draft_application_bundle).\n\n"
+                "You compose the full body as Markdown following the Zambian "
+                "drafting playbook: a parties block, recitals (WHEREAS …) "
+                "where appropriate, numbered operative clauses, and the "
+                "CORRECT execution / attestation block for the instrument — "
+                "e.g. a deed is 'signed, sealed and delivered' and witnessed; "
+                "a statutory declaration ends with the statutory-declaration "
+                "jurat before a Commissioner for Oaths; a will needs the "
+                "attestation clause + two witnesses; a board resolution "
+                "records the meeting, quorum and resolution number. For land "
+                "instruments include the consent-to-assign / Property "
+                "Transfer Tax (8%) / Lands and Deeds Registry steps where "
+                "relevant. Use bracketed [PLACEHOLDERS] for details the user "
+                "hasn't supplied rather than inventing them."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "description": "Document title shown on the artifact card, e.g. 'Contract of Sale of Land — Banda to Phiri' or 'General Power of Attorney'.",
+                    },
+                    "body_markdown": {
+                        "type": "string",
+                        "description": "The COMPLETE instrument as Markdown: heading, parties, recitals, numbered clauses, and the correct execution/attestation block. Headings (##), numbered lists, and bold render in the legal layout.",
+                    },
+                    "template_id": {
+                        "type": "string",
+                        "description": "Optional ID of one of the user's saved templates (from suggest_templates); prepends the firm letterhead.",
+                    },
+                },
+                "required": ["title", "body_markdown"],
+            },
+            handler=_draft_legal_document,
         ),
         "draft_summons": ToolDefinition(
             name="draft_summons",
