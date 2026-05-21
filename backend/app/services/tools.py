@@ -527,6 +527,15 @@ def build_tool_registry(
             owner_id=owner_id, session_id=session_id,
         )
 
+    async def _fill_form(form_title, fields, form_document_id=None, notes=None):
+        return await pdf_tools.fill_form(
+            form_title=form_title,
+            fields=fields,
+            form_document_id=form_document_id,
+            notes=notes,
+            owner_id=owner_id, session_id=session_id,
+        )
+
     async def _split(ranges, artifact_id=None, document_id=None, title_prefix=None):
         return await pdf_tools.pdf_split(
             artifact_id=artifact_id,
@@ -1753,6 +1762,58 @@ def build_tool_registry(
                 "required": ["title", "body_markdown"],
             },
             handler=_draft_legal_document,
+        ),
+        "fill_form": ToolDefinition(
+            name="fill_form",
+            description=(
+                "Produce a COMPLETED copy of a Zambian form once you've "
+                "gathered the user's details. Use this for 'help me fill in "
+                "the PACRA Form 5 / TPIN form / investor permit application' "
+                "etc.\n\n"
+                "Workflow: (1) `search_corpus` to find the form and learn "
+                "its fields; (2) tell the user which fields the form needs "
+                "and ask for the values (one message or several — gather "
+                "what you can); (3) call `fill_form` with the collected "
+                "{label, value} pairs and the form's `form_document_id` if "
+                "you have it. If the official PDF has fillable AcroForm "
+                "fields the tool fills them directly; otherwise it renders a "
+                "clean 'Completed: <form>' answer sheet the user transcribes "
+                "onto / lodges with the official form. Use the user's exact "
+                "values; put '[TO BE PROVIDED]' for anything still missing "
+                "rather than inventing it. Always remind the user to verify "
+                "before filing."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "form_title": {
+                        "type": "string",
+                        "description": "Name of the form being completed, e.g. 'PACRA Form 5 — Application for Registration of a Private Company'.",
+                    },
+                    "fields": {
+                        "type": "array",
+                        "description": "The form's fields with the user's values. One object per field.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "label": {"type": "string", "description": "Field label exactly as it appears on the form."},
+                                "value": {"type": "string", "description": "The user's value, or '[TO BE PROVIDED]' if still missing."},
+                            },
+                            "required": ["label", "value"],
+                        },
+                    },
+                    "form_document_id": {
+                        "type": "string",
+                        "description": "Optional corpus document UUID of the official form (from search_corpus). Lets the tool attempt to fill the real AcroForm directly.",
+                    },
+                    "notes": {
+                        "type": "string",
+                        "description": "Optional filing notes for the user (where to lodge, fee, supporting documents needed).",
+                    },
+                },
+                "required": ["form_title", "fields"],
+            },
+            handler=_fill_form,
         ),
         "draft_summons": ToolDefinition(
             name="draft_summons",

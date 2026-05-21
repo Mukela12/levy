@@ -53,6 +53,7 @@ const TOOL_META: Record<
   // from a clear "working on…" indicator.
   recommend_application: { label: 'Plan', verb: 'Planning the application', Icon: ClipboardList },
   draft_legal_document: { label: 'Draft', verb: 'Drafting the document', Icon: FilePen },
+  fill_form: { label: 'Fill form', verb: 'Completing the form', Icon: ClipboardList },
   draft_summons: { label: 'Summons', verb: 'Drafting the Originating Notice of Motion', Icon: FilePen },
   draft_affidavit: { label: 'Affidavit', verb: 'Drafting the Affidavit in Support', Icon: FilePen },
   draft_skeletal: { label: 'Skeletal', verb: 'Drafting Skeletal Arguments', Icon: Scale },

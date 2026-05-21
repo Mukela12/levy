@@ -571,6 +571,134 @@ async def pdf_generate_legal(
     }
 
 
+# ─── Tool: fill_form ─────────────────────────────────────────────────────────
+
+
+async def fill_form(
+    *,
+    form_title: str,
+    fields: list[dict],
+    form_document_id: str | None = None,
+    notes: str | None = None,
+    owner_id: str | None = None,
+    session_id: str | None = None,
+) -> dict:
+    """Produce a completed copy of a Zambian form from the field values the
+    agent has gathered.
+
+    Two paths:
+      1. If `form_document_id` points to a corpus PDF that has fillable
+         AcroForm fields, fill the matching fields directly and return that
+         PDF (the actual official form, completed).
+      2. Otherwise — the common case, since most gov forms are flat scans —
+         render a clean "Completed: <form>" answer sheet: every field label
+         with the supplied value, in a two-column table, that the user
+         transcribes onto / lodges with the official form (downloadable
+         from the corpus card).
+
+    `fields` is a list of {"label": str, "value": str}.
+    """
+    clean = [
+        {"label": str(f.get("label", "")).strip(), "value": str(f.get("value", "")).strip()}
+        for f in (fields or [])
+        if f and (f.get("label") or f.get("value"))
+    ]
+    if not form_title.strip():
+        return {"result": {"error": "form_title required"}}
+    if not clean:
+        return {"result": {"error": "fields must be a non-empty list of {label, value}"}}
+
+    # ── Path 1: try to fill the real AcroForm, if the source PDF has one ──
+    if form_document_id:
+        try:
+            src = _download_corpus_pdf(form_document_id)
+            reader = PdfReader(io.BytesIO(src))
+            acro = reader.get_fields() or {}
+            if acro:
+                writer = PdfWriter()
+                writer.append(reader)
+                # Match supplied labels to AcroForm field names case-/space-
+                # insensitively; fill what we can.
+                norm = lambda s: re.sub(r"[^a-z0-9]", "", (s or "").lower())
+                field_names = {norm(k): k for k in acro.keys()}
+                values: dict[str, str] = {}
+                for f in clean:
+                    key = field_names.get(norm(f["label"]))
+                    if key:
+                        values[key] = f["value"]
+                if values:
+                    for page in writer.pages:
+                        writer.update_page_form_field_values(page, values)
+                    buf = io.BytesIO()
+                    writer.write(buf)
+                    pdf_bytes = buf.getvalue()
+                    return await _store_filled_pdf(
+                        pdf_bytes, form_title, clean,
+                        mode="acroform", filled=len(values), total=len(acro),
+                        owner_id=owner_id, session_id=session_id,
+                    )
+        except Exception:  # noqa: BLE001 — fall through to the answer sheet
+            pass
+
+    # ── Path 2: render a completed-answers sheet ──
+    rows = "".join(
+        f'<tr><td style="width:42%;font-weight:700;">{_html_escape(f["label"])}</td>'
+        f'<td>{_html_escape(f["value"]) or "&nbsp;"}</td></tr>'
+        for f in clean
+    )
+    notes_html = (
+        f'<p style="margin-top:14pt;font-style:italic;">{_html_escape(notes)}</p>'
+        if notes else ""
+    )
+    body = (
+        f'<div class="doc-title">COMPLETED: {_html_escape(form_title.upper())}</div>'
+        '<p style="font-style:italic;text-align:center;margin-bottom:14pt;">'
+        'Completed answer sheet — transcribe these values onto the official '
+        'form, or lodge alongside it. Verify every entry before filing.</p>'
+        '<table style="width:100%;">' + rows + '</table>'
+        + notes_html
+    )
+    return await pdf_generate_legal(
+        title=f"Completed — {form_title}",
+        body_markdown=body,
+        meta_tool="fill_form",
+        owner_id=owner_id,
+        session_id=session_id,
+    )
+
+
+async def _store_filled_pdf(
+    pdf_bytes: bytes, form_title: str, fields: list[dict], *,
+    mode: str, filled: int, total: int,
+    owner_id: str | None, session_id: str | None,
+) -> dict:
+    try:
+        page_count = len(PdfReader(io.BytesIO(pdf_bytes)).pages)
+    except Exception:
+        page_count = None
+    row = _insert_artifact_row(
+        kind="pdf",
+        title=f"Completed — {form_title}",
+        storage_path="artifacts/pending",
+        source="generated",
+        size_bytes=len(pdf_bytes),
+        page_count=page_count,
+        meta={"tool": "fill_form", "mode": mode, "fields_filled": filled, "fields_total": total,
+              "slug": _slug(form_title)},
+        owner_id=owner_id,
+        session_id=session_id,
+    )
+    storage_path = _upload_artifact_pdf(row["id"], pdf_bytes)
+    get_db().table("artifacts").update({"storage_path": storage_path}).eq("id", row["id"]).execute()
+    row["storage_path"] = storage_path
+    return {
+        "result": {"artifact_id": row["id"], "title": row["title"], "kind": "pdf",
+                   "page_count": page_count, "size_bytes": len(pdf_bytes),
+                   "mode": mode, "fields_filled": filled, "fields_total": total},
+        "artifact": row, "db_sources": [], "web_sources": [],
+    }
+
+
 # ─── Tool: pdf_merge ─────────────────────────────────────────────────────────
 
 
