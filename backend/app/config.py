@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     # Tavily (web search)
     tavily_api_key: str = ""
 
+    # Laws.Africa Content API (legislation + judgments for ZM).
+    # Free account → token; content is CC-BY-NC-SA (non-commercial). See
+    # scripts/ingest_lawsafrica_zambia.py + services/laws_africa.py.
+    laws_africa_api_token: str = ""
+
     # Agent loop
     agent_max_iterations: int = 12
     agent_tool_timeout_seconds: int = 25
