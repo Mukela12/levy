@@ -536,6 +536,11 @@ def build_tool_registry(
             owner_id=owner_id, session_id=session_id,
         )
 
+    async def _fetch_web_pdf(url, title=None):
+        return await pdf_tools.fetch_web_pdf(
+            url=url, title=title, owner_id=owner_id, session_id=session_id,
+        )
+
     async def _split(ranges, artifact_id=None, document_id=None, title_prefix=None):
         return await pdf_tools.pdf_split(
             artifact_id=artifact_id,
@@ -1814,6 +1819,43 @@ def build_tool_registry(
                 "required": ["form_title", "fields"],
             },
             handler=_fill_form,
+        ),
+        "fetch_web_pdf": ToolDefinition(
+            name="fetch_web_pdf",
+            description=(
+                "Download a PDF you found online (a government / institutional "
+                "form, an Act, a guideline, a fee schedule) and hand it to the "
+                "user as a DOWNLOADABLE artifact card in the chat — so they get "
+                "the actual file, not just a link.\n\n"
+                "Use this when the user wants the real document and it isn't in "
+                "the corpus: first find the official PDF URL via gov_search / "
+                "web_search (prefer .gov.zm / .org.zm / the issuing institution), "
+                "confirm it's the right document, then call fetch_web_pdf with "
+                "that URL. Pass a clear `title` (e.g. 'Zambia Employment Permit "
+                "Application — Form XXIII').\n\n"
+                "Only pass a direct link to a PDF file. If the tool returns an "
+                "error (not a PDF, too large, download failed), tell the user "
+                "and give them the source link instead. IMPORTANT caveat to "
+                "pass on: many Zambian forms are not reliably published online "
+                "or may be outdated versions — always tell the user to confirm "
+                "they have the current form with the issuing office before "
+                "relying on it."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": "Direct URL to the PDF file (http/https).",
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "A clear title for the downloadable card.",
+                    },
+                },
+                "required": ["url"],
+            },
+            handler=_fetch_web_pdf,
         ),
         "draft_summons": ToolDefinition(
             name="draft_summons",

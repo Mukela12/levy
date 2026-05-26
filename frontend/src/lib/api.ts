@@ -403,7 +403,7 @@ export interface ArtifactView {
   id: string
   title: string
   kind: 'pdf' | 'docx' | 'md' | 'txt'
-  source: 'generated' | 'extracted' | 'merged' | 'uploaded'
+  source: 'generated' | 'extracted' | 'merged' | 'uploaded' | 'fetched'
   page_count?: number
   size_bytes?: number
   meta?: Record<string, unknown>

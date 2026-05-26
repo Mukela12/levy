@@ -94,7 +94,7 @@ const STEPS: Step[] = [
     route: '/chat',
     title: 'Save templates',
     body:
-      'Reusable skeletons — NDAs, demand letters, offer letters. Levy can pick one automatically when you ask it to draft.',
+      'Reusable skeletons like NDAs, demand letters and offer letters. Levy can pick one automatically when you ask it to draft.',
     side: 'auto',
     requiresMenu: true,
   },

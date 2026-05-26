@@ -527,7 +527,7 @@ export default function NewChatPage() {
                   Review my draft
                 </span>
                 <span className="block text-[11px] text-white/40 truncate">
-                  Paste a contract, affidavit or submission — Levy critiques it and finds gaps
+                  Paste a contract, affidavit or submission. Levy critiques it and finds gaps.
                 </span>
               </span>
             </button>

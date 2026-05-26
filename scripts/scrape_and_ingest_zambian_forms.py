@@ -466,6 +466,143 @@ FORMS: list[dict] = [
             "BoZ licensing application Zambia PDF",
         ],
     },
+
+    # ─── Zambian INSTITUTIONS (not central govt): universities, professional
+    #     bodies, regulators, utilities. Coverage is patchy — many are offline
+    #     — so the scraper keeps whatever genuine PDFs it finds. ────────────
+    {
+        "title": "University of Zambia (UNZA) Undergraduate Application Form",
+        "short_name": "UNZA Undergraduate Application",
+        "description": (
+            "Application form for undergraduate admission to the University of Zambia "
+            "(UNZA), Lusaka. Covers programme choices, secondary results and sponsorship."
+        ),
+        "document_type": "application", "category": "education",
+        "issuing_authority": "University of Zambia (UNZA)",
+        "domains": ["unza.zm"],
+        "queries": ["UNZA undergraduate application form PDF", "University of Zambia application form PDF"],
+    },
+    {
+        "title": "Copperbelt University (CBU) Application Form",
+        "short_name": "CBU Application",
+        "description": "Admission application form for the Copperbelt University (CBU), Kitwe.",
+        "document_type": "application", "category": "education",
+        "issuing_authority": "Copperbelt University (CBU)",
+        "domains": ["cbu.ac.zm"],
+        "queries": ["Copperbelt University CBU application form PDF", "CBU admission application form PDF"],
+    },
+    {
+        "title": "Law Association of Zambia (LAZ) Membership / Practising Certificate Application",
+        "short_name": "LAZ Membership Application",
+        "description": (
+            "Application to the Law Association of Zambia (LAZ) for membership and a "
+            "practising certificate for legal practitioners under the Legal Practitioners Act."
+        ),
+        "document_type": "application", "category": "professional",
+        "issuing_authority": "Law Association of Zambia (LAZ)",
+        "domains": ["laz.org.zm"],
+        "queries": ["Law Association of Zambia LAZ membership application form PDF",
+                    "LAZ practising certificate application PDF"],
+    },
+    {
+        "title": "ZICA Membership / Student Registration Form",
+        "short_name": "ZICA Registration",
+        "description": (
+            "Registration form for the Zambia Institute of Chartered Accountants (ZICA) — "
+            "student or member registration for accountants and auditors."
+        ),
+        "document_type": "application", "category": "professional",
+        "issuing_authority": "Zambia Institute of Chartered Accountants (ZICA)",
+        "domains": ["zica.co.zm"],
+        "queries": ["ZICA membership registration form PDF", "Zambia Institute of Chartered Accountants registration form PDF"],
+    },
+    {
+        "title": "Engineering Institution of Zambia (EIZ) Registration Form",
+        "short_name": "EIZ Registration",
+        "description": (
+            "Registration / membership application for the Engineering Institution of Zambia "
+            "(EIZ), required to practise engineering under the Engineers Registration Act."
+        ),
+        "document_type": "application", "category": "professional",
+        "issuing_authority": "Engineering Institution of Zambia (EIZ)",
+        "domains": ["eiz.org.zm"],
+        "queries": ["Engineering Institution of Zambia EIZ registration form PDF", "EIZ membership application PDF"],
+    },
+    {
+        "title": "Health Professions Council of Zambia (HPCZ) Registration Form",
+        "short_name": "HPCZ Registration",
+        "description": (
+            "Registration application for health practitioners with the Health Professions "
+            "Council of Zambia (HPCZ) under the Health Professions Act."
+        ),
+        "document_type": "application", "category": "professional",
+        "issuing_authority": "Health Professions Council of Zambia (HPCZ)",
+        "domains": ["hpcz.org.zm"],
+        "queries": ["HPCZ registration form PDF", "Health Professions Council of Zambia registration application PDF"],
+    },
+    {
+        "title": "Nursing and Midwifery Council of Zambia (NMCZ) Registration Form",
+        "short_name": "NMCZ Registration",
+        "description": "Registration / licensing form for nurses and midwives with the NMCZ.",
+        "document_type": "application", "category": "professional",
+        "issuing_authority": "Nursing and Midwifery Council of Zambia (NMCZ)",
+        "domains": ["nmcz.org.zm"],
+        "queries": ["Nursing and Midwifery Council of Zambia NMCZ registration form PDF"],
+    },
+    {
+        "title": "NHIMA Member / Employer Registration Form",
+        "short_name": "NHIMA Registration",
+        "description": (
+            "Registration with the National Health Insurance Management Authority (NHIMA) "
+            "under the National Health Insurance Act, for employers and members."
+        ),
+        "document_type": "form", "category": "labour",
+        "issuing_authority": "National Health Insurance Management Authority (NHIMA)",
+        "domains": ["nhima.co.zm"],
+        "queries": ["NHIMA registration form PDF", "National Health Insurance NHIMA employer registration form PDF"],
+    },
+    {
+        "title": "ZESCO New Electricity Supply / Connection Application Form",
+        "short_name": "ZESCO Connection Application",
+        "description": "Application for a new electricity supply / connection from ZESCO Limited.",
+        "document_type": "application", "category": "utilities",
+        "issuing_authority": "ZESCO Limited",
+        "domains": ["zesco.co.zm"],
+        "queries": ["ZESCO new connection application form PDF", "ZESCO electricity supply application form PDF"],
+    },
+    {
+        "title": "RTSA Driving Licence Application Form",
+        "short_name": "RTSA Licence Application",
+        "description": (
+            "Application for a driving licence with the Road Transport and Safety Agency "
+            "(RTSA) under the Road Traffic Act."
+        ),
+        "document_type": "application", "category": "transport",
+        "issuing_authority": "Road Transport and Safety Agency (RTSA)",
+        "domains": ["rtsa.org.zm"],
+        "queries": ["RTSA driving licence application form PDF", "Road Transport and Safety Agency licence form PDF"],
+    },
+    {
+        "title": "Zambia Public Procurement Authority (ZPPA) Supplier Registration Form",
+        "short_name": "ZPPA Supplier Registration",
+        "description": (
+            "Bidder / supplier registration with the Zambia Public Procurement Authority "
+            "(ZPPA) to participate in public tenders under the Public Procurement Act."
+        ),
+        "document_type": "application", "category": "procurement",
+        "issuing_authority": "Zambia Public Procurement Authority (ZPPA)",
+        "domains": ["zppa.org.zm"],
+        "queries": ["ZPPA supplier registration form PDF", "Zambia Public Procurement Authority bidder registration form PDF"],
+    },
+    {
+        "title": "PACRA Intellectual Property — Trademark Application Form",
+        "short_name": "PACRA Trademark Application",
+        "description": "Application to register a trademark with PACRA under the Trade Marks Act.",
+        "document_type": "application", "category": "company",
+        "issuing_authority": "PACRA",
+        "domains": ["pacra.org.zm"],
+        "queries": ["PACRA trademark application form PDF", "Zambia trademark registration form PACRA PDF"],
+    },
 ]
 
 

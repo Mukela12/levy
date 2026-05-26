@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { FileText, Download, Loader2, Layers, Scissors } from 'lucide-react'
+import { FileText, Download, Loader2, Layers, Scissors, Globe } from 'lucide-react'
 import { LevyLogo } from '@/components/ui/levy-logo'
 import type { ArtifactView } from '@/lib/api'
 
@@ -16,13 +16,14 @@ interface ArtifactCardProps {
 // hence the slightly odd union type. The Icon is rendered with className,
 // LevyLogo with size, so we branch at the render site.
 const SOURCE_META: Record<
-  ArtifactView['source'],
+  string,
   { label: string; Icon: typeof FileText | null }
 > = {
   generated: { label: 'Generated', Icon: null },
   extracted: { label: 'Extracted', Icon: Scissors },
   merged: { label: 'Merged', Icon: Layers },
   uploaded: { label: 'Uploaded', Icon: FileText },
+  fetched: { label: 'From the web', Icon: Globe },
 }
 
 function formatBytes(n?: number): string {

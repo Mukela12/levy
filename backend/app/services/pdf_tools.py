@@ -699,6 +699,95 @@ async def _store_filled_pdf(
     }
 
 
+# ─── Tool: fetch_web_pdf ─────────────────────────────────────────────────────
+
+_FETCH_MAX_BYTES = 30 * 1024 * 1024  # 30 MB ceiling
+
+
+async def fetch_web_pdf(
+    *,
+    url: str,
+    title: str | None = None,
+    owner_id: str | None = None,
+    session_id: str | None = None,
+) -> dict:
+    """Download a PDF from a public URL and store it as a downloadable artifact.
+
+    This lets the agent hand the user the ACTUAL government / institutional
+    form or document found online (not just a link) — they get a download
+    card in-chat. We accept self-signed gov certs (verify=False) because
+    several Zambian gov hosts ship broken cert chains; the content is a
+    public document either way.
+
+    Guardrails: http(s) only, must be a real PDF (magic bytes), capped at
+    30 MB. Returns an error envelope (not a raise) on any failure so the
+    agent can tell the user gracefully.
+    """
+    u = (url or "").strip()
+    if not (u.startswith("http://") or u.startswith("https://")):
+        return {"result": {"error": "url must be http(s)"}}
+
+    try:
+        async with httpx.AsyncClient(
+            timeout=60.0, follow_redirects=True, verify=False,
+            headers={"User-Agent": "Mozilla/5.0 LevyFetch/1.0"},
+        ) as client:
+            r = await client.get(u)
+    except Exception as e:  # noqa: BLE001
+        return {"result": {"error": f"could not download: {e}", "url": u}}
+
+    if r.status_code != 200:
+        return {"result": {"error": f"download returned {r.status_code}", "url": u}}
+    content = r.content
+    if len(content) > _FETCH_MAX_BYTES:
+        return {"result": {"error": "file too large (over 30 MB)", "url": u}}
+    if not content[:5].startswith(b"%PDF"):
+        # Some servers send the PDF without the leading magic on redirect
+        # pages; treat non-PDF as a miss so we never store an HTML error page.
+        return {"result": {"error": "the URL did not return a PDF", "url": u}}
+
+    try:
+        page_count = len(PdfReader(io.BytesIO(content)).pages)
+    except Exception:
+        page_count = None
+
+    # Derive a clean title from the URL filename if none supplied.
+    if not (title or "").strip():
+        import urllib.parse
+        fname = urllib.parse.unquote(u.rsplit("/", 1)[-1].rsplit(".", 1)[0])
+        title = re.sub(r"[-_]+", " ", fname).strip() or "Downloaded document"
+
+    row = _insert_artifact_row(
+        kind="pdf",
+        title=title.strip(),
+        storage_path="artifacts/pending",
+        source="fetched",
+        size_bytes=len(content),
+        page_count=page_count,
+        meta={"tool": "fetch_web_pdf", "source_url": u, "slug": _slug(title)},
+        owner_id=owner_id,
+        session_id=session_id,
+    )
+    storage_path = _upload_artifact_pdf(row["id"], content)
+    get_db().table("artifacts").update({"storage_path": storage_path}).eq("id", row["id"]).execute()
+    row["storage_path"] = storage_path
+
+    return {
+        "result": {
+            "artifact_id": row["id"], "title": title.strip(), "kind": "pdf",
+            "page_count": page_count, "size_bytes": len(content), "source_url": u,
+        },
+        "artifact": row,
+        "db_sources": [],
+        "web_sources": [{"title": title.strip(), "url": u, "snippet": "", "domain": _extract_domain_pt(u)}],
+    }
+
+
+def _extract_domain_pt(url: str) -> str:
+    m = re.search(r"https?://([^/]+)", url or "")
+    return m.group(1) if m else ""
+
+
 # ─── Tool: pdf_merge ─────────────────────────────────────────────────────────
 
 
