@@ -133,6 +133,76 @@ CASES: list[dict] = [
         "Zambia Commercial Court judgment banking PDF judiciary",
         "guarantee indemnity Zambia Court of Appeal judgment PDF",
     ]},
+    # ── second wave: broader nets so we harvest more of the directly-hosted
+    #    Court-of-Appeal / Supreme-Court PDF subset on judiciaryzambia.com ──
+    {"area": "employment", "queries": [
+        "Court of Appeal Zambia judgment contract of employment PDF",
+        "Supreme Court Zambia judgment pension benefits PDF",
+    ]},
+    {"area": "employment", "queries": [
+        "Zambia judgment breach of employment contract damages PDF",
+        "Court of Appeal Zambia judgment salary arrears PDF",
+    ]},
+    {"area": "land", "queries": [
+        "Court of Appeal Zambia judgment vacant possession eviction PDF",
+        "Zambia judgment boundary dispute land PDF judiciary",
+    ]},
+    {"area": "land", "queries": [
+        "Zambia Supreme Court judgment beneficial interest property PDF",
+        "Court of Appeal Zambia judgment mortgage foreclosure PDF",
+    ]},
+    {"area": "contract", "queries": [
+        "Court of Appeal Zambia judgment sale of goods PDF",
+        "Zambia judgment misrepresentation rescission contract PDF",
+    ]},
+    {"area": "contract", "queries": [
+        "Zambia Supreme Court judgment specific performance agreement PDF",
+        "Court of Appeal Zambia judgment quantum meruit PDF",
+    ]},
+    {"area": "company", "queries": [
+        "Court of Appeal Zambia judgment shareholder oppression PDF",
+        "Zambia judgment company liquidation creditors PDF judiciary",
+    ]},
+    {"area": "constitutional", "queries": [
+        "Constitutional Court Zambia judgment election petition PDF",
+        "Zambia judgment fundamental rights detention PDF judiciary",
+    ]},
+    {"area": "constitutional", "queries": [
+        "Constitutional Court Zambia judgment separation of powers PDF",
+        "Zambia judicial review certiorari mandamus judgment PDF",
+    ]},
+    {"area": "family", "queries": [
+        "Court of Appeal Zambia judgment maintenance spouse PDF",
+        "Zambia judgment property settlement divorce PDF judiciary",
+    ]},
+    {"area": "succession", "queries": [
+        "Court of Appeal Zambia judgment estate administration dispute PDF",
+        "Zambia judgment beneficiary inheritance Intestate Succession Act PDF",
+    ]},
+    {"area": "criminal", "queries": [
+        "Court of Appeal Zambia judgment theft by servant PDF",
+        "Zambia Supreme Court judgment defilement appeal PDF",
+    ]},
+    {"area": "criminal", "queries": [
+        "Court of Appeal Zambia judgment robbery sentence PDF",
+        "Zambia judgment fraud false pretences appeal PDF judiciary",
+    ]},
+    {"area": "tort", "queries": [
+        "Court of Appeal Zambia judgment road traffic accident damages PDF",
+        "Zambia judgment occupiers liability negligence PDF judiciary",
+    ]},
+    {"area": "tax", "queries": [
+        "Court of Appeal Zambia judgment income tax assessment PDF",
+        "Zambia judgment VAT dispute Revenue Authority PDF judiciary",
+    ]},
+    {"area": "commercial", "queries": [
+        "Court of Appeal Zambia judgment insurance claim PDF",
+        "Zambia Supreme Court judgment loan facility default PDF",
+    ]},
+    {"area": "commercial", "queries": [
+        "Court of Appeal Zambia judgment arbitration award enforcement PDF",
+        "Zambia judgment letters of credit banking PDF judiciary",
+    ]},
 ]
 
 
