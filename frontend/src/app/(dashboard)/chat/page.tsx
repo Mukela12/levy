@@ -132,6 +132,7 @@ export default function NewChatPage() {
   const [attachmentsOpen, setAttachmentsOpen] = useState(false)
   const pdf = usePdfViewer()
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
   const { user, session } = useAuth()
   const router = useRouter()
 
@@ -146,8 +147,13 @@ export default function NewChatPage() {
     return () => clearTimeout(timer)
   }, [])
 
+  // Only auto-scroll when the user is already near the bottom, so a
+  // streaming reply doesn't yank them down while they read from the top.
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const el = scrollContainerRef.current
+    if (!el) return
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 140
+    if (nearBottom) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
   async function createSession(firstMessage: string): Promise<string> {
@@ -555,6 +561,7 @@ export default function NewChatPage() {
           /* ── Chat State ── */
           <>
             <div
+              ref={scrollContainerRef}
               className="flex-1 overflow-y-auto pt-6 pb-40 md:pb-32"
               style={{ overscrollBehavior: 'none' }}
             >

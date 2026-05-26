@@ -45,6 +45,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
   const [webSearch, setWebSearch] = useState(false)
   const [attachmentsOpen, setAttachmentsOpen] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
   const { user, session, loading: authLoading } = useAuth()
   const router = useRouter()
   const pdf = usePdfViewer()
@@ -71,8 +72,15 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, authLoading, user])
 
+  // Auto-scroll to the newest content ONLY when the user is already near the
+  // bottom. While a reply streams, jumping the view down every token stops
+  // the reader following from the top — so if they've scrolled up to read,
+  // leave them where they are.
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const el = scrollContainerRef.current
+    if (!el) return
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 140
+    if (nearBottom) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
   async function loadMessages() {
@@ -339,6 +347,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
       {/* Main chat area */}
       <div className="flex-1 flex flex-col min-w-0 relative">
         <div
+          ref={scrollContainerRef}
           className="flex-1 overflow-y-auto pt-6 pb-40 md:pb-32"
           style={{ overscrollBehavior: 'none' }}
         >

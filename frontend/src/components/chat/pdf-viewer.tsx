@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, useDragControls, type PanInfo } from 'framer-motion'
 import { Loader2, ChevronLeft, ChevronRight, X, ExternalLink, Maximize2, Minimize2 } from 'lucide-react'
+import { useAuth } from '@/components/auth/auth-provider'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
 
@@ -40,6 +41,8 @@ const DISMISS_DRAG_PX = 120   // dragging down >120px past peek dismisses
 
 export function PdfViewer({ citation, onClose }: PdfViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const { session } = useAuth()
+  const token = session?.access_token
   const [meta, setMeta] = useState<PdfDocMeta | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -82,6 +85,13 @@ export function PdfViewer({ citation, onClose }: PdfViewerProps) {
   useEffect(() => {
     if (!citation) return
     const controller = new AbortController()
+    // Owner-scoped artifacts / user documents now require the bearer token
+    // (RLS + backend auth). Send it on every fetch; without it the backend
+    // returns 403 "not authorized for this artifact".
+    const authInit = {
+      signal: controller.signal,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    }
     setLoading(true)
     setError(null)
     ;(async () => {
@@ -89,7 +99,7 @@ export function PdfViewer({ citation, onClose }: PdfViewerProps) {
         if (citation.artifactId) {
           const r = await fetch(
             `${API_URL}/api/artifacts/${citation.artifactId}/pdf`,
-            { signal: controller.signal },
+            authInit,
           )
           if (!r.ok) throw new Error((await r.text()) || `artifact ${r.status}`)
           const j = (await r.json()) as PdfDocMeta & { kind?: string }
@@ -103,7 +113,7 @@ export function PdfViewer({ citation, onClose }: PdfViewerProps) {
         if (!documentId) {
           const r = await fetch(
             `${API_URL}/api/documents/by-title?title=${encodeURIComponent(citation.actName)}`,
-            { signal: controller.signal },
+            authInit,
           )
           if (!r.ok) throw new Error(`title lookup ${r.status}`)
           const j = await r.json()
@@ -112,7 +122,7 @@ export function PdfViewer({ citation, onClose }: PdfViewerProps) {
         }
         const r = await fetch(
           `${API_URL}/api/documents/${documentId}/pdf`,
-          { signal: controller.signal },
+          authInit,
         )
         if (!r.ok) {
           const text = await r.text()
@@ -134,7 +144,7 @@ export function PdfViewer({ citation, onClose }: PdfViewerProps) {
       controller.abort()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [citationKey])
+  }, [citationKey, token])
 
   // Render with pdfjs once we have the URL.
   useEffect(() => {

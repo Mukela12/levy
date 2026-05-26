@@ -62,9 +62,14 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const activeCaseName = pathname.startsWith('/chat/') ? 'Active Consultation' : 'Levy Counsel'
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-background" style={{ overscrollBehavior: 'none' }}>
+    <div className="flex flex-col h-[100dvh] overflow-hidden bg-background" style={{ overscrollBehavior: 'none' }}>
       {/* ── Top Nav Bar ── */}
-      <header className="h-12 border-b border-white/[0.06] px-4 flex items-center justify-between flex-shrink-0 bg-background z-30">
+      {/* min-h-12 + safe-area top padding so the bar clears the iPhone status
+          bar / notch. env() is 0 on desktop, so the desktop bar is unchanged. */}
+      <header
+        className="min-h-12 border-b border-white/[0.06] px-4 flex items-center justify-between flex-shrink-0 bg-background z-30"
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      >
         {/* Left: hamburger (mobile) / case name (desktop) */}
         <div className="flex items-center gap-3">
           <button
