@@ -9,7 +9,7 @@ Three endpoints for the baseline RAG system:
 
 import os
 import tempfile
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, Header
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import json
@@ -18,14 +18,38 @@ from ..services import rag
 from ..services.agent import run_agent
 from ..services.ingester import ingest_pdf
 from ..services.embedder import get_query_embedding
-from ..db.supabase import search_chunks
+from ..db.supabase import search_chunks, get_db
 from ..prompts.legal_qa import SYSTEM_PROMPT, build_context_prompt
 from ..prompts.irac_brief import IRAC_SYSTEM_PROMPT, build_irac_prompt
 from ..providers.anthropic_provider import generate_response, generate_response_stream
 from ..models.schemas import BriefRequest
 from ..config import get_settings
+from ..auth import require_user, optional_user, verify_token
 
 router = APIRouter(prefix="/api")
+
+
+# --- Ownership guards (backend uses service_role, which bypasses RLS, so we
+#     must authorize every owner-scoped row here in code) -------------------
+
+def _assert_owns(table: str, row_id: str, uid: str, *, owner_col: str = "owner_id") -> dict:
+    """Fetch a row and assert it belongs to `uid`. 404 if missing, 403 if not theirs."""
+    res = get_db().table(table).select("*").eq("id", row_id).limit(1).execute()
+    if not res.data:
+        raise HTTPException(status_code=404, detail=f"{table[:-1]} not found")
+    row = res.data[0]
+    if row.get(owner_col) != uid:
+        raise HTTPException(status_code=403, detail="not authorized for this resource")
+    return row
+
+
+def _assert_owns_session(session_id: str, uid: str) -> dict:
+    res = get_db().table("chat_sessions").select("id,user_id").eq("id", session_id).limit(1).execute()
+    if not res.data:
+        raise HTTPException(status_code=404, detail="session not found")
+    if res.data[0].get("user_id") != uid:
+        raise HTTPException(status_code=403, detail="not authorized for this session")
+    return res.data[0]
 
 
 # --- Request/Response Models ---
@@ -98,7 +122,7 @@ def search(request: SearchRequest):
 
 
 @router.post("/chat/stream")
-async def chat_stream(request: ChatRequest):
+async def chat_stream(request: ChatRequest, authorization: str | None = Header(default=None)):
     """
     Agentic RAG pipeline. Server-Sent Events.
 
@@ -115,14 +139,26 @@ async def chat_stream(request: ChatRequest):
     if not request.query.strip():
         raise HTTPException(status_code=400, detail="Query cannot be empty")
 
+    # Identity comes from the verified bearer token, NOT the client-supplied
+    # user_id. Anonymous callers (no token) get global-corpus-only answers.
+    token = (authorization or "")[7:].strip() if (authorization or "").lower().startswith("bearer ") else None
+    uid = verify_token(token) if token else None
+    # Only honour a session_id the caller actually owns; otherwise ignore it
+    # so nobody can read another user's attached documents via the agent.
+    safe_session_id = None
+    if request.session_id and uid:
+        s = get_db().table("chat_sessions").select("user_id").eq("id", request.session_id).limit(1).execute()
+        if s.data and s.data[0].get("user_id") == uid:
+            safe_session_id = request.session_id
+
     async def event_stream():
         async for event in run_agent(
             user_query=request.query,
             model=request.model,
             web_enabled=bool(request.web_search),
             history=request.history,
-            owner_id=request.user_id,
-            session_id=request.session_id,
+            owner_id=uid,
+            session_id=safe_session_id,
             attached_doc_ids=request.attached_doc_ids,
         ):
             # The pre-agent client expects `chunks_used` on the sources event.
@@ -160,19 +196,20 @@ async def chat_stream(request: ChatRequest):
 
 
 @router.get("/documents/{document_id}/pdf")
-def get_document_pdf_url(document_id: str, expires_in: int = 3600):
+def get_document_pdf_url(document_id: str, expires_in: int = 3600, uid: str | None = Depends(optional_user)):
     """
     Return a short-lived signed URL for the canonical PDF of a legal document.
 
-    The PDF lives in the private `legal-docs` Supabase Storage bucket; we mint
-    a signed URL on demand so the client (PDF.js viewer) can fetch it.
+    Global-library docs are readable by anyone; user-uploaded docs only by
+    their owner. The PDF lives in the private `legal-docs` bucket; we mint a
+    signed URL on demand for the PDF.js viewer.
     """
     from ..db.supabase import get_db
 
     db = get_db()
     res = (
         db.table("legal_documents")
-        .select("id, title, short_name, pdf_storage_path, pdf_page_count, canonical_url")
+        .select("id, title, short_name, pdf_storage_path, pdf_page_count, canonical_url, is_global, owner_id")
         .eq("id", document_id)
         .limit(1)
         .execute()
@@ -180,6 +217,8 @@ def get_document_pdf_url(document_id: str, expires_in: int = 3600):
     if not res.data:
         raise HTTPException(status_code=404, detail="document not found")
     row = res.data[0]
+    if not row.get("is_global") and row.get("owner_id") != uid:
+        raise HTTPException(status_code=403, detail="not authorized for this document")
     storage_path = row.get("pdf_storage_path")
     if not storage_path:
         raise HTTPException(status_code=404, detail="no PDF stored for this document")
@@ -203,17 +242,21 @@ def get_document_pdf_url(document_id: str, expires_in: int = 3600):
 
 
 @router.post("/artifacts/sweep")
-def sweep_old_artifacts(older_than_days: int = 30, dry_run: bool = True):
+def sweep_old_artifacts(
+    older_than_days: int = 30,
+    dry_run: bool = True,
+    x_admin_token: str | None = Header(default=None),
+):
     """
     Soft-archive artifacts older than `older_than_days` (default 30) by
     stamping `archived_at`. With `dry_run=false`, also deletes the underlying
-    storage objects so we stop paying for them. Doesn't touch row metadata —
-    the artifact card in old chats still shows title/page count, but opening
-    it returns 410 once the storage object is gone.
-
-    Intended to be hit by an external cron (Railway scheduled job, Supabase
-    cron, or manually). Idempotent.
+    storage objects. DESTRUCTIVE — gated behind the ADMIN_API_TOKEN secret
+    (send it as the X-Admin-Token header). Intended for an external cron.
     """
+    settings = get_settings()
+    admin_token = getattr(settings, "admin_api_token", "") or os.environ.get("ADMIN_API_TOKEN", "")
+    if not admin_token or x_admin_token != admin_token:
+        raise HTTPException(status_code=403, detail="admin token required")
     from ..db.supabase import get_db
     from datetime import datetime, timedelta, timezone
 
@@ -268,14 +311,19 @@ def sweep_old_artifacts(older_than_days: int = 30, dry_run: bool = True):
 
 
 @router.get("/artifacts/{artifact_id}/pdf")
-def get_artifact_pdf_url(artifact_id: str, expires_in: int = 3600):
-    """Signed URL for an agent-generated artifact PDF."""
+def get_artifact_pdf_url(artifact_id: str, expires_in: int = 3600, uid: str | None = Depends(optional_user)):
+    """Signed URL for an agent-generated artifact PDF.
+
+    Owned artifacts are only served to their owner; anonymous-demo artifacts
+    (owner_id NULL, addressable only by their unguessable UUID) are served by
+    capability.
+    """
     from ..db.supabase import get_db
 
     db = get_db()
     res = (
         db.table("artifacts")
-        .select("id, title, kind, storage_path, page_count, size_bytes, source, meta, created_at")
+        .select("id, title, kind, storage_path, page_count, size_bytes, source, meta, created_at, owner_id")
         .eq("id", artifact_id)
         .limit(1)
         .execute()
@@ -283,6 +331,8 @@ def get_artifact_pdf_url(artifact_id: str, expires_in: int = 3600):
     if not res.data:
         raise HTTPException(status_code=404, detail="artifact not found")
     row = res.data[0]
+    if row.get("owner_id") and row.get("owner_id") != uid:
+        raise HTTPException(status_code=403, detail="not authorized for this artifact")
     storage_path = row.get("storage_path")
     if not storage_path or storage_path == "artifacts/pending":
         raise HTTPException(status_code=409, detail="artifact upload not finalized")
@@ -341,18 +391,19 @@ def get_document_by_title(title: str):
 
 @router.get("/documents")
 def list_documents(
-    user_id: str | None = None,
     session_id: str | None = None,
     folder_id: str | None = None,
+    user_id: str | None = None,  # ignored — kept for backward-compat
+    uid: str | None = Depends(optional_user),
 ):
     """
     List documents visible to the caller.
 
-    - `global`   : the curated Zambian-law library (always available)
-    - `owned`    : documents this user uploaded; if `folder_id` is given,
-                   filtered to that folder. Pass `folder_id="unfiled"` to get
-                   the user's documents that are not in any folder.
-    - `attached` : documents attached to the active chat session
+    - `global`   : the curated Zambian-law library (always available, even
+                   to anonymous callers)
+    - `owned`    : documents the AUTHENTICATED user uploaded (identity from
+                   the bearer token, never the client-supplied user_id)
+    - `attached` : documents attached to a chat session the user owns
     """
     from ..db.supabase import get_db
 
@@ -370,8 +421,8 @@ def list_documents(
     )
 
     owned: list[dict] = []
-    if user_id:
-        q = db.table("legal_documents").select(cols).eq("owner_id", user_id)
+    if uid:
+        q = db.table("legal_documents").select(cols).eq("owner_id", uid)
         if folder_id == "unfiled":
             q = q.is_("folder_id", "null")
         elif folder_id:
@@ -379,17 +430,20 @@ def list_documents(
         owned = q.order("created_at", desc=True).execute().data or []
 
     attached: list[dict] = []
-    if session_id:
-        ids_res = (
-            db.table("chat_session_documents").select("document_id")
-            .eq("session_id", session_id).execute()
-        )
-        ids = [r["document_id"] for r in (ids_res.data or [])]
-        if ids:
-            attached = (
-                db.table("legal_documents").select(cols).in_("id", ids)
-                .order("title").execute().data or []
+    if session_id and uid:
+        # only expose attachments for a session the caller owns
+        sess = db.table("chat_sessions").select("user_id").eq("id", session_id).limit(1).execute()
+        if sess.data and sess.data[0].get("user_id") == uid:
+            ids_res = (
+                db.table("chat_session_documents").select("document_id")
+                .eq("session_id", session_id).execute()
             )
+            ids = [r["document_id"] for r in (ids_res.data or [])]
+            if ids:
+                attached = (
+                    db.table("legal_documents").select(cols).in_("id", ids)
+                    .order("title").execute().data or []
+                )
 
     return {
         "global": global_docs,
@@ -420,17 +474,16 @@ class MoveDocumentRequest(BaseModel):
 
 
 @router.get("/folders")
-def list_folders(user_id: str):
-    """Return the user's folders + a per-folder document count."""
+def list_folders(user_id: str | None = None, uid: str = Depends(require_user)):
+    """Return the authenticated user's folders + a per-folder document count."""
     from ..db.supabase import get_db
     db = get_db()
     folders = (
         db.table("document_folders").select("id, name, created_at")
-        .eq("owner_id", user_id).order("created_at", desc=False).execute().data or []
+        .eq("owner_id", uid).order("created_at", desc=False).execute().data or []
     )
-    # Count user docs per folder, plus an "unfiled" count for ones with folder_id null.
     docs = (
-        db.table("legal_documents").select("id, folder_id").eq("owner_id", user_id)
+        db.table("legal_documents").select("id, folder_id").eq("owner_id", uid)
         .execute().data or []
     )
     counts: dict[str, int] = {}
@@ -450,7 +503,7 @@ def list_folders(user_id: str):
 
 
 @router.post("/folders")
-def create_folder(request: CreateFolderRequest):
+def create_folder(request: CreateFolderRequest, uid: str = Depends(require_user)):
     from ..db.supabase import get_db
     db = get_db()
     name = request.name.strip()
@@ -458,20 +511,20 @@ def create_folder(request: CreateFolderRequest):
         raise HTTPException(status_code=400, detail="name required")
     try:
         row = db.table("document_folders").insert(
-            {"owner_id": request.user_id, "name": name}
+            {"owner_id": uid, "name": name}
         ).execute()
     except Exception as e:  # noqa: BLE001
-        # Likely unique-name collision
         raise HTTPException(status_code=409, detail=str(e))
     return row.data[0] if row.data else {"status": "ok"}
 
 
 @router.patch("/folders/{folder_id}")
-def rename_folder(folder_id: str, request: RenameFolderRequest):
+def rename_folder(folder_id: str, request: RenameFolderRequest, uid: str = Depends(require_user)):
     from ..db.supabase import get_db
     name = request.name.strip()
     if not name:
         raise HTTPException(status_code=400, detail="name required")
+    _assert_owns("document_folders", folder_id, uid)
     db = get_db()
     db.table("document_folders").update(
         {"name": name, "updated_at": "now()"}
@@ -480,26 +533,28 @@ def rename_folder(folder_id: str, request: RenameFolderRequest):
 
 
 @router.delete("/folders/{folder_id}")
-def delete_folder(folder_id: str, cascade: bool = False):
-    """Delete a folder. Documents inside are unfiled (folder_id=null), not removed,
-    unless cascade=true (which deletes their chunks + storage too — destructive)."""
+def delete_folder(folder_id: str, cascade: bool = False, uid: str = Depends(require_user)):
+    """Delete a folder you own. Documents inside are unfiled (folder_id=null),
+    not removed, unless cascade=true (destructive)."""
     from ..db.supabase import get_db
+    _assert_owns("document_folders", folder_id, uid)
     db = get_db()
     if cascade:
-        # Delete all docs in the folder; chunks cascade via FK; PDFs in storage
-        # are NOT auto-cleaned here (leftover storage objects can be swept
-        # later in Phase 6 polish).
-        db.table("legal_documents").delete().eq("folder_id", folder_id).execute()
+        # only the caller's docs in that folder
+        db.table("legal_documents").delete().eq("folder_id", folder_id).eq("owner_id", uid).execute()
     else:
-        db.table("legal_documents").update({"folder_id": None}).eq("folder_id", folder_id).execute()
+        db.table("legal_documents").update({"folder_id": None}).eq("folder_id", folder_id).eq("owner_id", uid).execute()
     db.table("document_folders").delete().eq("id", folder_id).execute()
     return {"status": "ok", "cascade": cascade}
 
 
 @router.patch("/documents/{document_id}/folder")
-def move_document_to_folder(document_id: str, request: MoveDocumentRequest):
-    """Move a user-owned document into a folder (or clear by sending null)."""
+def move_document_to_folder(document_id: str, request: MoveDocumentRequest, uid: str = Depends(require_user)):
+    """Move a document you own into a folder you own (or clear with null)."""
     from ..db.supabase import get_db
+    _assert_owns("legal_documents", document_id, uid)
+    if request.folder_id:
+        _assert_owns("document_folders", request.folder_id, uid)
     db = get_db()
     db.table("legal_documents").update({"folder_id": request.folder_id}).eq("id", document_id).execute()
     return {"status": "ok", "folder_id": request.folder_id}
@@ -513,10 +568,11 @@ class AttachDocRequest(BaseModel):
 
 
 @router.get("/sessions/{session_id}/documents")
-def list_session_documents(session_id: str):
-    """Documents currently attached to a chat session."""
+def list_session_documents(session_id: str, uid: str = Depends(require_user)):
+    """Documents currently attached to a chat session the caller owns."""
     from ..db.supabase import get_db
     db = get_db()
+    _assert_owns_session(session_id, uid)
     ids_res = (
         db.table("chat_session_documents").select("document_id, attached_at")
         .eq("session_id", session_id).execute()
@@ -540,11 +596,18 @@ def list_session_documents(session_id: str):
 
 
 @router.post("/sessions/{session_id}/documents/attach")
-def attach_document(session_id: str, request: AttachDocRequest):
-    """Attach a document to a chat session so search_corpus can see it."""
+def attach_document(session_id: str, request: AttachDocRequest, uid: str = Depends(require_user)):
+    """Attach a document to a chat session the caller owns."""
     from ..db.supabase import get_db
     db = get_db()
-    # Idempotent — primary key is (session_id, document_id)
+    _assert_owns_session(session_id, uid)
+    # the document must be global or owned by the caller
+    doc = db.table("legal_documents").select("owner_id,is_global").eq("id", request.document_id).limit(1).execute()
+    if not doc.data:
+        raise HTTPException(status_code=404, detail="document not found")
+    d = doc.data[0]
+    if not d.get("is_global") and d.get("owner_id") != uid:
+        raise HTTPException(status_code=403, detail="not authorized for this document")
     try:
         db.table("chat_session_documents").upsert(
             {"session_id": session_id, "document_id": request.document_id},
@@ -555,10 +618,11 @@ def attach_document(session_id: str, request: AttachDocRequest):
 
 
 @router.delete("/sessions/{session_id}/documents/{document_id}")
-def detach_document(session_id: str, document_id: str):
-    """Remove a document attachment from a chat session."""
+def detach_document(session_id: str, document_id: str, uid: str = Depends(require_user)):
+    """Remove a document attachment from a chat session the caller owns."""
     from ..db.supabase import get_db
     db = get_db()
+    _assert_owns_session(session_id, uid)
     db.table("chat_session_documents").delete().eq("session_id", session_id).eq(
         "document_id", document_id
     ).execute()
@@ -568,12 +632,16 @@ def detach_document(session_id: str, document_id: str):
 @router.post("/documents/upload")
 async def upload_document(
     file: UploadFile = File(...),
-    user_id: str | None = None,
+    user_id: str | None = None,  # ignored — identity from token
     folder_id: str | None = None,
+    uid: str = Depends(require_user),
 ):
-    """Upload and ingest a PDF document. Stamps owner_id and (optionally) folder_id."""
+    """Upload and ingest a PDF document. Stamps owner_id from the verified token."""
     if not file.filename or not file.filename.lower().endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Only PDF files are supported")
+    # if a folder was given, it must belong to the caller
+    if folder_id:
+        _assert_owns("document_folders", folder_id, uid)
 
     try:
         # Save to temp file
@@ -590,9 +658,7 @@ async def upload_document(
         doc_id = doc.get("id")
         if doc_id:
             from ..db.supabase import get_db
-            patch: dict = {"is_global": False}
-            if user_id:
-                patch["owner_id"] = user_id
+            patch: dict = {"is_global": False, "owner_id": uid}
             if folder_id:
                 patch["folder_id"] = folder_id
             try:
@@ -686,24 +752,24 @@ class MoveTemplateRequest(BaseModel):
 
 
 @router.get("/templates")
-def list_templates(user_id: str, folder_id: str | None = None):
-    """List the user's uploaded templates, optionally scoped to one folder."""
+def list_templates(user_id: str | None = None, folder_id: str | None = None, uid: str = Depends(require_user)):
+    """List the authenticated user's uploaded templates, optionally by folder."""
     from ..services.templates import list_templates_for_owner
 
-    rows = list_templates_for_owner(user_id, folder_id=folder_id)
+    rows = list_templates_for_owner(uid, folder_id=folder_id)
     return {"templates": rows, "count": len(rows)}
 
 
 @router.get("/template-folders")
-def list_template_folders(user_id: str):
-    """Return the user's template folders + per-folder count + unfiled count."""
+def list_template_folders(user_id: str | None = None, uid: str = Depends(require_user)):
+    """Return the authenticated user's template folders + counts."""
     from ..db.supabase import get_db
 
     db = get_db()
     folders = (
         db.table("template_folders")
         .select("id, name, created_at")
-        .eq("owner_id", user_id)
+        .eq("owner_id", uid)
         .order("created_at", desc=False)
         .execute()
         .data
@@ -712,7 +778,7 @@ def list_template_folders(user_id: str):
     rows = (
         db.table("templates")
         .select("id, folder_id")
-        .eq("owner_id", user_id)
+        .eq("owner_id", uid)
         .execute()
         .data
         or []
@@ -732,7 +798,7 @@ def list_template_folders(user_id: str):
 
 
 @router.post("/template-folders")
-def create_template_folder(req: CreateTemplateFolderRequest):
+def create_template_folder(req: CreateTemplateFolderRequest, uid: str = Depends(require_user)):
     from ..db.supabase import get_db
 
     name = req.name.strip()
@@ -742,7 +808,7 @@ def create_template_folder(req: CreateTemplateFolderRequest):
     try:
         row = (
             db.table("template_folders")
-            .insert({"owner_id": req.user_id, "name": name})
+            .insert({"owner_id": uid, "name": name})
             .execute()
         )
     except Exception as e:  # noqa: BLE001
@@ -751,12 +817,13 @@ def create_template_folder(req: CreateTemplateFolderRequest):
 
 
 @router.patch("/template-folders/{folder_id}")
-def rename_template_folder(folder_id: str, req: RenameTemplateFolderRequest):
+def rename_template_folder(folder_id: str, req: RenameTemplateFolderRequest, uid: str = Depends(require_user)):
     from ..db.supabase import get_db
 
     name = req.name.strip()
     if not name:
         raise HTTPException(status_code=400, detail="name required")
+    _assert_owns("template_folders", folder_id, uid)
     db = get_db()
     db.table("template_folders").update(
         {"name": name, "updated_at": "now()"}
@@ -765,12 +832,12 @@ def rename_template_folder(folder_id: str, req: RenameTemplateFolderRequest):
 
 
 @router.delete("/template-folders/{folder_id}")
-def delete_template_folder(folder_id: str, cascade: bool = False):
-    """Delete a template folder. By default the templates inside become
-    unfiled (folder_id=NULL). With cascade=true the templates are deleted too
-    (storage objects included)."""
+def delete_template_folder(folder_id: str, cascade: bool = False, uid: str = Depends(require_user)):
+    """Delete a template folder you own. By default templates inside become
+    unfiled; with cascade=true they're deleted (storage included)."""
     from ..db.supabase import get_db
 
+    _assert_owns("template_folders", folder_id, uid)
     db = get_db()
     if cascade:
         # Pull storage paths first so we can clean blobs.
@@ -798,9 +865,12 @@ def delete_template_folder(folder_id: str, cascade: bool = False):
 
 
 @router.patch("/templates/{template_id}/folder")
-def move_template_to_folder(template_id: str, req: MoveTemplateRequest):
+def move_template_to_folder(template_id: str, req: MoveTemplateRequest, uid: str = Depends(require_user)):
     from ..db.supabase import get_db
 
+    _assert_owns("templates", template_id, uid)
+    if req.folder_id:
+        _assert_owns("template_folders", req.folder_id, uid)
     db = get_db()
     db.table("templates").update({"folder_id": req.folder_id}).eq(
         "id", template_id
@@ -811,10 +881,11 @@ def move_template_to_folder(template_id: str, req: MoveTemplateRequest):
 @router.post("/templates/upload")
 async def upload_template(
     file: UploadFile = File(...),
-    user_id: str | None = None,
+    user_id: str | None = None,  # ignored — identity from token
     name: str | None = None,
     description: str | None = None,
     folder_id: str | None = None,
+    uid: str = Depends(require_user),
 ):
     """
     Upload a template file (.docx | .pdf | .txt | .md).
@@ -823,10 +894,10 @@ async def upload_template(
     `templates` table records owner + name + description + a preview of the
     text content for the agent's `suggest_templates` tool.
     """
-    if not user_id:
-        raise HTTPException(status_code=400, detail="user_id required")
     if not file.filename:
         raise HTTPException(status_code=400, detail="file required")
+    if folder_id:
+        _assert_owns("template_folders", folder_id, uid)
 
     from ..services.templates import (
         TEMPLATES_BUCKET,
@@ -853,7 +924,7 @@ async def upload_template(
         raise HTTPException(status_code=400, detail="name required")
 
     try:
-        storage_path = upload_to_storage(content, file_type, user_id)
+        storage_path = upload_to_storage(content, file_type, uid)
     except Exception as e:  # noqa: BLE001
         raise HTTPException(status_code=500, detail=f"storage upload failed: {e}")
 
@@ -863,7 +934,7 @@ async def upload_template(
             db.table("templates")
             .insert(
                 {
-                    "owner_id": user_id,
+                    "owner_id": uid,
                     "name": template_name,
                     "description": (description or "").strip() or None,
                     "file_type": file_type,
@@ -889,10 +960,11 @@ async def upload_template(
 
 
 @router.patch("/templates/{template_id}")
-def update_template(template_id: str, req: UpdateTemplateRequest):
-    """Rename a template or update its description."""
+def update_template(template_id: str, req: UpdateTemplateRequest, uid: str = Depends(require_user)):
+    """Rename a template you own or update its description."""
     from ..db.supabase import get_db
 
+    _assert_owns("templates", template_id, uid)
     patch: dict = {"updated_at": "now()"}
     if req.name is not None:
         name = req.name.strip()
@@ -908,14 +980,14 @@ def update_template(template_id: str, req: UpdateTemplateRequest):
 
 
 @router.delete("/templates/{template_id}")
-def delete_template(template_id: str):
-    """Delete a template (DB row + storage object)."""
+def delete_template(template_id: str, uid: str = Depends(require_user)):
+    """Delete a template you own (DB row + storage object)."""
     from ..db.supabase import get_db
 
     db = get_db()
     res = (
         db.table("templates")
-        .select("id, storage_path")
+        .select("id, storage_path, owner_id")
         .eq("id", template_id)
         .limit(1)
         .execute()
@@ -923,6 +995,8 @@ def delete_template(template_id: str):
     if not res.data:
         raise HTTPException(status_code=404, detail="template not found")
     row = res.data[0]
+    if row.get("owner_id") != uid:
+        raise HTTPException(status_code=403, detail="not authorized for this template")
     path = row.get("storage_path") or ""
     if path:
         bucket, _, key = path.partition("/")
@@ -936,14 +1010,14 @@ def delete_template(template_id: str):
 
 
 @router.get("/templates/{template_id}/file")
-def get_template_signed_url(template_id: str, expires_in: int = 3600):
-    """Short-lived signed URL the frontend can use to download/preview the file."""
+def get_template_signed_url(template_id: str, expires_in: int = 3600, uid: str = Depends(require_user)):
+    """Short-lived signed URL to download/preview a template you own."""
     from ..db.supabase import get_db
 
     db = get_db()
     res = (
         db.table("templates")
-        .select("id, name, file_type, storage_path, page_count, file_size_bytes")
+        .select("id, name, file_type, storage_path, page_count, file_size_bytes, owner_id")
         .eq("id", template_id)
         .limit(1)
         .execute()
@@ -951,6 +1025,8 @@ def get_template_signed_url(template_id: str, expires_in: int = 3600):
     if not res.data:
         raise HTTPException(status_code=404, detail="template not found")
     row = res.data[0]
+    if row.get("owner_id") != uid:
+        raise HTTPException(status_code=403, detail="not authorized for this template")
     path = row.get("storage_path") or ""
     if not path:
         raise HTTPException(status_code=404, detail="template has no stored file")

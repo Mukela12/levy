@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     # scripts/ingest_lawsafrica_zambia.py + services/laws_africa.py.
     laws_africa_api_token: str = ""
 
+    # Secret for destructive admin endpoints (e.g. /artifacts/sweep). Send as
+    # the X-Admin-Token header. If empty, those endpoints are denied.
+    admin_api_token: str = ""
+
     # Agent loop
     agent_max_iterations: int = 12
     agent_tool_timeout_seconds: int = 25

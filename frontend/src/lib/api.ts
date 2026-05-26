@@ -1,5 +1,25 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
+/**
+ * Attach the logged-in user's Supabase access token so the backend can
+ * verify identity. The backend authorizes every owner-scoped endpoint from
+ * this token (it no longer trusts a client-supplied user_id), so any call
+ * that touches user data must carry it. Reads the live session straight
+ * from the Supabase browser client, so callers don't have to thread a token
+ * through every function.
+ */
+async function authHeaders(): Promise<Record<string, string>> {
+  try {
+    const { createClient } = await import('@/lib/supabase')
+    const supabase = createClient()
+    const { data } = await supabase.auth.getSession()
+    const token = data.session?.access_token
+    return token ? { Authorization: `Bearer ${token}` } : {}
+  } catch {
+    return {}
+  }
+}
+
 interface ChatResponse {
   answer: string
   chunks_used: ChunkUsed[]
@@ -84,7 +104,7 @@ export async function listDocumentsForUser(
   if (userId) params.set('user_id', userId)
   if (sessionId) params.set('session_id', sessionId)
   if (folderId) params.set('folder_id', folderId)
-  const r = await fetch(`${API_URL}/api/documents?${params.toString()}`)
+  const r = await fetch(`${API_URL}/api/documents?${params.toString()}`, { headers: await authHeaders() })
   if (!r.ok) throw new Error(`documents ${r.status}`)
   return r.json()
 }
@@ -92,7 +112,7 @@ export async function listDocumentsForUser(
 export async function attachDocumentToSession(sessionId: string, documentId: string): Promise<void> {
   const r = await fetch(`${API_URL}/api/sessions/${sessionId}/documents/attach`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
     body: JSON.stringify({ document_id: documentId }),
   })
   if (!r.ok) throw new Error(`attach ${r.status}`)
@@ -101,12 +121,13 @@ export async function attachDocumentToSession(sessionId: string, documentId: str
 export async function detachDocumentFromSession(sessionId: string, documentId: string): Promise<void> {
   const r = await fetch(`${API_URL}/api/sessions/${sessionId}/documents/${documentId}`, {
     method: 'DELETE',
+    headers: await authHeaders(),
   })
   if (!r.ok) throw new Error(`detach ${r.status}`)
 }
 
 export async function listSessionDocuments(sessionId: string): Promise<{ documents: LibraryDocument[] }> {
-  const r = await fetch(`${API_URL}/api/sessions/${sessionId}/documents`)
+  const r = await fetch(`${API_URL}/api/sessions/${sessionId}/documents`, { headers: await authHeaders() })
   if (!r.ok) throw new Error(`session-docs ${r.status}`)
   return r.json()
 }
@@ -121,7 +142,7 @@ export interface FolderRow {
 }
 
 export async function listFolders(userId: string): Promise<{ folders: FolderRow[]; unfiled_count: number }> {
-  const r = await fetch(`${API_URL}/api/folders?user_id=${encodeURIComponent(userId)}`)
+  const r = await fetch(`${API_URL}/api/folders?user_id=${encodeURIComponent(userId)}`, { headers: await authHeaders() })
   if (!r.ok) throw new Error(`folders ${r.status}`)
   return r.json()
 }
@@ -129,7 +150,7 @@ export async function listFolders(userId: string): Promise<{ folders: FolderRow[
 export async function createFolder(userId: string, name: string): Promise<FolderRow> {
   const r = await fetch(`${API_URL}/api/folders`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
     body: JSON.stringify({ user_id: userId, name }),
   })
   if (!r.ok) throw new Error((await r.text()) || `create folder ${r.status}`)
@@ -139,21 +160,21 @@ export async function createFolder(userId: string, name: string): Promise<Folder
 export async function renameFolder(folderId: string, name: string): Promise<void> {
   const r = await fetch(`${API_URL}/api/folders/${folderId}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
     body: JSON.stringify({ name }),
   })
   if (!r.ok) throw new Error(`rename ${r.status}`)
 }
 
 export async function deleteFolder(folderId: string, cascade = false): Promise<void> {
-  const r = await fetch(`${API_URL}/api/folders/${folderId}?cascade=${cascade}`, { method: 'DELETE' })
+  const r = await fetch(`${API_URL}/api/folders/${folderId}?cascade=${cascade}`, { method: 'DELETE', headers: await authHeaders() })
   if (!r.ok) throw new Error(`delete ${r.status}`)
 }
 
 export async function moveDocumentToFolder(documentId: string, folderId: string | null): Promise<void> {
   const r = await fetch(`${API_URL}/api/documents/${documentId}/folder`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
     body: JSON.stringify({ folder_id: folderId }),
   })
   if (!r.ok) throw new Error(`move ${r.status}`)
@@ -197,7 +218,7 @@ export async function listTemplates(
   const params = new URLSearchParams()
   params.set('user_id', userId)
   if (folderId) params.set('folder_id', folderId)
-  const r = await fetch(`${API_URL}/api/templates?${params.toString()}`)
+  const r = await fetch(`${API_URL}/api/templates?${params.toString()}`, { headers: await authHeaders() })
   if (!r.ok) throw new Error(`templates ${r.status}`)
   return r.json()
 }
@@ -215,6 +236,7 @@ export async function uploadTemplate(
   formData.append('file', file)
   const r = await fetch(`${API_URL}/api/templates/upload?${params.toString()}`, {
     method: 'POST',
+    headers: await authHeaders(),
     body: formData,
   })
   if (!r.ok) throw new Error((await r.text()) || `upload-template ${r.status}`)
@@ -225,7 +247,7 @@ export async function uploadTemplate(
 export async function listTemplateFolders(
   userId: string,
 ): Promise<{ folders: TemplateFolderRow[]; unfiled_count: number }> {
-  const r = await fetch(`${API_URL}/api/template-folders?user_id=${encodeURIComponent(userId)}`)
+  const r = await fetch(`${API_URL}/api/template-folders?user_id=${encodeURIComponent(userId)}`, { headers: await authHeaders() })
   if (!r.ok) throw new Error(`template-folders ${r.status}`)
   return r.json()
 }
@@ -233,7 +255,7 @@ export async function listTemplateFolders(
 export async function createTemplateFolder(userId: string, name: string): Promise<TemplateFolderRow> {
   const r = await fetch(`${API_URL}/api/template-folders`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
     body: JSON.stringify({ user_id: userId, name }),
   })
   if (!r.ok) throw new Error((await r.text()) || `create template folder ${r.status}`)
@@ -243,7 +265,7 @@ export async function createTemplateFolder(userId: string, name: string): Promis
 export async function renameTemplateFolder(folderId: string, name: string): Promise<void> {
   const r = await fetch(`${API_URL}/api/template-folders/${folderId}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
     body: JSON.stringify({ name }),
   })
   if (!r.ok) throw new Error(`rename ${r.status}`)
@@ -252,6 +274,7 @@ export async function renameTemplateFolder(folderId: string, name: string): Prom
 export async function deleteTemplateFolder(folderId: string, cascade = false): Promise<void> {
   const r = await fetch(`${API_URL}/api/template-folders/${folderId}?cascade=${cascade}`, {
     method: 'DELETE',
+    headers: await authHeaders(),
   })
   if (!r.ok) throw new Error(`delete ${r.status}`)
 }
@@ -259,7 +282,7 @@ export async function deleteTemplateFolder(folderId: string, cascade = false): P
 export async function moveTemplateToFolder(templateId: string, folderId: string | null): Promise<void> {
   const r = await fetch(`${API_URL}/api/templates/${templateId}/folder`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
     body: JSON.stringify({ folder_id: folderId }),
   })
   if (!r.ok) throw new Error(`move ${r.status}`)
@@ -268,19 +291,19 @@ export async function moveTemplateToFolder(templateId: string, folderId: string 
 export async function updateTemplate(id: string, patch: { name?: string; description?: string }): Promise<void> {
   const r = await fetch(`${API_URL}/api/templates/${id}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
     body: JSON.stringify(patch),
   })
   if (!r.ok) throw new Error(`update-template ${r.status}`)
 }
 
 export async function deleteTemplate(id: string): Promise<void> {
-  const r = await fetch(`${API_URL}/api/templates/${id}`, { method: 'DELETE' })
+  const r = await fetch(`${API_URL}/api/templates/${id}`, { method: 'DELETE', headers: await authHeaders() })
   if (!r.ok) throw new Error(`delete-template ${r.status}`)
 }
 
 export async function getTemplateSignedUrl(id: string): Promise<{ signed_url: string; name: string; file_type: string }> {
-  const r = await fetch(`${API_URL}/api/templates/${id}/file`)
+  const r = await fetch(`${API_URL}/api/templates/${id}/file`, { headers: await authHeaders() })
   if (!r.ok) throw new Error(`template-url ${r.status}`)
   return r.json()
 }
@@ -341,8 +364,9 @@ export async function uploadDocument(
   userId?: string,
   folderId?: string | null,
 ): Promise<{ status: string; document_id: string }> {
-  const headers: Record<string, string> = {}
-  if (token) headers['Authorization'] = `Bearer ${token}`
+  const headers: Record<string, string> = token
+    ? { Authorization: `Bearer ${token}` }
+    : await authHeaders()
 
   const formData = new FormData()
   formData.append('file', file)
