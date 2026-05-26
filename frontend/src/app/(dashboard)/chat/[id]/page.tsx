@@ -61,9 +61,15 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
   // array every render and would render-loop with the provider's setState.
   useRegisterBrief(messages, session?.access_token)
 
+  // Load only once auth is ready. chat_messages is now RLS-protected, so a
+  // query fired before the Supabase session is hydrated runs unauthenticated
+  // and returns [] — which showed an empty chat after navigation/refresh.
+  // Re-run when the user resolves on a full page load.
   useEffect(() => {
+    if (authLoading || !user) return
     loadMessages()
-  }, [id])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, authLoading, user])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
