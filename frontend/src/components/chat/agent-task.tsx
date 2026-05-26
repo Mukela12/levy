@@ -215,9 +215,6 @@ export function AgentTask({ call }: { call: ToolCallView }) {
               transition={{ duration: 0.25, ease: [0.2, 0.65, 0.3, 0.9] }}
               className="relative overflow-hidden border-t border-white/[0.04]"
             >
-              {/* Vertical dashed connector aligned with the tool icon */}
-              <div className="absolute top-1.5 bottom-1.5 left-[26px] border-l border-dashed border-white/15" />
-
               <ul className="py-1.5 pl-3 pr-2.5 space-y-0.5">
                 {dbResults.map((s, i) => (
                   <SubtaskRow
