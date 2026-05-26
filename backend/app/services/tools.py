@@ -74,6 +74,52 @@ GOV_ZM_DOMAINS: list[str] = [
     # Statistics & digital governance
     "zamstats.gov.zm",
     "szi.gov.zm",
+    # ── Non-government but institutional + trustworthy Zambian sources ──
+    # Used by gov_search when the answer needs a regulator, a licensed bank,
+    # a professional body, a university, or authoritative legal publishing
+    # that isn't a .gov.zm site. Still on-demand only — the agent reaches
+    # for these when a question genuinely needs them.
+    # Regulators / statutory bodies
+    "seczambia.org.zm",      # Securities & Exchange Commission
+    "pia.org.zm",            # Pensions & Insurance Authority
+    "ccpc.org.zm",           # Competition & Consumer Protection Commission
+    "napsa.co.zm",           # National Pension Scheme Authority
+    "workers.com.zm",        # Workers' Compensation Fund Control Board
+    "zicta.zm",              # ICT regulator
+    "erb.org.zm",            # Energy Regulation Board
+    "zema.org.zm",           # Environmental Management Agency
+    "luse.co.zm",            # Lusaka Securities Exchange
+    # Licensed commercial banks
+    "zanaco.co.zm",
+    "stanbicbank.co.zm",
+    "absa.co.zm",
+    "fnbzambia.co.zm",
+    "izb.co.zm",             # Indo-Zambia Bank
+    "accessbankplc.com",     # Access Bank Zambia
+    "firstalliancebankzambia.com",
+    # Professional bodies
+    "laz.org.zm",            # Law Association of Zambia (current site)
+    "zica.co.zm",            # Institute of Chartered Accountants
+    "eiz.org.zm",            # Engineering Institution of Zambia
+    "hpcz.org.zm",           # Health Professions Council
+    "gnc.org.zm",            # Nursing & Midwifery Council
+    # Universities
+    "unza.zm",
+    "cbu.ac.zm",
+    "mu.ac.zm",
+    "zcas.ac.zm",
+    # Legal information + reputable legal publishing
+    "zambialii.org",         # judgments / Acts / SIs (cite, do not bulk-scrape)
+    "africanlii.org",
+    "bowmanslaw.com",
+    "dentons.com",
+    "dlapiperafrica.com",
+    "corpus.co.zm",
+    # Established record-of-note Zambian press (use for facts, verify against
+    # primary sources; tabloids deliberately excluded)
+    "daily-mail.co.zm",
+    "times.co.zm",
+    "diggers.news",
 ]
 
 
@@ -527,11 +573,12 @@ def build_tool_registry(
             owner_id=owner_id, session_id=session_id,
         )
 
-    async def _fill_form(form_title, fields, form_document_id=None, notes=None):
+    async def _fill_form(form_title, fields, form_document_id=None, form_artifact_id=None, notes=None):
         return await pdf_tools.fill_form(
             form_title=form_title,
             fields=fields,
             form_document_id=form_document_id,
+            form_artifact_id=form_artifact_id,
             notes=notes,
             owner_id=owner_id, session_id=session_id,
         )
@@ -1809,7 +1856,11 @@ def build_tool_registry(
                     },
                     "form_document_id": {
                         "type": "string",
-                        "description": "Optional corpus document UUID of the official form (from search_corpus). Lets the tool attempt to fill the real AcroForm directly.",
+                        "description": "Optional corpus document UUID of the official form (from search_corpus). If it has fillable form fields they're filled in place.",
+                    },
+                    "form_artifact_id": {
+                        "type": "string",
+                        "description": "Optional artifact UUID of a form you just pulled with fetch_web_pdf (or the user uploaded). If that PDF has fillable form fields, fill_form completes the ACTUAL form in place and returns it; otherwise it produces the answer sheet.",
                     },
                     "notes": {
                         "type": "string",

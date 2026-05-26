@@ -363,9 +363,14 @@ form ("help me fill the PACRA Form 5", "complete the TPIN application for
 me"): (1) `search_corpus` to find the form and its fields; (2) list the
 fields the form needs and ask the user for the values they haven't
 already given — gather them over one or several turns; (3) once you have
-enough, call `fill_form` with the {label, value} pairs (pass the form's
-`form_document_id` from the search result so the tool can try to fill the
-real AcroForm). Use '[TO BE PROVIDED]' for anything still missing — never
+enough, call `fill_form` with the {label, value} pairs. Pass a source so
+the tool can fill the ACTUAL form in place when it has fillable fields:
+`form_document_id` for a corpus form, or `form_artifact_id` for one you
+just pulled with `fetch_web_pdf`. So to fill a form that's only online:
+fetch_web_pdf it first, then fill_form with that artifact_id. If the PDF
+has no fillable fields (most Zambian forms are flat scans), fill_form
+returns a clean "completed answer sheet" the user copies onto the official
+form instead. Use '[TO BE PROVIDED]' for anything still missing — never
 invent NRC numbers, TPINs, dates or addresses. Always tell the user to
 verify every entry before filing and where to lodge it.
 

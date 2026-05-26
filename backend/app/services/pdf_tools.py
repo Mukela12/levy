@@ -579,6 +579,7 @@ async def fill_form(
     form_title: str,
     fields: list[dict],
     form_document_id: str | None = None,
+    form_artifact_id: str | None = None,
     notes: str | None = None,
     owner_id: str | None = None,
     session_id: str | None = None,
@@ -587,14 +588,14 @@ async def fill_form(
     agent has gathered.
 
     Two paths:
-      1. If `form_document_id` points to a corpus PDF that has fillable
-         AcroForm fields, fill the matching fields directly and return that
-         PDF (the actual official form, completed).
-      2. Otherwise — the common case, since most gov forms are flat scans —
-         render a clean "Completed: <form>" answer sheet: every field label
-         with the supplied value, in a two-column table, that the user
-         transcribes onto / lodges with the official form (downloadable
-         from the corpus card).
+      1. If the source PDF (a corpus doc via `form_document_id`, OR a
+         fetched/uploaded artifact via `form_artifact_id`) has fillable
+         AcroForm fields, fill the matching fields IN PLACE and return that
+         actual form, completed.
+      2. Otherwise — the common case, since most Zambian gov forms are flat
+         scans with no form fields — render a clean "Completed: <form>"
+         answer sheet: every field label with the supplied value, that the
+         user transcribes onto / lodges with the official form.
 
     `fields` is a list of {"label": str, "value": str}.
     """
@@ -608,11 +609,20 @@ async def fill_form(
     if not clean:
         return {"result": {"error": "fields must be a non-empty list of {label, value}"}}
 
-    # ── Path 1: try to fill the real AcroForm, if the source PDF has one ──
-    if form_document_id:
+    # ── Path 1: fill the real AcroForm in place, if the source has one ──
+    # Source can be a fetched/uploaded artifact or a corpus document.
+    src_bytes: bytes | None = None
+    try:
+        if form_artifact_id:
+            src_bytes = _download_artifact_pdf(form_artifact_id)
+        elif form_document_id:
+            src_bytes = _download_corpus_pdf(form_document_id)
+    except Exception:  # noqa: BLE001 — fall through to the answer sheet
+        src_bytes = None
+
+    if src_bytes:
         try:
-            src = _download_corpus_pdf(form_document_id)
-            reader = PdfReader(io.BytesIO(src))
+            reader = PdfReader(io.BytesIO(src_bytes))
             acro = reader.get_fields() or {}
             if acro:
                 writer = PdfWriter()
