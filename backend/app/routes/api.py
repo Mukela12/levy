@@ -93,7 +93,7 @@ def chat(request: ChatRequest):
         )
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="request could not be completed")
 
 
 @router.post("/search")
@@ -118,7 +118,7 @@ def search(request: SearchRequest):
         )
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="request could not be completed")
 
 
 @router.post("/chat/stream")
@@ -228,7 +228,7 @@ def get_document_pdf_url(document_id: str, expires_in: int = 3600, uid: str | No
     try:
         signed = db.storage.from_(bucket).create_signed_url(key, expires_in)
     except Exception as e:  # noqa: BLE001
-        raise HTTPException(status_code=500, detail=f"signed-url failed: {e}")
+        raise HTTPException(status_code=500, detail="could not generate download link")
 
     return {
         "document_id": row["id"],
@@ -341,7 +341,7 @@ def get_artifact_pdf_url(artifact_id: str, expires_in: int = 3600, uid: str | No
     try:
         signed = db.storage.from_(bucket).create_signed_url(key, expires_in)
     except Exception as e:  # noqa: BLE001
-        raise HTTPException(status_code=500, detail=f"signed-url failed: {e}")
+        raise HTTPException(status_code=500, detail="could not generate download link")
 
     return {
         "artifact_id": row["id"],
@@ -514,7 +514,7 @@ def create_folder(request: CreateFolderRequest, uid: str = Depends(require_user)
             {"owner_id": uid, "name": name}
         ).execute()
     except Exception as e:  # noqa: BLE001
-        raise HTTPException(status_code=409, detail=str(e))
+        raise HTTPException(status_code=409, detail="request could not be completed")
     return row.data[0] if row.data else {"status": "ok"}
 
 
@@ -613,7 +613,7 @@ def attach_document(session_id: str, request: AttachDocRequest, uid: str = Depen
             {"session_id": session_id, "document_id": request.document_id},
         ).execute()
     except Exception as e:  # noqa: BLE001
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail="request could not be completed")
     return {"status": "ok", "session_id": session_id, "document_id": request.document_id}
 
 
@@ -676,7 +676,7 @@ async def upload_document(
             "chunks_created": result.get("chunks_created", 0),
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="request could not be completed")
 
 
 @router.post("/brief/generate")
@@ -727,7 +727,7 @@ def generate_brief(request: BriefRequest):
             "citations": [],
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="request could not be completed")
 
 
 # ─── Templates ───────────────────────────────────────────────────────────────
@@ -812,7 +812,7 @@ def create_template_folder(req: CreateTemplateFolderRequest, uid: str = Depends(
             .execute()
         )
     except Exception as e:  # noqa: BLE001
-        raise HTTPException(status_code=409, detail=str(e))
+        raise HTTPException(status_code=409, detail="request could not be completed")
     return row.data[0] if row.data else {"status": "ok"}
 
 
@@ -926,7 +926,7 @@ async def upload_template(
     try:
         storage_path = upload_to_storage(content, file_type, uid)
     except Exception as e:  # noqa: BLE001
-        raise HTTPException(status_code=500, detail=f"storage upload failed: {e}")
+        raise HTTPException(status_code=500, detail="upload failed")
 
     db = get_db()
     try:
@@ -954,7 +954,7 @@ async def upload_template(
             db.storage.from_(bucket).remove([key])
         except Exception:
             pass
-        raise HTTPException(status_code=409, detail=str(e))
+        raise HTTPException(status_code=409, detail="request could not be completed")
 
     return {"template": row[0] if row else None}
 
@@ -1034,7 +1034,7 @@ def get_template_signed_url(template_id: str, expires_in: int = 3600, uid: str =
     try:
         signed = db.storage.from_(bucket).create_signed_url(key, expires_in)
     except Exception as e:  # noqa: BLE001
-        raise HTTPException(status_code=500, detail=f"signed-url failed: {e}")
+        raise HTTPException(status_code=500, detail="could not generate download link")
     return {
         "template_id": row["id"],
         "name": row.get("name"),
