@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Download, RefreshCw, Loader2, Scale } from 'lucide-react'
-import { generateBrief, type BriefResponse } from '@/lib/api'
+import { Download, RefreshCw, Loader2, Scale, FileText } from 'lucide-react'
+import { generateBrief, exportBrief, type BriefResponse } from '@/lib/api'
 
 interface BriefPanelProps {
   messages: Array<{ role: string; content: string }>
@@ -21,8 +21,22 @@ export function BriefPanel({ messages, token }: BriefPanelProps) {
   const [brief, setBrief] = useState<BriefResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [exporting, setExporting] = useState<'pdf' | 'docx' | null>(null)
 
   const hasMessages = messages.length >= 2
+
+  async function handleExport(format: 'pdf' | 'docx') {
+    if (!brief || exporting) return
+    setExporting(format)
+    try {
+      await exportBrief(brief, format, token)
+    } catch (err) {
+      console.error('Brief export error:', err)
+      setError('Failed to export brief. Please try again.')
+    } finally {
+      setExporting(null)
+    }
+  }
 
   async function handleGenerate() {
     if (!hasMessages) return
@@ -174,12 +188,24 @@ export function BriefPanel({ messages, token }: BriefPanelProps) {
       {/* Footer */}
       {brief && (
         <div className="px-5 py-3 border-t border-white/[0.06] flex-shrink-0">
-          <button
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold tracking-wide bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/15 transition-colors"
-          >
-            <Download size={13} />
-            Export Brief
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleExport('pdf')}
+              disabled={exporting !== null}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold tracking-wide bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/15 transition-colors disabled:opacity-50"
+            >
+              {exporting === 'pdf' ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
+              PDF
+            </button>
+            <button
+              onClick={() => handleExport('docx')}
+              disabled={exporting !== null}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold tracking-wide bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/15 transition-colors disabled:opacity-50"
+            >
+              {exporting === 'docx' ? <Loader2 size={13} className="animate-spin" /> : <FileText size={13} />}
+              Word
+            </button>
+          </div>
         </div>
       )}
     </div>

@@ -4,78 +4,63 @@ import { useState, useRef, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth/auth-provider'
 import { createClient } from '@/lib/supabase'
-import { streamQuery } from '@/lib/api'
+import { uploadDocument, promoteDocument } from '@/lib/api'
 import { ChatInput } from '@/components/chat/chat-input'
 import { ChatMessage, ThinkingGlow } from '@/components/chat/chat-message'
 import { BriefPanel } from '@/components/chat/brief-panel'
 import { useRegisterBrief } from '@/components/chat/brief-context'
+import { useChatStream, type Message } from '@/components/chat/chat-stream-context'
 import { usePdfViewer } from '@/components/chat/pdf-viewer-context'
 import { useSessionAttachments } from '@/components/chat/use-session-attachments'
 import { AttachmentsSheet } from '@/components/chat/attachments-sheet'
 import type { ToolCallView } from '@/components/chat/tool-call-card'
 import type { MessageBlock } from '@/components/chat/chat-message'
-import { Loader2, Paperclip, X } from 'lucide-react'
-import type {
-  ApplicationPlan,
-  ArtifactView,
-  ChunkUsed,
-  TemplateSuggestion,
-  WebSource,
-} from '@/lib/api'
+import { Loader2, Paperclip, X, ArrowUpToLine } from 'lucide-react'
 
-interface Message {
-  role: 'user' | 'assistant'
-  content: string
-  blocks?: MessageBlock[]
-  citations?: ChunkUsed[]
-  webSources?: WebSource[]
-  toolCalls?: ToolCallView[]
-  artifacts?: ArtifactView[]
-  templateSuggestions?: Record<string, TemplateSuggestion[]>
-  applicationPlans?: Record<string, ApplicationPlan>
-  timing?: { total_ms: number }
-  compaction?: { summarised_messages: number; tokens_before: number; tokens_after: number }
-}
+const EMPTY_MESSAGES: Message[] = []
 
 export default function ChatSessionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const [messages, setMessages] = useState<Message[]>([])
-  const [loading, setLoading] = useState(false)
-  const [initialLoading, setInitialLoading] = useState(true)
-  const [webSearch, setWebSearch] = useState(false)
-  const [attachmentsOpen, setAttachmentsOpen] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const { user, session, loading: authLoading } = useAuth()
   const router = useRouter()
   const pdf = usePdfViewer()
   const attachments = useSessionAttachments(id)
+  const { sessions, ensureLoaded, send } = useChatStream()
 
-  // Saved-thread routes require an account - anonymous users couldn't have
-  // created this session anyway. Bounce them to the home /chat (where they
-  // can chat anonymously) rather than to login, which is friendlier.
+  const [webSearch, setWebSearch] = useState(false)
+  const [attachmentsOpen, setAttachmentsOpen] = useState(false)
+  // Save-to-Library promotion state (per chip).
+  const [promoting, setPromoting] = useState<Set<string>>(new Set())
+  const [promoted, setPromoted] = useState<Set<string>>(new Set())
+  const [promotionSuggested, setPromotionSuggested] = useState<Set<string>>(new Set())
+
+  const sess = sessions[id]
+  const messages = sess?.messages ?? EMPTY_MESSAGES
+  const loading = sess?.status === 'streaming'
+  // While auth is resolving or the session hasn't been hydrated from the DB
+  // yet, show the spinner. Once a session is present in the provider (loaded
+  // or streaming), render its messages - even after navigating back mid-run.
+  const initialLoading = authLoading || (!!user && !sess?.loaded)
+
+  // Saved-thread routes require an account.
   useEffect(() => {
     if (!authLoading && !user) router.replace('/chat')
   }, [user, authLoading, router])
 
-  // Pass the raw messages state (stable reference). Mapping here creates a new
-  // array every render and would render-loop with the provider's setState.
   useRegisterBrief(messages, session?.access_token)
 
-  // Load only once auth is ready. chat_messages is now RLS-protected, so a
-  // query fired before the Supabase session is hydrated runs unauthenticated
-  // and returns [] — which showed an empty chat after navigation/refresh.
-  // Re-run when the user resolves on a full page load.
+  // Hydrate this session's history from the DB exactly once. The provider
+  // guards against clobbering an in-flight stream, so navigating back to a
+  // chat that's still generating keeps showing live progress.
   useEffect(() => {
     if (authLoading || !user) return
-    loadMessages()
+    ensureLoaded(id, () => loadMessagesFromDB(id))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, authLoading, user])
 
-  // Auto-scroll to the newest content ONLY when the user is already near the
-  // bottom. While a reply streams, jumping the view down every token stops
-  // the reader following from the top — so if they've scrolled up to read,
-  // leave them where they are.
+  // Auto-scroll only when already near the bottom.
   useEffect(() => {
     const el = scrollContainerRef.current
     if (!el) return
@@ -83,252 +68,56 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
     if (nearBottom) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  async function loadMessages() {
-    setInitialLoading(true)
-    const supabase = createClient()
-    const { data } = await supabase
-      .from('chat_messages')
-      .select('role, content, blocks, tool_calls, citations, web_sources, artifacts, compaction')
-      .eq('session_id', id)
-      .order('created_at', { ascending: true })
-
-    if (data) {
-      setMessages(
-        data.map((m) => ({
-          role: m.role as 'user' | 'assistant',
-          content: m.content,
-          blocks: m.blocks as MessageBlock[] | undefined,
-          toolCalls: m.tool_calls as ToolCallView[] | undefined,
-          citations: m.citations as ChunkUsed[] | undefined,
-          webSources: m.web_sources as WebSource[] | undefined,
-          artifacts: m.artifacts as ArtifactView[] | undefined,
-          compaction: m.compaction as Message['compaction'] | undefined,
-        }))
-      )
-    }
-    setInitialLoading(false)
-  }
-
-  async function saveMessage(
-    role: string,
-    content: string,
-    citations?: ChunkUsed[],
-    webSources?: WebSource[],
-    artifacts?: ArtifactView[],
-    compaction?: Message['compaction'],
-    blocks?: MessageBlock[],
-    toolCalls?: ToolCallView[],
-  ) {
-    const supabase = createClient()
-    await supabase.from('chat_messages').insert({
-      session_id: id,
-      role,
-      content,
-      blocks: blocks || null,
-      tool_calls: toolCalls || null,
-      citations: citations || null,
-      web_sources: webSources || null,
-      artifacts: artifacts || null,
-      compaction: compaction || null,
+  function handleSend(question: string) {
+    // Snapshot the current attachments so the user message owns them. After
+    // firing the stream we immediately detach them from the session, which
+    // clears the chips and prevents the next turn from inheriting them.
+    const pending = attachments.attached.map((d) => ({ id: d.id, title: d.title }))
+    send(id, question, {
+      token: session?.access_token,
+      webSearch,
+      userId: user?.id,
+      attachedDocIds: pending.map((d) => d.id),
+      attachedDocs: pending,
     })
+    if (pending.length > 0) {
+      // Fire-and-forget: the IDs are already in the in-flight streamQuery
+      // body, so detaching now is safe.
+      void Promise.all(pending.map((d) => attachments.detach(d.id)))
+    }
   }
 
-  async function handleSend(question: string) {
-    setLoading(true)
-    setMessages((prev) => [...prev, { role: 'user', content: question }])
+  // Upload-from-chat: ingest the file under this user, then attach it to the
+  // current session. Skips the trip to the Documents page entirely.
+  async function handleUploadFile(file: File) {
+    if (!user) return
+    const res = await uploadDocument(file, session?.access_token, user.id)
+    if (res.suggest_promotion) {
+      setPromotionSuggested((prev) => new Set(prev).add(res.document_id))
+    }
+    await attachments.attach(res.document_id)
+  }
 
+  // "Save to library" promotion — chunks + embeds the doc in place so it
+  // becomes searchable across all the user's chats.
+  async function handlePromote(docId: string) {
+    setPromoting((prev) => new Set(prev).add(docId))
     try {
-      await saveMessage('user', question)
-
-      // Add placeholder assistant message for streaming
-      const assistantMsg: Message = {
-        role: 'assistant',
-        content: '',
-        blocks: [],
-        citations: [],
-        toolCalls: [],
-        artifacts: [],
-      }
-      setMessages((prev) => [...prev, assistantMsg])
-
-      const updateLast = (patch: (m: Message) => Message) =>
-        setMessages((prev) => {
-          const updated = [...prev]
-          const last = updated[updated.length - 1]
-          updated[updated.length - 1] = patch(last)
-          return updated
-        })
-
-      // Send the conversation so far so the backend's compactor can see the
-      // full thread when deciding whether to summarise.
-      const history = messages
-        .filter((m) => m.content)
-        .map((m) => ({ role: m.role, content: m.content }))
-
-      await streamQuery(
-        question,
-        {
-          token: session?.access_token,
-          webSearch,
-          userId: user?.id,
-          sessionId: id,
-          attachedDocIds: attachments.attachedIds,
-          history,
-        },
-        undefined,
-        undefined,
-        {
-          onToken: (chunk) =>
-            updateLast((last) => {
-              const blocks = [...(last.blocks ?? [])]
-              const tail = blocks[blocks.length - 1]
-              if (tail && tail.kind === 'text') {
-                blocks[blocks.length - 1] = { kind: 'text', text: tail.text + chunk }
-              } else {
-                blocks.push({ kind: 'text', text: chunk })
-              }
-              return { ...last, content: last.content + chunk, blocks }
-            }),
-          onToolCall: (call) =>
-            updateLast((last) => ({
-              ...last,
-              blocks: [...(last.blocks ?? []), { kind: 'tool', toolCallId: call.id }],
-              toolCalls: [
-                ...(last.toolCalls ?? []),
-                { ...call, status: 'running', db: [], web: [] },
-              ],
-            })),
-          onToolResult: (result) =>
-            updateLast((last) => ({
-              ...last,
-              toolCalls: (last.toolCalls ?? []).map((c) =>
-                c.id === result.id
-                  ? {
-                      ...c,
-                      status: result.ok ? 'ok' : 'error',
-                      durationMs: result.ms,
-                      db: result.db,
-                      web: result.web,
-                    }
-                  : c,
-              ),
-            })),
-          onArtifact: (artifact) =>
-            updateLast((last) => {
-              const existing = last.artifacts ?? []
-              if (existing.some((a) => a.id === artifact.id)) return last
-              return { ...last, artifacts: [...existing, artifact] }
-            }),
-          onCompaction: (info) =>
-            updateLast((last) => ({
-              ...last,
-              compaction: {
-                summarised_messages: info.summarised_messages,
-                tokens_before: info.tokens_before,
-                tokens_after: info.tokens_after,
-              },
-            })),
-          onTemplateSuggestion: (event) =>
-            updateLast((last) => {
-              const blocks = [...(last.blocks ?? [])]
-              const existing = blocks.findIndex(
-                (b) => b.kind === 'templates' && b.toolCallId === event.tool_call_id,
-              )
-              if (existing >= 0) {
-                blocks[existing] = {
-                  kind: 'templates',
-                  toolCallId: event.tool_call_id,
-                  templates: event.templates,
-                }
-              } else {
-                blocks.push({
-                  kind: 'templates',
-                  toolCallId: event.tool_call_id,
-                  templates: event.templates,
-                })
-              }
-              return {
-                ...last,
-                blocks,
-                templateSuggestions: {
-                  ...(last.templateSuggestions ?? {}),
-                  [event.tool_call_id]: event.templates,
-                },
-              }
-            }),
-          onApplicationPlan: (event) =>
-            updateLast((last) => {
-              const blocks = [...(last.blocks ?? [])]
-              const existing = blocks.findIndex(
-                (b) =>
-                  b.kind === 'application_plan' && b.toolCallId === event.tool_call_id,
-              )
-              if (existing >= 0) {
-                blocks[existing] = {
-                  kind: 'application_plan',
-                  toolCallId: event.tool_call_id,
-                  plan: event.plan,
-                }
-              } else {
-                blocks.push({
-                  kind: 'application_plan',
-                  toolCallId: event.tool_call_id,
-                  plan: event.plan,
-                })
-              }
-              return {
-                ...last,
-                blocks,
-                applicationPlans: {
-                  ...(last.applicationPlans ?? {}),
-                  [event.tool_call_id]: event.plan,
-                },
-              }
-            }),
-          onDone: (metadata) => {
-            setMessages((prev) => {
-              const updated = [...prev]
-              const last = updated[updated.length - 1]
-              const finalMsg = {
-                ...last,
-                citations: metadata.chunks_used,
-                webSources: metadata.web_sources,
-                timing: { total_ms: metadata.timing?.total_ms ?? 0 },
-              }
-              updated[updated.length - 1] = finalMsg
-              saveMessage(
-                'assistant',
-                finalMsg.content,
-                finalMsg.citations,
-                finalMsg.webSources,
-                finalMsg.artifacts,
-                finalMsg.compaction,
-                finalMsg.blocks,
-                finalMsg.toolCalls,
-              )
-              return updated
-            })
-            setLoading(false)
-          },
-          onError: (msg) =>
-            updateLast((last) => ({
-              ...last,
-              content:
-                (last.content || '') +
-                (last.content ? '\n\n' : '') +
-                `_Error: ${msg}_`,
-            })),
-        },
-      )
-    } catch {
-      setMessages((prev) => {
-        const last = prev[prev.length - 1]
-        if (last && last.role === 'assistant' && last.content === '') {
-          return [...prev.slice(0, -1), { role: 'assistant' as const, content: 'Sorry, I encountered an error. Please try again.' }]
-        }
-        return [...prev, { role: 'assistant' as const, content: 'Sorry, I encountered an error. Please try again.' }]
+      await promoteDocument(docId, session?.access_token)
+      setPromoted((prev) => new Set(prev).add(docId))
+      setPromotionSuggested((prev) => {
+        const n = new Set(prev)
+        n.delete(docId)
+        return n
       })
-      setLoading(false)
+    } catch (err) {
+      console.error('promote failed', err)
+    } finally {
+      setPromoting((prev) => {
+        const n = new Set(prev)
+        n.delete(docId)
+        return n
+      })
     }
   }
 
@@ -371,6 +160,10 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
                       artifacts={msg.artifacts}
                       templateSuggestions={msg.templateSuggestions}
                       applicationPlans={msg.applicationPlans}
+                      entitlementBreakdowns={msg.entitlementBreakdowns}
+                      caseLaw={msg.caseLaw}
+                      cheatSheets={msg.cheatSheets}
+                      quizzes={msg.quizzes}
                       timing={msg.timing}
                       isStreaming={isLastAssistant}
                       compaction={msg.compaction}
@@ -431,19 +224,48 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
             <div className="pointer-events-auto max-w-3xl mx-auto">
               {attachments.attached.length > 0 && (
                 <div className="mb-2 flex flex-wrap gap-1.5 px-1">
-                  {attachments.attached.map((d) => (
-                    <button
-                      key={d.id}
-                      type="button"
-                      onClick={() => attachments.detach(d.id)}
-                      className="group flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-100/85 hover:bg-emerald-500/20 transition-colors"
-                      aria-label={`Detach ${d.title}`}
-                    >
-                      <Paperclip size={10} className="text-emerald-400/80" />
-                      <span className="max-w-[180px] truncate">{d.title}</span>
-                      <X size={10} className="text-emerald-400/40 group-hover:text-emerald-400/80" />
-                    </button>
-                  ))}
+                  {attachments.attached.map((d) => {
+                    const isPromoting = promoting.has(d.id)
+                    const isPromoted = promoted.has(d.id)
+                    const suggested = promotionSuggested.has(d.id)
+                    return (
+                      <div
+                        key={d.id}
+                        className="group flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-900/90 border border-emerald-500/35 text-[11px] text-emerald-50"
+                      >
+                        <Paperclip size={10} className="text-emerald-300" />
+                        <span className="max-w-[180px] truncate">{d.title}</span>
+                        {!isPromoted && (
+                          <button
+                            type="button"
+                            onClick={() => handlePromote(d.id)}
+                            disabled={isPromoting}
+                            title={
+                              suggested
+                                ? "You've used this file before — save it to your library for cross-chat search"
+                                : 'Save to library for cross-chat search'
+                            }
+                            aria-label="Save to library"
+                            className={`ml-0.5 ${
+                              suggested
+                                ? 'text-emerald-200 hover:text-white'
+                                : 'text-emerald-300/70 hover:text-emerald-100'
+                            } disabled:opacity-40`}
+                          >
+                            {isPromoting ? <Loader2 size={10} className="animate-spin" /> : <ArrowUpToLine size={10} />}
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => attachments.detach(d.id)}
+                          aria-label={`Detach ${d.title}`}
+                          className="text-emerald-300/60 hover:text-emerald-100"
+                        >
+                          <X size={10} />
+                        </button>
+                      </div>
+                    )
+                  })}
                 </div>
               )}
               <ChatInput
@@ -452,6 +274,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
                 webSearch={webSearch}
                 onWebSearchChange={setWebSearch}
                 onAttachClick={user ? () => setAttachmentsOpen(true) : undefined}
+                onUploadFile={user ? handleUploadFile : undefined}
                 attachmentCount={attachments.attached.length}
               />
               <p className="mt-2 text-center text-[10px] text-white/25">
@@ -465,7 +288,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
       {/* Brief Panel - desktop only */}
       {hasMessages && (
         <aside className="hidden lg:flex flex-col w-[280px] shrink-0 border-l border-white/[0.06] bg-[#0d0d0f]">
-          <BriefPanel messages={messages.map(m => ({ role: m.role, content: m.content }))} token={session?.access_token} />
+          <BriefPanel messages={messages.map((m) => ({ role: m.role, content: m.content }))} token={session?.access_token} />
         </aside>
       )}
 
@@ -483,4 +306,25 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
       />
     </div>
   )
+}
+
+async function loadMessagesFromDB(id: string): Promise<Message[]> {
+  const supabase = createClient()
+  const { data } = await supabase
+    .from('chat_messages')
+    .select('role, content, blocks, tool_calls, citations, web_sources, artifacts, compaction')
+    .eq('session_id', id)
+    .order('created_at', { ascending: true })
+
+  if (!data) return []
+  return data.map((m) => ({
+    role: m.role as 'user' | 'assistant',
+    content: m.content,
+    blocks: m.blocks as MessageBlock[] | undefined,
+    toolCalls: m.tool_calls as ToolCallView[] | undefined,
+    citations: m.citations as Message['citations'],
+    webSources: m.web_sources as Message['webSources'],
+    artifacts: m.artifacts as Message['artifacts'],
+    compaction: m.compaction as Message['compaction'],
+  }))
 }

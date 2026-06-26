@@ -34,23 +34,26 @@ function formatBytes(n?: number): string {
 }
 
 export function ArtifactCard({ artifact, onOpen }: ArtifactCardProps) {
-  const [downloading, setDownloading] = useState(false)
+  const [busy, setBusy] = useState<null | 'pdf' | 'docx'>(null)
   const meta = SOURCE_META[artifact.source] ?? SOURCE_META.uploaded
   const Icon = meta.Icon
   const sizeLabel = formatBytes(artifact.size_bytes)
   const pageLabel =
     typeof artifact.page_count === 'number' ? `${artifact.page_count} page${artifact.page_count === 1 ? '' : 's'}` : null
+  // Only Levy-generated documents carry editable source, so only they can be
+  // exported to Word. Uploaded / extracted / merged / fetched PDFs cannot.
+  const canWord = artifact.source === 'generated'
 
-  async function handleDownload() {
-    if (downloading) return
-    setDownloading(true)
+  async function handleDownload(fmt: 'pdf' | 'docx') {
+    if (busy) return
+    setBusy(fmt)
     try {
-      const r = await fetch(`${API_URL}/api/artifacts/${artifact.id}/pdf`)
+      const r = await fetch(`${API_URL}/api/artifacts/${artifact.id}/${fmt}`)
       if (!r.ok) throw new Error(`download ${r.status}`)
       const j = await r.json()
       const a = document.createElement('a')
       a.href = j.signed_url
-      a.download = `${artifact.title}.pdf`
+      a.download = `${artifact.title}.${fmt}`
       a.target = '_blank'
       a.rel = 'noopener noreferrer'
       document.body.appendChild(a)
@@ -59,7 +62,7 @@ export function ArtifactCard({ artifact, onOpen }: ArtifactCardProps) {
     } catch {
       // best-effort; user can retry
     } finally {
-      setDownloading(false)
+      setBusy(null)
     }
   }
 
@@ -104,18 +107,27 @@ export function ArtifactCard({ artifact, onOpen }: ArtifactCardProps) {
         </button>
         <button
           type="button"
-          onClick={handleDownload}
-          disabled={downloading}
+          onClick={() => handleDownload('pdf')}
+          disabled={busy !== null}
           className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-white/70 transition-colors disabled:opacity-50"
-          aria-label="Download artifact"
+          aria-label="Download PDF"
         >
-          {downloading ? (
-            <Loader2 className="size-3.5 animate-spin" />
-          ) : (
-            <Download className="size-3.5" />
-          )}
-          <span>Download</span>
+          {busy === 'pdf' ? <Loader2 className="size-3.5 animate-spin" /> : <Download className="size-3.5" />}
+          <span>PDF</span>
         </button>
+        {canWord && (
+          <button
+            type="button"
+            data-testid="artifact-word"
+            onClick={() => handleDownload('docx')}
+            disabled={busy !== null}
+            className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-white/70 transition-colors disabled:opacity-50"
+            aria-label="Download Word document"
+          >
+            {busy === 'docx' ? <Loader2 className="size-3.5 animate-spin" /> : <FileText className="size-3.5" />}
+            <span>Word</span>
+          </button>
+        )}
       </div>
     </div>
   )

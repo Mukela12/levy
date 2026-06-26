@@ -12,8 +12,16 @@ import {
   Database,
   ExternalLink,
   Link as LinkIcon,
+  GraduationCap,
+  ScrollText,
+  FileText,
+  PenLine,
+  Calculator,
+  Scale,
+  Newspaper,
 } from 'lucide-react'
 import { Favicon } from './favicon'
+import { TextShimmer } from '@/components/ui/text-shimmer'
 
 export interface ToolCallView {
   id: string
@@ -39,7 +47,28 @@ const TOOL_LABELS: Record<string, { label: string; verb: string; Icon: typeof Se
   search_corpus: { label: 'Corpus', verb: 'Searching the corpus', Icon: Database },
   gov_search: { label: 'Gov sites', verb: 'Searching government sources', Icon: Search },
   web_search: { label: 'Web', verb: 'Searching the web', Icon: Globe },
-  web_fetch: { label: 'Fetch', verb: 'Reading page', Icon: LinkIcon },
+  web_crawl: { label: 'Web', verb: 'Crawling the site', Icon: Globe },
+  news_search: { label: 'News', verb: 'Searching the news', Icon: Newspaper },
+  web_fetch: { label: 'Fetch', verb: 'Reading the page', Icon: LinkIcon },
+  fetch_web_pdf: { label: 'Fetch', verb: 'Fetching the document', Icon: LinkIcon },
+  search_case_law: { label: 'Case law', verb: 'Searching case law', Icon: Scale },
+  calculate_entitlements: { label: 'Entitlements', verb: 'Calculating entitlements', Icon: Calculator },
+  recommend_application: { label: 'Plan', verb: 'Planning the application', Icon: Scale },
+  make_cheat_sheet: { label: 'Cheat sheet', verb: 'Generating your cheat sheet', Icon: ScrollText },
+  generate_quiz: { label: 'Quiz', verb: 'Generating your quiz', Icon: GraduationCap },
+  pdf_generate: { label: 'Document', verb: 'Generating the document', Icon: FileText },
+  draft_legal_document: { label: 'Draft', verb: 'Drafting the document', Icon: PenLine },
+  draft_summons: { label: 'Draft', verb: 'Drafting the summons', Icon: PenLine },
+  draft_affidavit: { label: 'Draft', verb: 'Drafting the affidavit', Icon: PenLine },
+  draft_skeletal: { label: 'Draft', verb: 'Drafting the skeleton arguments', Icon: PenLine },
+  draft_order: { label: 'Draft', verb: 'Drafting the order', Icon: PenLine },
+  draft_application_bundle: { label: 'Bundle', verb: 'Assembling the bundle', Icon: FileText },
+  fill_form: { label: 'Form', verb: 'Filling the form', Icon: FileText },
+  suggest_templates: { label: 'Templates', verb: 'Finding templates', Icon: FileText },
+  export_thread_brief: { label: 'Brief', verb: 'Building the brief', Icon: FileText },
+  pdf_extract_pages: { label: 'Extract', verb: 'Extracting pages', Icon: FileText },
+  pdf_merge: { label: 'Merge', verb: 'Merging documents', Icon: FileText },
+  pdf_split: { label: 'Split', verb: 'Splitting the document', Icon: FileText },
 }
 
 function formatInput(name: string, input: Record<string, unknown>): string {
@@ -82,9 +111,13 @@ export function ToolCallCard({ call }: { call: ToolCallView }) {
         </span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 text-[12px] text-white/70">
-            <span className="font-medium">
-              {call.status === 'running' ? meta.verb : meta.label}
-            </span>
+            {call.status === 'running' ? (
+              <TextShimmer as="span" duration={1.6} className="font-medium text-[12px]">
+                {meta.verb}
+              </TextShimmer>
+            ) : (
+              <span className="font-medium">{meta.label}</span>
+            )}
             {arg && (
               <span className="text-white/35 truncate">
                 {arg.length > 64 ? arg.slice(0, 61) + '…' : arg}

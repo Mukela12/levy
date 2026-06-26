@@ -31,6 +31,8 @@ build/
 .lychee-results.json
 supabase/.temp/
 .vercel
+# Generated report exports (not source)
+Levy_Chat_Report_*.pdf
 
 # Vercel link metadata
 .vercel/

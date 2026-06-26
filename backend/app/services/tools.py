@@ -39,6 +39,23 @@ from ..db.supabase import search_chunks
 from .embedder import get_query_embedding
 from . import pdf_tools
 from . import templates as templates_service
+from .entitlements import calculate_entitlements
+
+
+# ─── Zambian news whitelist ──────────────────────────────────────────────────
+# Established, record-of-note Zambian press and the state broadcaster. Used by
+# news_search to pull current Zambian news, and folded into GOV_ZM_DOMAINS so
+# gov_search can reach them too. Tabloids and rumour blogs are deliberately
+# excluded; the model should still verify facts against primary sources.
+ZM_NEWS_DOMAINS: list[str] = [
+    "znbc.co.zm",          # Zambia National Broadcasting Corporation (state)
+    "daily-mail.co.zm",    # Zambia Daily Mail
+    "times.co.zm",         # Times of Zambia
+    "diggers.news",        # News Diggers
+    "lusakatimes.com",     # Lusaka Times
+    "mwebantu.com",        # Mwebantu
+    "themastonline.com",   # The Mast
+]
 
 
 # ─── Curated source whitelist ────────────────────────────────────────────────
@@ -109,17 +126,16 @@ GOV_ZM_DOMAINS: list[str] = [
     "mu.ac.zm",
     "zcas.ac.zm",
     # Legal information + reputable legal publishing
+    "constitution.gov.zm",   # official Constitution + constitutional amendment Acts
     "zambialii.org",         # judgments / Acts / SIs (cite, do not bulk-scrape)
     "africanlii.org",
     "bowmanslaw.com",
     "dentons.com",
     "dlapiperafrica.com",
     "corpus.co.zm",
-    # Established record-of-note Zambian press (use for facts, verify against
-    # primary sources; tabloids deliberately excluded)
-    "daily-mail.co.zm",
-    "times.co.zm",
-    "diggers.news",
+    # Established record-of-note Zambian press + state broadcaster (use for
+    # facts, verify against primary sources; tabloids deliberately excluded)
+    *ZM_NEWS_DOMAINS,
 ]
 
 
@@ -214,6 +230,104 @@ async def _search_corpus(
     }
 
 
+# ─── search_case_law ─────────────────────────────────────────────────────────
+
+
+async def _search_case_law(
+    query: str,
+    court: str | None = None,
+    year: int | None = None,
+    area: str | None = None,
+    max_results: int = 6,
+) -> dict:
+    """Search ingested Zambian JUDGMENTS for relevant precedent.
+
+    The corpus mixes statutes and judgments; this tool over-fetches by vector
+    similarity then keeps only `document_type == 'judgment'`, dedupes to one
+    hit per case (highest-scoring chunk), and enriches with court/year/area
+    from legal_documents. Returns structured precedent the UI renders as cards.
+    """
+    embedding = await asyncio.to_thread(get_query_embedding, query)
+    # Over-fetch broadly (judgments are a minority of chunks) at a low threshold.
+    chunks = await asyncio.to_thread(search_chunks, embedding, top_k=80, threshold=0.2)
+
+    # Keep judgment chunks, dedupe by document (first = highest similarity).
+    best: dict[str, dict] = {}
+    for c in chunks:
+        meta = c.get("metadata") or {}
+        if meta.get("document_type") != "judgment":
+            continue
+        did = c.get("document_id")
+        if did and did not in best:
+            best[did] = c
+    if not best:
+        return {"result": {"matches": [], "count": 0, "note": "no matching judgments in the corpus yet"},
+                "db_sources": [], "web_sources": []}
+
+    # Enrich with document-level metadata in one batch.
+    docs_by_id: dict[str, dict] = {}
+    try:
+        rows = (
+            get_db().table("legal_documents")
+            .select("id,title,short_name,year,pdf_storage_path,pdf_page_count")
+            .in_("id", list(best.keys()))
+            .execute()
+            .data
+            or []
+        )
+        docs_by_id = {r["id"]: r for r in rows}
+    except Exception:
+        docs_by_id = {}
+
+    matches = []
+    db_sources = []
+    for did, c in best.items():
+        meta = c.get("metadata") or {}
+        doc = docs_by_id.get(did, {})
+        # Optional filters.
+        court_v = meta.get("issuing_authority") or ""
+        area_v = meta.get("category") or ""
+        year_v = doc.get("year")
+        if court and court.lower() not in court_v.lower():
+            continue
+        if area and area.lower() != (area_v or "").lower():
+            continue
+        if year and year_v and int(year) != int(year_v):
+            continue
+        matches.append({
+            "document_id": did,
+            "case": doc.get("title") or meta.get("act_name") or "Judgment",
+            "citation": doc.get("short_name") or "",
+            "court": court_v,
+            "area": area_v,
+            "year": year_v,
+            "page_count": doc.get("pdf_page_count"),
+            "holding": (c.get("content") or "")[:320].strip(),
+            "similarity": round(c.get("similarity", 0.0), 4),
+        })
+        db_sources.append({
+            "id": c.get("id"),
+            "document_id": did,
+            "act_name": doc.get("title") or meta.get("act_name") or "Judgment",
+            "section": "",
+            "part": "",
+            "page_start": c.get("page_start"),
+            "page_end": c.get("page_end"),
+            "similarity": round(c.get("similarity", 0.0), 4),
+            "content_preview": (c.get("content") or "")[:240],
+        })
+        if len(matches) >= max_results:
+            break
+
+    return {
+        "result": {"matches": matches, "count": len(matches)},
+        "db_sources": db_sources,
+        "web_sources": [],
+        # Surfaced as a `case_law` SSE event so the UI renders precedent cards.
+        "case_law": {"query": query, "cases": matches},
+    }
+
+
 # ─── Tavily-backed web tools ─────────────────────────────────────────────────
 
 
@@ -222,6 +336,8 @@ async def _tavily_search(
     *,
     max_results: int = 5,
     include_domains: list[str] | None = None,
+    topic: str | None = None,
+    days: int | None = None,
 ) -> dict:
     settings = get_settings()
     if not settings.tavily_api_key:
@@ -237,6 +353,12 @@ async def _tavily_search(
     }
     if include_domains:
         payload["include_domains"] = include_domains
+    if topic:
+        payload["topic"] = topic
+    # `days` only applies to Tavily's news topic — it restricts results to the
+    # last N days, which is how we keep Zambian news fresh.
+    if days and topic == "news":
+        payload["days"] = days
 
     async with httpx.AsyncClient(timeout=20.0) as client:
         resp = await client.post("https://api.tavily.com/search", json=payload)
@@ -251,16 +373,21 @@ async def _tavily_search(
         title = r.get("title", "")
         content = r.get("content", "")
         score = r.get("score")
-        results.append({"title": title, "url": url, "content": content, "score": score})
-        web_sources.append(
-            {
-                "title": title,
-                "url": url,
-                "snippet": content[:300],
-                "score": score,
-                "domain": _extract_domain(url),
-            }
-        )
+        published = r.get("published_date")  # present for news topic
+        entry = {"title": title, "url": url, "content": content, "score": score}
+        if published:
+            entry["published_date"] = published
+        results.append(entry)
+        source = {
+            "title": title,
+            "url": url,
+            "snippet": content[:300],
+            "score": score,
+            "domain": _extract_domain(url),
+        }
+        if published:
+            source["published_date"] = published
+        web_sources.append(source)
 
     return {
         "result": {"matches": results, "count": len(results)},
@@ -277,6 +404,23 @@ async def _gov_search(query: str, max_results: int = 5) -> dict:
 async def _web_search(query: str, max_results: int = 5) -> dict:
     """General web search. Use only when gov_search returns nothing useful."""
     return await _tavily_search(query, max_results=max_results)
+
+
+async def _news_search(query: str, max_results: int = 6, days: int = 14) -> dict:
+    """Fresh Zambian news, restricted to established outlets and recent days.
+
+    Uses Tavily's news topic so results are ordered by recency and carry a
+    published_date, and scopes to ZM_NEWS_DOMAINS so the model only sees
+    record-of-note Zambian press and the state broadcaster.
+    """
+    days = max(1, min(int(days or 14), 60))
+    return await _tavily_search(
+        query,
+        max_results=max_results,
+        include_domains=ZM_NEWS_DOMAINS,
+        topic="news",
+        days=days,
+    )
 
 
 # ─── Web fetch (single URL, cleaned content) ─────────────────────────────────
@@ -566,6 +710,93 @@ def build_tool_registry(
             title, content_markdown, subtitle,
             owner_id=owner_id, session_id=session_id,
         )
+
+    # ── Study Mode: exam cheat sheet ────────────────────────────────────────
+    async def _make_cheat_sheet(title, area, topic, sections,
+                                key_statutes=None, key_cases=None,
+                                exam_traps=None, mnemonic=None):
+        """Render a condensed, exam-focused revision sheet as an inline card
+        AND a downloadable PDF/Word artifact. Content must already be grounded
+        (the agent searches the corpus + case law first, then calls this)."""
+        sections = sections or []
+        key_statutes = key_statutes or []
+        key_cases = key_cases or []
+        exam_traps = exam_traps or []
+
+        md: list[str] = [f"*{area}: revision sheet for {topic}*", ""]
+        if key_statutes:
+            md.append("## Key statutes")
+            for s in key_statutes:
+                note = f": {s.get('note')}" if s.get("note") else ""
+                md.append(f"- **{s.get('name','')}**{note}")
+            md.append("")
+        for sec in sections:
+            md.append(f"## {sec.get('heading','')}")
+            for p in (sec.get("points") or []):
+                md.append(f"- {p}")
+            md.append("")
+        if key_cases:
+            md.append("## Leading cases")
+            for c in key_cases:
+                hold = f": {c.get('holding')}" if c.get("holding") else ""
+                md.append(f"- **{c.get('name','')}**{hold}")
+            md.append("")
+        if exam_traps:
+            md.append("## Common exam traps")
+            for t in exam_traps:
+                md.append(f"- {t}")
+            md.append("")
+        if mnemonic:
+            md.append("## Memory aid")
+            md.append(str(mnemonic))
+        content_md = "\n".join(md)
+
+        pdf = await pdf_tools.pdf_generate(
+            title, content_md, f"{area}: revision sheet",
+            owner_id=owner_id, session_id=session_id,
+        )
+        artifact = pdf.get("artifact")
+        artifact_id = (pdf.get("result") or {}).get("artifact_id")
+        cheat_sheet = {
+            "title": title, "area": area, "topic": topic,
+            "key_statutes": key_statutes, "sections": sections,
+            "key_cases": key_cases, "exam_traps": exam_traps,
+            "mnemonic": mnemonic, "artifact_id": artifact_id,
+        }
+        return {
+            "result": {"ok": True, "artifact_id": artifact_id, "title": title},
+            "artifact": artifact,
+            "db_sources": [], "web_sources": [],
+            "cheat_sheet": cheat_sheet,
+        }
+
+    # ── Study Mode: interactive quiz / mock exam ────────────────────────────
+    async def _generate_quiz(title, area, topic, questions):
+        """Return a graded multiple-choice quiz the UI renders interactively.
+        Each question is grounded (the agent retrieves the law first) and
+        carries the correct option, an explanation, and a citation."""
+        clean: list[dict] = []
+        for q in (questions or []):
+            opts = q.get("options") or []
+            if len(opts) < 2:
+                continue
+            try:
+                ci = int(q.get("correct_index", 0))
+            except (TypeError, ValueError):
+                ci = 0
+            ci = max(0, min(ci, len(opts) - 1))
+            clean.append({
+                "stem": q.get("stem", ""),
+                "options": opts,
+                "correct_index": ci,
+                "explanation": q.get("explanation", ""),
+                "citation": q.get("citation", ""),
+            })
+        return {
+            "result": {"ok": True, "count": len(clean)},
+            "db_sources": [], "web_sources": [],
+            "quiz": {"title": title, "area": area, "topic": topic, "questions": clean},
+        }
 
     async def _merge(parts, title):
         return await pdf_tools.pdf_merge(
@@ -1546,6 +1777,44 @@ def build_tool_registry(
             "application_plan": plan,
         }
 
+    async def _calculate_entitlements(
+        monthly_basic_pay: float,
+        years_of_service: float,
+        termination_reason: str,
+        contract_type: str = "unspecified",
+        notice_given_by_employer: bool | None = None,
+        accrued_leave_days: float | None = None,
+        unpaid_salary_amount: float | None = None,
+        napsa_contributed: bool | None = None,
+        nhima_contributed: bool | None = None,
+    ):
+        """Deterministic Employment Code Act exit-entitlement computation.
+
+        The maths is pure Python (no model arithmetic). Returns the structured
+        breakdown as an `entitlement_breakdown` envelope field, which the agent
+        loop forwards over SSE so the UI renders a calculator card inline.
+        """
+        try:
+            breakdown = calculate_entitlements(
+                monthly_basic_pay=monthly_basic_pay,
+                years_of_service=years_of_service,
+                termination_reason=termination_reason,
+                contract_type=contract_type,
+                notice_given_by_employer=notice_given_by_employer,
+                accrued_leave_days=accrued_leave_days,
+                unpaid_salary_amount=unpaid_salary_amount,
+                napsa_contributed=napsa_contributed,
+                nhima_contributed=nhima_contributed,
+            )
+        except Exception as e:  # noqa: BLE001
+            return {"result": {"error": f"could not compute entitlements: {e}"}}
+        return {
+            "result": {"breakdown": breakdown, "ok": True},
+            "db_sources": [],
+            "web_sources": [],
+            "entitlement_breakdown": breakdown,
+        }
+
     tools: dict[str, ToolDefinition] = {
         "pdf_extract_pages": ToolDefinition(
             name="pdf_extract_pages",
@@ -1593,6 +1862,112 @@ def build_tool_registry(
                 "required": ["title", "content_markdown"],
             },
             handler=_generate,
+        ),
+        "make_cheat_sheet": ToolDefinition(
+            name="make_cheat_sheet",
+            description=(
+                "STUDY MODE. Build a condensed, exam-focused revision sheet for "
+                "a Zambian law topic. It renders as an inline study card AND a "
+                "downloadable PDF/Word artifact. FIRST ground yourself: call "
+                "search_corpus for the governing Act sections and search_case_law "
+                "for leading Zambian cases, THEN call this with the distilled "
+                "content. Keep points short and memorable, the way a student "
+                "revises the night before an exam. Cite real section numbers and "
+                "real case names only."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "description": "e.g. 'Constructive Dismissal Cheat Sheet'."},
+                    "area": {"type": "string", "description": "Legal area, e.g. 'Employment', 'Contract', 'Constitutional'."},
+                    "topic": {"type": "string", "description": "The specific topic revised."},
+                    "key_statutes": {
+                        "type": "array",
+                        "description": "The governing provisions.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": {"type": "string", "description": "e.g. 'Employment Code Act 2019, s.52'."},
+                                "note": {"type": "string", "description": "One line on what it provides."},
+                            },
+                            "required": ["name"],
+                        },
+                    },
+                    "sections": {
+                        "type": "array",
+                        "description": "The body of the sheet: titled blocks of short bullet points.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "heading": {"type": "string"},
+                                "points": {"type": "array", "items": {"type": "string"}},
+                            },
+                            "required": ["heading", "points"],
+                        },
+                    },
+                    "key_cases": {
+                        "type": "array",
+                        "description": "Leading Zambian cases with a one-line holding.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": {"type": "string"},
+                                "holding": {"type": "string"},
+                            },
+                            "required": ["name"],
+                        },
+                    },
+                    "exam_traps": {
+                        "type": "array",
+                        "description": "Common mistakes / things examiners test.",
+                        "items": {"type": "string"},
+                    },
+                    "mnemonic": {"type": "string", "description": "Optional memory aid."},
+                },
+                "required": ["title", "area", "topic", "sections"],
+            },
+            handler=_make_cheat_sheet,
+        ),
+        "generate_quiz": ToolDefinition(
+            name="generate_quiz",
+            description=(
+                "STUDY MODE. Build an interactive multiple-choice quiz / mock "
+                "exam on a Zambian law topic. The UI lets the student answer, "
+                "then grades them with explanations. FIRST ground yourself via "
+                "search_corpus + search_case_law, THEN call this. Write 4 to 8 "
+                "questions unless the user asked for a specific number. Each "
+                "question needs 4 plausible options, the correct option index, a "
+                "short explanation of WHY, and a citation to the section or case. "
+                "Test understanding and application, not just recall."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "description": "e.g. 'Trademark Law Quiz'."},
+                    "area": {"type": "string"},
+                    "topic": {"type": "string"},
+                    "questions": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "stem": {"type": "string", "description": "The question."},
+                                "options": {
+                                    "type": "array",
+                                    "items": {"type": "string"},
+                                    "description": "4 answer options.",
+                                },
+                                "correct_index": {"type": "integer", "description": "0-based index of the correct option."},
+                                "explanation": {"type": "string", "description": "Why the correct answer is right."},
+                                "citation": {"type": "string", "description": "Section or case the answer rests on."},
+                            },
+                            "required": ["stem", "options", "correct_index", "explanation"],
+                        },
+                    },
+                },
+                "required": ["title", "area", "topic", "questions"],
+            },
+            handler=_generate_quiz,
         ),
         "pdf_split": ToolDefinition(
             name="pdf_split",
@@ -1766,6 +2141,83 @@ def build_tool_registry(
                 ],
             },
             handler=_recommend_application,
+        ),
+        "calculate_entitlements": ToolDefinition(
+            name="calculate_entitlements",
+            description=(
+                "Compute an itemized Zambian employment-exit entitlement "
+                "estimate (gratuity, accrued leave, notice / pay in lieu, "
+                "severance / redundancy, NAPSA/NHIMA compliance) under the "
+                "Employment Code Act No. 3 of 2019. Use this WHENEVER a user "
+                "asks what an employee is owed / entitled to on leaving a job "
+                "— e.g. 'what would a worker of 8 years on K2500 be entitled "
+                "to after resigning', 'how much severance', 'calculate my "
+                "gratuity', 'what do I get if I'm made redundant'.\n\n"
+                "The maths is done deterministically server-side, so always "
+                "use this tool instead of computing figures yourself. Gather "
+                "the inputs from the conversation first; if the user hasn't "
+                "given monthly basic pay, years of service, or how the "
+                "employment ended, ask for those before calling. The UI "
+                "renders the result as a breakdown card. After it runs, "
+                "explain the contested / needs-input items in plain language "
+                "and offer to search case law for any contested point (e.g. "
+                "gratuity on resignation)."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "monthly_basic_pay": {
+                        "type": "number",
+                        "description": "Monthly basic pay in ZMW (Kwacha), excluding allowances.",
+                    },
+                    "years_of_service": {
+                        "type": "number",
+                        "description": "Total years of continuous service (decimals allowed, e.g. 8.5).",
+                    },
+                    "termination_reason": {
+                        "type": "string",
+                        "enum": [
+                            "resignation",
+                            "dismissal_with_notice",
+                            "summary_dismissal",
+                            "redundancy",
+                            "end_of_fixed_term",
+                            "medical_discharge",
+                            "death",
+                            "mutual_agreement",
+                            "unfair_dismissal",
+                        ],
+                        "description": "How the employment ended.",
+                    },
+                    "contract_type": {
+                        "type": "string",
+                        "enum": ["permanent", "fixed_term", "long_term", "unspecified"],
+                        "description": "Type of contract. Use 'unspecified' if unknown.",
+                    },
+                    "notice_given_by_employer": {
+                        "type": "boolean",
+                        "description": "For employer-initiated endings: did the employer give the required notice? False means pay in lieu is owed.",
+                    },
+                    "accrued_leave_days": {
+                        "type": "number",
+                        "description": "Number of untaken (accrued) leave days, if known.",
+                    },
+                    "unpaid_salary_amount": {
+                        "type": "number",
+                        "description": "Any outstanding salary / wage arrears in ZMW, if known.",
+                    },
+                    "napsa_contributed": {
+                        "type": "boolean",
+                        "description": "Was NAPSA being contributed? False flags an employer compliance liability.",
+                    },
+                    "nhima_contributed": {
+                        "type": "boolean",
+                        "description": "Was NHIMA being contributed? False flags an employer compliance breach.",
+                    },
+                },
+                "required": ["monthly_basic_pay", "years_of_service", "termination_reason"],
+            },
+            handler=_calculate_entitlements,
         ),
         "draft_legal_document": ToolDefinition(
             name="draft_legal_document",
@@ -2378,6 +2830,48 @@ def build_tool_registry(
             },
             handler=_scoped_search,
         ),
+        "search_case_law": ToolDefinition(
+            name="search_case_law",
+            description=(
+                "Search ingested Zambian court JUDGMENTS for relevant precedent. "
+                "Use this WHENEVER the user asks for cases, case law, authorities, "
+                "or precedent — e.g. 'any cases on unfair dismissal', 'find a "
+                "judgment on gratuity after resignation', 'what has the court held "
+                "on adverse possession'. Returns real ingested judgments (case "
+                "name, court, year, holding excerpt) which the UI renders as "
+                "precedent cards the user can open. Prefer this over web search "
+                "for precedent. If it returns nothing useful, you may then fall "
+                "back to gov_search on judiciaryzambia.com / zambialii.org and "
+                "cite the URL. Cite cases by name; never invent a citation."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "The legal issue / point of law to find precedent on.",
+                    },
+                    "court": {
+                        "type": "string",
+                        "description": "Optional court filter, e.g. 'Supreme', 'Court of Appeal', 'Constitutional', 'Industrial Relations', 'High Court'.",
+                    },
+                    "year": {
+                        "type": "integer",
+                        "description": "Optional year filter.",
+                    },
+                    "area": {
+                        "type": "string",
+                        "description": "Optional area filter: employment, criminal, succession, family, land, company, constitutional, commercial, tort, tax.",
+                    },
+                    "max_results": {
+                        "type": "integer",
+                        "description": "Max cases to return (default 6).",
+                    },
+                },
+                "required": ["query"],
+            },
+            handler=_search_case_law,
+        ),
     }
 
     # Web tools — always registered. The agent decides when to use them.
@@ -2418,6 +2912,31 @@ def build_tool_registry(
                 "required": ["query"],
             },
             handler=_web_search,
+        )
+        tools["news_search"] = ToolDefinition(
+            name="news_search",
+            description=(
+                "Fresh Zambian news from established outlets (ZNBC, Zambia Daily "
+                "Mail, Times of Zambia, News Diggers, Lusaka Times, The Mast, "
+                "Mwebantu). Results are ordered by recency and carry a "
+                "published_date. Use for current events, recent developments, "
+                "or 'what's the latest on ...' questions — not for settled law, "
+                "which lives in the corpus. Cite the outlet and date; verify "
+                "legal claims against primary sources."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string"},
+                    "max_results": {"type": "integer", "description": "Default 6, max 8."},
+                    "days": {
+                        "type": "integer",
+                        "description": "Restrict to the last N days. Default 14, max 60.",
+                    },
+                },
+                "required": ["query"],
+            },
+            handler=_news_search,
         )
         tools["web_fetch"] = ToolDefinition(
             name="web_fetch",

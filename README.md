@@ -2,7 +2,7 @@
 
 Ask questions about Zambian law and get answers grounded in actual legislation, with citations to specific Acts, sections, and pages.
 
-- **Live:** https://levy-ten.vercel.app
+- **Live:** https://levylegal.ai
 - **API:** https://levy-api-production.up.railway.app
 
 ## Architecture
@@ -22,8 +22,8 @@ Ask questions about Zambian law and get answers grounded in actual legislation, 
             ▼                                                                   ▼
 ┌─────────────────────────┐                                       ┌─────────────────────────┐
 │  Supabase Auth          │                                       │  BGE-base-en-v1.5       │
-│  + Resend SMTP          │                                       │  (sentence-transformers,│
-│  no-reply@degreedesk.app│                                       │   embedded in API image)│
+│  + Resend email         │                                       │  (sentence-transformers,│
+│  sender: mukelakatungu@levylegal.ai                             │   embedded in API image)│
 └─────────────────────────┘                                       └─────────────────────────┘
 ```
 
@@ -102,7 +102,9 @@ The Railway image bakes the BGE-base model (`~440MB`) into the image at build ti
 
 ## Auth flow
 
-Signup uses Supabase Auth (`@supabase/ssr` browser client). Confirmation emails go through Resend SMTP (`smtp.resend.com:465`, sender `Levy <no-reply@degreedesk.app>`). After clicking the confirmation link the user lands on `https://levy-ten.vercel.app` with the session in the URL hash; `AuthProvider` picks it up via `onAuthStateChange` and the user is redirected into `/chat` by the dashboard layout.
+Signup uses Supabase Auth (`@supabase/ssr` browser client). Levy-branded app emails now go through Resend (`RESEND_API_KEY`) using the `frontend/src/app/api/email/*` routes and reusable templates in `frontend/src/lib/email/templates.ts`. The welcome route verifies the caller's Supabase bearer token before sending to the signed-in user, and the tester-update route is protected by `LEVY_EMAIL_ADMIN_TOKEN` for manual preview/broadcast sends.
+
+At the moment email confirmation is disabled on the project, so signup returns an active session immediately and the UI fires a best-effort Levy welcome email after account creation. If confirmation mode is re-enabled later, Supabase's auth mailer can still stay on Resend/SMTP separately while the app keeps using the same branded notification layer.
 
 A `public.profiles` row is auto-created on signup via the `handle_new_user` trigger on `auth.users`.
 

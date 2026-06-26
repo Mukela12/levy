@@ -3,18 +3,27 @@
 import { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { ChevronDown, ChevronUp, FileText, Clock, Scale, Globe, ExternalLink } from 'lucide-react'
+import { ChevronDown, ChevronUp, FileText, Clock, Scale, Globe, ExternalLink, Paperclip } from 'lucide-react'
 import { MatchBadge } from '@/components/ui/match-badge'
+import { TextShimmer } from '@/components/ui/text-shimmer'
 import { ToolCallCard, type ToolCallView } from './tool-call-card'
 import { AgentTask } from './agent-task'
 import { ArtifactCard } from './artifact-card'
 import { Favicon } from './favicon'
 import { TemplateSuggestions } from './template-suggestions'
 import { ApplicationPlanCard } from './application-plan-card'
+import { EntitlementCard } from './entitlement-card'
+import { PrecedentCard } from './precedent-card'
+import { CheatSheetCard } from './cheat-sheet-card'
+import { QuizCard } from './quiz-card'
 import type {
   ApplicationPlan,
   ArtifactView,
+  CaseLawMatch,
+  CheatSheet,
   ChunkUsed,
+  EntitlementBreakdown,
+  Quiz,
   TemplateSuggestion,
   WebSource,
 } from '@/lib/api'
@@ -30,6 +39,14 @@ export type MessageBlock =
   | { kind: 'tool'; toolCallId: string }
   | { kind: 'templates'; toolCallId: string; templates?: TemplateSuggestion[] }
   | { kind: 'application_plan'; toolCallId: string; plan?: ApplicationPlan }
+  | { kind: 'entitlement'; toolCallId: string; breakdown?: EntitlementBreakdown }
+  | { kind: 'case_law'; toolCallId: string; cases?: CaseLawMatch[] }
+  | { kind: 'cheat_sheet'; toolCallId: string; cheatSheet?: CheatSheet }
+  | { kind: 'quiz'; toolCallId: string; quiz?: Quiz }
+  // Captures which library docs the user attached to this specific turn. We
+  // store it on the user message so attachments are scoped to one message
+  // (not the whole session) and remain visible in the chat history.
+  | { kind: 'attachments'; docs: Array<{ id: string; title: string }> }
 
 interface ChatMessageProps {
   role: 'user' | 'assistant'
@@ -41,6 +58,10 @@ interface ChatMessageProps {
   artifacts?: ArtifactView[]
   templateSuggestions?: Record<string, TemplateSuggestion[]>
   applicationPlans?: Record<string, ApplicationPlan>
+  entitlementBreakdowns?: Record<string, EntitlementBreakdown>
+  caseLaw?: Record<string, CaseLawMatch[]>
+  cheatSheets?: Record<string, CheatSheet>
+  quizzes?: Record<string, Quiz>
   timing?: { total_ms: number }
   isStreaming?: boolean
   compaction?: { summarised_messages: number; tokens_before: number; tokens_after: number }
@@ -61,6 +82,10 @@ export function ChatMessage({
   artifacts,
   templateSuggestions,
   applicationPlans,
+  entitlementBreakdowns,
+  caseLaw,
+  cheatSheets,
+  quizzes,
   timing,
   isStreaming,
   compaction,
@@ -74,9 +99,29 @@ export function ChatMessage({
   const [showWebSources, setShowWebSources] = useState(false)
 
   if (role === 'user') {
+    const attachBlock = blocks?.find(
+      (b): b is Extract<MessageBlock, { kind: 'attachments' }> => b.kind === 'attachments',
+    )
+    const attachedDocs = attachBlock?.docs ?? []
     return (
       <div className="flex justify-end px-4 md:px-0">
         <div className="max-w-[78%] md:max-w-[70%]">
+          {/* Per-message attachment chips. Pinned above the bubble so the user
+              can see exactly which document(s) Levy was asked to read for this
+              turn. Opaque emerald so the page bg doesn't bleed through. */}
+          {attachedDocs.length > 0 && (
+            <div className="mb-1.5 flex flex-wrap justify-end gap-1.5">
+              {attachedDocs.map((d) => (
+                <span
+                  key={d.id}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-900/90 border border-emerald-500/35 text-[11px] text-emerald-50"
+                >
+                  <Paperclip size={10} className="text-emerald-300" />
+                  <span className="max-w-[180px] truncate">{d.title}</span>
+                </span>
+              ))}
+            </div>
+          )}
           <div
             className="px-5 py-3.5 text-[14px] leading-relaxed text-white/90 rounded-2xl"
             style={{
@@ -175,6 +220,38 @@ export function ChatMessage({
                     />
                   )
                 }
+                if (block.kind === 'entitlement') {
+                  const breakdown = block.breakdown ?? entitlementBreakdowns?.[block.toolCallId]
+                  if (!breakdown) return null
+                  return <EntitlementCard key={`ent-${block.toolCallId}`} breakdown={breakdown} />
+                }
+                if (block.kind === 'case_law') {
+                  const cases = block.cases ?? caseLaw?.[block.toolCallId]
+                  if (!cases?.length) return null
+                  return (
+                    <PrecedentCard
+                      key={`law-${block.toolCallId}`}
+                      cases={cases}
+                      onOpenCase={(documentId, title) =>
+                        onOpenCitation?.({ document_id: documentId, act_name: title, page_start: 1 } as ChunkUsed)
+                      }
+                    />
+                  )
+                }
+                if (block.kind === 'cheat_sheet') {
+                  const sheet = block.cheatSheet ?? cheatSheets?.[block.toolCallId]
+                  if (!sheet) return null
+                  return <CheatSheetCard key={`cs-${block.toolCallId}`} sheet={sheet} />
+                }
+                if (block.kind === 'quiz') {
+                  const quiz = block.quiz ?? quizzes?.[block.toolCallId]
+                  if (!quiz?.questions?.length) return null
+                  return <QuizCard key={`quiz-${block.toolCallId}`} quiz={quiz} />
+                }
+                // The 'attachments' block only ever appears on user messages
+                // (it's the chip listing what the user attached for that
+                // turn). Skip it in the assistant render path.
+                if (block.kind === 'attachments') return null
                 const call = (toolCalls || []).find((c) => c.id === block.toolCallId)
                 if (!call) {
                   // Older saved messages may have block refs without the
@@ -221,6 +298,23 @@ export function ChatMessage({
                 <span className="w-1 h-1 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             )}
+            {/* Gap shimmer: streaming, but the model is composing the next step
+                (e.g. writing quiz questions) so no token is printing and no tool
+                card is spinning. Without this the UI looks frozen between cards. */}
+            {isStreaming && blocks && blocks.length > 0 && (() => {
+              const last = blocks[blocks.length - 1]
+              const toolRunning = (toolCalls || []).some((c) => c.status === 'running')
+              if (toolRunning || !last || last.kind === 'text') return null
+              return (
+                <div className="flex items-center gap-2 py-2">
+                  <span className="relative flex size-2">
+                    <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400/50 animate-ping" />
+                    <span className="relative inline-flex size-2 rounded-full bg-emerald-400/70" />
+                  </span>
+                  <TextShimmer as="span" duration={1.6} className="text-[12.5px]">Working…</TextShimmer>
+                </div>
+              )
+            })()}
           </div>
         </div>
 
@@ -347,17 +441,23 @@ export function ChatMessage({
 }
 
 /**
- * ThinkingGlow - displayed between user message and AI response while loading
+ * ThinkingGlow - displayed between the user message and the AI response while
+ * Levy is working but before any tool card or token has arrived. Shows a
+ * shimmering status label so the wait reads as active, not stuck. An optional
+ * `label` lets callers describe the current activity (e.g. "Generating quiz").
  */
-export function ThinkingGlow() {
+export function ThinkingGlow({ label = 'Thinking' }: { label?: string }) {
   return (
     <div className="flex justify-start px-4">
-      <div
-        className="w-full max-w-xl h-20 rounded-2xl animate-pulse"
-        style={{
-          background: 'radial-gradient(ellipse at center, rgba(34,197,94,0.12) 0%, transparent 70%)',
-        }}
-      />
+      <div className="flex items-center gap-2 py-3">
+        <span className="relative flex size-2">
+          <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400/60 animate-ping" />
+          <span className="relative inline-flex size-2 rounded-full bg-emerald-400/80" />
+        </span>
+        <TextShimmer as="span" duration={1.6} className="text-[13px]">
+          {`${label}…`}
+        </TextShimmer>
+      </div>
     </div>
   )
 }

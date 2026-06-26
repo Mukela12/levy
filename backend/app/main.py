@@ -33,6 +33,8 @@ app = FastAPI(
 # in a victim's browser, so pin the known origins + Vercel preview deploys.
 _allowed_origins = [
     "https://levy-ten.vercel.app",
+    "https://levylegal.ai",
+    "https://www.levylegal.ai",
     "http://localhost:3000",
     "http://localhost:3001",
 ]
@@ -79,3 +81,40 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/health/llm")
+def health_llm():
+    """Synthetic LLM ping for uptime monitoring.
+
+    Does a tiny, cheap generation against the configured default model so an
+    external monitor catches a retired model id, an empty credit balance, or a
+    bad API key automatically — instead of us finding out from conversation
+    logs days later. Returns 200 {ok:true} on success, 503 {ok:false,...} on
+    any provider failure. Point an uptime checker (or a cron) at this path.
+    """
+    try:
+        import anthropic
+        from .config import get_settings
+        from .providers.anthropic_provider import DEFAULT_MODEL
+
+        settings = get_settings()
+        client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+        client.messages.create(
+            model=DEFAULT_MODEL,
+            max_tokens=5,
+            messages=[{"role": "user", "content": "ping"}],
+        )
+        return {"ok": True, "model": DEFAULT_MODEL}
+    except Exception as e:
+        from .providers.anthropic_provider import DEFAULT_MODEL
+        status = getattr(e, "status_code", None)
+        reason = "model_not_found" if (status == 404 or "not_found" in str(e).lower()) else (
+            "rate_limited" if status == 429 else (
+                "credit_or_bad_request" if status == 400 else "provider_error"
+            )
+        )
+        return JSONResponse(
+            status_code=503,
+            content={"ok": False, "model": DEFAULT_MODEL, "reason": reason},
+        )

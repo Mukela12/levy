@@ -39,9 +39,28 @@ export default function SignUpPage() {
       setLoading(false)
       return
     }
-    const { error } = await signUp(email, password, fullName)
-    if (error) { setError(error.message); setLoading(false) }
-    else { setSuccess(true); setLoading(false) }
+    const { error, session } = await signUp(email, password, fullName)
+    if (error) {
+      setError(error.message)
+      setLoading(false)
+      return
+    }
+
+    if (session?.access_token) {
+      void fetch('/api/email/welcome', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ fullName }),
+      }).catch(() => {
+        // Welcome email is best-effort and should never block signup.
+      })
+    }
+
+    setSuccess(true)
+    setLoading(false)
   }
 
   return (

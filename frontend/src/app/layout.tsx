@@ -8,9 +8,56 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 
+// Canonical site URL. Crawlers that hit the Vercel alias still see canonical
+// tags pointing here, so SEO authority consolidates on the official domain
+// while the alias keeps working for existing users.
+const SITE_URL = 'https://levylegal.ai'
+const TITLE = 'Levy: AI Legal Assistant for Zambian Law'
+// Shown as the search-result snippet under the link. ~155 chars, keyword-rich,
+// and written to earn the click: what it is, that it is free, what you can do.
+const DESCRIPTION =
+  'Ask any question about Zambian law and get clear answers grounded in the Acts and case law, with citations. Free legal research, document drafting and exam prep.'
+
 export const metadata: Metadata = {
-  title: 'Levy - AI Legal Assistant for Zambia',
-  description: 'Ask questions about Zambian law and get answers grounded in actual legislation with citations.',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: TITLE,
+    template: '%s | Levy',
+  },
+  description: DESCRIPTION,
+  applicationName: 'Levy',
+  keywords: [
+    'Zambian law',
+    'Zambia legal AI',
+    'Zambian legislation',
+    'Zambian Acts of Parliament',
+    'legal assistant Zambia',
+    'Zambian Constitution',
+    'Zambian legal research',
+    'Laws of Zambia',
+    'Zambia case law',
+  ],
+  authors: [{ name: 'Levy' }],
+  creator: 'Levy',
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    siteName: 'Levy',
+    title: TITLE,
+    description: DESCRIPTION,
+    url: SITE_URL,
+    locale: 'en_ZM',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: TITLE,
+    description: DESCRIPTION,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
+  },
 }
 
 // viewportFit:'cover' makes env(safe-area-inset-*) resolve to real values on

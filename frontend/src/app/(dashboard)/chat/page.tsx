@@ -10,18 +10,18 @@ import { ChatInput } from '@/components/chat/chat-input'
 import { ChatMessage, ThinkingGlow } from '@/components/chat/chat-message'
 import { BriefPanel } from '@/components/chat/brief-panel'
 import { useRegisterBrief } from '@/components/chat/brief-context'
+import { useChatStream, type Message } from '@/components/chat/chat-stream-context'
 import { usePdfViewer } from '@/components/chat/pdf-viewer-context'
 import { AttachmentsSheet } from '@/components/chat/attachments-sheet'
-import type { ToolCallView } from '@/components/chat/tool-call-card'
-import type { MessageBlock } from '@/components/chat/chat-message'
-import { attachDocumentToSession, type LibraryDocument } from '@/lib/api'
+import { attachDocumentToSession, promoteDocument, uploadDocument, type LibraryDocument } from '@/lib/api'
 import {
   BookOpen,
   Search,
-  FileText,
   Gavel,
   Paperclip,
   X,
+  Loader2,
+  ArrowUpToLine,
   TrendingUp,
   Globe,
   Leaf,
@@ -30,27 +30,6 @@ import {
   FileSearch,
 } from 'lucide-react'
 import { LevyLogo } from '@/components/ui/levy-logo'
-import type {
-  ApplicationPlan,
-  ArtifactView,
-  ChunkUsed,
-  TemplateSuggestion,
-  WebSource,
-} from '@/lib/api'
-
-interface Message {
-  role: 'user' | 'assistant'
-  content: string
-  blocks?: MessageBlock[]
-  citations?: ChunkUsed[]
-  webSources?: WebSource[]
-  toolCalls?: ToolCallView[]
-  artifacts?: ArtifactView[]
-  templateSuggestions?: Record<string, TemplateSuggestion[]>
-  applicationPlans?: Record<string, ApplicationPlan>
-  timing?: { total_ms: number }
-  compaction?: { summarised_messages: number; tokens_before: number; tokens_after: number }
-}
 
 function getGreeting(): string {
   const h = new Date().getHours()
@@ -130,11 +109,17 @@ export default function NewChatPage() {
   // chat_session_documents join table once the session is created.
   const [stagedAttachments, setStagedAttachments] = useState<LibraryDocument[]>([])
   const [attachmentsOpen, setAttachmentsOpen] = useState(false)
+  // Save-to-Library promotion state (per chip).
+  const [promoting, setPromoting] = useState<Set<string>>(new Set())
+  const [promoted, setPromoted] = useState<Set<string>>(new Set())
+  const [promotionSuggested, setPromotionSuggested] = useState<Set<string>>(new Set())
   const pdf = usePdfViewer()
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const { user, session } = useAuth()
+  const { user, session, loading: authLoading } = useAuth()
   const router = useRouter()
+  const { send } = useChatStream()
+  const seededRef = useRef(false)
 
   // Expose the raw messages state (stable reference) to the layout-level
   // Brief button + bottom sheet. Do NOT map here - that creates a new array
@@ -156,6 +141,57 @@ export default function NewChatPage() {
     if (nearBottom) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  // Seeded prompt from /chat?q=... (Study launcher, Act pages, answer pages).
+  // We PRE-FILL the composer and let the user press send. We must NOT auto-send:
+  // search crawlers render this page when they follow the many /chat?q= links,
+  // and an auto-send would fire a full (billed) agent run on every crawl.
+  useEffect(() => {
+    if (seededRef.current) return
+    const q = new URLSearchParams(window.location.search).get('q')
+    if (!q) return
+    seededRef.current = true
+    window.history.replaceState(null, '', '/chat')
+    setInputSeed({ text: q, nonce: Date.now() })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Upload-from-chat on the new-chat page: ingest the file into the user's
+  // library now (so we have a document_id), then stage it locally. On send,
+  // the staged doc is pinned to the user message and the session never
+  // session-attaches it (per-message scoping).
+  async function handleUploadFile(file: File) {
+    if (!user) return
+    const res = await uploadDocument(file, session?.access_token, user.id)
+    if (res.suggest_promotion) {
+      setPromotionSuggested((prev) => new Set(prev).add(res.document_id))
+    }
+    setStagedAttachments((prev) => [
+      ...prev,
+      { id: res.document_id, title: file.name, is_global: false } as LibraryDocument,
+    ])
+  }
+
+  async function handlePromote(docId: string) {
+    setPromoting((prev) => new Set(prev).add(docId))
+    try {
+      await promoteDocument(docId, session?.access_token)
+      setPromoted((prev) => new Set(prev).add(docId))
+      setPromotionSuggested((prev) => {
+        const n = new Set(prev)
+        n.delete(docId)
+        return n
+      })
+    } catch (err) {
+      console.error('promote failed', err)
+    } finally {
+      setPromoting((prev) => {
+        const n = new Set(prev)
+        n.delete(docId)
+        return n
+      })
+    }
+  }
+
   async function createSession(firstMessage: string): Promise<string> {
     const supabase = createClient()
     const title = firstMessage.length > 60 ? firstMessage.slice(0, 57) + '...' : firstMessage
@@ -169,59 +205,60 @@ export default function NewChatPage() {
     return data.id
   }
 
-  async function saveMessage(
-    sid: string,
-    role: string,
-    content: string,
-    citations?: ChunkUsed[],
-    webSources?: WebSource[],
-    artifacts?: ArtifactView[],
-    compaction?: Message['compaction'],
-    blocks?: MessageBlock[],
-    toolCalls?: ToolCallView[],
-  ) {
-    const supabase = createClient()
-    await supabase.from('chat_messages').insert({
-      session_id: sid,
-      role,
-      content,
-      blocks: blocks || null,
-      tool_calls: toolCalls || null,
-      citations: citations || null,
-      web_sources: webSources || null,
-      artifacts: artifacts || null,
-      compaction: compaction || null,
-    })
-  }
-
   async function handleSend(question: string) {
-    setLoading(true)
-    const userMsg: Message = { role: 'user', content: question }
-    setMessages((prev) => [...prev, userMsg])
+    // Signed-in: hand the stream to the shared provider so it keeps running
+    // even if the user switches chats, then move to the saved-thread route.
+    if (user) {
+      setLoading(true)
+      // Optimistic display so the welcome screen doesn't linger during the
+      // route transition; the [id] page re-renders from the provider on mount.
+      setMessages([
+        { role: 'user', content: question },
+        { role: 'assistant', content: '', blocks: [] },
+      ])
+      try {
+        const sid = sessionId ?? (await createSession(question))
+        if (!sessionId) setSessionId(sid)
+        const pending = stagedAttachments.map((d) => ({ id: d.id, title: d.title }))
+        // Skip attachDocumentToSession on purpose: with per-message scoping the
+        // doc is passed as attached_doc_ids on this turn only, and pinned to
+        // the user message via the attachments block. Session-level attachment
+        // is what caused chips to bleed into subsequent turns.
+        send(sid, question, {
+          token: session?.access_token,
+          webSearch,
+          userId: user.id,
+          attachedDocIds: pending.map((d) => d.id),
+          attachedDocs: pending,
+        })
+        setStagedAttachments([])
+        router.replace(`/chat/${sid}`, { scroll: false })
+      } catch (e) {
+        const content =
+          e instanceof Error && !e.message.startsWith('API error') && !e.message.startsWith('No response')
+            ? e.message
+            : 'Sorry, I encountered an error processing your question. Please try again.'
+        setMessages((prev) => {
+          const last = prev[prev.length - 1]
+          const errorMsg: Message = {
+            role: 'assistant',
+            content,
+          }
+          if (last && last.role === 'assistant' && last.content === '') {
+            return [...prev.slice(0, -1), errorMsg]
+          }
+          return [...prev, errorMsg]
+        })
+        setLoading(false)
+      }
+      return
+    }
 
-    // Anonymous mode: keep everything in React state, never touch the DB.
-    // Signed-in users get the full session/save flow.
-    const isAnonymous = !user
+    // Anonymous: keep everything in React state, never touch the DB.
+    setLoading(true)
+    setMessages((prev) => [...prev, { role: 'user', content: question }])
 
     try {
-      // Create session if first message (signed-in only)
-      let sid = sessionId
-      if (!sid && !isAnonymous) {
-        sid = await createSession(question)
-        setSessionId(sid)
-        // Apply any staged attachments to the new session.
-        if (stagedAttachments.length > 0) {
-          await Promise.all(
-            stagedAttachments.map((d) => attachDocumentToSession(sid!, d.id)),
-          )
-        }
-      }
-
-      if (sid && !isAnonymous) {
-        await saveMessage(sid, 'user', question)
-      }
-
-      // Add placeholder assistant message for streaming
       const assistantMsg: Message = {
         role: 'assistant',
         content: '',
@@ -240,22 +277,13 @@ export default function NewChatPage() {
           return updated
         })
 
-      // Send the conversation so far so the backend's compactor can see the
-      // full thread when deciding whether to summarise.
       const history = messages
         .filter((m) => m.content)
         .map((m) => ({ role: m.role, content: m.content }))
 
       await streamQuery(
         question,
-        {
-          token: session?.access_token,
-          webSearch,
-          userId: user?.id,
-          sessionId: sid ?? undefined,
-          attachedDocIds: stagedAttachments.map((d) => d.id),
-          history,
-        },
+        { token: session?.access_token, webSearch, history },
         undefined,
         undefined,
         {
@@ -367,56 +395,120 @@ export default function NewChatPage() {
                 },
               }
             }),
-          onDone: (metadata) => {
-            setMessages((prev) => {
-              const updated = [...prev]
-              const last = updated[updated.length - 1]
-              const finalMsg = {
+          onEntitlementBreakdown: (event) =>
+            updateLast((last) => {
+              const blocks = [...(last.blocks ?? [])]
+              const existing = blocks.findIndex(
+                (b) => b.kind === 'entitlement' && b.toolCallId === event.tool_call_id,
+              )
+              const block = {
+                kind: 'entitlement' as const,
+                toolCallId: event.tool_call_id,
+                breakdown: event.breakdown,
+              }
+              if (existing >= 0) blocks[existing] = block
+              else blocks.push(block)
+              return {
                 ...last,
-                citations: metadata.chunks_used,
-                webSources: metadata.web_sources,
-                timing: { total_ms: metadata.timing?.total_ms ?? 0 },
+                blocks,
+                entitlementBreakdowns: {
+                  ...(last.entitlementBreakdowns ?? {}),
+                  [event.tool_call_id]: event.breakdown,
+                },
               }
-              updated[updated.length - 1] = finalMsg
-              if (sid && !isAnonymous) {
-                saveMessage(
-                  sid,
-                  'assistant',
-                  finalMsg.content,
-                  finalMsg.citations,
-                  finalMsg.webSources,
-                  finalMsg.artifacts,
-                  finalMsg.compaction,
-                  finalMsg.blocks,
-                  finalMsg.toolCalls,
-                )
+            }),
+          onCaseLaw: (event) =>
+            updateLast((last) => {
+              const blocks = [...(last.blocks ?? [])]
+              const existing = blocks.findIndex(
+                (b) => b.kind === 'case_law' && b.toolCallId === event.tool_call_id,
+              )
+              const block = {
+                kind: 'case_law' as const,
+                toolCallId: event.tool_call_id,
+                cases: event.cases,
               }
-              return updated
-            })
+              if (existing >= 0) blocks[existing] = block
+              else blocks.push(block)
+              return {
+                ...last,
+                blocks,
+                caseLaw: {
+                  ...(last.caseLaw ?? {}),
+                  [event.tool_call_id]: event.cases,
+                },
+              }
+            }),
+          onCheatSheet: (event) =>
+            updateLast((last) => {
+              const blocks = [...(last.blocks ?? [])]
+              const existing = blocks.findIndex(
+                (b) => b.kind === 'cheat_sheet' && b.toolCallId === event.tool_call_id,
+              )
+              const block = {
+                kind: 'cheat_sheet' as const,
+                toolCallId: event.tool_call_id,
+                cheatSheet: event.cheat_sheet,
+              }
+              if (existing >= 0) blocks[existing] = block
+              else blocks.push(block)
+              return {
+                ...last,
+                blocks,
+                cheatSheets: {
+                  ...(last.cheatSheets ?? {}),
+                  [event.tool_call_id]: event.cheat_sheet,
+                },
+              }
+            }),
+          onQuiz: (event) =>
+            updateLast((last) => {
+              const blocks = [...(last.blocks ?? [])]
+              const existing = blocks.findIndex(
+                (b) => b.kind === 'quiz' && b.toolCallId === event.tool_call_id,
+              )
+              const block = {
+                kind: 'quiz' as const,
+                toolCallId: event.tool_call_id,
+                quiz: event.quiz,
+              }
+              if (existing >= 0) blocks[existing] = block
+              else blocks.push(block)
+              return {
+                ...last,
+                blocks,
+                quizzes: {
+                  ...(last.quizzes ?? {}),
+                  [event.tool_call_id]: event.quiz,
+                },
+              }
+            }),
+          onDone: (metadata) => {
+            updateLast((last) => ({
+              ...last,
+              citations: metadata.chunks_used,
+              webSources: metadata.web_sources,
+              timing: { total_ms: metadata.timing?.total_ms ?? 0 },
+            }))
             setLoading(false)
           },
           onError: (msg) =>
             updateLast((last) => ({
               ...last,
               content:
-                (last.content || '') +
-                (last.content ? '\n\n' : '') +
-                `_Error: ${msg}_`,
+                (last.content || '') + (last.content ? '\n\n' : '') + `_Error: ${msg}_`,
             })),
         },
       )
-
-      // Update URL to session
-      if (sid && !isAnonymous) {
-        router.replace(`/chat/${sid}`, { scroll: false })
-      }
-    } catch (err) {
+    } catch (e) {
       const errorMsg: Message = {
         role: 'assistant',
-        content: 'Sorry, I encountered an error processing your question. Please try again.',
+        content:
+          e instanceof Error && !e.message.startsWith('API error') && !e.message.startsWith('No response')
+            ? e.message
+            : 'Sorry, I encountered an error processing your question. Please try again.',
       }
       setMessages((prev) => {
-        // Replace the empty streaming message if it exists, otherwise append
         const last = prev[prev.length - 1]
         if (last && last.role === 'assistant' && last.content === '') {
           return [...prev.slice(0, -1), errorMsg]
@@ -438,12 +530,21 @@ export default function NewChatPage() {
       <div className="flex-1 flex flex-col min-w-0 relative">
         {!hasMessages ? (
           /* ── Welcome State ── */
-          <div className="flex-1 flex flex-col items-center justify-center px-4 relative overflow-y-auto">
+          <div
+            className="flex-1 flex flex-col items-center px-4 relative overflow-y-auto overscroll-none"
+            style={{ overscrollBehavior: 'none' }}
+          >
             {/* Subtle radial background */}
             <div
               className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[400px] pointer-events-none"
               style={{ background: 'radial-gradient(ellipse at center, rgba(34, 197, 94, 0.04) 0%, transparent 70%)' }}
             />
+
+            {/* Centering wrapper: my-auto centers the content when it fits the
+                viewport and collapses to a clean top-aligned scroll when it
+                overflows on short phones — so the greeting never clips and the
+                screen no longer rubber-bands. */}
+            <div className="w-full flex flex-col items-center my-auto">
 
             <div className="text-center mb-8 space-y-4 relative z-10">
               {/* Levy logo, centered above the accent line */}
@@ -539,6 +640,7 @@ export default function NewChatPage() {
                 webSearch={webSearch}
                 onWebSearchChange={setWebSearch}
                 onAttachClick={user ? () => setAttachmentsOpen(true) : undefined}
+                onUploadFile={user ? handleUploadFile : undefined}
                 attachmentCount={stagedAttachments.length}
                 seed={inputSeed}
               />
@@ -556,6 +658,7 @@ export default function NewChatPage() {
             <p className="mt-4 text-[10px] text-white/15 relative z-10 text-center">
               Levy provides legal information, not legal advice. Always consult a qualified lawyer.
             </p>
+            </div>
           </div>
         ) : (
           /* ── Chat State ── */
@@ -589,6 +692,10 @@ export default function NewChatPage() {
                           artifacts={msg.artifacts}
                           templateSuggestions={msg.templateSuggestions}
                           applicationPlans={msg.applicationPlans}
+                          entitlementBreakdowns={msg.entitlementBreakdowns}
+                          caseLaw={msg.caseLaw}
+                          cheatSheets={msg.cheatSheets}
+                          quizzes={msg.quizzes}
                           timing={msg.timing}
                           isStreaming={isLastAssistant}
                           compaction={msg.compaction}
@@ -649,21 +756,50 @@ export default function NewChatPage() {
                 <div className="pointer-events-auto max-w-3xl mx-auto">
                   {stagedAttachments.length > 0 && (
                     <div className="mb-2 flex flex-wrap gap-1.5 px-1">
-                      {stagedAttachments.map((d) => (
-                        <button
-                          key={d.id}
-                          type="button"
-                          onClick={() =>
-                            setStagedAttachments((prev) => prev.filter((x) => x.id !== d.id))
-                          }
-                          className="group flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-100/85 hover:bg-emerald-500/20"
-                          aria-label={`Detach ${d.title}`}
-                        >
-                          <Paperclip size={10} className="text-emerald-400/80" />
-                          <span className="max-w-[180px] truncate">{d.title}</span>
-                          <X size={10} className="text-emerald-400/40 group-hover:text-emerald-400/80" />
-                        </button>
-                      ))}
+                      {stagedAttachments.map((d) => {
+                        const isPromoting = promoting.has(d.id)
+                        const isPromoted = promoted.has(d.id)
+                        const suggested = promotionSuggested.has(d.id)
+                        return (
+                          <div
+                            key={d.id}
+                            className="group flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-900/90 border border-emerald-500/35 text-[11px] text-emerald-50"
+                          >
+                            <Paperclip size={10} className="text-emerald-300" />
+                            <span className="max-w-[180px] truncate">{d.title}</span>
+                            {!isPromoted && (
+                              <button
+                                type="button"
+                                onClick={() => handlePromote(d.id)}
+                                disabled={isPromoting}
+                                title={
+                                  suggested
+                                    ? "You've used this file before — save it to your library for cross-chat search"
+                                    : 'Save to library for cross-chat search'
+                                }
+                                aria-label="Save to library"
+                                className={`ml-0.5 ${
+                                  suggested
+                                    ? 'text-emerald-200 hover:text-white'
+                                    : 'text-emerald-300/70 hover:text-emerald-100'
+                                } disabled:opacity-40`}
+                              >
+                                {isPromoting ? <Loader2 size={10} className="animate-spin" /> : <ArrowUpToLine size={10} />}
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setStagedAttachments((prev) => prev.filter((x) => x.id !== d.id))
+                              }
+                              aria-label={`Remove ${d.title}`}
+                              className="text-emerald-300/60 hover:text-emerald-100"
+                            >
+                              <X size={10} />
+                            </button>
+                          </div>
+                        )
+                      })}
                     </div>
                   )}
                   <ChatInput
@@ -672,6 +808,7 @@ export default function NewChatPage() {
                 webSearch={webSearch}
                 onWebSearchChange={setWebSearch}
                 onAttachClick={user ? () => setAttachmentsOpen(true) : undefined}
+                onUploadFile={user ? handleUploadFile : undefined}
                 attachmentCount={stagedAttachments.length}
               />
                   <p className="mt-2 text-center text-[10px] text-white/25">

@@ -9,9 +9,10 @@ and returns the generated answer with token usage stats.
 import anthropic
 from ..config import get_settings
 
-# Default model — Claude 3.5 Sonnet balances quality, speed, and cost.
-# For highest accuracy on complex legal questions, upgrade to Claude 3.5 Opus.
-DEFAULT_MODEL = "claude-sonnet-4-20250514"
+# Default model. Claude Sonnet 4.6 balances quality, speed, and cost; it
+# replaced claude-sonnet-4-20250514, which Anthropic retired (calls to the
+# old id now 404). Override per-request by passing `model`.
+DEFAULT_MODEL = "claude-sonnet-4-6"
 
 
 def generate_response(

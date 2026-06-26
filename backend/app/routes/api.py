@@ -8,14 +8,20 @@ Three endpoints for the baseline RAG system:
 """
 
 import os
+import io
+import re
+import asyncio
+import logging
 import tempfile
-from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, Header
+from datetime import datetime, timezone
+from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, Header, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import json
 import time
 from ..services import rag
 from ..services.agent import run_agent
+from ..services.chat_persist import RunAccumulator
 from ..services.ingester import ingest_pdf
 from ..services.embedder import get_query_embedding
 from ..db.supabase import search_chunks, get_db
@@ -27,6 +33,11 @@ from ..config import get_settings
 from ..auth import require_user, optional_user, verify_token
 
 router = APIRouter(prefix="/api")
+logger = logging.getLogger("levy.api")
+
+# Strong refs to detached durable-run tasks so the event loop doesn't GC them
+# mid-flight; each removes itself on completion.
+_INFLIGHT_RUNS: set = set()
 
 
 # --- Ownership guards (backend uses service_role, which bypasses RLS, so we
@@ -121,8 +132,27 @@ def search(request: SearchRequest):
         raise HTTPException(status_code=500, detail="request could not be completed")
 
 
+# Abuse guard for the public, expensive, anonymous chat endpoint. Search
+# crawlers (and scripts) hitting /chat?q=... links were triggering billed agent
+# runs at high volume. We block automated user-agents outright and rate-limit
+# anonymous callers per client IP. Authenticated users are unaffected.
+_BOT_UA = re.compile(
+    r"(bot|crawler|spider|slurp|crawl|headless|preview|python-requests|httpx|aiohttp|"
+    r"curl|wget|scrapy|node-fetch|axios|go-http|java/|okhttp|libwww|phantom|puppeteer|playwright)",
+    re.I,
+)
+_ANON_HITS: dict[str, list[float]] = {}
+_ANON_LIMIT = 6        # max anonymous chat requests
+_ANON_WINDOW = 60.0    # per 60 seconds, per client IP
+
+
+def _client_ip(req: Request) -> str:
+    xff = (req.headers.get("x-forwarded-for") or "").split(",")[0].strip()
+    return xff or (req.client.host if req.client else "unknown")
+
+
 @router.post("/chat/stream")
-async def chat_stream(request: ChatRequest, authorization: str | None = Header(default=None)):
+async def chat_stream(request: ChatRequest, http_request: Request, authorization: str | None = Header(default=None)):
     """
     Agentic RAG pipeline. Server-Sent Events.
 
@@ -143,6 +173,20 @@ async def chat_stream(request: ChatRequest, authorization: str | None = Header(d
     # user_id. Anonymous callers (no token) get global-corpus-only answers.
     token = (authorization or "")[7:].strip() if (authorization or "").lower().startswith("bearer ") else None
     uid = verify_token(token) if token else None
+
+    # Abuse guard: block automated user-agents, and rate-limit anonymous callers
+    # per IP. This stops crawlers/scripts from draining the LLM budget via the
+    # public chat endpoint. Signed-in users are exempt.
+    ua = http_request.headers.get("user-agent") or ""
+    if _BOT_UA.search(ua):
+        raise HTTPException(status_code=403, detail="Automated access to chat is not allowed.")
+    if not uid:
+        # TEMPORARY HARD STOP: anonymous chat is disabled. A distributed flood
+        # (browser-like user-agents across many IPs) bypassed the per-IP rate
+        # limit and kept draining the LLM budget. Require sign-in until we add a
+        # bot challenge (e.g. Cloudflare Turnstile) to reopen anonymous access.
+        raise HTTPException(status_code=401, detail="Please sign in to use Levy chat.")
+
     # Only honour a session_id the caller actually owns; otherwise ignore it
     # so nobody can read another user's attached documents via the agent.
     safe_session_id = None
@@ -151,41 +195,70 @@ async def chat_stream(request: ChatRequest, authorization: str | None = Header(d
         if s.data and s.data[0].get("user_id") == uid:
             safe_session_id = request.session_id
 
-    async def event_stream():
-        async for event in run_agent(
-            user_query=request.query,
-            model=request.model,
-            web_enabled=bool(request.web_search),
-            history=request.history,
-            owner_id=uid,
-            session_id=safe_session_id,
-            attached_doc_ids=request.attached_doc_ids,
-        ):
-            # The pre-agent client expects `chunks_used` on the sources event.
-            if event.get("type") == "sources":
-                payload = {
-                    "type": "sources",
-                    "db": event.get("db", []),
-                    "web": event.get("web", []),
-                    # Legacy field — first 8 db sources mapped to old shape
-                    "chunks_used": [
-                        {
-                            "id": s.get("id"),
-                            "act_name": s.get("act_name"),
-                            "section": s.get("section"),
-                            "part": s.get("part"),
-                            "page_start": s.get("page_start"),
-                            "page_end": s.get("page_end"),
-                            "similarity": s.get("similarity"),
-                            "content_preview": s.get("content_preview"),
-                        }
-                        for s in event.get("db", [])[:8]
-                    ],
-                }
-                yield f"data: {json.dumps(payload)}\n\n"
-            else:
-                yield f"data: {json.dumps(event)}\n\n"
+    def _sse(event: dict) -> str:
+        # The pre-agent client expects `chunks_used` on the sources event.
+        if event.get("type") == "sources":
+            payload = {
+                "type": "sources",
+                "db": event.get("db", []),
+                "web": event.get("web", []),
+                "chunks_used": [
+                    {
+                        "id": s.get("id"), "act_name": s.get("act_name"),
+                        "section": s.get("section"), "part": s.get("part"),
+                        "page_start": s.get("page_start"), "page_end": s.get("page_end"),
+                        "similarity": s.get("similarity"), "content_preview": s.get("content_preview"),
+                    }
+                    for s in event.get("db", [])[:8]
+                ],
+            }
+            return f"data: {json.dumps(payload)}\n\n"
+        return f"data: {json.dumps(event)}\n\n"
 
+    # Tier-1 durable execution: drive the agent in a DETACHED task that pushes
+    # events to a queue and, on completion, persists the assistant message
+    # server-side. If the client disconnects (closed tab / lost mobile signal)
+    # the response generator is cancelled, but this task keeps running and still
+    # saves the reply — so the thread is never left with a dangling no-reply.
+    queue: asyncio.Queue = asyncio.Queue()
+    acc = RunAccumulator()
+
+    async def _drive():
+        try:
+            async for event in run_agent(
+                user_query=request.query,
+                model=request.model,
+                web_enabled=bool(request.web_search),
+                history=request.history,
+                owner_id=uid,
+                session_id=safe_session_id,
+                attached_doc_ids=request.attached_doc_ids,
+            ):
+                acc.consume(event)
+                await queue.put(event)
+        except Exception as e:  # noqa: BLE001
+            logger.exception("agent run failed")
+            await queue.put({"type": "error", "message": "Levy ran into a temporary problem. Please try again."})
+        finally:
+            await queue.put(None)  # stream sentinel
+            # Durable, server-owned save (signed-in threads only). Anonymous
+            # callers have no session and aren't persisted.
+            if safe_session_id and uid:
+                try:
+                    await asyncio.to_thread(acc.save, safe_session_id)
+                except Exception:
+                    logger.exception("durable save failed")
+
+    task = asyncio.create_task(_drive())
+    _INFLIGHT_RUNS.add(task)
+    task.add_done_callback(_INFLIGHT_RUNS.discard)
+
+    async def event_stream():
+        while True:
+            event = await queue.get()
+            if event is None:
+                break
+            yield _sse(event)
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(
@@ -352,6 +425,50 @@ def get_artifact_pdf_url(artifact_id: str, expires_in: int = 3600, uid: str | No
         "source": row.get("source"),
         "meta": row.get("meta"),
         "created_at": row.get("created_at"),
+        "signed_url": signed.get("signedURL") or signed.get("signed_url") or signed.get("signedUrl"),
+        "expires_in": expires_in,
+    }
+
+
+@router.get("/artifacts/{artifact_id}/docx")
+def get_artifact_docx_url(artifact_id: str, expires_in: int = 3600, uid: str | None = Depends(optional_user)):
+    """Signed URL for the Word (.docx) version of an artifact, rendered on demand.
+
+    Same authorization as the PDF route. The Word file is rendered from the
+    artifact's stored source Markdown the first time it is requested, then
+    cached in the bucket so subsequent downloads are instant.
+    """
+    from ..db.supabase import get_db
+    from ..services.docx_tools import ensure_artifact_docx
+
+    db = get_db()
+    res = (
+        db.table("artifacts").select("id, title, meta, owner_id")
+        .eq("id", artifact_id).limit(1).execute()
+    )
+    if not res.data:
+        raise HTTPException(status_code=404, detail="artifact not found")
+    row = res.data[0]
+    if row.get("owner_id") and row.get("owner_id") != uid:
+        raise HTTPException(status_code=403, detail="not authorized for this artifact")
+
+    try:
+        out = ensure_artifact_docx(artifact_id)
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=500, detail="could not render the Word document")
+
+    bucket, _, key = out["storage_path"].partition("/")
+    try:
+        signed = db.storage.from_(bucket).create_signed_url(key, expires_in)
+    except Exception:
+        raise HTTPException(status_code=500, detail="could not generate download link")
+
+    return {
+        "artifact_id": artifact_id,
+        "title": out.get("title"),
+        "kind": "docx",
         "signed_url": signed.get("signedURL") or signed.get("signed_url") or signed.get("signedUrl"),
         "expires_in": expires_in,
     }
@@ -629,6 +746,46 @@ def detach_document(session_id: str, document_id: str, uid: str = Depends(requir
     return {"status": "ok"}
 
 
+INLINE_TIER_MAX_PAGES = 5
+
+
+def _upload_object(db, bucket: str, key: str, content: bytes, content_type: str) -> None:
+    """Upload bytes to a Supabase Storage object, replacing any existing object."""
+    try:
+        db.storage.from_(bucket).upload(
+            path=key,
+            file=content,
+            file_options={"content-type": content_type, "upsert": "true"},
+        )
+    except Exception as e:
+        # Older storage SDKs raise on duplicate even when upsert=true was sent;
+        # fall back to remove + upload.
+        if "exists" in str(e).lower() or "duplicate" in str(e).lower():
+            try:
+                db.storage.from_(bucket).remove([key])
+            except Exception:
+                pass
+            db.storage.from_(bucket).upload(
+                path=key,
+                file=content,
+                file_options={"content-type": content_type},
+            )
+        else:
+            raise
+
+
+def _extract_pdf_text(pdf_path: str) -> str:
+    """Concatenate all pages' text. Used for the inline tier (small docs)."""
+    import pdfplumber
+
+    parts: list[str] = []
+    with pdfplumber.open(pdf_path) as pdf:
+        for page in pdf.pages:
+            t = page.extract_text() or ""
+            parts.append(t)
+    return "\n\n".join(parts).strip()
+
+
 @router.post("/documents/upload")
 async def upload_document(
     file: UploadFile = File(...),
@@ -636,47 +793,216 @@ async def upload_document(
     folder_id: str | None = None,
     uid: str = Depends(require_user),
 ):
-    """Upload and ingest a PDF document. Stamps owner_id from the verified token."""
-    if not file.filename or not file.filename.lower().endswith('.pdf'):
+    """Upload + ingest a PDF.
+
+    Two paths, picked by page count:
+      * **Inline tier** (≤5 pages) — extract full text, store it alongside the
+        PDF in storage, mark the document with `total_chunks=0`. No embeddings.
+        At chat time, the agent receives the full text in its system prompt.
+      * **RAG tier** (>5 pages) — full chunk + embed via `ingest_pdf`.
+
+    In both paths the PDF itself is uploaded to the `legal-docs` bucket so the
+    citation viewer can render it.
+    """
+    import hashlib
+    import io as _io
+
+    from pypdf import PdfReader
+    from ..db.supabase import get_db
+
+    if not file.filename or not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are supported")
-    # if a folder was given, it must belong to the caller
     if folder_id:
         _assert_owns("document_folders", folder_id, uid)
 
+    db = get_db()
+
     try:
-        # Save to temp file
-        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
-            content = await file.read()
+        content = await file.read()
+        size_bytes = len(content)
+        pdf_hash = hashlib.sha256(content).hexdigest()
+
+        # Dedup by hash — same bytes always map to the same document.
+        existing = (
+            db.table("legal_documents")
+            .select("id,title,total_chunks,pdf_page_count")
+            .eq("pdf_hash", pdf_hash)
+            .execute()
+            .data
+        )
+        if existing:
+            doc = existing[0]
+            is_inline = (doc.get("total_chunks", 0) or 0) == 0
+            # Hitting the dedup path with an inline-tier doc means the user
+            # has uploaded this exact file before — surface a promotion hint so
+            # the UI can offer "Save to Library" (chunk + embed) once.
+            return {
+                "status": "skipped",
+                "document_id": doc["id"],
+                "chunks_created": doc.get("total_chunks", 0),
+                "tier": "inline" if is_inline else "rag",
+                "page_count": doc.get("pdf_page_count"),
+                "suggest_promotion": is_inline,
+            }
+
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
             tmp.write(content)
             tmp_path = tmp.name
 
-        # Run ingestion pipeline
-        result = ingest_pdf(tmp_path)
+        try:
+            page_count = len(PdfReader(_io.BytesIO(content)).pages)
+        except Exception:
+            page_count = 0
 
-        # Stamp ownership + non-global on user uploads.
+        # ── Inline tier ────────────────────────────────────────────────────
+        if 0 < page_count <= INLINE_TIER_MAX_PAGES:
+            try:
+                text = _extract_pdf_text(tmp_path)
+            except Exception:
+                text = ""
+
+            title = file.filename.rsplit(".", 1)[0] or "Document"
+            row = (
+                db.table("legal_documents")
+                .insert(
+                    {
+                        "title": title,
+                        "short_name": title,
+                        "document_type": "attachment",
+                        "pdf_hash": pdf_hash,
+                        "pdf_page_count": page_count,
+                        "pdf_size_bytes": size_bytes,
+                        "total_chunks": 0,
+                        "total_sections": 0,
+                        "is_global": False,
+                        "owner_id": uid,
+                        "folder_id": folder_id,
+                    }
+                )
+                .execute()
+                .data[0]
+            )
+            doc_id = row["id"]
+            key_pdf = f"{doc_id}.pdf"
+            try:
+                _upload_object(db, "legal-docs", key_pdf, content, "application/pdf")
+                if text:
+                    _upload_object(
+                        db,
+                        "legal-docs",
+                        f"{doc_id}.txt",
+                        text.encode("utf-8"),
+                        "text/plain; charset=utf-8",
+                    )
+                db.table("legal_documents").update(
+                    {"pdf_storage_path": f"legal-docs/{key_pdf}"}
+                ).eq("id", doc_id).execute()
+            except Exception:
+                pass
+
+            os.unlink(tmp_path)
+            return {
+                "status": "inline",
+                "document_id": doc_id,
+                "chunks_created": 0,
+                "tier": "inline",
+                "page_count": page_count,
+            }
+
+        # ── RAG tier (>5 pages) ────────────────────────────────────────────
+        result = ingest_pdf(tmp_path)
         doc = (result or {}).get("document") or {}
         doc_id = doc.get("id")
         if doc_id:
-            from ..db.supabase import get_db
             patch: dict = {"is_global": False, "owner_id": uid}
             if folder_id:
                 patch["folder_id"] = folder_id
             try:
-                get_db().table("legal_documents").update(patch).eq("id", doc_id).execute()
+                db.table("legal_documents").update(patch).eq("id", doc_id).execute()
             except Exception:
-                # Non-fatal: ingestion succeeded, ownership stamp didn't.
+                pass
+            # Upload PDF to storage so the citation viewer can render it.
+            try:
+                key_pdf = f"{doc_id}.pdf"
+                _upload_object(db, "legal-docs", key_pdf, content, "application/pdf")
+                db.table("legal_documents").update(
+                    {"pdf_storage_path": f"legal-docs/{key_pdf}"}
+                ).eq("id", doc_id).execute()
+            except Exception:
                 pass
 
-        # Clean up
         os.unlink(tmp_path)
-
         return {
             "status": result.get("status", "unknown"),
-            "document_id": result.get("document", {}).get("id"),
+            "document_id": doc_id,
             "chunks_created": result.get("chunks_created", 0),
+            "tier": "rag",
+            "page_count": page_count,
         }
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception:
         raise HTTPException(status_code=500, detail="request could not be completed")
+
+
+@router.post("/documents/{doc_id}/promote")
+def promote_document_to_library(
+    doc_id: str,
+    uid: str = Depends(require_user),
+):
+    """Promote an inline-tier document to full RAG (chunk + embed).
+
+    Inline-tier docs have `total_chunks=0` and only their full text in storage.
+    Promotion runs the standard parse → chunk → embed pipeline against the
+    SAME row (no new document_id), so chips already pinned to user messages
+    remain valid and the doc becomes searchable across all the user's chats.
+    """
+    from ..db.supabase import get_db
+    from ..services.ingester import chunk_existing_pdf
+
+    db = get_db()
+
+    # Authorise: caller must own the doc (or admin). We use the same pattern
+    # as _assert_owns but allow global docs to be promoted by anyone (they
+    # already are searchable, so it's a no-op anyway).
+    row_res = db.table("legal_documents").select(
+        "id, owner_id, is_global, total_chunks, pdf_storage_path"
+    ).eq("id", doc_id).limit(1).execute()
+    if not row_res.data:
+        raise HTTPException(status_code=404, detail="document not found")
+    row = row_res.data[0]
+    if not row.get("is_global") and row.get("owner_id") != uid:
+        raise HTTPException(status_code=403, detail="not authorized for this document")
+
+    if (row.get("total_chunks") or 0) > 0:
+        return {"status": "already_promoted", "document_id": doc_id, "chunks_created": row["total_chunks"]}
+
+    storage_path = row.get("pdf_storage_path")
+    if not storage_path:
+        raise HTTPException(status_code=400, detail="document has no PDF in storage to promote")
+
+    bucket, _, key = storage_path.partition("/")
+    try:
+        pdf_bytes = db.storage.from_(bucket).download(key)
+    except Exception:
+        raise HTTPException(status_code=502, detail="could not fetch PDF from storage")
+
+    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+        tmp.write(pdf_bytes)
+        tmp_path = tmp.name
+    try:
+        result = chunk_existing_pdf(tmp_path, doc_id)
+    finally:
+        try:
+            os.unlink(tmp_path)
+        except Exception:
+            pass
+
+    return {
+        "status": result.get("status", "unknown"),
+        "document_id": doc_id,
+        "chunks_created": result.get("chunks_created", 0),
+    }
 
 
 @router.post("/brief/generate")
@@ -727,6 +1053,120 @@ def generate_brief(request: BriefRequest):
             "citations": [],
         }
     except Exception as e:
+        raise HTTPException(status_code=500, detail="request could not be completed")
+
+
+class BriefExportRequest(BaseModel):
+    issue: str = ""
+    rule: str = ""
+    application: str = ""
+    conclusion: str = ""
+    citations: list[dict] = []
+    format: str = "pdf"  # "pdf" | "docx"
+    title: str = "Legal Brief"
+
+
+_IRAC_SECTIONS = [
+    ("issue", "Issue"),
+    ("rule", "Rule"),
+    ("application", "Application"),
+    ("conclusion", "Conclusion"),
+]
+
+
+def _brief_filename(title: str, ext: str) -> str:
+    base = re.sub(r"[^A-Za-z0-9]+", "-", title or "legal-brief").strip("-").lower()
+    return f"{base or 'legal-brief'}.{ext}"
+
+
+def _citation_line(c: dict) -> str:
+    act = (c.get("act") or "").strip()
+    section = (c.get("section") or "").strip()
+    page = c.get("page")
+    parts = ", ".join(p for p in [act, section] if p)
+    if isinstance(page, int) and page > 0:
+        parts = f"{parts} (p.{page})" if parts else f"p.{page}"
+    return parts
+
+
+@router.post("/brief/export")
+def export_brief(request: BriefExportRequest):
+    """Render an IRAC brief into a downloadable PDF or DOCX file."""
+    fmt = (request.format or "pdf").lower()
+    if fmt not in ("pdf", "docx"):
+        raise HTTPException(status_code=400, detail="format must be 'pdf' or 'docx'")
+
+    if not any(getattr(request, key) for key, _ in _IRAC_SECTIONS):
+        raise HTTPException(status_code=400, detail="brief has no content to export")
+
+    subtitle = "IRAC Analysis — " + datetime.now(timezone.utc).strftime("%d %B %Y")
+    citations = [c for c in request.citations if _citation_line(c)]
+
+    try:
+        if fmt == "pdf":
+            from ..services.pdf_tools import _render_markdown_pdf
+
+            parts: list[str] = []
+            for key, label in _IRAC_SECTIONS:
+                value = (getattr(request, key) or "").strip()
+                if value:
+                    parts.append(f"## {label}\n\n{value}")
+            if citations:
+                lines = "\n".join(f"- {_citation_line(c)}" for c in citations)
+                parts.append(f"## Sources Referenced\n\n{lines}")
+            body_md = "\n\n".join(parts)
+
+            pdf_bytes = _render_markdown_pdf(
+                title=request.title or "Legal Brief",
+                body_md=body_md,
+                subtitle=subtitle,
+            )
+            if not pdf_bytes:
+                raise HTTPException(status_code=500, detail="failed to render PDF")
+            return StreamingResponse(
+                io.BytesIO(pdf_bytes),
+                media_type="application/pdf",
+                headers={
+                    "Content-Disposition": f'attachment; filename="{_brief_filename(request.title, "pdf")}"'
+                },
+            )
+
+        # docx
+        from docx import Document
+        from docx.shared import Pt, RGBColor
+
+        doc = Document()
+        heading = doc.add_heading(request.title or "Legal Brief", level=0)
+        sub = doc.add_paragraph(subtitle)
+        sub.runs[0].italic = True
+        sub.runs[0].font.size = Pt(10)
+        sub.runs[0].font.color.rgb = RGBColor(0x66, 0x66, 0x66)
+
+        for key, label in _IRAC_SECTIONS:
+            value = (getattr(request, key) or "").strip()
+            if not value:
+                continue
+            doc.add_heading(label, level=1)
+            doc.add_paragraph(value)
+
+        if citations:
+            doc.add_heading("Sources Referenced", level=1)
+            for c in citations:
+                doc.add_paragraph(_citation_line(c), style="List Bullet")
+
+        buf = io.BytesIO()
+        doc.save(buf)
+        buf.seek(0)
+        return StreamingResponse(
+            buf,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={
+                "Content-Disposition": f'attachment; filename="{_brief_filename(request.title, "docx")}"'
+            },
+        )
+    except HTTPException:
+        raise
+    except Exception:
         raise HTTPException(status_code=500, detail="request could not be completed")
 
 

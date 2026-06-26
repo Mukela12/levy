@@ -8,6 +8,8 @@ import AppSidebar from '@/components/layout/app-sidebar'
 import { MenuToggleIcon } from '@/components/layout/menu-toggle-icon'
 import { BriefProvider, useBrief } from '@/components/chat/brief-context'
 import { BriefPanel } from '@/components/chat/brief-panel'
+import { DomainBanner } from '@/components/layout/domain-banner'
+import { ChatStreamProvider } from '@/components/chat/chat-stream-context'
 import { PdfViewerProvider, usePdfViewer } from '@/components/chat/pdf-viewer-context'
 import { PdfViewer } from '@/components/chat/pdf-viewer'
 import { Scale, Loader2, X } from 'lucide-react'
@@ -63,6 +65,9 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex flex-col h-[100dvh] overflow-hidden bg-background" style={{ overscrollBehavior: 'none' }}>
+      {/* New-domain announcement (auto-hides on levylegal.ai + once dismissed) */}
+      <DomainBanner />
+
       {/* ── Top Nav Bar ── */}
       {/* min-h-12 + safe-area top padding so the bar clears the iPhone status
           bar / notch. env() is 0 on desktop, so the desktop bar is unchanged. */}
@@ -185,10 +190,12 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <BriefProvider>
-      <PdfViewerProvider>
-        <DashboardLayoutInner>{children}</DashboardLayoutInner>
-      </PdfViewerProvider>
-    </BriefProvider>
+    <ChatStreamProvider>
+      <BriefProvider>
+        <PdfViewerProvider>
+          <DashboardLayoutInner>{children}</DashboardLayoutInner>
+        </PdfViewerProvider>
+      </BriefProvider>
+    </ChatStreamProvider>
   )
 }

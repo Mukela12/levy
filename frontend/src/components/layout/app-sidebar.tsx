@@ -4,15 +4,18 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth/auth-provider'
+import { useChatStream } from '@/components/chat/chat-stream-context'
 import { createClient } from '@/lib/supabase'
 import {
   FolderOpen,
   Files,
+  GraduationCap,
   MessageSquare,
   Trash2,
   ChevronDown,
   ChevronRight,
   LogOut,
+  Loader2,
 } from 'lucide-react'
 import { LevyLogo } from '@/components/ui/levy-logo'
 
@@ -31,6 +34,7 @@ export default function AppSidebar({ mobileSidebarOpen, onCloseMobile }: AppSide
   const { user, signOut } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
+  const { streamingIds } = useChatStream()
   const [sessions, setSessions] = useState<ChatSession[]>([])
   const [casesExpanded, setCasesExpanded] = useState(true)
 
@@ -44,6 +48,16 @@ export default function AppSidebar({ mobileSidebarOpen, onCloseMobile }: AppSide
   useEffect(() => {
     onCloseMobile()
   }, [pathname])
+
+  // Pull in a freshly created chat so it appears (and can show its loader)
+  // the moment the user lands on its route, without waiting for a refresh.
+  useEffect(() => {
+    const match = pathname.match(/^\/chat\/([^/]+)$/)
+    if (match && user?.id && !sessions.some((s) => s.id === match[1])) {
+      loadSessions()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname, user?.id])
 
   async function loadSessions() {
     const supabase = createClient()
@@ -142,6 +156,7 @@ export default function AppSidebar({ mobileSidebarOpen, onCloseMobile }: AppSide
           <div className="space-y-px mt-1" suppressHydrationWarning>
             {sessions.map((session) => {
               const isActive = pathname === `/chat/${session.id}`
+              const isThinking = streamingIds.includes(session.id)
               return (
                 <div
                   key={session.id}
@@ -151,10 +166,18 @@ export default function AppSidebar({ mobileSidebarOpen, onCloseMobile }: AppSide
                       : 'hover:bg-white/[0.03]'
                   }`}
                 >
-                  {/* Status dot */}
-                  <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${
-                    isActive ? 'bg-emerald-500' : 'bg-white/20'
-                  }`} />
+                  {/* Status indicator: spinner while the chat is generating,
+                      otherwise a static dot (emerald when active). */}
+                  {isThinking ? (
+                    <Loader2
+                      className="w-3 h-3 mt-1 flex-shrink-0 text-emerald-400 animate-spin"
+                      aria-label="Generating response"
+                    />
+                  ) : (
+                    <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${
+                      isActive ? 'bg-emerald-500' : 'bg-white/20'
+                    }`} />
+                  )}
 
                   <Link
                     href={`/chat/${session.id}`}
@@ -195,6 +218,18 @@ export default function AppSidebar({ mobileSidebarOpen, onCloseMobile }: AppSide
 
       {/* Library Nav Links */}
       <div className="px-2 py-2 flex-shrink-0 space-y-px">
+        <Link
+          href="/study"
+          data-tour="nav-study"
+          className={`flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] font-medium transition-colors ${
+            pathname.startsWith('/study')
+              ? 'bg-emerald-500/10 text-emerald-500'
+              : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.03]'
+          }`}
+        >
+          <GraduationCap className="w-4 h-4" />
+          <span>Study</span>
+        </Link>
         <Link
           href="/documents"
           data-tour="nav-documents"

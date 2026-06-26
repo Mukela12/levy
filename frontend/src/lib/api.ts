@@ -363,7 +363,14 @@ export async function uploadDocument(
   token?: string,
   userId?: string,
   folderId?: string | null,
-): Promise<{ status: string; document_id: string }> {
+): Promise<{
+  status: string
+  document_id: string
+  chunks_created?: number
+  tier?: 'inline' | 'rag'
+  page_count?: number
+  suggest_promotion?: boolean
+}> {
   const headers: Record<string, string> = token
     ? { Authorization: `Bearer ${token}` }
     : await authHeaders()
@@ -462,6 +469,90 @@ export interface ApplicationPlanEvent {
   plan: ApplicationPlan
 }
 
+export interface EntitlementLineItem {
+  item: string
+  status: 'owed' | 'conditional' | 'contested' | 'not_applicable' | 'compliance' | 'needs_input'
+  basis: string
+  amount?: number | null
+  formula?: string
+  note?: string
+}
+
+export interface EntitlementBreakdown {
+  currency: string
+  monthly_basic_pay: number
+  years_of_service: number
+  termination_reason: string
+  contract_type: string
+  daily_rate: number
+  line_items: EntitlementLineItem[]
+  total_clearly_owed: number
+  needs_input: string[]
+  contested: string[]
+  assumptions: string[]
+  disclaimer: string
+}
+
+export interface EntitlementBreakdownEvent {
+  tool_call_id: string
+  breakdown: EntitlementBreakdown
+}
+
+export interface CaseLawMatch {
+  document_id: string
+  case: string
+  citation?: string
+  court?: string
+  area?: string
+  year?: number | null
+  page_count?: number | null
+  holding?: string
+  similarity?: number
+}
+
+export interface CaseLawEvent {
+  tool_call_id: string
+  cases: CaseLawMatch[]
+}
+
+// ── Study Mode ────────────────────────────────────────────────────────────
+export interface CheatSheet {
+  title: string
+  area: string
+  topic: string
+  key_statutes?: Array<{ name: string; note?: string }>
+  sections: Array<{ heading: string; points: string[] }>
+  key_cases?: Array<{ name: string; holding?: string }>
+  exam_traps?: string[]
+  mnemonic?: string
+  artifact_id?: string
+}
+
+export interface CheatSheetEvent {
+  tool_call_id: string
+  cheat_sheet: CheatSheet
+}
+
+export interface QuizQuestion {
+  stem: string
+  options: string[]
+  correct_index: number
+  explanation?: string
+  citation?: string
+}
+
+export interface Quiz {
+  title: string
+  area: string
+  topic: string
+  questions: QuizQuestion[]
+}
+
+export interface QuizEvent {
+  tool_call_id: string
+  quiz: Quiz
+}
+
 export interface StreamHandlers {
   onThinking?: () => void
   onToken?: (text: string) => void
@@ -471,6 +562,10 @@ export interface StreamHandlers {
   onCompaction?: (event: CompactionEvent) => void
   onTemplateSuggestion?: (event: TemplateSuggestionEvent) => void
   onApplicationPlan?: (event: ApplicationPlanEvent) => void
+  onEntitlementBreakdown?: (event: EntitlementBreakdownEvent) => void
+  onCaseLaw?: (event: CaseLawEvent) => void
+  onCheatSheet?: (event: CheatSheetEvent) => void
+  onQuiz?: (event: QuizEvent) => void
   onDone?: (metadata: AgentDoneMetadata) => void
   onError?: (message: string) => void
 }
@@ -509,7 +604,15 @@ export async function streamQuery(
     }),
   })
 
-  if (!res.ok) throw new Error(`API error: ${res.status}`)
+  if (!res.ok) {
+    // Friendly, recognizable messages so callers can show them verbatim.
+    // 401/403 = anonymous chat is currently disabled (abuse guard); 429 = rate limited.
+    if (res.status === 401 || res.status === 403)
+      throw new Error('Please sign in to chat with Levy. Anonymous chat is temporarily disabled to prevent abuse.')
+    if (res.status === 429)
+      throw new Error('Levy is handling a lot of requests right now. Please wait a moment and try again.')
+    throw new Error(`API error: ${res.status}`)
+  }
 
   const reader = res.body?.getReader()
   if (!reader) throw new Error('No response body')
@@ -568,6 +671,18 @@ export async function streamQuery(
           break
         case 'template_suggestion':
           handlers?.onTemplateSuggestion?.(parsed as unknown as TemplateSuggestionEvent)
+          break
+        case 'entitlement_breakdown':
+          handlers?.onEntitlementBreakdown?.(parsed as unknown as EntitlementBreakdownEvent)
+          break
+        case 'case_law':
+          handlers?.onCaseLaw?.(parsed as unknown as CaseLawEvent)
+          break
+        case 'cheat_sheet':
+          handlers?.onCheatSheet?.(parsed as unknown as CheatSheetEvent)
+          break
+        case 'quiz':
+          handlers?.onQuiz?.(parsed as unknown as QuizEvent)
           break
         case 'application_plan':
           handlers?.onApplicationPlan?.(parsed as unknown as ApplicationPlanEvent)
@@ -630,6 +745,51 @@ export async function generateBrief(
   })
   if (!res.ok) throw new Error(`Brief generation error: ${res.status}`)
   return res.json()
+}
+
+/**
+ * Promote an inline-tier document to full RAG (chunk + embed in place, no new
+ * document_id). Used by the "Save to library" affordance on attachment chips.
+ */
+export async function promoteDocument(
+  documentId: string,
+  token?: string,
+): Promise<{ status: string; document_id: string; chunks_created: number }> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (token) headers['Authorization'] = `Bearer ${token}`
+  const res = await fetch(`${API_URL}/api/documents/${documentId}/promote`, {
+    method: 'POST',
+    headers,
+  })
+  if (!res.ok) throw new Error((await res.text()) || `promote ${res.status}`)
+  return res.json()
+}
+
+export async function exportBrief(
+  brief: BriefResponse,
+  format: 'pdf' | 'docx',
+  token?: string,
+  title = 'Legal Brief',
+): Promise<void> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const res = await fetch(`${API_URL}/api/brief/export`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ ...brief, format, title }),
+  })
+  if (!res.ok) throw new Error(`Brief export error: ${res.status}`)
+
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${title.replace(/[^A-Za-z0-9]+/g, '-').toLowerCase() || 'legal-brief'}.${format}`
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
 }
 
 export type { ChatResponse, ChunkUsed, SearchResult, SearchResponse, DocumentInfo, DocumentsResponse }

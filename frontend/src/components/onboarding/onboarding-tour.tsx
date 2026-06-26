@@ -40,7 +40,7 @@ import { LevyLogo } from '@/components/ui/levy-logo'
  * users). The Done/Skip handler writes BOTH (best-effort on the metadata
  * update; localStorage is the always-on fallback).
  */
-const STORAGE_KEY = 'levy_onboarding_v2'
+const STORAGE_KEY = 'levy_onboarding_v3'
 const METADATA_FIELD = 'onboarded_at'
 
 interface Step {
@@ -88,6 +88,15 @@ const STEPS: Step[] = [
       'Drop in PDFs and Levy will search them in this chat alongside the curated library.',
     side: 'auto',
     pad: 4,
+  },
+  {
+    selector: '[data-tour="nav-study"]',
+    route: '/chat',
+    title: 'Study mode',
+    body:
+      'Learn any Zambian law topic, generate exam cheat sheets, and test yourself with graded quizzes. Built for students and exam prep.',
+    side: 'auto',
+    requiresMenu: true,
   },
   {
     selector: '[data-tour="nav-templates"]',

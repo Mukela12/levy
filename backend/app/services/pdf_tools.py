@@ -375,6 +375,8 @@ async def pdf_generate(
             "tool": "pdf_generate",
             "subtitle": subtitle,
             "slug": _slug(title),
+            "source_markdown": content_markdown,  # enables lazy Word (.docx) export
+            "layout": "memo",
         },
         owner_id=owner_id,
         session_id=session_id,
@@ -549,6 +551,8 @@ async def pdf_generate_legal(
         meta={
             "tool": meta_tool,
             "slug": _slug(title),
+            "source_markdown": body_markdown,  # enables lazy Word (.docx) export
+            "layout": "legal",
         },
         owner_id=owner_id,
         session_id=session_id,

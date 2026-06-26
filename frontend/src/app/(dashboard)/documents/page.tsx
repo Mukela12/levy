@@ -31,7 +31,6 @@ import {
   Upload,
   X,
 } from 'lucide-react'
-import { CTA } from '@/components/ui/cta'
 
 // Sentinel ids used to address the two non-user-folder pseudo-folders.
 const FOLDER_GLOBAL = '__global__'
@@ -286,28 +285,25 @@ export default function DocumentsPage() {
           <div className="flex items-center gap-2 flex-shrink-0">
             <input ref={fileInputRef} type="file" accept=".pdf" onChange={handleUpload} className="hidden" />
             {activeFolder && activeFolder !== FOLDER_GLOBAL && (
-              <>
-                <CTA
-                  size="md"
-                  tone="primary"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading || !user}
-                  iconOnly
-                  startIcon={uploading ? <Loader2 className="animate-spin" /> : <Upload />}
-                  aria-label={uploading ? 'Uploading' : 'Upload PDF'}
-                  className="sm:hidden"
-                />
-                <CTA
-                  size="md"
-                  tone="primary"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading || !user}
-                  startIcon={uploading ? <Loader2 className="animate-spin" /> : <Upload />}
-                  className="hidden sm:inline-flex"
-                >
-                  {uploading ? 'Uploading' : 'Upload'}
-                </CTA>
-              </>
+              // Single refined Upload button. Subtle emerald (no glow, no
+              // gradient) so it reads as a utility action rather than
+              // competing with the hero CTAs ("New chat", "Sign in").
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading || !user}
+                aria-label={uploading ? 'Uploading file' : 'Upload PDF'}
+                className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full text-[13px] font-medium
+                  text-emerald-300 bg-emerald-500/10 border border-emerald-500/25
+                  hover:bg-emerald-500/15 hover:border-emerald-500/40 hover:text-emerald-200
+                  active:translate-y-px transition-colors
+                  disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {uploading
+                  ? <Loader2 className="size-3.5 animate-spin" />
+                  : <Plus className="size-3.5" strokeWidth={2.5} />}
+                <span>{uploading ? 'Uploading' : 'Upload'}</span>
+              </button>
             )}
           </div>
         </div>

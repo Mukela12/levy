@@ -37,7 +37,74 @@ from .tools import (
 
 import time as _time
 
-DEFAULT_MODEL = "claude-sonnet-4-20250514"
+# claude-sonnet-4-20250514 was retired by Anthropic (now 404s); Sonnet 4.6
+# is the current replacement. Override per-request by passing `model`.
+DEFAULT_MODEL = "claude-sonnet-4-6"
+
+# If the primary model is unavailable (e.g. Anthropic retires a snapshot and
+# the configured id starts returning 404), the agent transparently retries the
+# turn on the next model in this list before any tokens are streamed. This is
+# the safety net that keeps Levy answering if a model id ever goes stale again.
+FALLBACK_MODELS = ["claude-sonnet-4-5", "claude-opus-4-1-20250805"]
+
+
+def _friendly_api_error(e: object) -> str:
+    """Map a raw Anthropic API error to a calm, user-facing sentence.
+
+    We never surface raw provider errors (model ids, credit balances, request
+    ids) to end users — those are noise at best and a trust hit at worst.
+    """
+    status = getattr(e, "status_code", None)
+    msg = str(e).lower()
+    if status == 404 or "not_found" in msg:
+        return (
+            "Levy's language model is temporarily unavailable. "
+            "Please try again in a moment."
+        )
+    if status == 429 or "rate_limit" in msg:
+        return (
+            "Levy is handling a lot of requests right now. "
+            "Please wait a few seconds and try again."
+        )
+    if status == 400 and ("credit" in msg or "balance" in msg):
+        return (
+            "Levy is temporarily unavailable. Our team has been notified. "
+            "Please try again shortly."
+        )
+    if status == 529 or "overloaded" in msg:
+        return "Levy is briefly overloaded. Please try again in a moment."
+    return "Levy ran into a temporary problem answering that. Please try again."
+
+
+# Future-tense "I'm about to produce a document" promises. When the model
+# ends a turn with one of these and called NO tool, it has stalled: it told
+# the user it would draft but never did. QA found a litigant stuck in this
+# loop for hours ("Let me draft right now." -> nothing -> "I am waiting").
+_PROMISE_TRIGGERS = (
+    "let me draft", "let me prepare", "let me generate", "let me create",
+    "let me put together", "let me compile", "let me build", "let me produce",
+    "let me actually draft", "let me do this right now", "let me get started",
+    "let me start", "drafting now", "draft now", "i'll draft", "i will draft",
+    "i'll prepare", "i will prepare", "starting now", "let me draft both",
+    "let me draft the", "drafting the", "let me put this together",
+)
+# If the reply shows the work is actually done, it is not a stall.
+_COMPLETION_MARKERS = (
+    "artifact", "see the", "is ready", "are ready", "i've drafted",
+    "i have drafted", "here is", "here are", "download", "attached",
+    "below is", "as a pdf", "drafted the", "prepared the",
+)
+
+
+def _is_stalled_draft_promise(text: str) -> bool:
+    """True if a short, tool-less reply only PROMISES to draft (no output)."""
+    t = (text or "").strip().lower()
+    if not t or len(t) > 600:        # real drafts produce an artifact + longer prose
+        return False
+    if any(m in t for m in _COMPLETION_MARKERS):
+        return False
+    return any(p in t for p in _PROMISE_TRIGGERS)
+
 
 # Per-process cooldown bookkeeping: session_id -> monotonic timestamp of last
 # compaction. Worker restarts wipe this naturally, which is fine.
@@ -59,6 +126,11 @@ Workflow — corpus-first, web on demand:
    without waiting for permission. If gov_search comes back thin, fall back
    to `web_search`. If a result snippet looks promising but truncated,
    `web_fetch` the full URL.
+   For current events or "what's the latest on ..." questions, use
+   `news_search` instead: it pulls fresh, date-stamped stories from
+   established Zambian outlets (ZNBC, Zambia Daily Mail, Times of Zambia,
+   News Diggers, Lusaka Times, The Mast, Mwebantu). Cite the outlet and the
+   published date, and verify any legal claim against a primary source.
 3. STOP gathering and WRITE THE ANSWER after at most 4 tool rounds. The
    user wants a usable answer, not a perfect one. Note any gaps in the
    answer itself.
@@ -137,6 +209,30 @@ recently changed, and cite the instrument):
 - Investment incentives: Investment, Trade and Business Development Act
   No. 18 of 2022 (USD 1,000,000 foreign-investor threshold) — see the
   guardrail below; the old ZDA Act No. 11 of 2006 is REPEALED.
+
+EMPLOYMENT ENTITLEMENTS — USE THE CALCULATOR, NEVER DO THE MATHS YOURSELF.
+When the user asks what an employee is owed on leaving a job (gratuity,
+severance, redundancy, notice / pay in lieu, accrued leave, "what would a
+worker of N years on K_ be entitled to after resigning / being made
+redundant / being dismissed"), call `calculate_entitlements`. The figures
+are computed deterministically server-side and grounded in the Employment
+Code Act 2019, so they are reliable; figures you compute in prose are not.
+Gather the three required inputs first — monthly basic pay, years of
+service, and how the employment ended — and ask for any that are missing
+rather than guessing. After the tool returns, explain in plain language
+what is clearly owed versus what is contested or needs more facts (e.g.
+gratuity on resignation is contested), and offer to search case law on any
+contested point. Do not restate the rand/kwacha figures in a way that
+contradicts the card.
+
+CASE LAW / PRECEDENT — USE `search_case_law`. When the user asks for cases,
+authorities, or precedent ("any cases on this?", "find a judgment on X",
+"what has the court held on Y"), call `search_case_law` with the point of
+law. It returns real ingested Zambian judgments (rendered as precedent cards
+the user can open). Cite the cases it returns by name; never invent a
+citation or a holding. If it returns nothing useful, you may fall back to
+gov_search on judiciaryzambia.com / zambialii.org and cite the URL, but say
+plainly that it is not yet in the corpus.
 
 When the user describes a real legal situation in Zambia and asks for
 help bringing a case, filing an application, or seeking relief from a
@@ -236,6 +332,19 @@ letter, brief, employment letter, anything document-shaped):
    - the dedicated court tools (draft_summons / draft_affidavit /
      draft_skeletal / draft_order / draft_application_bundle) for a court
      application.
+
+CRITICAL: never announce a draft and then stop. If you tell the user you
+are drafting ("Let me draft now", "Drafting the Skeletal Arguments"), you
+MUST call the drafting tool in that SAME turn. A reply that only promises to
+draft, with no tool call, is a failure that leaves the user waiting.
+
+When the user has ALREADY given the facts and explicitly tells you to draft
+("just draft it", "draft now", "proceed", "I am waiting", or after you asked
+your questions and they answered): skip suggest_templates and any further
+confirmation, and call the drafting tool immediately in this turn. Do not
+re-ask about templates you already settled, and do not re-confirm a plan the
+user has already approved. Only pause for a question if a fact the tool
+strictly needs (party names, a deponent's address) is genuinely missing.
 
 ═══════════════════════════════════════════════════════════════════════
 ZAMBIAN DRAFTING PLAYBOOK (for draft_legal_document)
@@ -424,6 +533,77 @@ Do NOT generate an artifact unless the user asked for one (explicitly or
 implicitly via "draft a memo", "extract sections", "make a one-pager",
 "prepare a brief"). Plain Q&A doesn't need an artifact.
 
+═══════════════════════════════════════════════════════════════════════
+STUDY MODE (for law students and exam candidates)
+═══════════════════════════════════════════════════════════════════════
+Many users are students (university or ZIALE) revising for exams. When they
+say "teach me X", "explain X", "create a cheat sheet", "quiz me", "mock
+exam", "test me", or arrive from Study mode, act as an exam tutor. In EVERY
+case, ground yourself first: search_corpus for the governing Act and sections,
+and search_case_law for the leading Zambian cases. Never teach law from memory
+alone; cite real sections and real cases.
+
+GROUND FROM THE RIGHT SOURCE. A study request can be about (a) a topic the
+user names, (b) the CURRENT conversation ("quiz me on what we just discussed",
+"test me on this", "summarise this into a cheat sheet"), or (c) a specific
+document or case in this thread (an upload, an attachment, a judgment you
+retrieved). When the request points at "this" or the conversation, build the
+lesson, cheat sheet, or quiz from THAT material, plus whatever statute and case
+retrieval is needed to keep it accurate. Do not restart a generic topic from
+scratch when the user means the thing in front of them. These tools work in any
+chat, so the moment a user expresses a wish to learn, revise, or be tested,
+reach for TEACH / CHEAT SHEET / QUIZ rather than answering in plain prose.
+
+1. TEACH ("teach me X", "explain X for my exam"): write a structured lesson in
+   prose, not a tool. Shape it as: a short plain-language overview, the
+   statutory framework (named Act + section numbers), the leading cases and
+   what each decided, how it applies in practice with a short worked example,
+   the common exam pitfalls, and a two or three line recap. Pitch it to a
+   student who must reproduce this in an exam. At the end, offer in one line to
+   make a cheat sheet or quiz on the topic.
+
+2. CHEAT SHEET ("cheat sheet", "summary sheet", "revision notes"): after
+   grounding, call make_cheat_sheet with distilled, memorable content (key
+   statutes, titled point blocks, leading cases with one-line holdings, exam
+   traps, an optional mnemonic). It renders a study card and a downloadable
+   PDF/Word sheet.
+
+3. QUIZ / MOCK EXAM ("quiz me", "test me", "mock exam"): after grounding, call
+   generate_quiz with 4 to 8 grounded multiple-choice questions (4 options
+   each, the correct index, a why-explanation, and a section/case citation).
+   The UI grades the student interactively, so do NOT also paste the questions
+   or answers as prose; a one-line intro is enough.
+
+ZIALE / BAR EXAM (the Legal Practitioners Qualifying Examination, LPQE). When
+the user is a ZIALE candidate, or mentions the bar, the LPQE, or a Head, study
+the way ZIALE actually examines:
+- The Heads are PRACTICE subjects: Civil Procedure (Superior and Subordinate
+  Court), Criminal Procedure, Conveyancing and Legal Drafting, Probate and
+  Succession, Commercial Transactions, Company Law and Procedure, Professional
+  Conduct and Ethics, Bookkeeping and Accounts, Trial Advocacy, ADR, and Legal
+  Writing. Pass mark is 50 percent per Head and the exam is notoriously hard,
+  so be rigorous and practical, not superficial.
+- ZIALE questions are APPLICATION based, not recall. They give a fact scenario
+  and ask the candidate to advise, draft, or state the exact procedure: the
+  rule, the court, the form, the timeline, and the authority. So write quizzes
+  as scenario questions (a short fact pattern, then the question), and for the
+  drafting Heads set an actual drafting task in the lesson with a model answer.
+- Ground in the real machinery: the relevant Act, the Rules of court and any
+  subsidiary legislation and practice directions, and the LPQE syllabus topics.
+  Use search_corpus for these.
+- For RECENT or PAST ZIALE questions and what the exam is currently focused on,
+  use web_search and gov_search (ZIALE is at ziale.org.zm; candidates also
+  discuss past questions online). Pull real recent questions to shape the quiz
+  and say where they came from. Never claim a question appeared on a real past
+  paper unless a source actually shows it.
+
+PAST PAPERS IN THE CORPUS. The corpus includes University of Zambia (UNZA)
+School of Law past exam papers (titled "UNZA School of Law Past Paper ..."),
+which search_corpus will surface. Use them to model realistic exam questions
+and to see how a topic is actually examined. They are university LLB papers,
+NOT ZIALE bar papers, so cite them honestly as UNZA past papers and never
+present a UNZA question as a ZIALE one.
+
 Final answer format:
 - Prose with inline citations: `[Companies Act, S.13] (p. 370)` for corpus,
   bare URLs for web results.
@@ -475,8 +655,91 @@ async def run_agent(
         attached_doc_ids=attached_doc_ids,
     )
     tool_schemas = to_anthropic_schema(registry)
+    # Prompt caching: the tool definitions are identical on every model call, so
+    # mark the last one as a cache breakpoint. Combined with the cached system
+    # prompt below, this lets the 12-iteration tool loop (and back-to-back
+    # messages within the 5-minute cache window) re-read the large static prefix
+    # at ~10% of the input cost instead of re-billing it every call.
+    if tool_schemas:
+        tool_schemas[-1] = {**tool_schemas[-1], "cache_control": {"type": "ephemeral"}}
 
-    system_prompt = SYSTEM_PROMPT + AGENT_SYSTEM_SUFFIX
+    # If the user attached documents to this conversation, prepend the titles
+    # to the system prompt and explicitly tell the model to read them BEFORE
+    # reaching for the web.
+    #
+    # Two tiers:
+    #   * Inline (total_chunks == 0): small docs (≤5 pages). The full extracted
+    #     text lives at `legal-docs/<id>.txt` in storage; we inline it into the
+    #     system prompt so the model reads it directly — no tool call required.
+    #   * RAG: search_corpus already includes attached docs in its candidate
+    #     pool when attached_doc_ids is set, so the model just calls it first.
+    attachments_block = ""
+    if attached_doc_ids:
+        try:
+            from ..db.supabase import get_db
+            db = get_db()
+            rows = (
+                db.table("legal_documents")
+                .select("id,title,short_name,pdf_page_count,total_chunks")
+                .in_("id", attached_doc_ids)
+                .execute()
+                .data
+                or []
+            )
+            if rows:
+                INLINE_MAX_CHARS = 30_000  # per attachment hard cap
+                INLINE_TOTAL_CAP = 60_000  # across all inline docs in one turn
+                lines: list[str] = []
+                inline_sections: list[str] = []
+                inline_used = 0
+                for r in rows:
+                    name = (r.get("short_name") or r.get("title") or "untitled").strip()
+                    pages = r.get("pdf_page_count")
+                    is_inline = (r.get("total_chunks") or 0) == 0
+                    tier_label = "inline" if is_inline else "RAG (searchable)"
+                    lines.append(
+                        f'  - "{name}"' + (f" ({pages} pages, {tier_label})" if pages else f" ({tier_label})")
+                    )
+                    if is_inline and inline_used < INLINE_TOTAL_CAP:
+                        try:
+                            blob = db.storage.from_("legal-docs").download(f"{r['id']}.txt")
+                            text = blob.decode("utf-8", errors="ignore") if isinstance(blob, (bytes, bytearray)) else ""
+                            if text:
+                                budget = min(INLINE_MAX_CHARS, INLINE_TOTAL_CAP - inline_used)
+                                snippet = text[:budget]
+                                truncated = "\n\n[truncated]" if len(text) > budget else ""
+                                inline_sections.append(
+                                    f"### Attachment: {name}\n{snippet}{truncated}"
+                                )
+                                inline_used += len(snippet)
+                        except Exception:
+                            pass
+                attachments_block = (
+                    "\n\n## User attachments for this conversation\n"
+                    "The user has attached these documents to this chat:\n"
+                    + "\n".join(lines)
+                    + "\n\nREAD THE ATTACHMENTS FIRST. For RAG attachments, your first "
+                    "tool call must be `search_corpus` with a query drawn from the user's "
+                    "question; the results will include those attachments. For inline "
+                    "attachments, the full text is provided below — read it directly and "
+                    "do NOT search for it. Do not call gov_search / web_search / "
+                    "news_search until you have read the attachments. Cite attachments "
+                    "by name when you quote them."
+                )
+                if inline_sections:
+                    attachments_block += (
+                        "\n\n## Inline attachment contents\n"
+                        "These are the FULL texts of the small attachments listed above.\n\n"
+                        + "\n\n---\n\n".join(inline_sections)
+                    )
+        except Exception:
+            attachments_block = ""
+
+    system_prompt = SYSTEM_PROMPT + AGENT_SYSTEM_SUFFIX + attachments_block
+    # Send the (large, static) system prompt as a cached block so it is billed
+    # once per 5-minute window instead of on every one of the up-to-12 model
+    # calls per message. This is the single biggest cost lever for the chat.
+    cached_system = [{"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}}]
 
     messages: list[dict] = list(history or [])
     messages.append({"role": "user", "content": user_query})
@@ -490,6 +753,7 @@ async def run_agent(
     total_input_tokens = 0
     total_output_tokens = 0
     iterations = 0
+    auto_nudges = 0   # times we've prodded the model past a "I'll draft" stall
 
     while True:
         # If we hit the iteration cap, force a final answer with no tools so
@@ -530,28 +794,51 @@ async def run_agent(
 
         # Streaming call. Capture tool_use blocks as they finalize, and forward
         # text deltas as `token` events.
+        #
+        # Model resilience: try the configured model first, then FALLBACK_MODELS.
+        # We only fall back BEFORE any token has streamed (a model-not-found
+        # 404 fails at stream-open, so this is safe and avoids duplicating
+        # partial output). Once a fallback succeeds we keep using it for the
+        # rest of this run so we don't re-hit the dead model every iteration.
         final_message = None
-        try:
-            async with client.messages.stream(
-                model=model_name,
-                max_tokens=4096,
-                system=system_prompt,
-                messages=compacted_messages,
-                tools=[] if cap_reached else tool_schemas,
-            ) as stream:
-                async for event in stream:
-                    etype = getattr(event, "type", None)
-                    if etype == "content_block_delta":
-                        delta = getattr(event, "delta", None)
-                        if delta and getattr(delta, "type", None) == "text_delta":
-                            yield {"type": "token", "content": delta.text}
-                final_message = await stream.get_final_message()
-        except anthropic.APIError as e:  # noqa: BLE001
-            yield {"type": "error", "message": f"anthropic API error: {e}"}
-            return
+        streamed_any = False
+        last_error: Exception | None = None
+        model_attempts = [model_name] + [m for m in FALLBACK_MODELS if m != model_name]
+        for attempt_idx, attempt_model in enumerate(model_attempts):
+            try:
+                async with client.messages.stream(
+                    model=attempt_model,
+                    max_tokens=8192,
+                    system=cached_system,
+                    messages=compacted_messages,
+                    tools=[] if cap_reached else tool_schemas,
+                ) as stream:
+                    async for event in stream:
+                        etype = getattr(event, "type", None)
+                        if etype == "content_block_delta":
+                            delta = getattr(event, "delta", None)
+                            if delta and getattr(delta, "type", None) == "text_delta":
+                                streamed_any = True
+                                yield {"type": "token", "content": delta.text}
+                    final_message = await stream.get_final_message()
+                if attempt_idx > 0:
+                    # Fell back successfully — stick with this model from now on.
+                    model_name = attempt_model
+                    print(f"[agent] model fallback engaged -> {attempt_model}")
+                break
+            except anthropic.NotFoundError as e:  # model id retired/unknown
+                last_error = e
+                print(f"[agent] model {attempt_model} not found (404); trying fallback")
+                if streamed_any:
+                    break  # can't safely restart mid-stream
+                continue
+            except anthropic.APIError as e:  # rate limit / credit / overloaded / etc.
+                last_error = e
+                print(f"[agent] anthropic API error on {attempt_model}: {e}")
+                break
 
         if final_message is None:
-            yield {"type": "error", "message": "no final message from model"}
+            yield {"type": "error", "message": _friendly_api_error(last_error)}
             return
 
         if final_message.usage:
@@ -562,8 +849,29 @@ async def run_agent(
         # (preserving any tool_use blocks so the next user turn's tool_results match).
         messages.append({"role": "assistant", "content": final_message.content})
 
-        # If the model is done talking, exit the loop.
+        # If the model is done talking, exit the loop — UNLESS it stalled:
+        # it ended the turn merely PROMISING to draft (no tool call). Prod it
+        # once or twice to actually call the drafting tool this turn instead
+        # of handing the user a useless "Let me draft now." stub.
         if final_message.stop_reason != "tool_use":
+            final_text = "".join(
+                getattr(b, "text", "") for b in final_message.content
+                if getattr(b, "type", None) == "text"
+            )
+            if auto_nudges < 2 and _is_stalled_draft_promise(final_text):
+                auto_nudges += 1
+                messages.append({
+                    "role": "user",
+                    "content": (
+                        "You said you would draft but did not call any drafting tool. "
+                        "Produce the document NOW: call the appropriate tool "
+                        "(draft_skeletal / draft_affidavit / draft_legal_document / "
+                        "pdf_generate / draft_application_bundle) in THIS turn using the "
+                        "facts already provided. Do not reply with another promise; if a "
+                        "required fact is genuinely missing, ask one specific question."
+                    ),
+                })
+                continue
             break
 
         # Otherwise, execute every tool_use block in this assistant message
@@ -653,6 +961,43 @@ async def run_agent(
                     "type": "application_plan",
                     "tool_call_id": tool_id,
                     "plan": application_plan,
+                }
+
+            # Surface the deterministic entitlement breakdown so the UI can
+            # render a calculator card inline, immediately after the tool card.
+            entitlement_breakdown = envelope.get("entitlement_breakdown")
+            if entitlement_breakdown:
+                yield {
+                    "type": "entitlement_breakdown",
+                    "tool_call_id": tool_id,
+                    "breakdown": entitlement_breakdown,
+                }
+
+            # Surface matched precedent so the UI renders judgment cards inline.
+            case_law = envelope.get("case_law")
+            if case_law and case_law.get("cases"):
+                yield {
+                    "type": "case_law",
+                    "tool_call_id": tool_id,
+                    "cases": case_law["cases"],
+                }
+
+            # Study Mode: surface the cheat sheet as an inline revision card.
+            cheat_sheet = envelope.get("cheat_sheet")
+            if cheat_sheet:
+                yield {
+                    "type": "cheat_sheet",
+                    "tool_call_id": tool_id,
+                    "cheat_sheet": cheat_sheet,
+                }
+
+            # Study Mode: surface the interactive quiz.
+            quiz = envelope.get("quiz")
+            if quiz and quiz.get("questions"):
+                yield {
+                    "type": "quiz",
+                    "tool_call_id": tool_id,
+                    "quiz": quiz,
                 }
 
             tool_results_content.append(
