@@ -437,6 +437,25 @@ async def _web_fetch(url: str) -> dict:
     returns that instead. Without the fallback the agent ends up reporting
     "no content extracted" for half the gov sources and gives up.
     """
+    # ZambiaLII blocks automated access and is licensed CC-NC: we never scrape
+    # it. Refuse the fetch and tell the model to be honest rather than promising
+    # a full-text fetch that always fails.
+    if "zambialii.org" in (url or "").lower():
+        return {
+            "result": {
+                "url": url,
+                "content": "",
+                "blocked": True,
+                "note": (
+                    "ZambiaLII cannot be fetched (it blocks automated access). Do NOT say you "
+                    "will fetch or that you have its full text. Cite the URL as a reference only, "
+                    "tell the user this judgment is not in Levy's library, and offer what you do "
+                    "have: the citation, any held related judgments via search_case_law, or an "
+                    "official copy on judiciaryzambia.com."
+                ),
+            },
+            "db_sources": [], "web_sources": [],
+        }
     settings = get_settings()
 
     tavily_error: str | None = None

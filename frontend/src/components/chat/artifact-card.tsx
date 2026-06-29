@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { FileText, Download, Loader2, Layers, Scissors, Globe } from 'lucide-react'
+import { FileText, Download, Loader2, Layers, Scissors, Globe, Copy, Check } from 'lucide-react'
 import { LevyLogo } from '@/components/ui/levy-logo'
 import type { ArtifactView } from '@/lib/api'
 
@@ -35,6 +35,7 @@ function formatBytes(n?: number): string {
 
 export function ArtifactCard({ artifact, onOpen }: ArtifactCardProps) {
   const [busy, setBusy] = useState<null | 'pdf' | 'docx'>(null)
+  const [copied, setCopied] = useState(false)
   const meta = SOURCE_META[artifact.source] ?? SOURCE_META.uploaded
   const Icon = meta.Icon
   const sizeLabel = formatBytes(artifact.size_bytes)
@@ -63,6 +64,22 @@ export function ArtifactCard({ artifact, onOpen }: ArtifactCardProps) {
       // best-effort; user can retry
     } finally {
       setBusy(null)
+    }
+  }
+
+  // Copy the drafted text straight to the clipboard. Mobile downloads of signed
+  // PDF URLs are unreliable, and users asked to "just type the reply into
+  // copyable text", so this is the most dependable way to get a draft out.
+  async function handleCopy() {
+    try {
+      const r = await fetch(`${API_URL}/api/artifacts/${artifact.id}/text`)
+      if (!r.ok) throw new Error(`text ${r.status}`)
+      const j = await r.json()
+      await navigator.clipboard.writeText(j.text || '')
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // best-effort
     }
   }
 
@@ -126,6 +143,17 @@ export function ArtifactCard({ artifact, onOpen }: ArtifactCardProps) {
           >
             {busy === 'docx' ? <Loader2 className="size-3.5 animate-spin" /> : <FileText className="size-3.5" />}
             <span>Word</span>
+          </button>
+        )}
+        {canWord && (
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-white/70 transition-colors"
+            aria-label="Copy the text"
+          >
+            {copied ? <Check className="size-3.5 text-emerald-400" /> : <Copy className="size-3.5" />}
+            <span>{copied ? 'Copied' : 'Copy text'}</span>
           </button>
         )}
       </div>

@@ -238,7 +238,16 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
                 await queue.put(event)
         except Exception as e:  # noqa: BLE001
             logger.exception("agent run failed")
-            await queue.put({"type": "error", "message": "Levy ran into a temporary problem. Please try again."})
+            msg = (
+                "Levy ran into a problem answering that. Please try again. If you pasted a very "
+                "long document or table, try sending it in smaller parts."
+            )
+            # Persist a visible message so a failed run is never saved as a blank
+            # reply (which made users re-send the same large paste repeatedly).
+            if not acc.has_content():
+                acc.content = msg
+                acc.blocks.append({"kind": "text", "text": msg})
+            await queue.put({"type": "error", "message": msg})
         finally:
             await queue.put(None)  # stream sentinel
             # Durable, server-owned save (signed-in threads only). Anonymous
@@ -428,6 +437,30 @@ def get_artifact_pdf_url(artifact_id: str, expires_in: int = 3600, uid: str | No
         "signed_url": signed.get("signedURL") or signed.get("signed_url") or signed.get("signedUrl"),
         "expires_in": expires_in,
     }
+
+
+@router.get("/artifacts/{artifact_id}/text")
+def get_artifact_text(artifact_id: str, uid: str | None = Depends(optional_user)):
+    """Plain text of a generated document so the user can copy it directly.
+
+    Mobile downloads of signed PDF URLs are unreliable, and users asked to just
+    copy the drafted text. We return the stored source Markdown (same content
+    that renders the PDF/Word), same authorization as the other artifact routes.
+    """
+    from ..db.supabase import get_db
+
+    db = get_db()
+    res = (db.table("artifacts").select("id, title, meta, owner_id")
+           .eq("id", artifact_id).limit(1).execute())
+    if not res.data:
+        raise HTTPException(status_code=404, detail="artifact not found")
+    row = res.data[0]
+    if row.get("owner_id") and row.get("owner_id") != uid:
+        raise HTTPException(status_code=403, detail="not authorized for this artifact")
+    text = (row.get("meta") or {}).get("source_markdown")
+    if not text:
+        raise HTTPException(status_code=409, detail="this document has no copyable text")
+    return {"artifact_id": artifact_id, "title": row.get("title"), "text": text}
 
 
 @router.get("/artifacts/{artifact_id}/docx")
