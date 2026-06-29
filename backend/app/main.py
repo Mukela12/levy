@@ -118,3 +118,39 @@ def health_llm():
             status_code=503,
             content={"ok": False, "model": DEFAULT_MODEL, "reason": reason},
         )
+
+
+@app.get("/health/embeddings")
+def health_embeddings():
+    """Synthetic embedding ping for uptime monitoring.
+
+    Corpus search and case-law search both embed the user's query before the
+    vector lookup, and the corpus is embedded with one provider (no compatible
+    fallback). If that provider's quota is exhausted or its key is bad, every
+    search fails while chat's LLM still answers, so it is easy to miss. Point
+    an uptime checker at this path. 200 {ok:true} on success, 503 otherwise.
+    """
+    try:
+        from .services.embedder import get_query_embedding
+        from .config import get_settings
+
+        vec = get_query_embedding("ping")
+        return {"ok": True, "provider": get_settings().embedding_provider, "dims": len(vec)}
+    except Exception as e:
+        from .config import get_settings
+
+        s = str(e).lower()
+        reason = (
+            "quota_or_billing" if ("insufficient_quota" in s or "quota" in s)
+            else "rate_limited" if ("429" in s or "rate limit" in s)
+            else "auth" if ("401" in s or "invalid api key" in s or "incorrect api key" in s)
+            else "provider_error"
+        )
+        try:
+            provider = get_settings().embedding_provider
+        except Exception:
+            provider = "unknown"
+        return JSONResponse(
+            status_code=503,
+            content={"ok": False, "provider": provider, "reason": reason},
+        )

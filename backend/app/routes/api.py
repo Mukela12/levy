@@ -13,6 +13,7 @@ import re
 import asyncio
 import logging
 import tempfile
+import uuid
 from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, Header, Request
 from fastapi.responses import StreamingResponse
@@ -392,6 +393,19 @@ def sweep_old_artifacts(
     }
 
 
+def _require_artifact_uuid(artifact_id: str) -> None:
+    """Reject a malformed artifact id with a clean 404.
+
+    artifacts.id is a uuid column, so a non-uuid path segment makes the
+    Postgres cast raise and surface as a 500. Validate the format up front so
+    a bad id reads as "not found" like every other missing artifact.
+    """
+    try:
+        uuid.UUID(str(artifact_id))
+    except (ValueError, TypeError, AttributeError):
+        raise HTTPException(status_code=404, detail="artifact not found")
+
+
 @router.get("/artifacts/{artifact_id}/pdf")
 def get_artifact_pdf_url(artifact_id: str, expires_in: int = 3600, uid: str | None = Depends(optional_user)):
     """Signed URL for an agent-generated artifact PDF.
@@ -400,6 +414,7 @@ def get_artifact_pdf_url(artifact_id: str, expires_in: int = 3600, uid: str | No
     (owner_id NULL, addressable only by their unguessable UUID) are served by
     capability.
     """
+    _require_artifact_uuid(artifact_id)
     from ..db.supabase import get_db
 
     db = get_db()
@@ -447,6 +462,7 @@ def get_artifact_text(artifact_id: str, uid: str | None = Depends(optional_user)
     copy the drafted text. We return the stored source Markdown (same content
     that renders the PDF/Word), same authorization as the other artifact routes.
     """
+    _require_artifact_uuid(artifact_id)
     from ..db.supabase import get_db
 
     db = get_db()
@@ -471,6 +487,7 @@ def get_artifact_docx_url(artifact_id: str, expires_in: int = 3600, uid: str | N
     artifact's stored source Markdown the first time it is requested, then
     cached in the bucket so subsequent downloads are instant.
     """
+    _require_artifact_uuid(artifact_id)
     from ..db.supabase import get_db
     from ..services.docx_tools import ensure_artifact_docx
 
