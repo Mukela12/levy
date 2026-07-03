@@ -30,6 +30,8 @@ except Exception:
 
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO / "backend"))
+sys.path.insert(0, str(REPO / "scripts"))
+import _dns_resilient  # noqa: E402,F401  patch getaddrinfo before any client
 from dotenv import load_dotenv
 load_dotenv(REPO / "backend" / ".env")
 from app.db.supabase import get_db                         # noqa: E402
