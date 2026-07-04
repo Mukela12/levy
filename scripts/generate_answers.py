@@ -13,6 +13,8 @@ from pathlib import Path
 
 REPO = Path("/Users/mukelakatungu/levy/.claude/worktrees/gracious-mclean-3f2951")
 sys.path.insert(0, str(REPO / "backend"))
+sys.path.insert(0, str(REPO / "scripts"))
+import _dns_resilient  # noqa: E402,F401  survive flaky local DNS
 from dotenv import load_dotenv
 load_dotenv(REPO / "backend" / ".env")
 from app.config import get_settings
@@ -54,6 +56,20 @@ QUESTIONS: list[tuple[str, str]] = [
     ("Study", "What subjects (heads) are examined in the ZIALE bar exam?"),
     ("Study", "What is the pass mark and structure of the ZIALE LPQE exam?"),
     ("Employment", "What is the difference between summary dismissal and dismissal with notice in Zambia?"),
+    # --- 2026-07 batch: target high-impression Search Console queries + the
+    # procedural questions real users asked in chat. Ungroundable ones self-skip.
+    ("Employment", "What is unfair dismissal and what remedies are available in Zambia?"),
+    ("Employment", "How is pro rata gratuity calculated in Zambia?"),
+    ("Employment", "What is the probation period under Zambian employment law?"),
+    ("Employment", "What is the difference between a contract of service and a contract for service in Zambia?"),
+    ("Consumer", "How does hire purchase work under Zambian law?"),
+    ("Land", "What is the legal process for evicting a tenant in Zambia?"),
+    ("Procedure", "How does substituted service of court documents work in Zambia?"),
+    ("Procedure", "How do I recover a debt through the courts in Zambia?"),
+    ("Procedure", "What is the procedure for judicial review in Zambia?"),
+    ("Family", "How is matrimonial property divided on divorce in Zambia?"),
+    ("Business", "How do I register a business name in Zambia?"),
+    ("Contract", "What makes a contract void or unenforceable in Zambia?"),
 ]
 
 
@@ -79,8 +95,22 @@ def retrieval_query(q: str) -> str:
 async def main() -> int:
     settings = get_settings()
     client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+    # Incremental: keep already-generated answers byte-identical (they may be
+    # ranking) and only generate questions not yet present. Pass --force to
+    # regenerate every answer from scratch.
+    force = "--force" in sys.argv
+    existing: dict[str, dict] = {}
+    if OUT.exists():
+        try:
+            existing = {a["slug"]: a for a in json.loads(OUT.read_text())}
+        except Exception:
+            existing = {}
     out = []
     for cat, q in QUESTIONS:
+        slug = slugify(q)
+        if slug in existing and not force:
+            out.append(existing[slug])
+            continue
         res = await _search_corpus(retrieval_query(q), top_k=10, threshold=0.2)
         chunks = res["result"].get("results") or res["result"].get("matches") or []
         if not chunks:
