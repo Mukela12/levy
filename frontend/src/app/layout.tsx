@@ -8,10 +8,11 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 
-// Canonical site URL. Crawlers that hit the Vercel alias still see canonical
-// tags pointing here, so SEO authority consolidates on the official domain
-// while the alias keeps working for existing users.
-const SITE_URL = 'https://levylegal.ai'
+// Canonical site URL. The apex (levylegal.ai) 308-redirects to www on Vercel,
+// and Google already indexed the www URLs, so canonical tags, the sitemap and
+// robots all point at www to consolidate SEO authority on the served host and
+// stop the "Page with redirect" churn from advertising apex URLs that redirect.
+const SITE_URL = 'https://www.levylegal.ai'
 const TITLE = 'Levy: AI Legal Assistant for Zambian Law'
 // Shown as the search-result snippet under the link. ~155 chars, keyword-rich,
 // and written to earn the click: what it is, that it is free, what you can do.

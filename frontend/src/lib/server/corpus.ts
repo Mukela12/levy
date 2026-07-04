@@ -7,7 +7,7 @@
 import 'server-only'
 import { createClient } from '@supabase/supabase-js'
 
-export const SITE_URL = 'https://levylegal.ai'
+export const SITE_URL = 'https://www.levylegal.ai'
 
 function db() {
   return createClient(

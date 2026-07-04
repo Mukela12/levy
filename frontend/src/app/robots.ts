@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next'
 
-const SITE_URL = 'https://levylegal.ai'
+const SITE_URL = 'https://www.levylegal.ai'
 
 // Index the public content (Acts, answers, study); keep the app + private,
 // per-user routes OUT of the index. IMPORTANT: /chat is disallowed entirely.
