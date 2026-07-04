@@ -1164,5 +1164,161 @@
         "document_id": "cd547d4e-64e0-40e9-aa4a-00f5e1ab27aa"
       }
     ]
+  },
+  {
+    "slug": "how-do-i-change-ownership-of-a-car-in-zambia",
+    "category": "e-Government",
+    "question": "How do I change ownership of a car in Zambia?",
+    "answer": "# How to Change Car Ownership in Zambia\n\nTo legally own a car in Zambia, your name must appear on the registration certificate (the white book). Simply buying a car is not enough; you must complete a formal transfer at the Road Transport and Safety Agency (RTSA). The process is governed by the [Road Traffic Act No. 11 of 2002].\n\n**What you need to do:**\n\nBoth buyer and seller must work together on steps 1 to 6. First, complete a signed Letter of Sale (or a donation letter if the car is a gift). Then take the car for inspection at any RTSA office and collect your inspection report. The seller must obtain a tax clearance certificate for change of ownership from ZRA (you will need a TPIN). The buyer must get a Police anti-theft clearance report and swear a General Affidavit before a Commissioner for Oaths. Fill in Form MVR 1, signed by both parties. Finally, both of you go to RTSA with the original white book, both NRCs, and all documents listed above, pay the fee, and receive a new white book in the buyer's name. The seller must then file a separate online \"Notification of Change of Ownership\" at rtsa.org.zm to remove their liability.\n\n**Important notes:**\n\nConfirm the current transfer fee with RTSA before you pay (fees are set under SI No. 25 of 2024 and change regularly). The car must have valid road tax and a fitness certificate before transfer. Your insurance automatically ends when ownership changes, so you must arrange new cover immediately.",
+    "sources": [
+      {
+        "act": "RTSA guide: vehicle change of ownership",
+        "section": "",
+        "document_id": "d52bf27c-360b-490e-9bb2-6678a897dac2"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-get-a-tpin-in-zambia",
+    "category": "e-Government",
+    "question": "How do I get a TPIN in Zambia?",
+    "answer": "# How to Get a TPIN in Zambia\n\nA TPIN is your 10-digit Taxpayer Identification Number. You now need one for a bank account, employment, business, or vehicle and land transactions, not only if you owe tax [Income Tax Act, Cap. 323]. The Zambia Revenue Authority (ZRA) issues TPINs for free; beware of unofficial agents charging you.\n\n**The quickest way is online.** Go to portal.zra.org.zm (or use the TaxOnApp mobile app) and choose \"Get a TPIN\". Select your taxpayer type (individual, sole trader, partnership, company, or NGO), enter your name, NRC or passport number, address and contact details, and upload the required documents. For individuals, bring a copy of your NRC or passport and proof of address. For companies or businesses, bring your PACRA certificate and your directors' or partners' names and TPINs. Submit your application and you will usually receive your TPIN the same day. If you prefer to apply in person, take Form TPIN-1 to any ZRA office.\n\n**If your company was registered with PACRA after 2020, you may already have a TPIN.** The ZRA and PACRA automatically link their systems, so your TPIN is issued without a separate ZRA application. Keep your contact details up to date with the ZRA, as outdated information may cause problems later when you need tax clearance or file returns.",
+    "sources": [
+      {
+        "act": "ZRA guide: TPIN registration",
+        "section": "",
+        "document_id": "e463d9a8-1f0d-490f-8c5e-e3bfbcff62d8"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-pay-road-tax-in-zambia",
+    "category": "e-Government",
+    "question": "How do I pay road tax in Zambia?",
+    "answer": "# How to Pay Road Tax in Zambia\n\nRoad tax is your motor vehicle licence, separate from insurance and the fitness certificate. You need all three to drive legally. The Road Transport and Safety Agency (RTSA) manages road tax payments, which you can do entirely online through ZamPass and ZamPortal, available 24/7 [Road Traffic Act No. 11 of 2002; SI No. 25 of 2024].\n\n**Steps to pay online:**\n\n1. Log in to ZamPass using your NRC or driver's licence number plus your registered phone number or email (you must already be registered with RTSA as a vehicle owner or licence holder).\n2. Go to ZamPortal and select \"Motor Vehicle Licence (Road Tax)\".\n3. Choose your payment period: 1, 2, 3 or 4 quarters. Each quarter costs 25% of the annual fee with no extra surcharge.\n4. Pay by mobile money or bank transfer. Your licence disc will be posted to you or you can collect it at any RTSA office.\n\n**Fees and what to bring:**\n\nThe fee depends on your vehicle's gross weight band, not engine size. The exact amount varies by band. Check the current fee on the ZamPortal licence screen for your specific vehicle. You do not need to bring any documents for online payment. You can also pay at any RTSA service centre or visit rtsa.org.zm/pay-online.\n\nDriving with expired road tax is an offence and your vehicle can be impounded, with penalties reaching up to three times the annual tax.",
+    "sources": [
+      {
+        "act": "RTSA guide: road tax / motor vehicle licence",
+        "section": "",
+        "document_id": "84c8aa4f-0ddc-4ca1-8b85-73949edd8933"
+      }
+    ]
+  },
+  {
+    "slug": "how-much-is-import-duty-on-a-car-in-zambia",
+    "category": "e-Government",
+    "question": "How much is import duty on a car in Zambia?",
+    "answer": "# Import Duty on a Car in Zambia\n\nImport duty on a car in Zambia depends on the vehicle's age and engine size. **Newer vehicles** (roughly under two years old, and hybrids or electric vehicles) are charged on the Value for Duty Purposes (VDP), the Kwacha equivalent of the CIF value (Cost, Insurance and Freight), at a combined rate of 25% customs duty plus 30% excise plus 16% VAT. **Older vehicles** are charged a fixed specific duty in Kwacha per body type and engine size, which bundles customs, excise, VAT and fees together. All vehicles are also subject to a one-off carbon emission surtax based on engine size [Customs and Excise Act, Cap. 322].\n\nBecause the exact amount varies by vehicle, **do not rely on a general figure**. Instead, use the ZRA's official Motor Vehicle Tax Calculator on the ZRA portal (zra.org.zm) to calculate your duty. You will need your vehicle's CIF value, engine size, body type and year of manufacture.\n\nTo import, if the CIF value exceeds US$2,000 you must declare on ASYCUDAWorld and use a licensed clearing agent. Bring your commercial invoice, bill of lading or airway bill, packing list and Tax Identification Number (TPIN). Full duty is paid before the vehicle is released. The Zambia Revenue Authority (ZRA) is the responsible authority. Note: there is no import declaration fee in Zambia.",
+    "sources": [
+      {
+        "act": "ZRA guide: import duty and customs",
+        "section": "",
+        "document_id": "9a95223f-3ffe-4295-8266-38f960d7fa12"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-get-a-driver-s-licence-in-zambia",
+    "category": "e-Government",
+    "question": "How do I get a driver's licence in Zambia?",
+    "answer": "# How to Get a Driver's Licence in Zambia\n\nTo get a standard driver's licence in Zambia, you must be at least 18 years old and follow these steps: first, obtain a medical certificate from an approved medical facility; second, pass the computerised theory test at the Road Transport and Safety Agency (RTSA); third, pay the fee for a Provisional Driving Licence; and fourth, at least 7 days later, sit and pass the practical driving test. Once you pass the practical test, you pay the final printing fee to receive your licence [Road Traffic Act No. 11 of 2002].\n\nBring your National Registration Card (NRC) or passport and your medical certificate when you attend RTSA for the theory test. The theory and practical tests must be done in person at RTSA offices. Fees are charged separately for each stage (provisional licence, tests, and printing). Current fees are set under SI No. 25 of 2024, so you should confirm the exact amounts on the official RTSA portal or ZamPass website before attending.\n\nIf you already hold a licence, you can renew it online through ZamPortal or ZamPass before or after expiry. If your licence is lost, you must obtain a police report and a General Affidavit, then apply for a duplicate. If your licence is defaced, bring the old one to exchange it for a replacement.",
+    "sources": [
+      {
+        "act": "RTSA guide: driver's licence",
+        "section": "",
+        "document_id": "3c0e53fc-5c3c-4773-9146-172ff75f9eb8"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-apply-for-a-zambian-passport",
+    "category": "e-Government",
+    "question": "How do I apply for a Zambian passport?",
+    "answer": "# How to Apply for a Zambian Passport\n\n**Where to apply and getting started**\n\nYou can now apply for a Zambian passport online through **ZamPortal** (using your **ZamPass** account) or in person at a passport office, DNRPC office, or Zambian mission abroad. The Department of National Registration, Passport and Citizenship (DNRPC) in the Ministry of Home Affairs handles all passport applications [Passport Act No. 28 of 2016].\n\n**What you need to bring**\n\nYou must have a valid **National Registration Card (NRC)** - this is mandatory and you cannot get a passport without it. You will also need your full birth certificate, passport photos (full face, both ears visible, no headgear unless religious), and the application form signed by a person of standing who has known you for at least 2 years. If you lost a previous passport, bring a police report.\n\n**The process**\n\nIf you apply online, complete your application on ZamPortal, upload your documents, and pay by card or mobile money. However, you must then attend a passport office in person for biometric enrolment (fingerprints and photograph) - this is mandatory even for online applications. Processing takes about 14 days in Lusaka, Ndola, and Livingstone, and about 21 days in other provincial capitals. After that, you can track your application and collect your passport.\n\n**Fees**\n\nPassport fees vary by type (32-page, 48-page, and express options). Please **confirm the current fee on ZamPortal** before applying, as amounts are not consistently published online. Applications at missions abroad commonly cost around US$100.",
+    "sources": [
+      {
+        "act": "Guide: Zambian passport application",
+        "section": "",
+        "document_id": "7d115805-a9c2-4962-bb5a-27250047c7b9"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-get-or-replace-a-national-registration-card-nrc-in-zambia",
+    "category": "e-Government",
+    "question": "How do I get or replace a National Registration Card (NRC) in Zambia?",
+    "answer": "# Getting or Replacing Your National Registration Card (NRC) in Zambia\n\n## First-time NRC\n\nTo get your first NRC, you must be at least 16 years old and have had at least one parent who was a Zambian citizen when you were born. You must apply in person at a DNRPC (Department of National Registration, Passport and Citizenship) District Registration Office or during a mobile registration exercise in your area. Bring a deponent, a parent, blood relative, or legal guardian, who must present their original NRC (a photocopy will not be accepted). You will also need proof of your birth: a birth certificate, under-five card, record of birth, or a sworn affidavit. Your photograph will be taken at the office, and your card will be issued the same day. Your first NRC is free of charge [National Registration Act, Cap. 126].\n\n## Replacing a Lost or Damaged Card\n\nIf your NRC is lost, you must first obtain a police report. If it is damaged, bring the damaged card with you. Complete the replacement form at your nearest DNRPC District Registration Office. A replacement fee applies; please confirm the current amount on the official DNRPC portal or by contacting your local registration office, as the fee is not fixed in this guide.\n\n## Where to Go\n\nVisit any DNRPC District Registration Office nationwide, or watch for mobile enrolment campaigns in your area. If you do not yet have a birth certificate, arrange an affidavit or under-five card before attending.",
+    "sources": [
+      {
+        "act": "Guide: National Registration Card (NRC)",
+        "section": "",
+        "document_id": "34367fcc-b8a4-46a4-991b-efbd096fa8a1"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-register-for-napsa-in-zambia",
+    "category": "e-Government",
+    "question": "How do I register for NAPSA in Zambia?",
+    "answer": "# How to Register for NAPSA in Zambia\n\nNAPSA (the National Pension Scheme Authority) is Zambia's compulsory pension scheme for employees. Registration depends on whether you are an employee or self-employed.\n\n**If you are an employee:** Your employer is responsible for registering you with NAPSA. They must register with NAPSA within one month of hiring their first employee, then register each employee through the official eNAPSA portal at enapsa.napsa.co.zm. Your employer will receive login credentials by SMS. Once registered, your employer deducts 5% of your gross salary as your contribution and adds their own 5% employer contribution. You can verify that your employer is actually remitting by checking your statement on the NAPSA member portal.\n\n**If you are self-employed:** NAPSA registration is voluntary for you. You can register directly via the eNAPSA portal and arrange to make your own contributions (the combined rate is 10% of your earnings, split equally between employee and employer portions).\n\n**Contributions and benefits:** Contributions are capped at an earnings ceiling that changes each January. To confirm the current ceiling for 2026, check the official notice on napsa.co.zm rather than relying on an older figure. Once you have contributed for 180 months (15 years), you qualify for a monthly pension at retirement (typically age 55–65); if you have fewer than 180 months, you receive a one-off lump sum. Keep your beneficiary and next-of-kin details up to date with NAPSA to avoid delays in settling survivor and funeral benefits [National Pension Scheme Act No. 40 of 1996].",
+    "sources": [
+      {
+        "act": "NAPSA guide: pensions",
+        "section": "",
+        "document_id": "791431c6-ffa7-4402-ad2b-10394fb47800"
+      }
+    ]
+  },
+  {
+    "slug": "how-does-nhima-health-insurance-work-in-zambia",
+    "category": "e-Government",
+    "question": "How does NHIMA health insurance work in Zambia?",
+    "answer": "# How NHIMA Health Insurance Works in Zambia\n\nNHIMA is Zambia's compulsory national health insurance scheme managed by the National Health Insurance Management Authority. If you are a formal employee, your employer registers you automatically once you join. If you are self-employed or in the informal sector, you register yourself online at enhima.nhima.co.zm with a copy of your NRC (front and back). You can also register your spouse and up to five children under 18 as dependants under your membership [National Health Insurance Act No. 2 of 2018].\n\nFor formal employees, NHIMA contributions are 2% of your salary, split equally between you (1%) and your employer (1%), with no earnings cap. If you are self-employed or informal, your premium is set by income assessment. To find out what you will pay, contact NHIMA on hotline 8000 rather than relying on any published flat figure. You can confirm current contribution deadlines on nhima.co.zm.\n\nOnce registered, you use your NHIMA membership card or number at any accredited health facility. The scheme covers consultations, laboratory tests, medicines, and inpatient and specialist services within the benefit package. To get medicines, present a stamped prescription from an accredited facility to an accredited pharmacy. Care at non-accredited providers is not covered. Check nhima.co.zm to confirm which services and medicines fall within your benefit package and any waiting periods that apply.",
+    "sources": [
+      {
+        "act": "NHIMA guide: national health insurance",
+        "section": "",
+        "document_id": "5ef07c50-2ee5-4f8f-b2b9-a930151a05c1"
+      }
+    ]
+  },
+  {
+    "slug": "what-is-the-difference-between-zampass-zamportal-and-zamgov",
+    "category": "e-Government",
+    "question": "What is the difference between ZamPass, ZamPortal and ZamGov?",
+    "answer": "# The Difference Between ZamPass, ZamPortal and ZamGov\n\n**ZamPass is your digital ID login.** It is a single sign-on account that proves who you are across all connected government services. To create a ZamPass account, go to pass.gsb.gov.zm/registration and bring your NRC (or passport or refugee ID), a phone number and an email address. That is all you need, you do not require a driving licence or RTSA record just to register. ZamPass itself holds no services; it only identifies you [Government Gazette Notice No. 836 of 2016].\n\n**ZamPortal is the website where you find and apply for government services.** Visit zamportal.gov.zm to browse what is available, check requirements and fees, then log in with your ZamPass to submit applications and pay via the ZamPay gateway. The Smart Zambia Institute (in the Office of the President) runs ZamPortal and maintains ZamPass.\n\n**ZamGov is the mobile app version of ZamPortal, plus a digital wallet.** It uses the same ZamPass login and also stores your Digital ID, driver's licence and vehicle registration, and lets you sign PDFs electronically.\n\n**Important:** Fully live services today include RTSA (road tax, fitness, driver's licence, vehicle registration), passports, some Lands services and NRC issuance. Other services listed on the portal (NAPSA, NHIMA, ZRA tax, birth certificates, immigration) are still under development or remain on their own agency websites, check before you assume the full service is online. Immigration has its own portal at eservices.zambiaimmigration.gov.zm and ZRA tax at portal.zra.org.zm.",
+    "sources": [
+      {
+        "act": "Guide: Zambia e-government portals",
+        "section": "",
+        "document_id": "cd054688-6c63-4d8c-9b1d-0577353f6b82"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-get-a-business-or-trading-licence-from-the-council-in-zambia",
+    "category": "e-Government",
+    "question": "How do I get a business or trading licence from the council in Zambia?",
+    "answer": "# How to Get a Business or Trading Licence from the Council in Zambia\n\n**Before you apply to council, you must first register your business with PACRA (Patents and Companies Registration Agency) and obtain a ZRA TPIN (tax identification number) from the Zambia Revenue Authority. A council licence does not replace these; it sits on top of them.**\n\n**Apply to your council for trading authorisation** by visiting the council civic centre or using the national eRegistry at businesslicenses.gov.zm. Most small traders need a Local Government Business Levy certificate; larger or regulated businesses are licensed under the Trades Licensing Act. The council will classify your business (for example, hawker, retail, wholesale, or manufacturer), and this classification sets your fee. Bring your NRC or PACRA certificate, PACRA registration documents, ZRA TPIN, and details of your premises. If you are selling food or alcohol, you will also need a health permit and liquor licence respectively, and a fire-safety certificate is mandatory for commercial premises.\n\n**Pay the fee and obtain your certificate.** Confirm the current fee for your business class and council on the eRegistry, as fees vary by council and are re-gazetted annually. Your licence must be renewed every year. [Local Government Act No. 2 of 2019; Trades Licensing Act, Cap. 393]",
+    "sources": [
+      {
+        "act": "Council guide: business/trading licence",
+        "section": "",
+        "document_id": "ab3e5be7-0977-4b88-80d5-db9447c3b114"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-check-or-verify-a-land-title-in-zambia",
+    "category": "e-Government",
+    "question": "How do I check or verify a land title in Zambia?",
+    "answer": "# How to Check or Verify a Land Title in Zambia\n\nTo verify a land title in Zambia, you must carry out an official search called a **Digital Clearance** at the Lands and Deeds Registry. This is a mandatory first step before any land transaction and is the Ministry's digital confirmation of the title's details, including the name of the registered holder. You can submit your request online through ZamPortal (using ZamPass) or visit the Registry in person. The most important check is to confirm that the registered holder's name matches your seller's identification document exactly.\n\nWhen you submit your Digital Clearance request, bring the property description or reference number and your personal identification. The approval process can take a few weeks, so do not pay any deposit to the seller until you have received official clearance. Processing is quick online, but final approval requires time. If you are unsure of current fees for searches and registration services, confirm the amounts directly with the Lands and Deeds Registry or through ZILAS, as these are set under the Lands regulations on a fee-unit basis and may change.\n\nThe Lands and Deeds Registry, part of the Ministry of Lands and Natural Resources, is responsible for maintaining the digital title records under Zambia's leasehold system. All land in Zambia is held on leasehold from the State, and the Registry's records show who owns each title. By obtaining your Digital Clearance before any other step, you protect yourself and ensure the seller has the legal right to sell [Lands Act, Cap. 184; Lands and Deeds Registry Act].",
+    "sources": [
+      {
+        "act": "Lands guide: certificate of title",
+        "section": "",
+        "document_id": "e9c9c12c-65f1-4935-9d78-e30dc60cdc3a"
+      }
+    ]
   }
 ]

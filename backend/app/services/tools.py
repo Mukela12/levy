@@ -77,6 +77,22 @@ GOV_ZM_DOMAINS: list[str] = [
     "boz.zm",
     # Devolved governance / local
     "mlg.gov.zm",
+    # E-government service portals + civic agencies (confirmed official, 2026).
+    # These carry the "how do I actually do this" procedures users kept asking
+    # for (RTSA, ZRA, PACRA, immigration, NAPSA/NHIMA, land, councils) that the
+    # Acts do not contain.
+    "rtsa.org.zm",                      # Road Transport & Safety Agency
+    "zamportal.gov.zm",                 # ZamPortal (national e-services one-stop)
+    "eservices.gov.zm",                 # ZamServices e-services engine
+    "pass.gsb.gov.zm",                  # ZamPass (national auth)
+    "gsb.gov.zm",                       # Government Service Bus (passports.gsb.gov.zm etc.)
+    "mohais.gov.zm",                    # Home Affairs / DNRPC (passport, NRC, civil registration)
+    "zambiaimmigration.gov.zm",         # Department of Immigration (permits, visas)
+    "eservices.zambiaimmigration.gov.zm",
+    "nhima.co.zm",                      # National Health Insurance Management Authority
+    "businesslicenses.gov.zm",          # national business-licence eRegistry
+    "lcc.gov.zm",                       # Lusaka City Council
+    "mlnr.gov.zm",                      # Ministry of Lands & Natural Resources
     # Economic / sectoral
     "eiti.org",
     "zmeiti.com",

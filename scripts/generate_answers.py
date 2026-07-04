@@ -70,6 +70,21 @@ QUESTIONS: list[tuple[str, str]] = [
     ("Family", "How is matrimonial property divided on divorce in Zambia?"),
     ("Business", "How do I register a business name in Zambia?"),
     ("Contract", "What makes a contract void or unenforceable in Zambia?"),
+    # --- 2026-07 e-government / civic batch: the "how do I actually do this"
+    # layer (43% of real tool calls fell back to the web). Grounded in the new
+    # curated civic guides now in the corpus.
+    ("e-Government", "How do I change ownership of a car in Zambia?"),
+    ("e-Government", "How do I get a TPIN in Zambia?"),
+    ("e-Government", "How do I pay road tax in Zambia?"),
+    ("e-Government", "How much is import duty on a car in Zambia?"),
+    ("e-Government", "How do I get a driver's licence in Zambia?"),
+    ("e-Government", "How do I apply for a Zambian passport?"),
+    ("e-Government", "How do I get or replace a National Registration Card (NRC) in Zambia?"),
+    ("e-Government", "How do I register for NAPSA in Zambia?"),
+    ("e-Government", "How does NHIMA health insurance work in Zambia?"),
+    ("e-Government", "What is the difference between ZamPass, ZamPortal and ZamGov?"),
+    ("e-Government", "How do I get a business or trading licence from the council in Zambia?"),
+    ("e-Government", "How do I check or verify a land title in Zambia?"),
 ]
 
 
