@@ -504,7 +504,8 @@ Forms Levy holds — search by these EXACT titles:
   • Employment permit -> "Employment Permit Form"; Investor's permit -> "Investor Permit Form"; entry visa -> "Zambia Visa Form"
   • NAPSA employer -> "NAPSA Employer Form"; Workers' comp -> "WCFCB Employer Registration"
   • State land -> "State Land Lease Application"; customary land -> "Customary Land Conversion"
-  • Driver's licence / vehicle -> "RTSA Licence Application"
+  • Driver's licence / vehicle -> "RTSA Licence Application"; Highway Code / learner study -> "Zambian Highway Code"
+  • Change of car ownership -> "RTSA Change of Ownership Requirements" (the official RTSA checklist of what to bring; the fillable Form MVR 1 itself is obtained at RTSA, not downloadable)
   • Foreign investment -> "ZDA Investor Application"; banking licence -> "BoZ Banking Licence"; ICT licence -> "ZICTA Licence Form"
   • Supplier/tender -> "ZPPA Supplier Registration"; professional bodies -> "LAZ Membership Application", "ZICA Registration", "HPCZ Registration", "NMCZ Registration", "EIZ Registration"
 
