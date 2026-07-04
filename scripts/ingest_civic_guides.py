@@ -688,6 +688,172 @@ Trading without the council levy or a required sector licence is an offence even
 
 **What is solidly live today via ZamPortal + ZamPass:** RTSA services (road tax, fitness test, driver's licence renewal/duplicate, vehicle registration), passports and travel documents (launched Dec 2025), some Lands services (ground rent), and NRC issuance. **Other things the portal lists as categories — NAPSA, NHIMA, ZRA tax, birth/marriage certificates, immigration — are either placeholders or still live on their own agency portals, so check rather than assume a full online flow.** Immigration keeps its own portal at eservices.zambiaimmigration.gov.zm; ZRA tax is on portal.zra.org.zm.""",
     },
+    # ─────────────────── COUNCIL / SECTOR LICENCES (expansion) ───────────────────
+    {
+        "title": "How to get a fire safety certificate for business premises in Zambia",
+        "short_name": "Council guide: fire safety certificate",
+        "authority": "Local authority fire services (e.g. Lusaka City Council)",
+        "law": "Local Government Act No. 2 of 2019; council fire by-laws",
+        "url": "https://www.businesslicenses.gov.zm/license/id/468",
+        "body": """Most commercial premises must hold a fire safety certificate before the council will issue or renew a trading licence. It certifies the premises meet fire standards and is risk-banded.
+
+**Steps:**
+1. Apply to the council fire services department (for Lusaka, Lusaka City Council).
+2. The premises are inspected and assigned a risk band (low, medium, high, or extra-high risk) based on the activity and building.
+3. Pay the risk-banded fee and receive the certificate.
+4. Renew annually (it is checked when you renew your trading licence).
+
+**Documents:** business/premises details; PACRA registration; access for the fire inspection.
+
+**Fees:** set by risk band and re-gazetted annually, so they vary and change. **Confirm the current fee with your council; do not rely on an old figure.** Payable online at some councils.
+
+**Notes:** you usually cannot get or keep a trading licence without the fire certificate, so plan for it alongside the business levy and (for food) the health permit. Governing law: Local Government Act No. 2 of 2019 and council fire by-laws.""",
+    },
+    {
+        "title": "How to get a health permit for a food business in Zambia",
+        "short_name": "Council guide: health / food premises permit",
+        "authority": "Local authority public health department",
+        "law": "Public Health Act; Local Government Act No. 2 of 2019",
+        "url": "https://www.businesslicenses.gov.zm/",
+        "body": """Any business that handles food (restaurant, takeaway, grocery, bakery, bar) needs a health/premises permit from the council in addition to its trading licence.
+
+**Steps:**
+1. Apply to the council public health department.
+2. A health inspector visits and checks the premises (kitchen layout, ventilation, drainage, water, waste, storage and staff hygiene).
+3. Address any issues raised, then pay the fee and receive the permit.
+4. Food handlers may also need medical/food-handler certificates.
+5. Renew as required (usually annually).
+
+**Documents:** business/premises details; PACRA registration; access for the inspection; food-handler medical certificates for staff where required.
+
+**Fees:** set per council and re-gazetted annually. **Confirm the current fee with your council.**
+
+**Notes:** the health permit is separate from the business levy and the fire certificate, and a food business generally cannot operate legally without it. Governing law: Public Health Act; Local Government Act No. 2 of 2019.""",
+    },
+    {
+        "title": "How to get a liquor licence in Zambia",
+        "short_name": "Council guide: liquor licence",
+        "authority": "Local authority liquor licensing committee",
+        "law": "Liquor Licensing Act No. 20 of 2011; SI No. 99 of 2011",
+        "url": "https://www.parliament.gov.zm/sites/default/files/documents/acts/Liquor%20Licensing%20Act.pdf",
+        "body": """If your business sells alcohol (bar, bottle store, restaurant, grocery), you need a liquor licence from the council's liquor licensing committee, on top of your trading licence.
+
+**Steps:**
+1. Apply to the council liquor licensing committee for the class of licence that fits your business (on-consumption, off-consumption, etc.).
+2. Provide the supporting documents (below) and give the required public notice.
+3. The committee considers the application (objections may be raised).
+4. On approval, pay the fee and receive the licence; renew as required.
+
+**Documents:** NRC; PACRA registration; a police report; a health report; a Government Gazette notice; and confirmation of the premises, as required under the Liquor Licensing Act and SI No. 99 of 2011.
+
+**Fees:** set per council and class of licence. **Confirm the current fee with your council.**
+
+**Notes:** selling alcohol without a liquor licence is an offence. The licence is in addition to the business levy, fire certificate and (for food) health permit. Governing law: Liquor Licensing Act No. 20 of 2011.""",
+    },
+    {
+        "title": "How to get a market stall or street vending permit in Zambia",
+        "short_name": "Council guide: market stall / vending permit",
+        "authority": "Local authority / market master",
+        "law": "Markets and Bus Stations Act; Local Government Act No. 2 of 2019",
+        "url": "https://www.businesslicenses.gov.zm/license/id/458",
+        "body": """To trade in a council market you need a stall allocation and a trading permit from the council or the market master. Trading in undesignated street spots is generally not permitted; the lawful route is a designated market space.
+
+**Steps:**
+1. Apply to the council or the market office (market master) for a stall or trading-space allocation.
+2. Pay the applicable market/stall levy (often daily or monthly) and get a receipt.
+3. Food sellers may also need a health check.
+4. Larger shops still need the council trading licence (business levy) plus fire and health clearances as applicable.
+
+**Documents:** NRC; the stall/space application; a health check for food sellers.
+
+**Fees:** market/stall levies are small and set locally; they change and vary by market. **Confirm the current daily/monthly levy with your council or market master; always get a receipt for any levy paid on site.**
+
+**Notes:** government policy directs vendors to trade from designated markets, and directives on street-vending levies have shifted, so secure a designated space rather than a street pitch. Governing law: Markets and Bus Stations Act; Local Government Act No. 2 of 2019.""",
+    },
+    {
+        "title": "Which sector licence a business needs in Zambia (regulators guide)",
+        "short_name": "Guide: sector business licences (which regulator)",
+        "authority": "Sector regulators (BoZ, ZICTA, ZAMRA, ERB, ZEMA, tourism, mines)",
+        "law": "Sector-specific statutes",
+        "url": "https://www.businesslicenses.gov.zm/",
+        "body": """After PACRA registration and a council trading licence, many businesses also need a licence from the regulator for their sector. Registering with PACRA alone does not make a regulated business legal to operate.
+
+**Which regulator for which activity:**
+- **Financial services, banking, lending, forex, payment systems:** Bank of Zambia (BoZ). Insurance and pensions: Pensions and Insurance Authority (PIA). Securities: Securities and Exchange Commission (SEC).
+- **Telecoms, internet, ICT, broadcasting equipment:** Zambia Information and Communications Technology Authority (ZICTA).
+- **Medicines, pharmacies, health products:** Zambia Medicines Regulatory Authority (ZAMRA); health facilities and professionals: Health Professions Council (HPCZ).
+- **Energy (fuel, electricity supply):** Energy Regulation Board (ERB).
+- **Environment (projects with environmental impact, e.g. mining, manufacturing, large developments):** Zambia Environmental Management Agency (ZEMA), often a prerequisite (an EIA or project brief).
+- **Mining:** Ministry of Mines and the mining-rights regime.
+- **Tourism and hospitality:** Ministry of Tourism licensing.
+- **Employees:** register with NAPSA (pensions), NHIMA (health) and WCFCB (workers' compensation).
+
+**Steps:** identify your sector regulator (the national eRegistry at businesslicenses.gov.zm lists licences by activity), apply to that regulator with your PACRA certificate and TPIN, meet the sector requirements, and pay the licence fee.
+
+**Fees and requirements:** vary by regulator and licence. **Confirm the current fee and exact requirements with the specific regulator; do not quote a single figure.**
+
+**Notes:** trading in a regulated sector without the sector licence is an offence even with a valid PACRA certificate and council licence.""",
+    },
+    {
+        "title": "How to register employees with WCFCB (workers' compensation) in Zambia",
+        "short_name": "Guide: WCFCB workers' compensation registration",
+        "authority": "Workers' Compensation Fund Control Board (WCFCB)",
+        "law": "Workers' Compensation Act",
+        "url": "https://www.workers.com.zm/",
+        "body": """Employers must register with the Workers' Compensation Fund Control Board (WCFCB), which compensates workers for injuries, disability or death arising from work. It is separate from NAPSA (pensions) and NHIMA (health).
+
+**Steps:**
+1. Register the business as an employer with WCFCB (the WCFCB Employer Registration form is downloadable from Levy).
+2. Declare your workers and their earnings.
+3. Pay the assessed contribution (assessed on payroll and the risk class of the work).
+4. Keep the registration and declarations current; claim on the fund if a worker suffers a work injury.
+
+**Documents:** PACRA certificate; TPIN; employer and payroll details; the WCFCB Employer Registration form.
+
+**Fees / contributions:** assessed by WCFCB on payroll and industry risk class. **Confirm the current assessment basis and rate with WCFCB.**
+
+**Notes:** WCFCB cover is a legal obligation for employers and sits alongside NAPSA and NHIMA on the payroll compliance list. Governing law: Workers' Compensation Act.""",
+    },
+    {
+        "title": "How to get an environmental approval or EIA for a project in Zambia (ZEMA)",
+        "short_name": "Guide: environmental approval / EIA (ZEMA)",
+        "authority": "Zambia Environmental Management Agency (ZEMA)",
+        "law": "Environmental Management Act No. 12 of 2011",
+        "url": "https://www.zema.org.zm/",
+        "body": """Projects that can affect the environment (mining, manufacturing, large developments, some energy and agriculture projects) need environmental clearance from the Zambia Environmental Management Agency (ZEMA) before they proceed. It is often a prerequisite for a sector licence or land development.
+
+**Steps:**
+1. Determine the level of assessment your project needs: a project brief / Environmental Project Brief for lower-impact projects, or a full Environmental Impact Assessment (EIA) with an Environmental Impact Statement for higher-impact ones.
+2. Engage a registered environmental consultant to prepare the study, including public consultation where required.
+3. Submit to ZEMA with the fee; ZEMA reviews (and may hold public hearings for an EIA).
+4. On approval, ZEMA issues a decision letter / environmental approval, usually with conditions you must comply with and monitor.
+
+**Documents:** the project brief or Environmental Impact Statement; the developer's and consultant's details; site/land information; proof of the fee.
+
+**Fees:** set by ZEMA and scaled to the project. **Confirm the current fee and the required assessment level with ZEMA.**
+
+**Notes:** starting a project that needs clearance without ZEMA approval is an offence and can halt the project. Governing law: Environmental Management Act No. 12 of 2011.""",
+    },
+    {
+        "title": "How foreign investors get incentives and register with the ZDA in Zambia",
+        "short_name": "Guide: ZDA investment registration and incentives",
+        "authority": "Zambia Development Agency (ZDA)",
+        "law": "Zambia Development Agency Act",
+        "url": "https://www.businesslicenses.gov.zm/",
+        "body": """Investors, especially foreign investors and larger projects, can register with the Zambia Development Agency (ZDA) to access investment incentives and support. This is separate from PACRA company registration and does not replace sector licences.
+
+**Steps:**
+1. Incorporate the company with PACRA and get a TPIN first.
+2. Apply to the ZDA for an investment certificate (the ZDA Investor Application form is downloadable from Levy), meeting the investment thresholds that apply to the incentives you seek.
+3. ZDA assesses the application and, if approved, issues an investment certificate that can unlock incentives (which may include tax and customs incentives for qualifying investments in priority sectors).
+4. Comply with the conditions and any reporting the certificate carries.
+
+**Documents:** PACRA certificate of incorporation; TPIN; the ZDA Investor Application; business plan and proof of investment; details of the sector and location.
+
+**Fees and thresholds:** set by ZDA and the incentive framework, and revised periodically. **Confirm the current thresholds, incentives and fees with the ZDA; incentives change with each Budget.**
+
+**Notes:** a foreigner investing in their own business also needs an Investor's Permit from the Department of Immigration (US$250,000 for a new business, US$150,000 to join an existing one). Governing law: Zambia Development Agency Act.""",
+    },
 ]
 
 
