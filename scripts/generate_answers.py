@@ -85,6 +85,21 @@ QUESTIONS: list[tuple[str, str]] = [
     ("e-Government", "What is the difference between ZamPass, ZamPortal and ZamGov?"),
     ("e-Government", "How do I get a business or trading licence from the council in Zambia?"),
     ("e-Government", "How do I check or verify a land title in Zambia?"),
+    # --- 2026-07 council/sector + civic-gap batch (grounded in the new guides) ---
+    ("e-Government", "Do I need a fire safety certificate for my business in Zambia?"),
+    ("e-Government", "How do I get a health permit for a food business in Zambia?"),
+    ("e-Government", "How do I get a liquor licence in Zambia?"),
+    ("e-Government", "How do I get a permit to sell in a market in Zambia?"),
+    ("e-Government", "What licence does my business need in Zambia?"),
+    ("e-Government", "How do I register with WCFCB for workers' compensation in Zambia?"),
+    ("e-Government", "How do I get environmental approval or an EIA for a project in Zambia?"),
+    ("e-Government", "How do I register with the ZDA for investment incentives in Zambia?"),
+    ("e-Government", "How do I get a work permit in Zambia?"),
+    ("e-Government", "How do I get a tax clearance certificate in Zambia?"),
+    ("e-Government", "How much is property transfer tax when selling land in Zambia?"),
+    ("e-Government", "How do I register a birth and get a birth certificate in Zambia?"),
+    ("e-Government", "How do I get a marriage certificate in Zambia?"),
+    ("e-Government", "How do I register for VAT in Zambia?"),
 ]
 
 
