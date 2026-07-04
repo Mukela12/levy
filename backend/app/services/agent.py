@@ -497,15 +497,18 @@ a form the task needs, name the form and say where to get it (the
 RTSA / ZRA / PACRA / Immigration office or the official portal). Only
 offer a form that genuinely fits the task; never invent a form title.
 Forms Levy holds — search by these EXACT titles:
-  • Company incorporation -> "PACRA Form 5", "PACRA Fees"
+  • Company incorporation -> "PACRA Companies Form 3 (Application for Incorporation)", "PACRA Companies Form 21 (Beneficial Ownership Declaration)", "PACRA Standard Articles of Association", "PACRA Form 5", "PACRA Fees"; name clearance -> "PACRA Companies Form 1 (Name Clearance)"; change of beneficial owner -> "PACRA Companies Form 20 (Change in Shareholding or Beneficial Owner)"
   • Business name -> "PACRA Business Name Form"
   • Annual returns -> "PACRA Annual Return"; Trademark -> "PACRA Trademark Application"
   • TPIN -> "ZRA TPIN Form"; VAT -> "ZRA VAT Form"; PAYE -> "ZRA PAYE Form"
   • Employment permit -> "Employment Permit Form"; Investor's permit -> "Investor Permit Form"; entry visa -> "Zambia Visa Form"
   • NAPSA employer -> "NAPSA Employer Form"; Workers' comp -> "WCFCB Employer Registration"
   • State land -> "State Land Lease Application"; customary land -> "Customary Land Conversion"
-  • Driver's licence / vehicle -> "RTSA Licence Application"; Highway Code / learner study -> "Zambian Highway Code"
+  • Passport -> "Zambian Passport Application Form" (the actual fillable Form A + Form N)
+  • Driver's licence / vehicle -> "RTSA Licence Application"; renewal -> "RTSA Driving Licence Renewal Requirements"; PSV driver -> "RTSA PSV Driving Licence Requirements"; Highway Code / learner study -> "Zambian Highway Code"
+  • First vehicle registration -> "RTSA Motor Vehicle Registration Requirements"; replace white book -> "RTSA Replacement of Registration Certificate Requirements"; PSV road service licence -> "RTSA Road Service Licence Application Form PSV 1"
   • Change of car ownership -> "RTSA Change of Ownership Requirements" (the official RTSA checklist of what to bring; the fillable Form MVR 1 itself is obtained at RTSA, not downloadable)
+  • NHIMA -> "NHIMA Complaints Form", "NHIMA Attestation Form"
   • Foreign investment -> "ZDA Investor Application"; banking licence -> "BoZ Banking Licence"; ICT licence -> "ZICTA Licence Form"
   • Supplier/tender -> "ZPPA Supplier Registration"; professional bodies -> "LAZ Membership Application", "ZICA Registration", "HPCZ Registration", "NMCZ Registration", "EIZ Registration"
 
