@@ -113,3 +113,57 @@ def ingest_pdf(pdf_path: str, force: bool = False) -> dict:
     print(f"{'='*60}\n")
 
     return summary
+
+
+def chunk_existing_pdf(pdf_path: str, document_id: str) -> dict:
+    """Run parse → chunk → embed against an EXISTING `legal_documents` row.
+
+    Used to promote an inline-tier document to a chunked / RAG-searchable one
+    without creating a duplicate row (so the document keeps its original id,
+    storage path, ownership, folder, and any chips already pinned to user
+    messages remain valid).
+    """
+    pdf_path = str(Path(pdf_path).resolve())
+    print(f"\n{'='*60}")
+    print(f"PROMOTING (chunking): {Path(pdf_path).name} -> {document_id}")
+    print(f"{'='*60}")
+
+    parsed = parse_legal_pdf(pdf_path)
+    metadata = parsed["metadata"]
+
+    chunks = chunk_sections(parsed["sections"], metadata, document_id)
+    if not chunks:
+        return {"status": "empty", "document_id": document_id, "chunks_created": 0}
+
+    texts = [c.content for c in chunks]
+    embeddings = get_embeddings(texts)
+
+    chunk_records = []
+    for chunk, embedding in zip(chunks, embeddings):
+        chunk_records.append({
+            "document_id": chunk.document_id,
+            "content": chunk.content,
+            "summary": chunk.summary,
+            "embedding": embedding,
+            "metadata": chunk.metadata,
+            "chunk_index": chunk.chunk_index,
+            "page_start": chunk.page_start,
+            "page_end": chunk.page_end,
+        })
+
+    stored = insert_chunks(chunk_records)
+
+    from ..db.supabase import get_db
+    get_db().table("legal_documents").update(
+        {
+            "total_chunks": len(stored),
+            "total_sections": len([s for s in parsed["sections"] if s.level == "section"]),
+        }
+    ).eq("id", document_id).execute()
+
+    return {
+        "status": "success",
+        "document_id": document_id,
+        "chunks_created": len(stored),
+        "pages_processed": len(parsed["raw_pages"]),
+    }

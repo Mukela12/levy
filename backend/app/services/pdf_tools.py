@@ -1,0 +1,1238 @@
+"""
+PDF manipulation tools for the Levy agent.
+
+Three tools:
+  pdf_extract_pages   — slice a page range out of a corpus document into a new artifact
+  pdf_generate        — render markdown into a PDF artifact (briefs, memos, summaries)
+  pdf_merge           — combine two or more existing artifacts (and/or corpus
+                        document slices) into one PDF artifact
+
+Each handler returns the same envelope shape the agent loop expects:
+  {"result": {...}, "db_sources": [], "web_sources": []}
+plus an additional "artifact" field (a dict) we surface to the UI as a card.
+
+Artifacts live in the private `artifacts` Supabase Storage bucket and have a
+row in `public.artifacts`. The bucket key is `<artifact_id>.pdf`.
+"""
+
+from __future__ import annotations
+
+import io
+import re
+import time
+from typing import Any
+
+import httpx
+import markdown as md_lib
+from pypdf import PdfReader, PdfWriter
+from weasyprint import HTML, CSS
+
+from ..config import get_settings
+from ..db.supabase import get_db
+
+
+# ─── Storage helpers ─────────────────────────────────────────────────────────
+
+
+def _upload_artifact_pdf(artifact_id: str, pdf_bytes: bytes) -> str:
+    """Upload generated PDF bytes to the artifacts bucket and return its path."""
+    settings = get_settings()
+    base = settings.supabase_url.rstrip("/")
+    key = f"{artifact_id}.pdf"
+    with httpx.Client(timeout=60.0) as client:
+        # Idempotent re-runs
+        client.delete(
+            f"{base}/storage/v1/object/artifacts/{key}",
+            headers={"Authorization": f"Bearer {settings.supabase_key}"},
+        )
+        resp = client.post(
+            f"{base}/storage/v1/object/artifacts/{key}",
+            headers={
+                "Authorization": f"Bearer {settings.supabase_key}",
+                "Content-Type": "application/pdf",
+                "x-upsert": "true",
+            },
+            content=pdf_bytes,
+        )
+        resp.raise_for_status()
+    return f"artifacts/{key}"
+
+
+def _download_corpus_pdf(document_id: str) -> bytes:
+    """Pull a corpus document's PDF from the private legal-docs bucket."""
+    db = get_db()
+    res = (
+        db.table("legal_documents")
+        .select("pdf_storage_path")
+        .eq("id", document_id)
+        .limit(1)
+        .execute()
+    )
+    if not res.data or not res.data[0].get("pdf_storage_path"):
+        raise ValueError(f"document {document_id} has no stored PDF")
+    path = res.data[0]["pdf_storage_path"]
+    bucket, _, key = path.partition("/")
+    blob = db.storage.from_(bucket).download(key)
+    if not isinstance(blob, (bytes, bytearray)):
+        raise RuntimeError(f"download returned {type(blob)} for {path}")
+    return bytes(blob)
+
+
+def _download_artifact_pdf(artifact_id: str) -> bytes:
+    db = get_db()
+    res = (
+        db.table("artifacts")
+        .select("storage_path")
+        .eq("id", artifact_id)
+        .limit(1)
+        .execute()
+    )
+    if not res.data:
+        raise ValueError(f"artifact {artifact_id} not found")
+    path = res.data[0]["storage_path"]
+    bucket, _, key = path.partition("/")
+    blob = db.storage.from_(bucket).download(key)
+    if not isinstance(blob, (bytes, bytearray)):
+        raise RuntimeError(f"download returned {type(blob)} for {path}")
+    return bytes(blob)
+
+
+def _insert_artifact_row(
+    *,
+    kind: str,
+    title: str,
+    storage_path: str,
+    source: str,
+    size_bytes: int,
+    page_count: int | None,
+    meta: dict,
+    owner_id: str | None,
+    session_id: str | None,
+) -> dict:
+    db = get_db()
+    row = db.table("artifacts").insert(
+        {
+            "kind": kind,
+            "title": title,
+            "storage_path": storage_path,
+            "source": source,
+            "size_bytes": size_bytes,
+            "page_count": page_count,
+            "meta": meta,
+            "owner_id": owner_id,
+            "session_id": session_id,
+        }
+    ).execute()
+    return row.data[0]
+
+
+# ─── Tool: pdf_extract_pages ─────────────────────────────────────────────────
+
+
+async def pdf_extract_pages(
+    document_id: str,
+    page_start: int,
+    page_end: int,
+    title: str | None = None,
+    *,
+    owner_id: str | None = None,
+    session_id: str | None = None,
+) -> dict:
+    """Slice a 1-indexed inclusive page range from a corpus PDF into a new artifact."""
+    if page_start < 1 or page_end < page_start:
+        return {"result": {"error": f"invalid page range {page_start}..{page_end}"}}
+
+    src_pdf = _download_corpus_pdf(document_id)
+    reader = PdfReader(io.BytesIO(src_pdf))
+    total = len(reader.pages)
+    end = min(page_end, total)
+    start = min(page_start, total)
+    if start > total:
+        return {
+            "result": {"error": f"page_start {page_start} exceeds document length {total}"},
+        }
+
+    writer = PdfWriter()
+    for i in range(start - 1, end):
+        writer.add_page(reader.pages[i])
+    out = io.BytesIO()
+    writer.write(out)
+    pdf_bytes = out.getvalue()
+
+    # Resolve the source act's title for a nicer artifact name
+    db = get_db()
+    src = (
+        db.table("legal_documents")
+        .select("short_name, title")
+        .eq("id", document_id)
+        .limit(1)
+        .execute()
+    )
+    src_name = (src.data[0].get("short_name") if src.data else None) or (
+        src.data[0].get("title") if src.data else "Source"
+    )
+    final_title = title or f"{src_name} — pp.{start}–{end}"
+
+    # Insert row first to get an id we can use as the storage key
+    row = _insert_artifact_row(
+        kind="pdf",
+        title=final_title,
+        storage_path="artifacts/pending",
+        source="extracted",
+        size_bytes=len(pdf_bytes),
+        page_count=end - start + 1,
+        meta={
+            "tool": "pdf_extract_pages",
+            "source_document_id": document_id,
+            "source_short_name": src_name,
+            "page_start": start,
+            "page_end": end,
+        },
+        owner_id=owner_id,
+        session_id=session_id,
+    )
+    storage_path = _upload_artifact_pdf(row["id"], pdf_bytes)
+    db.table("artifacts").update({"storage_path": storage_path}).eq("id", row["id"]).execute()
+    row["storage_path"] = storage_path
+
+    return {
+        "result": {
+            "artifact_id": row["id"],
+            "title": final_title,
+            "kind": "pdf",
+            "page_count": end - start + 1,
+            "size_bytes": len(pdf_bytes),
+        },
+        "artifact": row,
+        "db_sources": [],
+        "web_sources": [],
+    }
+
+
+# ─── Tool: pdf_generate ──────────────────────────────────────────────────────
+
+# Simple, modern stylesheet for generated legal documents. Keeps inline images
+# out (we don't fetch external resources) and uses safe system fonts so the
+# Docker image's bundled DejaVu/Liberation set always works.
+_DOCUMENT_CSS = """
+@page {
+  size: A4;
+  margin: 22mm 18mm 22mm 18mm;
+  @bottom-center {
+    content: counter(page) " / " counter(pages);
+    font-family: "Liberation Sans", "DejaVu Sans", sans-serif;
+    font-size: 9pt;
+    color: #777;
+  }
+}
+html { font-family: "Liberation Serif", "DejaVu Serif", "Times New Roman", serif; font-size: 11pt; line-height: 1.5; color: #1a1a1a; }
+h1 { font-size: 22pt; font-weight: 700; margin: 0 0 6pt 0; color: #0f3a2a; }
+h2 { font-size: 15pt; font-weight: 600; margin: 16pt 0 4pt 0; border-bottom: 1px solid #d6d6d6; padding-bottom: 4pt; }
+h3 { font-size: 12pt; font-weight: 600; margin: 10pt 0 3pt 0; color: #333; }
+p { margin: 0 0 8pt 0; text-align: justify; }
+ul, ol { margin: 0 0 8pt 18pt; padding: 0; }
+li { margin-bottom: 3pt; }
+hr { border: none; border-top: 1px solid #d6d6d6; margin: 14pt 0; }
+blockquote { border-left: 3px solid #16a34a; padding: 2pt 12pt; margin: 8pt 0; color: #444; font-style: italic; }
+code { font-family: "DejaVu Sans Mono", monospace; background: #f4f4f4; padding: 1pt 3pt; border-radius: 2pt; font-size: 10pt; }
+table { border-collapse: collapse; margin: 8pt 0; width: 100%; font-size: 10pt; }
+th, td { border: 1px solid #cfcfcf; padding: 4pt 6pt; text-align: left; }
+th { background: #f0f0f0; }
+.meta { color: #666; font-size: 9pt; margin-bottom: 14pt; }
+.cite { color: #0f3a2a; font-weight: 500; }
+"""
+
+
+def _render_markdown_pdf(title: str, body_md: str, subtitle: str | None = None) -> bytes:
+    body_html = md_lib.markdown(
+        body_md,
+        extensions=["extra", "tables", "sane_lists", "toc"],
+    )
+    subtitle_html = (
+        f'<div class="meta">{subtitle}</div>' if subtitle else ""
+    )
+    full_html = f"""<!doctype html>
+<html><head><meta charset="utf-8"><title>{_html_escape(title)}</title></head>
+<body>
+  <h1>{_html_escape(title)}</h1>
+  {subtitle_html}
+  {body_html}
+</body></html>"""
+
+    pdf_bytes = HTML(string=full_html).write_pdf(stylesheets=[CSS(string=_DOCUMENT_CSS)])
+    return pdf_bytes or b""
+
+
+# Court-document stylesheet. Lawyers expect plain black serif text, centered
+# captions for the court header, all-caps document titles, justified prose,
+# and the cause number aligned right of the heading block.
+_LEGAL_CSS = """
+@page {
+  size: A4;
+  margin: 25mm 22mm 25mm 25mm;
+  @bottom-center {
+    content: counter(page) " of " counter(pages);
+    font-family: "Liberation Serif", "Times New Roman", serif;
+    font-size: 9pt;
+    color: #555;
+  }
+}
+html { font-family: "Liberation Serif", "Times New Roman", serif; font-size: 12pt; line-height: 1.55; color: #000; }
+p { margin: 0 0 8pt 0; text-align: justify; }
+h1, h2, h3 { font-weight: 700; text-align: center; margin: 14pt 0 8pt 0; }
+h1 { font-size: 13.5pt; letter-spacing: 0.5pt; }
+h2 { font-size: 12.5pt; letter-spacing: 0.3pt; }
+h3 { font-size: 12pt; }
+ol, ul { margin: 0 0 8pt 22pt; padding: 0; }
+li { margin-bottom: 4pt; text-align: justify; }
+hr { border: none; border-top: 1px solid #000; margin: 10pt 0; }
+table { border-collapse: collapse; margin: 0; width: 100%; }
+table.heading td { border: none; padding: 0; vertical-align: top; }
+table.parties td { border: none; padding: 2pt 0; vertical-align: top; }
+table.parties td.right { text-align: right; font-weight: 700; }
+.court-caption { text-align: center; font-weight: 700; line-height: 1.45; }
+.court-caption .line { text-transform: uppercase; letter-spacing: 0.4pt; }
+.court-caption .jurisdiction { font-weight: 400; font-style: italic; text-transform: none; }
+.cause-number { text-align: right; font-weight: 700; margin-top: 4pt; }
+.between { font-weight: 700; margin: 10pt 0 6pt 0; }
+.doc-title { text-align: center; text-transform: uppercase; font-weight: 700; font-size: 13pt; letter-spacing: 1pt; margin: 18pt 0 10pt 0; text-decoration: underline; }
+.recital { margin: 12pt 0 12pt 0; }
+.dated { margin-top: 28pt; }
+.sig-line { border-bottom: 1px solid #000; width: 60%; margin-top: 30pt; }
+.served { margin-top: 18pt; }
+.served strong { display: block; margin-bottom: 4pt; }
+"""
+
+
+def _render_legal_pdf(body_md: str) -> bytes:
+    """Render a court-document Markdown body into a PDF, no auto h1.
+
+    Differs from `_render_markdown_pdf` in two ways: (1) it does NOT prepend
+    an `<h1>title</h1>` — the caller controls every byte of the heading via
+    Markdown / raw HTML; (2) it ships the legal-doc CSS instead of the memo
+    stylesheet (serif throughout, centered captions, all-black text).
+    """
+    body_html = md_lib.markdown(
+        body_md,
+        extensions=["extra", "tables", "sane_lists"],
+    )
+    full_html = f"""<!doctype html>
+<html><head><meta charset="utf-8"></head>
+<body>
+  {body_html}
+</body></html>"""
+
+    pdf_bytes = HTML(string=full_html).write_pdf(stylesheets=[CSS(string=_LEGAL_CSS)])
+    return pdf_bytes or b""
+
+
+def _html_escape(s: str) -> str:
+    return (
+        s.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace('"', "&quot;")
+    )
+
+
+def _slug(s: str) -> str:
+    s = re.sub(r"[^A-Za-z0-9]+", "-", s).strip("-")
+    return s[:60].lower() or "untitled"
+
+
+async def pdf_generate(
+    title: str,
+    content_markdown: str,
+    subtitle: str | None = None,
+    *,
+    owner_id: str | None = None,
+    session_id: str | None = None,
+) -> dict:
+    """Render a markdown body into a polished PDF artifact (memos, briefs)."""
+    if not title.strip():
+        return {"result": {"error": "title required"}}
+    if not content_markdown.strip():
+        return {"result": {"error": "content_markdown required"}}
+
+    pdf_bytes = _render_markdown_pdf(title=title, body_md=content_markdown, subtitle=subtitle)
+    if not pdf_bytes:
+        return {"result": {"error": "weasyprint produced no bytes"}}
+
+    # Count pages by re-parsing what weasyprint emitted.
+    try:
+        page_count = len(PdfReader(io.BytesIO(pdf_bytes)).pages)
+    except Exception:
+        page_count = None
+
+    row = _insert_artifact_row(
+        kind="pdf",
+        title=title,
+        storage_path="artifacts/pending",
+        source="generated",
+        size_bytes=len(pdf_bytes),
+        page_count=page_count,
+        meta={
+            "tool": "pdf_generate",
+            "subtitle": subtitle,
+            "slug": _slug(title),
+            "source_markdown": content_markdown,  # enables lazy Word (.docx) export
+            "layout": "memo",
+        },
+        owner_id=owner_id,
+        session_id=session_id,
+    )
+    storage_path = _upload_artifact_pdf(row["id"], pdf_bytes)
+    get_db().table("artifacts").update({"storage_path": storage_path}).eq("id", row["id"]).execute()
+    row["storage_path"] = storage_path
+
+    return {
+        "result": {
+            "artifact_id": row["id"],
+            "title": title,
+            "kind": "pdf",
+            "page_count": page_count,
+            "size_bytes": len(pdf_bytes),
+        },
+        "artifact": row,
+        "db_sources": [],
+        "web_sources": [],
+    }
+
+
+# ─── Helper: Zambian court-document rendering ────────────────────────────────
+
+
+_REGISTRY_INFO: dict[str, tuple[str, str, str, str]] = {
+    "Principal Registry, Civil":
+        ("PRINCIPAL REGISTRY", "LUSAKA", "HP", "Civil Jurisdiction"),
+    "Principal Registry, Commercial":
+        ("PRINCIPAL REGISTRY, COMMERCIAL DIVISION", "LUSAKA", "HPC", "Commercial Jurisdiction"),
+    "Principal Registry, Family and Children":
+        ("PRINCIPAL REGISTRY, FAMILY AND CHILDREN DIVISION", "LUSAKA", "HPF", "Family Jurisdiction"),
+    "Industrial Relations Division":
+        ("INDUSTRIAL RELATIONS DIVISION", "LUSAKA", "IRCLP", "Industrial Relations Jurisdiction"),
+    "Constitutional Court":
+        ("CONSTITUTIONAL COURT", "LUSAKA", "CCZ", "Constitutional Jurisdiction"),
+    "Court of Appeal":
+        ("COURT OF APPEAL", "LUSAKA", "CAZ", "Civil Appellate Jurisdiction"),
+    "Subordinate Court":
+        ("SUBORDINATE COURT", "LUSAKA", "SC", ""),
+}
+
+
+def render_template_letterhead(template: dict | None) -> str:
+    """Render a chambers letterhead block from a user's template, if any.
+
+    The user uploads a Word/PDF/TXT template (their firm's letterhead, with
+    address + contact info + boilerplate). At upload time we extract a
+    preview_text (~2000 chars). We render the first ~12 non-empty lines of
+    that preview as a centered block above the court caption — that's the
+    visible "branding" the user wants on their drafts. Line breaks are
+    preserved so addresses + contact info still read correctly.
+
+    Returns the empty string when no template is supplied or it has no
+    usable preview content.
+    """
+    if not template:
+        return ""
+    preview = (template.get("preview_text") or "").strip()
+    if not preview:
+        return ""
+
+    lines = [ln.strip() for ln in preview.splitlines() if ln.strip()]
+    head_lines = lines[:12]
+    if not head_lines:
+        return ""
+
+    name = (template.get("name") or "").strip()
+    e = _html_escape
+    inner = "<br/>".join(e(ln) for ln in head_lines)
+    badge = (
+        f'<div style="text-align:right;font-size:9pt;color:#666;font-style:italic;margin-top:-4pt;margin-bottom:8pt;">'
+        f'Drafted using your &ldquo;{e(name)}&rdquo; template'
+        f'</div>'
+    ) if name else ""
+
+    return (
+        '<div style="text-align:center;font-size:10.5pt;line-height:1.4;'
+        'margin-bottom:14pt;padding-bottom:10pt;border-bottom:1px solid #000;">'
+        f'{inner}'
+        '</div>'
+        f'{badge}'
+    )
+
+
+def render_court_heading(
+    *,
+    court_division: str,
+    cause_number: str | None,
+    applicant_name: str,
+    respondent_name: str,
+    applicant_role: str = "APPLICANT",
+    respondent_role: str = "RESPONDENT",
+) -> str:
+    """Return the Zambian court-document caption + parties block as HTML.
+
+    Pass this through to a Markdown body — the Markdown renderer keeps HTML
+    intact. The output relies on the `.court-caption`, `.cause-number`, and
+    `.parties` classes that ship with `_LEGAL_CSS`.
+    """
+    info = _REGISTRY_INFO.get(court_division)
+    if info:
+        registry, city, code, jurisdiction = info
+    else:
+        registry = court_division.upper()
+        city = "LUSAKA"
+        code = "HP"
+        jurisdiction = "Civil Jurisdiction"
+
+    cn = (cause_number or "").strip()
+    if not cn:
+        year = time.gmtime().tm_year
+        cn = f"{year}/{code}/[NUMBER]"
+
+    e = _html_escape
+    jurisdiction_html = (
+        f'<div class="jurisdiction">({e(jurisdiction)})</div>' if jurisdiction else ""
+    )
+    return (
+        '<div class="court-caption">'
+        '<div class="line">IN THE HIGH COURT FOR ZAMBIA</div>'
+        f'<div class="line">AT THE {e(registry)}</div>'
+        f'<div class="line">HOLDEN AT {e(city)}</div>'
+        f'{jurisdiction_html}'
+        '</div>'
+        f'<div class="cause-number">Cause No. {e(cn)}</div>'
+        '<div class="between">B E T W E E N:</div>'
+        '<table class="parties">'
+        f'<tr><td>{e(applicant_name)}</td><td class="right">{e(applicant_role)}</td></tr>'
+        '<tr><td>AND</td><td></td></tr>'
+        f'<tr><td>{e(respondent_name)}</td><td class="right">{e(respondent_role)}</td></tr>'
+        '</table>'
+    )
+
+
+async def pdf_generate_legal(
+    *,
+    title: str,
+    body_markdown: str,
+    meta_tool: str = "pdf_generate_legal",
+    owner_id: str | None = None,
+    session_id: str | None = None,
+) -> dict:
+    """Render a Zambian court document body (caption + parties + prose) as PDF.
+
+    The caller is responsible for producing the full body — including the
+    caption — typically by concatenating `render_court_heading(...)` with the
+    document-specific prose. `title` is used for the artifact card / DB row;
+    it does NOT get auto-injected into the rendered PDF.
+    """
+    if not title.strip():
+        return {"result": {"error": "title required"}}
+    if not body_markdown.strip():
+        return {"result": {"error": "body_markdown required"}}
+
+    pdf_bytes = _render_legal_pdf(body_md=body_markdown)
+    if not pdf_bytes:
+        return {"result": {"error": "weasyprint produced no bytes"}}
+
+    try:
+        page_count = len(PdfReader(io.BytesIO(pdf_bytes)).pages)
+    except Exception:
+        page_count = None
+
+    row = _insert_artifact_row(
+        kind="pdf",
+        title=title,
+        storage_path="artifacts/pending",
+        source="generated",
+        size_bytes=len(pdf_bytes),
+        page_count=page_count,
+        meta={
+            "tool": meta_tool,
+            "slug": _slug(title),
+            "source_markdown": body_markdown,  # enables lazy Word (.docx) export
+            "layout": "legal",
+        },
+        owner_id=owner_id,
+        session_id=session_id,
+    )
+    storage_path = _upload_artifact_pdf(row["id"], pdf_bytes)
+    get_db().table("artifacts").update({"storage_path": storage_path}).eq("id", row["id"]).execute()
+    row["storage_path"] = storage_path
+
+    return {
+        "result": {
+            "artifact_id": row["id"],
+            "title": title,
+            "kind": "pdf",
+            "page_count": page_count,
+            "size_bytes": len(pdf_bytes),
+        },
+        "artifact": row,
+        "db_sources": [],
+        "web_sources": [],
+    }
+
+
+# ─── Tool: fill_form ─────────────────────────────────────────────────────────
+
+
+async def fill_form(
+    *,
+    form_title: str,
+    fields: list[dict],
+    form_document_id: str | None = None,
+    form_artifact_id: str | None = None,
+    notes: str | None = None,
+    owner_id: str | None = None,
+    session_id: str | None = None,
+) -> dict:
+    """Produce a completed copy of a Zambian form from the field values the
+    agent has gathered.
+
+    Two paths:
+      1. If the source PDF (a corpus doc via `form_document_id`, OR a
+         fetched/uploaded artifact via `form_artifact_id`) has fillable
+         AcroForm fields, fill the matching fields IN PLACE and return that
+         actual form, completed.
+      2. Otherwise — the common case, since most Zambian gov forms are flat
+         scans with no form fields — render a clean "Completed: <form>"
+         answer sheet: every field label with the supplied value, that the
+         user transcribes onto / lodges with the official form.
+
+    `fields` is a list of {"label": str, "value": str}.
+    """
+    clean = [
+        {"label": str(f.get("label", "")).strip(), "value": str(f.get("value", "")).strip()}
+        for f in (fields or [])
+        if f and (f.get("label") or f.get("value"))
+    ]
+    if not form_title.strip():
+        return {"result": {"error": "form_title required"}}
+    if not clean:
+        return {"result": {"error": "fields must be a non-empty list of {label, value}"}}
+
+    # ── Path 1: fill the real AcroForm in place, if the source has one ──
+    # Source can be a fetched/uploaded artifact or a corpus document.
+    src_bytes: bytes | None = None
+    try:
+        if form_artifact_id:
+            src_bytes = _download_artifact_pdf(form_artifact_id)
+        elif form_document_id:
+            src_bytes = _download_corpus_pdf(form_document_id)
+    except Exception:  # noqa: BLE001 — fall through to the answer sheet
+        src_bytes = None
+
+    if src_bytes:
+        try:
+            reader = PdfReader(io.BytesIO(src_bytes))
+            acro = reader.get_fields() or {}
+            if acro:
+                writer = PdfWriter()
+                writer.append(reader)
+                # Match supplied labels to AcroForm field names case-/space-
+                # insensitively; fill what we can.
+                norm = lambda s: re.sub(r"[^a-z0-9]", "", (s or "").lower())
+                field_names = {norm(k): k for k in acro.keys()}
+                values: dict[str, str] = {}
+                for f in clean:
+                    key = field_names.get(norm(f["label"]))
+                    if key:
+                        values[key] = f["value"]
+                if values:
+                    for page in writer.pages:
+                        writer.update_page_form_field_values(page, values)
+                    buf = io.BytesIO()
+                    writer.write(buf)
+                    pdf_bytes = buf.getvalue()
+                    return await _store_filled_pdf(
+                        pdf_bytes, form_title, clean,
+                        mode="acroform", filled=len(values), total=len(acro),
+                        owner_id=owner_id, session_id=session_id,
+                    )
+        except Exception:  # noqa: BLE001 — fall through to the answer sheet
+            pass
+
+    # ── Path 2: render a completed-answers sheet ──
+    rows = "".join(
+        f'<tr><td style="width:42%;font-weight:700;">{_html_escape(f["label"])}</td>'
+        f'<td>{_html_escape(f["value"]) or "&nbsp;"}</td></tr>'
+        for f in clean
+    )
+    notes_html = (
+        f'<p style="margin-top:14pt;font-style:italic;">{_html_escape(notes)}</p>'
+        if notes else ""
+    )
+    body = (
+        f'<div class="doc-title">COMPLETED: {_html_escape(form_title.upper())}</div>'
+        '<p style="font-style:italic;text-align:center;margin-bottom:14pt;">'
+        'Completed answer sheet — transcribe these values onto the official '
+        'form, or lodge alongside it. Verify every entry before filing.</p>'
+        '<table style="width:100%;">' + rows + '</table>'
+        + notes_html
+    )
+    return await pdf_generate_legal(
+        title=f"Completed — {form_title}",
+        body_markdown=body,
+        meta_tool="fill_form",
+        owner_id=owner_id,
+        session_id=session_id,
+    )
+
+
+async def _store_filled_pdf(
+    pdf_bytes: bytes, form_title: str, fields: list[dict], *,
+    mode: str, filled: int, total: int,
+    owner_id: str | None, session_id: str | None,
+) -> dict:
+    try:
+        page_count = len(PdfReader(io.BytesIO(pdf_bytes)).pages)
+    except Exception:
+        page_count = None
+    row = _insert_artifact_row(
+        kind="pdf",
+        title=f"Completed — {form_title}",
+        storage_path="artifacts/pending",
+        source="generated",
+        size_bytes=len(pdf_bytes),
+        page_count=page_count,
+        meta={"tool": "fill_form", "mode": mode, "fields_filled": filled, "fields_total": total,
+              "slug": _slug(form_title)},
+        owner_id=owner_id,
+        session_id=session_id,
+    )
+    storage_path = _upload_artifact_pdf(row["id"], pdf_bytes)
+    get_db().table("artifacts").update({"storage_path": storage_path}).eq("id", row["id"]).execute()
+    row["storage_path"] = storage_path
+    return {
+        "result": {"artifact_id": row["id"], "title": row["title"], "kind": "pdf",
+                   "page_count": page_count, "size_bytes": len(pdf_bytes),
+                   "mode": mode, "fields_filled": filled, "fields_total": total},
+        "artifact": row, "db_sources": [], "web_sources": [],
+    }
+
+
+# ─── Tool: fetch_web_pdf ─────────────────────────────────────────────────────
+
+_FETCH_MAX_BYTES = 30 * 1024 * 1024  # 30 MB ceiling
+
+
+async def fetch_web_pdf(
+    *,
+    url: str,
+    title: str | None = None,
+    owner_id: str | None = None,
+    session_id: str | None = None,
+) -> dict:
+    """Download a PDF from a public URL and store it as a downloadable artifact.
+
+    This lets the agent hand the user the ACTUAL government / institutional
+    form or document found online (not just a link) — they get a download
+    card in-chat. We accept self-signed gov certs (verify=False) because
+    several Zambian gov hosts ship broken cert chains; the content is a
+    public document either way.
+
+    Guardrails: http(s) only, must be a real PDF (magic bytes), capped at
+    30 MB. Returns an error envelope (not a raise) on any failure so the
+    agent can tell the user gracefully.
+    """
+    u = (url or "").strip()
+    if not (u.startswith("http://") or u.startswith("https://")):
+        return {"result": {"error": "url must be http(s)"}}
+
+    try:
+        async with httpx.AsyncClient(
+            timeout=60.0, follow_redirects=True, verify=False,
+            headers={"User-Agent": "Mozilla/5.0 LevyFetch/1.0"},
+        ) as client:
+            r = await client.get(u)
+    except Exception as e:  # noqa: BLE001
+        return {"result": {"error": f"could not download: {e}", "url": u}}
+
+    if r.status_code != 200:
+        return {"result": {"error": f"download returned {r.status_code}", "url": u}}
+    content = r.content
+    if len(content) > _FETCH_MAX_BYTES:
+        return {"result": {"error": "file too large (over 30 MB)", "url": u}}
+    if not content[:5].startswith(b"%PDF"):
+        # Some servers send the PDF without the leading magic on redirect
+        # pages; treat non-PDF as a miss so we never store an HTML error page.
+        return {"result": {"error": "the URL did not return a PDF", "url": u}}
+
+    try:
+        page_count = len(PdfReader(io.BytesIO(content)).pages)
+    except Exception:
+        page_count = None
+
+    # Derive a clean title from the URL filename if none supplied.
+    if not (title or "").strip():
+        import urllib.parse
+        fname = urllib.parse.unquote(u.rsplit("/", 1)[-1].rsplit(".", 1)[0])
+        title = re.sub(r"[-_]+", " ", fname).strip() or "Downloaded document"
+
+    row = _insert_artifact_row(
+        kind="pdf",
+        title=title.strip(),
+        storage_path="artifacts/pending",
+        source="fetched",
+        size_bytes=len(content),
+        page_count=page_count,
+        meta={"tool": "fetch_web_pdf", "source_url": u, "slug": _slug(title)},
+        owner_id=owner_id,
+        session_id=session_id,
+    )
+    storage_path = _upload_artifact_pdf(row["id"], content)
+    get_db().table("artifacts").update({"storage_path": storage_path}).eq("id", row["id"]).execute()
+    row["storage_path"] = storage_path
+
+    return {
+        "result": {
+            "artifact_id": row["id"], "title": title.strip(), "kind": "pdf",
+            "page_count": page_count, "size_bytes": len(content), "source_url": u,
+        },
+        "artifact": row,
+        "db_sources": [],
+        "web_sources": [{"title": title.strip(), "url": u, "snippet": "", "domain": _extract_domain_pt(u)}],
+    }
+
+
+def _extract_domain_pt(url: str) -> str:
+    m = re.search(r"https?://([^/]+)", url or "")
+    return m.group(1) if m else ""
+
+
+# ─── Tool: pdf_merge ─────────────────────────────────────────────────────────
+
+
+async def pdf_merge(
+    parts: list[dict],
+    title: str,
+    *,
+    owner_id: str | None = None,
+    session_id: str | None = None,
+) -> dict:
+    """
+    Concatenate multiple PDFs into one artifact.
+
+    `parts` is a list of part dicts, each one of:
+      {"artifact_id": "<uuid>"}                                   — append an existing artifact whole
+      {"document_id": "<uuid>"}                                   — append a corpus PDF whole
+      {"document_id": "<uuid>", "page_start": N, "page_end": M}   — append a page range from a corpus PDF
+    """
+    if not parts:
+        return {"result": {"error": "parts must be a non-empty list"}}
+    if not title.strip():
+        return {"result": {"error": "title required"}}
+
+    writer = PdfWriter()
+    sources_used: list[dict] = []
+
+    for i, part in enumerate(parts):
+        try:
+            if part.get("artifact_id"):
+                pdf_bytes = _download_artifact_pdf(part["artifact_id"])
+                src_label = f"artifact:{part['artifact_id']}"
+            elif part.get("document_id"):
+                pdf_bytes = _download_corpus_pdf(part["document_id"])
+                src_label = f"document:{part['document_id']}"
+            else:
+                return {
+                    "result": {"error": f"part {i} needs artifact_id or document_id"},
+                }
+            reader = PdfReader(io.BytesIO(pdf_bytes))
+            total = len(reader.pages)
+            ps = max(1, int(part.get("page_start") or 1))
+            pe = min(total, int(part.get("page_end") or total))
+            for p in range(ps - 1, pe):
+                writer.add_page(reader.pages[p])
+            sources_used.append(
+                {"source": src_label, "page_start": ps, "page_end": pe, "page_count": pe - ps + 1}
+            )
+        except Exception as e:  # noqa: BLE001
+            return {"result": {"error": f"part {i} failed: {e}"}}
+
+    out = io.BytesIO()
+    writer.write(out)
+    pdf_bytes = out.getvalue()
+    page_count = len(writer.pages)
+
+    row = _insert_artifact_row(
+        kind="pdf",
+        title=title,
+        storage_path="artifacts/pending",
+        source="merged",
+        size_bytes=len(pdf_bytes),
+        page_count=page_count,
+        meta={"tool": "pdf_merge", "parts": sources_used},
+        owner_id=owner_id,
+        session_id=session_id,
+    )
+    storage_path = _upload_artifact_pdf(row["id"], pdf_bytes)
+    get_db().table("artifacts").update({"storage_path": storage_path}).eq("id", row["id"]).execute()
+    row["storage_path"] = storage_path
+
+    return {
+        "result": {
+            "artifact_id": row["id"],
+            "title": title,
+            "kind": "pdf",
+            "page_count": page_count,
+            "size_bytes": len(pdf_bytes),
+            "parts_count": len(parts),
+        },
+        "artifact": row,
+        "db_sources": [],
+        "web_sources": [],
+    }
+
+
+# ─── Tool: pdf_split ─────────────────────────────────────────────────────────
+
+
+async def pdf_split(
+    artifact_id: str | None = None,
+    document_id: str | None = None,
+    ranges: list[dict] | None = None,
+    title_prefix: str | None = None,
+    *,
+    owner_id: str | None = None,
+    session_id: str | None = None,
+) -> dict:
+    """
+    Split a PDF (artifact or corpus document) into multiple smaller artifacts.
+
+    `ranges` is a list of `{"page_start": N, "page_end": M, "title": "..."}`
+    descriptors. Each yields one artifact. If `title` is omitted on a range,
+    we synthesise `<title_prefix or 'Split'> — pp.N–M`.
+    """
+    if (artifact_id is None) == (document_id is None):
+        return {"result": {"error": "specify exactly one of artifact_id or document_id"}}
+    if not ranges:
+        return {"result": {"error": "ranges must be a non-empty list"}}
+
+    src_pdf = (
+        _download_artifact_pdf(artifact_id) if artifact_id
+        else _download_corpus_pdf(document_id or "")
+    )
+    reader = PdfReader(io.BytesIO(src_pdf))
+    total_pages = len(reader.pages)
+
+    # Resolve a sensible default title prefix.
+    db = get_db()
+    if not title_prefix:
+        if artifact_id:
+            r = db.table("artifacts").select("title").eq("id", artifact_id).limit(1).execute()
+            title_prefix = (r.data[0].get("title") if r.data else None) or "Split"
+        else:
+            r = db.table("legal_documents").select("short_name, title").eq("id", document_id).limit(1).execute()
+            title_prefix = (
+                (r.data[0].get("short_name") if r.data else None)
+                or (r.data[0].get("title") if r.data else None)
+                or "Split"
+            )
+
+    produced: list[dict] = []
+    for i, rng in enumerate(ranges):
+        try:
+            ps = max(1, int(rng.get("page_start") or 1))
+            pe = min(total_pages, int(rng.get("page_end") or total_pages))
+            if pe < ps:
+                produced.append({"index": i, "error": f"invalid range {ps}..{pe}"})
+                continue
+            writer = PdfWriter()
+            for p in range(ps - 1, pe):
+                writer.add_page(reader.pages[p])
+            out = io.BytesIO()
+            writer.write(out)
+            pdf_bytes = out.getvalue()
+            piece_title = (rng.get("title") or f"{title_prefix} — pp.{ps}–{pe}").strip()
+            row = _insert_artifact_row(
+                kind="pdf",
+                title=piece_title,
+                storage_path="artifacts/pending",
+                source="extracted",
+                size_bytes=len(pdf_bytes),
+                page_count=pe - ps + 1,
+                meta={
+                    "tool": "pdf_split",
+                    "source_artifact_id": artifact_id,
+                    "source_document_id": document_id,
+                    "page_start": ps,
+                    "page_end": pe,
+                },
+                owner_id=owner_id,
+                session_id=session_id,
+            )
+            storage_path = _upload_artifact_pdf(row["id"], pdf_bytes)
+            db.table("artifacts").update({"storage_path": storage_path}).eq("id", row["id"]).execute()
+            row["storage_path"] = storage_path
+            produced.append({
+                "artifact_id": row["id"],
+                "title": piece_title,
+                "page_start": ps,
+                "page_end": pe,
+                "page_count": pe - ps + 1,
+                "_artifact": row,
+            })
+        except Exception as e:  # noqa: BLE001
+            produced.append({"index": i, "error": str(e)})
+
+    # Surface every artifact as its own card via the agent loop's "artifact"
+    # event. The first one goes in `artifact`; the rest piggy-back via
+    # `extra_artifacts` so the loop emits them too.
+    succeeded = [p for p in produced if p.get("artifact_id")]
+    primary = succeeded[0]["_artifact"] if succeeded else None
+    extras = [p["_artifact"] for p in succeeded[1:]]
+    for p in produced:
+        p.pop("_artifact", None)
+
+    return {
+        "result": {
+            "produced": produced,
+            "count": len(succeeded),
+        },
+        "artifact": primary,
+        "extra_artifacts": extras,
+        "db_sources": [],
+        "web_sources": [],
+    }
+
+
+# ─── Tool: export_thread_brief ───────────────────────────────────────────────
+# The premium-edge feature: turn an entire chat thread into a polished PDF
+# brief with an appendix that includes the relevant page ranges from every
+# corpus document the assistant cited.
+
+
+def _strip_user_thinking(text: str) -> str:
+    """Light cleanup for the assistant's prose before embedding it in the brief.
+    Drops residual streaming artifacts (cursor pipes, isolated whitespace)."""
+    lines = [ln.rstrip() for ln in (text or "").splitlines()]
+    return "\n".join(ln for ln in lines if ln is not None)
+
+
+async def export_thread_brief(
+    session_id: str,
+    title: str | None = None,
+    include_appendix: bool = True,
+    *,
+    owner_id: str | None = None,
+) -> dict:
+    """
+    Compose a single PDF brief for the entire conversation:
+      1. Cover page (title + matter line + date).
+      2. Q&A transcript (each user question + the assistant's answer).
+      3. Appendix (when include_appendix=true): for every distinct corpus
+         document cited, pull the cited page ranges (deduped + merged into
+         contiguous spans) and append them to the PDF.
+    """
+    db = get_db()
+    sess = (
+        db.table("chat_sessions").select("id, title, user_id, created_at")
+        .eq("id", session_id).limit(1).execute()
+    )
+    if not sess.data:
+        return {"result": {"error": f"session {session_id} not found"}}
+    sess_row = sess.data[0]
+
+    msgs = (
+        db.table("chat_messages")
+        .select("role, content, citations, created_at")
+        .eq("session_id", session_id)
+        .order("created_at", desc=False)
+        .execute()
+    ).data or []
+
+    if not msgs:
+        return {"result": {"error": "thread is empty"}}
+
+    # ── Build the prose body in Markdown for weasyprint ─────────────────────
+    final_title = (title or sess_row.get("title") or "Levy Brief").strip() or "Levy Brief"
+    md_lines: list[str] = []
+    md_lines.append(f"_Generated from a Levy consultation on {sess_row.get('created_at','')[:10]}._")
+    md_lines.append("")
+
+    # Aggregate citations by document_id and merge page ranges. Legacy
+    # citation snapshots (pre-Phase-2) only carry `act_name` — for those we
+    # fall back to a title lookup so the appendix still works on old threads.
+    cite_spans: dict[str, dict] = {}  # doc_id -> {"act_name": ..., "spans": list[(ps,pe)]}
+    title_to_doc_id: dict[str, str | None] = {}
+
+    def _resolve_doc_id(act_name: str | None) -> str | None:
+        if not act_name:
+            return None
+        if act_name in title_to_doc_id:
+            return title_to_doc_id[act_name]
+        try:
+            res = (
+                db.table("legal_documents").select("id, title")
+                .eq("title", act_name).limit(1).execute()
+            )
+            if not res.data:
+                # Loose match — prior versions stored uppercased titles.
+                token = max(act_name.split(), key=len) if act_name.strip() else ""
+                if token:
+                    res = (
+                        db.table("legal_documents").select("id, title")
+                        .ilike("title", f"%{token}%").limit(1).execute()
+                    )
+            doc_id = res.data[0]["id"] if res.data else None
+        except Exception:
+            doc_id = None
+        title_to_doc_id[act_name] = doc_id
+        return doc_id
+
+    for m in msgs:
+        role = m.get("role")
+        content = m.get("content") or ""
+        if role == "user":
+            md_lines.append("## " + (content.splitlines()[0][:120] if content else "(empty)"))
+            md_lines.append("")
+            md_lines.append(content)
+        elif role == "assistant":
+            md_lines.append("")
+            md_lines.append("**Levy AI:**")
+            md_lines.append("")
+            md_lines.append(_strip_user_thinking(content))
+            for c in m.get("citations") or []:
+                if not isinstance(c, dict):
+                    continue
+                doc_id = c.get("document_id") or _resolve_doc_id(c.get("act_name"))
+                if not doc_id:
+                    continue
+                ps = c.get("page_start")
+                pe = c.get("page_end") or ps
+                if not ps:
+                    continue
+                slot = cite_spans.setdefault(
+                    doc_id,
+                    {"act_name": c.get("act_name"), "spans": []},
+                )
+                slot["spans"].append((int(ps), int(pe)))
+        md_lines.append("")
+        md_lines.append("---")
+        md_lines.append("")
+
+    body_md = "\n".join(md_lines).rstrip()
+
+    # ── Generate the prose PDF ──────────────────────────────────────────────
+    prose_bytes = _render_markdown_pdf(
+        title=final_title,
+        body_md=body_md,
+        subtitle="Compiled by Levy from this consultation.",
+    )
+    if not prose_bytes:
+        return {"result": {"error": "weasyprint produced no bytes"}}
+
+    appendix_pages_added = 0
+    appendix_index: list[dict] = []  # for the artifact meta record
+
+    # ── Optionally append cited corpus page-ranges ──────────────────────────
+    final_writer = PdfWriter()
+    for page in PdfReader(io.BytesIO(prose_bytes)).pages:
+        final_writer.add_page(page)
+
+    if include_appendix and cite_spans:
+        # Render an appendix cover page.
+        cover_md_lines = ["## Appendix", "", "Cited statutory excerpts, in the order cited:", ""]
+        # Sort docs by act name for stable order.
+        sorted_docs = sorted(cite_spans.items(), key=lambda kv: (kv[1].get("act_name") or "").lower())
+        for doc_id, info in sorted_docs:
+            spans = info.get("spans") or []
+            if not spans:
+                continue
+            # Merge overlapping/adjacent spans.
+            spans.sort()
+            merged: list[list[int]] = []
+            for ps, pe in spans:
+                if merged and ps <= merged[-1][1] + 1:
+                    merged[-1][1] = max(merged[-1][1], pe)
+                else:
+                    merged.append([ps, pe])
+            label = info.get("act_name") or "Source"
+            ranges_str = ", ".join(
+                f"pp.{ps}" if ps == pe else f"pp.{ps}–{pe}" for ps, pe in merged
+            )
+            cover_md_lines.append(f"- **{label}** — {ranges_str}")
+        cover_bytes = _render_markdown_pdf(
+            title=final_title,
+            body_md="\n".join(cover_md_lines),
+            subtitle="Appendix index",
+        )
+        for page in PdfReader(io.BytesIO(cover_bytes)).pages:
+            final_writer.add_page(page)
+
+        for doc_id, info in sorted_docs:
+            spans = info.get("spans") or []
+            if not spans:
+                continue
+            try:
+                doc_pdf = _download_corpus_pdf(doc_id)
+            except Exception:
+                continue
+            doc_reader = PdfReader(io.BytesIO(doc_pdf))
+            doc_pages = len(doc_reader.pages)
+            spans.sort()
+            merged: list[list[int]] = []
+            for ps, pe in spans:
+                if merged and ps <= merged[-1][1] + 1:
+                    merged[-1][1] = max(merged[-1][1], pe)
+                else:
+                    merged.append([ps, pe])
+            for ps, pe in merged:
+                ps = max(1, ps)
+                pe = min(doc_pages, pe)
+                if pe < ps:
+                    continue
+                for p in range(ps - 1, pe):
+                    final_writer.add_page(doc_reader.pages[p])
+                appendix_pages_added += pe - ps + 1
+                appendix_index.append({
+                    "document_id": doc_id,
+                    "act_name": info.get("act_name"),
+                    "page_start": ps,
+                    "page_end": pe,
+                })
+
+    out = io.BytesIO()
+    final_writer.write(out)
+    pdf_bytes = out.getvalue()
+    page_count = len(final_writer.pages)
+
+    row = _insert_artifact_row(
+        kind="pdf",
+        title=final_title,
+        storage_path="artifacts/pending",
+        source="generated",
+        size_bytes=len(pdf_bytes),
+        page_count=page_count,
+        meta={
+            "tool": "export_thread_brief",
+            "session_id": session_id,
+            "with_appendix": include_appendix,
+            "appendix_pages": appendix_pages_added,
+            "appendix_index": appendix_index,
+            "messages_included": len(msgs),
+        },
+        owner_id=owner_id or sess_row.get("user_id"),
+        session_id=session_id,
+    )
+    storage_path = _upload_artifact_pdf(row["id"], pdf_bytes)
+    db.table("artifacts").update({"storage_path": storage_path}).eq("id", row["id"]).execute()
+    row["storage_path"] = storage_path
+
+    return {
+        "result": {
+            "artifact_id": row["id"],
+            "title": final_title,
+            "kind": "pdf",
+            "page_count": page_count,
+            "size_bytes": len(pdf_bytes),
+            "appendix_pages": appendix_pages_added,
+            "documents_in_appendix": len(appendix_index),
+        },
+        "artifact": row,
+        "db_sources": [],
+        "web_sources": [],
+    }

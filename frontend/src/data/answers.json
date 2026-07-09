@@ -1,0 +1,1481 @@
+[
+  {
+    "slug": "what-is-the-minimum-notice-period-for-terminating-employment-in-zambia",
+    "category": "Employment",
+    "question": "What is the minimum notice period for terminating employment in Zambia?",
+    "answer": "# Minimum Notice Period for Employment Termination in Zambia\n\nUnder Zambian law, the minimum notice period for terminating employment depends on how long the employee has been contracted. [Employment Code Act, S.53] sets out three notice periods that apply when the employment contract itself does not specify a notice period: twenty-four hours for contracts not exceeding one month; fourteen days for contracts lasting more than one month but not exceeding three months; and thirty days for contracts lasting more than three months.\n\nHowever, there is an important exception. [Employment Code Act, S.53] states that no notice period is required if the employee is guilty of serious misconduct of a nature that would make it unreasonable for the employer to continue the employment relationship. In such cases, the employer may terminate immediately. Additionally, employers may provide compensation in lieu of notice instead of giving the notice period itself.\n\nIt is important to note that these are the statutory minimums. If your employment contract specifies a longer notice period, that contract term will apply instead of these statutory periods. You should check your employment contract to see what notice period has been agreed between you and your employer.",
+    "sources": [
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "53",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      },
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "57",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      },
+      {
+        "act": "Copyright Act",
+        "section": "57",
+        "document_id": "c872b9a4-a8bf-450e-a4f4-828552fe5823"
+      },
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "52",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      }
+    ]
+  },
+  {
+    "slug": "how-is-severance-pay-calculated-in-zambia",
+    "category": "Employment",
+    "question": "How is severance pay calculated in Zambia?",
+    "answer": "# How Severance Pay is Calculated in Zambia\n\nSeverance pay in Zambia is calculated differently depending on the reason for termination of employment. The key rule is that [Employment Code Act, S.54] requires employers to pay severance according to the specific circumstances.\n\nIf an employee's fixed-duration contract ends, severance pay must be a gratuity of at least 25 percent of the employee's basic pay earned during the contract period [Employment Code Act, S.54(b)]. If employment is terminated by redundancy, the employee is entitled to a minimum of two months' pay for every year served [Employment Code Act, S.54(3)(a)]. Where an employee is medically discharged from employment, they receive at least three months' basic pay for each completed year of service [Employment Code Act, S.36(6)]. If an employee dies in service, their estate receives two months' basic pay for each year served [Employment Code Act, S.54].\n\nImportant exceptions apply: severance pay is not paid to casual employees, temporary employees, employees on long-term contracts, or those still serving a probation period [Employment Code Act, S.54(3)]. The Minister has authority to prescribe a formula for the minimum computation of severance pay [Employment Code Act, S.54(4)], so you should check current regulations for any prescribed minimums that may apply to your situation.",
+    "sources": [
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "54",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      },
+      {
+        "act": "Copyright Act",
+        "section": "53",
+        "document_id": "c872b9a4-a8bf-450e-a4f4-828552fe5823"
+      },
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "37",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      },
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "36",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      }
+    ]
+  },
+  {
+    "slug": "what-are-an-employee-s-rights-when-dismissed-in-zambia",
+    "category": "Employment",
+    "question": "What are an employee's rights when dismissed in Zambia?",
+    "answer": "# Employee Rights Upon Dismissal in Zambia\n\nUnder Zambian law, an employer may only dismiss an employee summarily (immediately) in specific circumstances. These include: gross misconduct inconsistent with the employment contract; wilful disobedience to a lawful order; lack of skill the employee was warranted to possess; habitual or substantial neglect of duties; continual absence without permission or reasonable excuse; or misconduct under the employer's disciplinary rules where summary dismissal is the prescribed punishment [Employment Code Act, S.50].\n\nWhen an employer dismisses an employee for any lawful cause, the employee has a right to receive all wages and other accrued benefits due up to the date of dismissal [Employment Code Act, S.51]. This payment must be made on the date of dismissal itself. If an employer fails to pay these amounts, the employer is liable to an administrative penalty [Employment Code Act, S.51].\n\nThe law also provides special protections: an employer cannot dismiss an employee in connection with maternity leave [Employment Code Act, S.43], and dismissal on medical grounds is only appropriate where a medical practitioner determines the employee cannot fulfil their contract due to illness or accident, typically after six months without recovery or in cases of permanent disability.\n\nIf you believe your dismissal was unlawful or procedurally unfair, you should seek advice from a labour officer or legal representative, as you may have grounds to challenge the dismissal.",
+    "sources": [
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "51",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      },
+      {
+        "act": "Copyright Act",
+        "section": "51",
+        "document_id": "c872b9a4-a8bf-450e-a4f4-828552fe5823"
+      },
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "50",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      },
+      {
+        "act": "Copyright Act",
+        "section": "2",
+        "document_id": "c872b9a4-a8bf-450e-a4f4-828552fe5823"
+      }
+    ]
+  },
+  {
+    "slug": "what-is-the-maternity-leave-entitlement-in-zambia",
+    "category": "Employment",
+    "question": "What is the maternity leave entitlement in Zambia?",
+    "answer": "# Maternity Leave Entitlement in Zambia\n\nUnder Zambian law, a female employee is entitled to fourteen weeks of maternity leave [Employment Code Act, S.41]. This leave can be taken either immediately before the expected delivery date (with at least six weeks required after delivery) or entirely after delivery, provided the employee produces a medical certificate.\n\nIf an employee has worked continuously with the same employer for twenty-four months before maternity leave begins, the leave entitlement is paid [Employment Code Act, S.41]. In cases of multiple births, the fourteen weeks are extended by an additional four weeks [Employment Code Act, S.41].\n\nA female employee is also entitled to one day's absence from work each month without needing a medical certificate or explanation to the employer [Employment Code Act, S.47]. Additionally, female employees receive protection against dismissal connected with maternity leave [Employment Code Act, S.43].\n\nFor context, fathers are entitled to at least five continuous working days of paternity leave if taken within seven days of the child's birth, provided they have been employed continuously for at least twelve months [Employment Code Act, S.46].",
+    "sources": [
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "41",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      },
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "46",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      },
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "43",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      },
+      {
+        "act": "Copyright Act",
+        "section": "46",
+        "document_id": "c872b9a4-a8bf-450e-a4f4-828552fe5823"
+      }
+    ]
+  },
+  {
+    "slug": "how-is-gratuity-calculated-for-employees-in-zambia",
+    "category": "Employment",
+    "question": "How is gratuity calculated for employees in Zambia?",
+    "answer": "# How Gratuity is Calculated in Zambia\n\nUnder Zambian law, gratuity is calculated as a percentage of your basic pay earned during your employment period. [Employment Code Act, S.73(1)] requires your employer to pay you gratuity at a rate of not less than 25 percent of the basic pay you earned during the contract period when your long-term contract ends.\n\nIf your employment contract is terminated before the full contract period is complete, you are entitled to gratuity calculated on a pro-rata basis according to how long you actually worked [Employment Code Act, S.73(2)]. This means the gratuity amount is reduced proportionally to match the period of employment you completed.\n\nThe calculation is straightforward: take your total basic salary earned during employment, multiply it by at least 25 percent, and that is your minimum gratuity entitlement. Your employer may pay more than this minimum, but cannot pay less. For terminated contracts, the same percentage applies, but only to the basic pay corresponding to the actual time worked.",
+    "sources": [
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "73",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE INCOME TAX ACT",
+        "section": "21",
+        "document_id": "881305d4-ef28-4b88-b3b0-00fb864fed40"
+      },
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "37",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      },
+      {
+        "act": "Tourism and Hospitality Act",
+        "section": "54",
+        "document_id": "718fa78f-8a12-4f1c-a1ff-147d2f57406e"
+      }
+    ]
+  },
+  {
+    "slug": "what-is-constructive-dismissal-under-zambian-law",
+    "category": "Employment",
+    "question": "What is constructive dismissal under Zambian law?",
+    "answer": "# Constructive Dismissal Under Zambian Law\n\nThe Employment Code Act does not provide a statutory definition of constructive dismissal in the excerpts available. The Act addresses summary dismissal (termination by the employer with immediate effect) under specific grounds such as gross misconduct, wilful disobedience, lack of skill, habitual neglect, or unauthorised absence [Employment Code Act, S.50]. It also addresses termination by redundancy [Employment Code Act, S.55].\n\nConstructive dismissal typically refers to a situation where an employer's conduct forces an employee to resign, even though no formal dismissal has occurred. However, the statutory framework provided focuses on employer-initiated dismissals rather than circumstances where an employee resigns due to the employer's actions. If you face a workplace situation that feels like constructive dismissal, you should seek advice from an employment law specialist or the relevant labour authority in Zambia, as the legal remedy and requirements may be addressed through case law or procedural guidelines not contained in these statutory excerpts.",
+    "sources": [
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "50",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      },
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "55",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      },
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "51",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      },
+      {
+        "act": "APP No. 287 of 2022",
+        "section": "",
+        "document_id": "430739ce-4912-44eb-8b22-0a5ff9f07c08"
+      }
+    ]
+  },
+  {
+    "slug": "what-are-the-rules-on-redundancy-and-redundancy-pay-in-zambia",
+    "category": "Employment",
+    "question": "What are the rules on redundancy and redundancy pay in Zambia?",
+    "answer": "# Redundancy and Redundancy Pay in Zambia\n\nUnder Zambian law, redundancy is a formal process with specific protections for workers. When an employer terminates an employee's contract due to redundancy, the employer must notify the Labour Commissioner at least 60 days in advance, providing details about the reasons for redundancy, the number of employees affected, and the proposed redundancy package [Employment Code Act, S.55].\n\nAn employee terminated by redundancy is entitled to a minimum redundancy payment of two months' pay for every year of service, unless better terms have been agreed between the employer and employee [Employment Code Act, S.55(3)(a)]. The employer must pay this redundancy payment by the employee's last day of duty. However, if the employer cannot pay on that date, the employer must continue paying on agreed terms [Employment Code Act, S.55(3)(b)].\n\nIn exceptional cases where an employer faces genuine financial difficulty, they may apply to the Labour Commissioner for an exemption from paying the redundancy package as a lump sum [Employment Code Act, S.56(1)]. Any such application must be accompanied by proof of financial incapacity and, if the employer proposes to pay in instalments, a detailed payment plan with specific dates [Employment Code Act, S.56(2)].",
+    "sources": [
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "55",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      },
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "54",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      },
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "56",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      },
+      {
+        "act": "Copyright Act",
+        "section": "2",
+        "document_id": "c872b9a4-a8bf-450e-a4f4-828552fe5823"
+      }
+    ]
+  },
+  {
+    "slug": "how-much-annual-leave-is-an-employee-entitled-to-in-zambia",
+    "category": "Employment",
+    "question": "How much annual leave is an employee entitled to in Zambia?",
+    "answer": "# Annual Leave Entitlement in Zambia\n\nIn Zambia, an employee is entitled to a minimum of two days of annual leave per month [Employment Code Act, S.36]. This means that over a twelve-month period, a regular employee accrues at least 24 days of paid annual leave. This entitlement applies to all employees except temporary and casual workers, provided they have completed twelve consecutive months of continuous employment with the same employer.\n\nThe annual leave is granted on full pay [Employment Code Act, S.36]. Importantly, this leave is separate from public holidays and weekly rest periods, which you receive in addition to your annual leave [Employment Code Act, S.36].\n\nYour employer must prepare an annual leave plan in consultation with you at the beginning of each year to specify when your leave will be taken [Employment Code Act, S.36]. This ensures there is clarity about the timing of your leave so that business operations can be planned accordingly.",
+    "sources": [
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "36",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      },
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "37",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      },
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "40",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      },
+      {
+        "act": "Copyright Act",
+        "section": "36",
+        "document_id": "c872b9a4-a8bf-450e-a4f4-828552fe5823"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-register-a-company-with-pacra-in-zambia",
+    "category": "Business",
+    "question": "How do I register a company with PACRA in Zambia?",
+    "answer": "# How to Register a Company with PACRA in Zambia\n\nTo register a private company limited by shares with PACRA, you must follow a structured process under the [Companies Act No. 10 of 2017]. Here are the practical steps:\n\n**Step 1: Reserve Your Company Name**\nFirst, submit PACRA Companies Form 1 (Name Clearance) to reserve your proposed company name. You can suggest up to three names. Once approved, your chosen name is reserved for 30 days, which can be extended to 90 days. File this form on the PACRA portal at portal.pacra.org.zm.\n\n**Step 2: Prepare Your Incorporation Documents**\nComplete PACRA Companies Form 3 (Application for Incorporation of a company limited by shares). This form must be signed by your directors and shareholders and filed with PACRA. You will also need to provide the PACRA Standard Articles of Association, which is the official model articles template. You can file both documents online via the PACRA portal or submit them in hard copy in duplicate. If you wish to use non-standard articles, you may file your own instead of the standard template.\n\n**Step 3: Meet Minimum Capital Requirements**\nBefore your company transacts business, you must ensure that consideration of not less than fifty thousand kwacha has been paid for the issue of shares [Companies Act, S.18].\n\nYour company will then become a separate legal person with limited liability and perpetual succession, able to own property and enter contracts in its own name [Companies Act, S.17].",
+    "sources": [
+      {
+        "act": "Companies Act",
+        "section": "12",
+        "document_id": null
+      },
+      {
+        "act": "PACRA Companies Form 3 (Application for Incorporation)",
+        "section": "",
+        "document_id": "d9beca67-693f-4ad6-a739-d3a47fd7f5b5"
+      },
+      {
+        "act": "PACRA Companies Form 1 (Name Clearance)",
+        "section": "",
+        "document_id": "77e82649-a9d4-432d-af77-bd8c4c7cfad3"
+      }
+    ]
+  },
+  {
+    "slug": "what-is-the-difference-between-a-limited-company-and-a-registered-busi",
+    "category": "Business",
+    "question": "What is the difference between a limited company and a registered business name in Zambia?",
+    "answer": "# Limited Company vs. Registered Business Name in Zambia\n\nA limited company is a formal legal entity created through incorporation under the Companies Act. When you incorporate a company, the Registrar issues a Certificate of Incorporation [Companies Act, S.10], giving your business separate legal status. This means the company itself owns property, enters contracts, and can sue or be sued independently from its owners. A private company limited by shares can have up to 50 shareholders and they have limited liability, meaning they are only responsible for debts up to the amount they invested [Companies Act, S.2].\n\nA registered business name, by contrast, is simply a name under which you operate a business [Companies Act, S.1]. It is not a separate legal entity. If you operate under a registered business name, you personally (as an individual or partnership) own the business and are fully liable for all debts and obligations. There is no incorporation process and no limited liability protection.\n\nThe key practical differences are: a limited company has a separate legal personality and provides liability protection to its owners; a registered business name does not. A company requires formal registration and ongoing compliance; a business name requires simpler registration of the trading name you use. If you want to build a business with limited personal risk and create an asset that can be bought or sold separately from yourself, you should incorporate as a company. If you want to operate informally under a business name, registration as a business name may suit you, but you bear all the business risk personally.",
+    "sources": [
+      {
+        "act": "REPUBLIC OF ZAMBIA THE COMPANIES ACT",
+        "section": "2",
+        "document_id": "77ea947e-ae4f-4361-8e39-6f786fd9dabc"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE COMPANIES ACT",
+        "section": "1",
+        "document_id": "77ea947e-ae4f-4361-8e39-6f786fd9dabc"
+      },
+      {
+        "act": "PACRA Form 5",
+        "section": "",
+        "document_id": "6c9c9588-8a02-49b5-a2e4-b5d3bd6d6a58"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE COMPANIES ACT",
+        "section": "38",
+        "document_id": "77ea947e-ae4f-4361-8e39-6f786fd9dabc"
+      }
+    ]
+  },
+  {
+    "slug": "what-are-the-annual-return-requirements-for-companies-in-zambia",
+    "category": "Business",
+    "question": "What are the annual return requirements for companies in Zambia?",
+    "answer": "# Annual Return Requirements for Companies in Zambia\n\nEvery company in Zambia must lodge an annual return with the Registrar after the end of each financial year [Companies Act, S.184]. The deadline depends on when your annual general meeting is held: if held within three months of year-end, you have one month after that meeting to file; otherwise, you have three months from the end of the financial year [Companies Act, S.184]. The annual return must be signed by a director and the company secretary [Companies Act, S.184].\n\nThe annual return covers different matters depending on whether your company is public or private. Public companies must address matters specified in the Third Schedule of the Act in the prescribed form [Companies Act, S.185]. Private companies have similar requirements under their own section [Companies Act, S.187]. Once prepared, you file your annual return on the PACRA portal at portal.pacra.org.zm.\n\nThis is a legal requirement for all registered companies. Missing the deadline may result in penalties, so plan ahead and ensure your annual return is completed and submitted on time each year.",
+    "sources": [
+      {
+        "act": "Companies Act",
+        "section": "184",
+        "document_id": null
+      },
+      {
+        "act": "Companies Act",
+        "section": "185",
+        "document_id": null
+      }
+    ]
+  },
+  {
+    "slug": "what-are-the-duties-of-a-company-director-in-zambia",
+    "category": "Business",
+    "question": "What are the duties of a company director in Zambia?",
+    "answer": "# Directors' Duties in Zambia\n\nUnder Zambian law, company directors have several core statutory duties. The primary obligation is to act in good faith and in the best interest of the company while exercising the degree of care, diligence and skill reasonably expected of someone in that position [The Companies Act, S.215].\n\nDirectors must also take practical steps to manage business risks and prevent conduct that could cause substantial loss to members or creditors [The Companies Act, S.215]. This means directors cannot allow the company's business to be run in ways that create serious financial danger. For cooperative societies specifically, directors must approve or reject membership applications, appoint and manage staff (including defining their duties and pay), and regularly examine the condition of the business and property of the society [Co-operative Societies Act, S.48].\n\nThe Chairman of the board has additional responsibilities, including presiding over all society and board meetings, exercising general supervision over officers and business, calling meetings, presenting the directors' annual report to members, and presenting recommendations on distributing any net surplus [Co-operative Societies Act, S.51].\n\nIn summary, Zambian directors are legally required to act honestly, exercise proper care and skill, protect the company from serious financial risk, and oversee its day-to-day management according to law and company rules.",
+    "sources": [
+      {
+        "act": "Banking and Financial Services Act, 2026",
+        "section": "41",
+        "document_id": "31abb2b8-7a72-483a-b31a-8e99b4636640"
+      },
+      {
+        "act": "CO-OPERATIVE SOCIETIES ACT",
+        "section": "62",
+        "document_id": "40312bd2-eec1-4b92-87c3-23de46e8aea5"
+      },
+      {
+        "act": "CO-OPERATIVE SOCIETIES ACT",
+        "section": "113",
+        "document_id": "40312bd2-eec1-4b92-87c3-23de46e8aea5"
+      },
+      {
+        "act": "CO-OPERATIVE SOCIETIES ACT",
+        "section": "48",
+        "document_id": "40312bd2-eec1-4b92-87c3-23de46e8aea5"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-transfer-land-or-title-to-property-in-zambia",
+    "category": "Land",
+    "question": "How do I transfer land or title to property in Zambia?",
+    "answer": "# How to Transfer Land or Title to Property in Zambia\n\nTo transfer land or property title in Zambia, you must submit the transfer to the appropriate registration authority. The registration authority will then make entries in the register to give effect to the transfer and, where applicable, issue you a Certificate of Title or make the necessary amendments to the existing register [Lands and Deeds Registry Act, S.92].\n\nThe registration authority must also endorse the deeds relating to the title, right or obligation concerned. Importantly, no registration fees, stamp duty or other duties are payable in respect of the transaction [Legal Aid Act, S.14].\n\nThe key step is ensuring your transfer document reaches the correct registration authority for your property. Once registered, you will receive official confirmation of your new title through either a new Certificate of Title or an updated register entry. This formal registration completes the transfer process and gives you legal recognition as the property owner.",
+    "sources": [
+      {
+        "act": "LANDLORD AND TENANT (BUSINESS PREMISES) ACT",
+        "section": "1",
+        "document_id": "5fe8f030-caeb-4ec6-8f37-3331c0f8cc5c"
+      },
+      {
+        "act": "LANDLORD AND TENANT (BUSINESS PREMISES) ACT",
+        "section": "14",
+        "document_id": "5fe8f030-caeb-4ec6-8f37-3331c0f8cc5c"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE LANDS AND DEEDS REGISTRY ACT",
+        "section": "92",
+        "document_id": "d9df8956-7c13-43be-9353-b7765414b9ec"
+      },
+      {
+        "act": "OF ZAMBIA ACT",
+        "section": "3",
+        "document_id": "8e0b0af4-6bc5-4877-8b7c-c1412d3a0a93"
+      }
+    ]
+  },
+  {
+    "slug": "what-is-property-transfer-tax-in-zambia-and-who-pays-it",
+    "category": "Land",
+    "question": "What is property transfer tax in Zambia and who pays it?",
+    "answer": "I cannot provide a confident answer to your question based on the excerpts provided. While the excerpts reference property transfers in Zambia, they do not contain substantive provisions defining what property transfer tax is or establishing who must pay it. The excerpts show only procedural rules about registration and transfer forms, along with provisions stating that no registration fees, stamp duty, or other duties apply in certain limited contexts under the Housing (Statutory and Improvement Areas) Act and Rural Electrification Act.\n\nTo give you an accurate answer about property transfer tax in Zambia generally, I would need excerpts from the Income Tax Act, the Value Added Tax Act, or other tax legislation that specifically defines and imposes transfer taxes. The current excerpts do not address this topic substantively.\n\nI recommend consulting the Tax Commissioner's office or a tax specialist for current guidance on property transfer tax obligations in Zambia.",
+    "sources": [
+      {
+        "act": "HOUSING (STATUTORY AND IMPROVEMENT AREAS) ACT",
+        "section": "22",
+        "document_id": "cd547d4e-64e0-40e9-aa4a-00f5e1ab27aa"
+      },
+      {
+        "act": "HOUSING (STATUTORY AND IMPROVEMENT AREAS) ACT",
+        "section": "7",
+        "document_id": "cd547d4e-64e0-40e9-aa4a-00f5e1ab27aa"
+      },
+      {
+        "act": "HOUSING (STATUTORY AND IMPROVEMENT AREAS) ACT",
+        "section": "25",
+        "document_id": "cd547d4e-64e0-40e9-aa4a-00f5e1ab27aa"
+      },
+      {
+        "act": "LEGAL AID ACT",
+        "section": "14",
+        "document_id": "252c40e6-783c-4341-9cd4-43186ad5e60c"
+      }
+    ]
+  },
+  {
+    "slug": "what-consent-is-required-to-assign-land-in-zambia",
+    "category": "Land",
+    "question": "What consent is required to assign land in Zambia?",
+    "answer": "# Land Assignment Consent in Zambia\n\nTo assign land in Zambia, you must obtain the consent of the President before proceeding [The Lands Act, S.5(1)]. This applies to all sales, transfers, or assignments of land.\n\nThe consent process works as follows: you must apply to the President for consent before assigning the land [The Lands Act, S.5(1)]. If the President does not respond within forty-five days of your application, consent is automatically deemed to have been granted [The Lands Act, S.5(2)]. If the President refuses consent, they must provide reasons within thirty days of the refusal [The Lands Act, S.5(3)].\n\nIf your consent application is refused, you have the right to appeal to the Lands Tribunal within thirty days of the refusal to seek redress [The Lands Act, S.5(4)]. Additionally, if you are assigning business premises under a tenancy arrangement, the owner of any reversionary interest in the property must also consent [The Landlord and Tenant (Business Premises) Act, S.7(b)].",
+    "sources": [
+      {
+        "act": "REPUBLIC OF ZAMBIA THE LANDS AND DEEDS REGISTRY ACT",
+        "section": "3",
+        "document_id": "d9df8956-7c13-43be-9353-b7765414b9ec"
+      },
+      {
+        "act": "LANDLORD AND TENANT (BUSINESS PREMISES) ACT",
+        "section": "7",
+        "document_id": "5fe8f030-caeb-4ec6-8f37-3331c0f8cc5c"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE LANDS ACT",
+        "section": "5",
+        "document_id": "57944f7f-de15-4d9d-aff7-b26b7d0ab7d1"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE LANDS ACT",
+        "section": "13",
+        "document_id": "57944f7f-de15-4d9d-aff7-b26b7d0ab7d1"
+      }
+    ]
+  },
+  {
+    "slug": "what-are-a-tenant-s-rights-and-the-notice-to-end-a-tenancy-in-zambia",
+    "category": "Land",
+    "question": "What are a tenant's rights and the notice to end a tenancy in Zambia?",
+    "answer": "# Tenant Rights and Notice to End Tenancy in Zambia\n\nUnder the Landlord and Tenant (Business Premises) Act, a business tenancy does not end automatically. Instead, it continues indefinitely unless properly terminated [Landlord and Tenant (Business Premises) Act, S.4]. This protects tenants by requiring formal legal procedures rather than allowing a lease simply to expire.\n\nA landlord who wants to end the tenancy must give written notice in the prescribed form, specifying the termination date [Landlord and Tenant (Business Premises) Act, S.5]. Critically, this notice must be given between six and twelve months before the date the tenancy is to end. The tenant then has two months from receiving this notice to inform the landlord in writing whether they will vacate on that date [Landlord and Tenant (Business Premises) Act, S.2].\n\nA tenant also has rights if they occupy a fixed-term tenancy. If the tenant does not want the tenancy to continue when the fixed term ends, they can give the landlord written notice within three months before that date to prevent automatic renewal [Landlord and Tenant (Business Premises) Act, S.8]. Importantly, when a landlord serves termination notice or when a tenant requests renewal, the tenant may apply to the court for a new tenancy [Landlord and Tenant (Business Premises) Act, S.4]. The parties can also agree to renew the tenancy on new terms, which will override the statutory protections [Landlord and Tenant (Business Premises) Act, S.9].",
+    "sources": [
+      {
+        "act": "LANDLORD AND TENANT (BUSINESS PREMISES) ACT",
+        "section": "5",
+        "document_id": "5fe8f030-caeb-4ec6-8f37-3331c0f8cc5c"
+      },
+      {
+        "act": "LANDLORD AND TENANT (BUSINESS PREMISES) ACT",
+        "section": "8",
+        "document_id": "5fe8f030-caeb-4ec6-8f37-3331c0f8cc5c"
+      },
+      {
+        "act": "LANDLORD AND TENANT (BUSINESS PREMISES) ACT",
+        "section": "4",
+        "document_id": "5fe8f030-caeb-4ec6-8f37-3331c0f8cc5c"
+      },
+      {
+        "act": "LANDLORD AND TENANT (BUSINESS PREMISES) ACT",
+        "section": "1",
+        "document_id": "5fe8f030-caeb-4ec6-8f37-3331c0f8cc5c"
+      }
+    ]
+  },
+  {
+    "slug": "what-are-the-grounds-for-divorce-in-zambia",
+    "category": "Family",
+    "question": "What are the grounds for divorce in Zambia?",
+    "answer": "# Grounds for Divorce in Zambia\n\nIn Zambia, there is only one ground for divorce: that the marriage has broken down irretrievably [High Court Fees, S.31]. This is a \"no-fault\" system, meaning you do not need to prove wrongdoing by your spouse. Instead, you must demonstrate that the relationship has permanently and irreversibly ended.\n\nTo file for divorce, you must be married under the Marriage Act, Chapter 50 of the Laws of Zambia, and you must wait at least one year from the date of marriage before presenting a petition to the High Court [High Court Fees, S.31]. This one-year waiting period is a mandatory requirement.\n\nOnce divorce is granted, you can separately apply for ancillary relief, which includes maintenance (financial support), custody of children, and property settlement. These matters can also be applied for at any stage of the divorce proceedings [High Court Fees, S.31]. If you need assistance with the divorce process, the Legal Aid Board and the Law Association of Zambia's Legal Aid Clinic for Women offer support to those unfamiliar with court procedures.",
+    "sources": [
+      {
+        "act": "High Court Fees",
+        "section": "",
+        "document_id": "8b544574-13ab-4594-98d8-59228e089515"
+      },
+      {
+        "act": "APP No. 73 of 2019",
+        "section": "",
+        "document_id": "eba9a5a9-dcb7-4847-921a-ad3941c1360b"
+      },
+      {
+        "act": "APP No. 086 of 2021",
+        "section": "",
+        "document_id": "a6a00d5c-4420-4ed4-9e94-ad0b32050755"
+      },
+      {
+        "act": "UNZA Law Past Paper 2018/2019",
+        "section": "6",
+        "document_id": "44d1c37e-3c18-48f7-b417-3f4e86ffe3af"
+      }
+    ]
+  },
+  {
+    "slug": "how-is-child-maintenance-determined-in-zambia",
+    "category": "Family",
+    "question": "How is child maintenance determined in Zambia?",
+    "answer": "# How Child Maintenance is Determined in Zambia\n\nIn Zambia, child maintenance is a legal responsibility established through court orders. The law creates presumptions about who must pay. If the child's parents were married when the child was born and both are living, maintaining the child is their joint responsibility [Children's Code, S.129]. If the parents were never married to each other, the mother and father still share joint responsibility for maintenance [Children's Code, S.129]. Where guardians have been appointed, they also share responsibility for the child's maintenance [Children's Code, S.129].\n\nA court may make a maintenance order in several situations. When granting a divorce, annulment, or judicial separation, the court must make maintenance orders requiring one party to make periodic payments or secure periodic payments for the child [Children's Code, S.137]. The court can also make a maintenance order when varying or discharging a custody order [Children's Code, S.149]. Maintenance orders typically specify the amount and period of payments.\n\nMaintenance orders continue until the child reaches 19 years old [Children's Code, S.134]. However, if the court finds that the child is receiving or will receive instruction in a profession or vocation, the order may extend beyond the child's nineteenth birthday [Children's Code, S.134]. This allows for continued support during education or vocational training.",
+    "sources": [
+      {
+        "act": "Children’s Code",
+        "section": "137",
+        "document_id": "1b187a0f-565b-4be7-8850-533548ceb6b9"
+      },
+      {
+        "act": "Children’s Code",
+        "section": "149",
+        "document_id": "1b187a0f-565b-4be7-8850-533548ceb6b9"
+      },
+      {
+        "act": "Children’s Code",
+        "section": "129",
+        "document_id": "1b187a0f-565b-4be7-8850-533548ceb6b9"
+      },
+      {
+        "act": "Children’s Code",
+        "section": "134",
+        "document_id": "1b187a0f-565b-4be7-8850-533548ceb6b9"
+      }
+    ]
+  },
+  {
+    "slug": "how-does-intestate-succession-work-in-zambia-when-someone-dies-without",
+    "category": "Family",
+    "question": "How does intestate succession work in Zambia when someone dies without a will?",
+    "answer": "# How Intestate Succession Works in Zambia\n\nWhen someone dies without a will in Zambia, they are said to have died intestate [Intestate Succession Act, S.4(1)]. Their estate must then be distributed according to the law rather than their personal wishes. Even if a person left a will that only covers part of their property, the uncovered portion is treated as intestate and follows the same rules [Intestate Succession Act, S.4(2)].\n\nThe first step is appointing an administrator. The court grants letters of administration to a suitable person who will manage the deceased's estate and distribute it to the rightful beneficiaries [Wills and Administration of Testate Estates Act, S.36]. This administrator is the legally appointed personal representative and has the authority to protect the estate's interests and take legal action on its behalf. The beneficiaries themselves cannot act for the estate without this formal appointment.\n\nAn important protection in Zambian law is that any beneficiary who intentionally caused the death of the deceased loses their right to inherit [Intestate Succession Act, S.36]. This ensures that succession rules support justice and fairness. Once appointed, the administrator will identify all beneficiaries according to the intestacy rules and distribute the estate accordingly, ensuring the deceased's property passes to their family members in the prescribed legal order.",
+    "sources": [
+      {
+        "act": "REPUBLIC OF ZAMBIA THE INTESTATE SUCCESSION ACT",
+        "section": "4",
+        "document_id": "3e14ce98-bb66-4070-89a0-c8872429557a"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE INTESTATE SUCCESSION ACT",
+        "section": "21",
+        "document_id": "3e14ce98-bb66-4070-89a0-c8872429557a"
+      },
+      {
+        "act": "App 330 2024 Giford Kabunda v Enala Mulambo",
+        "section": "",
+        "document_id": "e8097fc8-f06d-49a0-b908-359d5f0f10b1"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE WILLS AND ADMINISTRATION OF TESTATE ESTATES ACT",
+        "section": "41",
+        "document_id": "701ef376-8cc7-4663-9472-52e1a0b83cb6"
+      }
+    ]
+  },
+  {
+    "slug": "what-are-the-requirements-for-a-valid-will-in-zambia",
+    "category": "Family",
+    "question": "What are the requirements for a valid will in Zambia?",
+    "answer": "# Valid Will Requirements in Zambia\n\nUnder Zambian law, a valid will must satisfy specific formal requirements set out in the Wills and Administration of Testate Estates Act. The will must be in writing and signed at the foot or end by the testator (the person making the will) or by another person on their direction [Wills and Administration of Testate Estates Act, S.6]. Critically, the testator's signature must be made or acknowledged in the presence of two witnesses who are present at the same time, and both witnesses must also sign at the foot or end of the will [Wills and Administration of Testate Estates Act, S.6].\n\nAny person who is not blind and is of sound mind may act as a witness [Wills and Administration of Testate Estates Act, S.6]. There is an important exception: if the testator is blind or illiterate, another competent person who did not participate in making the will must carefully read over and explain the will's contents to them [Wills and Administration of Testate Estates Act, S.6].\n\nA will is not made invalid simply because a witness later becomes incompetent to testify about the will's execution [Wills and Administration of Testate Estates Act, S.9]. Additionally, if you made your will outside Zambia, it will still be treated as properly executed if it followed the legal requirements of the country where you made it, where you were domiciled, where you habitually lived, or where you held nationality [Wills and Administration of Testate Estates Act, S.7].",
+    "sources": [
+      {
+        "act": "REPUBLIC OF ZAMBIA THE WILLS AND ADMINISTRATION OF TESTATE ESTATES ACT",
+        "section": "6",
+        "document_id": "701ef376-8cc7-4663-9472-52e1a0b83cb6"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE WILLS AND ADMINISTRATION OF TESTATE ESTATES ACT",
+        "section": "7",
+        "document_id": "701ef376-8cc7-4663-9472-52e1a0b83cb6"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE WILLS AND ADMINISTRATION OF TESTATE ESTATES ACT",
+        "section": "9",
+        "document_id": "701ef376-8cc7-4663-9472-52e1a0b83cb6"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE WILLS AND ADMINISTRATION OF TESTATE ESTATES ACT",
+        "section": "21",
+        "document_id": "701ef376-8cc7-4663-9472-52e1a0b83cb6"
+      }
+    ]
+  },
+  {
+    "slug": "what-are-my-rights-when-i-am-arrested-in-zambia",
+    "category": "Rights",
+    "question": "What are my rights when I am arrested in Zambia?",
+    "answer": "# Your Rights When Arrested in Zambia\n\nWhen you are arrested in Zambia, you have important legal protections. First, you must be informed of the reasons for your arrest and detention in a language you understand [The Extradition Act, S.22]. This applies regardless of whether the arrest was made with or without a warrant.\n\nSecond, you must be brought before a magistrate's court as soon as practicable after your arrest [The Extradition Act, S.22]. A magistrate may remand you in custody or on bail for periods not exceeding seven days at a time. You can be brought back before a magistrate at the end of each remand period for review of your detention.\n\nIf you are a child, you have additional protections. You should generally be released by a law enforcement officer on your own recognisance or that of your parent, guardian or close relative, unless you are accused of a serious offence [Children's Code, S.56]. If you cannot be released on recognisance, a court must order your placement in a safe place within forty-eight hours of arrest [Children's Code, S.56].\n\nThese protections ensure that your arrest is handled lawfully and that your detention is reviewed promptly by a court. If you believe your arrest was unlawful or your rights have been violated, you should seek legal advice immediately.",
+    "sources": [
+      {
+        "act": "Children’s Code",
+        "section": "46",
+        "document_id": "1b187a0f-565b-4be7-8850-533548ceb6b9"
+      },
+      {
+        "act": "(POWERS AND PRIVILEGES) ACT",
+        "section": "5",
+        "document_id": "e25321d6-8c12-4fc8-b81e-512934d3660f"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE EXTRADITION ACT",
+        "section": "22",
+        "document_id": "f42b91c7-ba1f-47e8-a0bf-430bbb53d3d8"
+      },
+      {
+        "act": "CONTROLLED SUBSTANCES ACT",
+        "section": "36",
+        "document_id": "7ebed942-58eb-4308-9640-0d99156b3c7b"
+      }
+    ]
+  },
+  {
+    "slug": "how-does-bail-work-in-zambia",
+    "category": "Rights",
+    "question": "How does bail work in Zambia?",
+    "answer": "# How Bail Works in Zambia\n\nIn Zambia, bail is a security mechanism that allows a person accused of a crime to be released from custody while awaiting trial. When a court or police officer orders bail, the accused person (and usually one or more sureties or guarantors) must execute a bail bond, which is a formal written agreement binding them to pay a specified sum of money to the court [Criminal Procedure Code Act, S.125]. Once the bail bond is properly executed, the person must be released immediately. If the person is in prison, the court issues a release order to the prison officer, who must then let them go [Criminal Procedure Code Act, S.125].\n\nHowever, bail is not available for the most serious crimes. A person charged with murder, treason, certain treasonable offences, or aggravated robbery cannot be granted bail by any court or released by police, regardless of the circumstances. Additionally, someone previously convicted of motor vehicle theft cannot be granted bail if charged with the same offence again. These restrictions apply across all court levels in Zambia.\n\nThe purpose of bail is to ensure the accused person's appearance in court and to prevent them from leaving the country or removing their property to avoid paying any judgment that may be made against them. The court sets the bail amount based on the seriousness of the case and the defendant's circumstances. The defendant may also be released on their own recognizance (personal promise) if the court thinks this is appropriate, without requiring sureties or a deposit [Criminal Procedure Code Act, S.4].",
+    "sources": [
+      {
+        "act": "REPUBLIC OF ZAMBIA THE SUBORDINATE COURTS ACT",
+        "section": "20",
+        "document_id": "996df4ae-afbe-4148-90e0-0caf43c1ece8"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE SUBORDINATE COURTS ACT",
+        "section": "19",
+        "document_id": "996df4ae-afbe-4148-90e0-0caf43c1ece8"
+      },
+      {
+        "act": "UNZA Law Past Paper 2008",
+        "section": "4",
+        "document_id": "cbd7d698-31a9-48ca-a60d-2d7dd9a0257e"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE CRIMINAL PROCEDURE CODE ACT",
+        "section": "13",
+        "document_id": "4ea46d0b-d24a-4ea8-96bd-c226385275a7"
+      }
+    ]
+  },
+  {
+    "slug": "what-fundamental-rights-does-the-constitution-of-zambia-protect",
+    "category": "Rights",
+    "question": "What fundamental rights does the Constitution of Zambia protect?",
+    "answer": "# Fundamental Rights Protected by Zambia's Constitution\n\nThe Constitution of Zambia protects a range of fundamental rights and freedoms as set out in Part III. These include [Constitution of Zambia, Article 11] equality regardless of gender, [Constitution of Zambia, Article 20] freedom of expression (including freedom to hold opinions, receive and impart information, and freedom of the press), and [Constitution of Zambia, Article 22] freedom of movement for citizens. The Constitution also guarantees protection against discriminatory treatment by any person acting under written law or holding public office [Constitution of Zambia, Article 23].\n\nAdditional protections flow from the Constitution's Preamble, which commits Zambia to upholding human rights and fundamental freedoms of every person, while confirming the equal worth of women and men and their right to participate in building a sustainable political system. The Constitution further protects freedom of conscience, belief and religion for all persons.\n\nThese rights are not absolute. They may be limited where a restriction is shown to be reasonably justifiable in a democratic society, and they operate subject to other written laws. The Constitution establishes these protections as foundational to Zambia's governance as a multi-party democratic state.",
+    "sources": [
+      {
+        "act": "Constitution of Zambia",
+        "section": "",
+        "document_id": "b16030d9-8ce6-4d0b-9cc0-0675543a3c35"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE LAND SURVEY ACT",
+        "section": "39",
+        "document_id": "453e439e-58c4-40d0-a01e-2e33a144c277"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE EXPLOSIVES ACT",
+        "section": "831",
+        "document_id": "eb7b0c0e-3842-4586-8805-057d8edffd66"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE ELECTORAL ACT",
+        "section": "4",
+        "document_id": "1b8c1f05-1c4c-4eec-961c-14d7fd0a0ef0"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-register-a-trademark-in-zambia",
+    "category": "Intellectual Property",
+    "question": "How do I register a trademark in Zambia?",
+    "answer": "To register a trademark in Zambia, you must submit an application under the [Trade Marks Act, S.4]. This is the foundational requirement for anyone seeking trademark protection in the country. Your application will then be processed according to the registration procedures set out in Part III of the Act.\n\nDepending on your needs, you have several registration options. You can register a single trademark [Trade Marks Act, S.25], register separate trademarks [Trade Marks Act, S.29], register a series of related trademarks [Trade Marks Act, S.30], or register trademarks as associated marks [Trade Marks Act, S.31]. If your mark contains armorial bearings, flags, or symbols of international organisations, special rules apply [Trade Marks Act, S.37]. If you represent a group or collective body, you may apply to register a collective mark instead [Trade Marks Act, S.77].\n\nIf you need professional assistance, you can appoint a registered trade mark agent [Trade Marks Act, S.116] to handle your application on your behalf. For specific guidance on your particular mark and the exact application process, including fees and documentation requirements, you should contact the Zambia Intellectual Property Office.",
+    "sources": [
+      {
+        "act": "TRADE MARKS ACT",
+        "section": "25",
+        "document_id": "ca6553d5-8454-432f-81a4-9c9b42bc5c39"
+      },
+      {
+        "act": "TRADE MARKS ACT",
+        "section": "37",
+        "document_id": "ca6553d5-8454-432f-81a4-9c9b42bc5c39"
+      },
+      {
+        "act": "TRADE MARKS ACT",
+        "section": "29",
+        "document_id": "ca6553d5-8454-432f-81a4-9c9b42bc5c39"
+      },
+      {
+        "act": "TRADE MARKS ACT",
+        "section": "4",
+        "document_id": "ca6553d5-8454-432f-81a4-9c9b42bc5c39"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-register-a-patent-in-zambia",
+    "category": "Intellectual Property",
+    "question": "How do I register a patent in Zambia?",
+    "answer": "# How to Register a Patent in Zambia\n\nTo register a patent in Zambia, you must file a patent application with the relevant authority. The Patents Act sets out the framework for this process. You should file your application in accordance with [Patents Act, S.26], which governs the filing of patent applications. The specific procedural requirements and forms you must use are set out in regulations made under [Patents Act, S.13].\n\nOnce you file your application, it will be examined and processed according to the law. If your patent is approved, the Registrar will enter details of your patent grant in the [Patents Act, S.10] Register of Patents, which is the official record of all registered patents in Zambia.\n\nFor practical next steps, contact the Zambia Intellectual Property Office, which administers patent registration. You may also engage a registered patent agent to help you prepare and file your application [Patents Act, S.115]. Given the technical nature of patent law, professional assistance is strongly recommended to ensure your application meets all legal requirements and protects your invention properly.",
+    "sources": [
+      {
+        "act": "PATENTS ACT",
+        "section": "115",
+        "document_id": "3862733d-0bd4-44f9-9980-dda9beeb7c85"
+      },
+      {
+        "act": "PATENTS ACT",
+        "section": "10",
+        "document_id": "3862733d-0bd4-44f9-9980-dda9beeb7c85"
+      },
+      {
+        "act": "PATENTS ACT",
+        "section": "13",
+        "document_id": "3862733d-0bd4-44f9-9980-dda9beeb7c85"
+      },
+      {
+        "act": "PATENTS ACT",
+        "section": "103",
+        "document_id": "3862733d-0bd4-44f9-9980-dda9beeb7c85"
+      }
+    ]
+  },
+  {
+    "slug": "what-are-the-requirements-for-a-valid-contract-in-zambia",
+    "category": "Contract",
+    "question": "What are the requirements for a valid contract in Zambia?",
+    "answer": "# Valid Contracts in Zambia\n\nA valid contract in Zambia is an agreement between one or more parties that is legally binding and enforceable by law. The agreement creates reciprocal rights and obligations on each party. If one party fails to perform their obligations or performs them differently from what was agreed, that party is in breach and the innocent party is entitled to a remedy.\n\nFor employment contracts specifically, Zambia has additional requirements. A contract of employment must be in writing [Employment Code Act, S.22]. The parties must execute the contract by appending a signature or affixing a thumb or fingerprint [Employment Code Act, S.4]. Within thirty days of entering into a written employment contract, the employer must submit three copies to an authorised officer for attestation [Copyright Act, S.25].\n\nFor electronic agreements, the law recognises that contracts can be formed and remain valid even when created through electronic communications and transactions, provided they meet the legal requirements for formation and validity [Electronic Communications and Transactions Act, S.21].\n\nIn summary, a valid contract requires a binding agreement with clear obligations between parties. Where the law specifies a particular form (such as writing for employment contracts), that form must be followed for the contract to be enforceable.",
+    "sources": [
+      {
+        "act": "ELECTRONIC COMMUNICATIONS AND TRANSACTIONS ACT",
+        "section": "21",
+        "document_id": "8d3ee593-9a33-4a46-a408-04adeb6f21e7"
+      },
+      {
+        "act": "2016HP2291 Alice Ngandu Katengo v Evans Mwansa and Others 2024 %E2%80%93 Chawata",
+        "section": "",
+        "document_id": "818bdc1c-882a-4d08-8ef0-1c1149f91437"
+      },
+      {
+        "act": "CO-OPERATIVE SOCIETIES ACT",
+        "section": "102",
+        "document_id": "40312bd2-eec1-4b92-87c3-23de46e8aea5"
+      },
+      {
+        "act": "ELECTRONIC COMMUNICATIONS AND TRANSACTIONS ACT",
+        "section": "13",
+        "document_id": "8d3ee593-9a33-4a46-a408-04adeb6f21e7"
+      }
+    ]
+  },
+  {
+    "slug": "what-incentives-are-available-for-foreign-investors-in-zambia",
+    "category": "Business",
+    "question": "What incentives are available for foreign investors in Zambia?",
+    "answer": "# Incentives Available for Foreign Investors in Zambia\n\nZambia offers several fiscal and tax incentives to foreign investors who register with the Zambia Development Agency (ZDA). The primary incentives include a zero percent import duty rate on capital equipment and machinery for five years, and accelerated depreciation allowances on capital equipment and machinery [Investment, Trade and Business Development Act, S.30].\n\nInvestors who establish operations in a Multi-Facility Economic Zone (MFEZ) or Industrial Park qualify for additional tax benefits. These include zero percent tax on dividends declared on profits made from exports, beginning from the first year of commencement of works [Investment, Trade and Business Development Act, S.16]. Exporters of products and services also benefit from specific incentive schemes [Investment, Trade and Business Development Act, S.13].\n\nTo access these incentives, an investor must first obtain proper registration, licensing, permits or certificates as required by law [Investment, Trade and Business Development Act, S.32]. The ZDA processes investor applications, which are then approved by the minister and forwarded to the Zambia Revenue Authority (ZRA) for system configuration. Only after receiving formal approval confirmation from the ZDA can an investor commence importation of approved items [Investment, Trade and Business Development Act, S.33]. Be aware that incentives may be withdrawn if conditions of eligibility are no longer met [Investment, Trade and Business Development Act, S.34].",
+    "sources": [
+      {
+        "act": "INVESTMENT, TRADE AND BUSINESS DEVELOPMENT ACT",
+        "section": "13",
+        "document_id": "1a639905-794e-47fd-aec7-a9d143754cb7"
+      },
+      {
+        "act": "INVESTMENT, TRADE AND BUSINESS DEVELOPMENT ACT",
+        "section": "30",
+        "document_id": "1a639905-794e-47fd-aec7-a9d143754cb7"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE INVESTMENT ACT",
+        "section": "18",
+        "document_id": "2a683a50-273f-407a-ad84-5c1bf4d77c7a"
+      },
+      {
+        "act": "INVESTMENT, TRADE AND BUSINESS DEVELOPMENT ACT",
+        "section": "33",
+        "document_id": "1a639905-794e-47fd-aec7-a9d143754cb7"
+      }
+    ]
+  },
+  {
+    "slug": "what-subjects-heads-are-examined-in-the-ziale-bar-exam",
+    "category": "Study",
+    "question": "What subjects (heads) are examined in the ZIALE bar exam?",
+    "answer": "# Subjects in the ZIALE Bar Exam\n\nThe Zambian bar exam, formally called the Legal Practitioners Qualifying Examination, consists of ten subjects (heads) [Legal Practitioners Act, S.23]. These are: Professional Conduct and Ethics, Bookkeeping and Accounts, Conveyancing and Legal Drafting, Probate and Succession, Commercial Transactions, Company Law, Civil Procedure, Domestic Relations, Criminal Law and Procedure, and Evidence.\n\nCandidates sit written papers in each of these ten subjects [Legal Practitioners Act, S.23]. During the examination, students are permitted to access books and legislation as directed by the Law Society Council [Legal Practitioners Act, S.23].",
+    "sources": [
+      {
+        "act": "REPUBLIC OF ZAMBIA THE LEGAL PRACTITIONERS ACT",
+        "section": "24",
+        "document_id": "b3ecb1c7-6136-4149-88a3-ab82dc5ce2d8"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE LEGAL PRACTITIONERS ACT",
+        "section": "23",
+        "document_id": "b3ecb1c7-6136-4149-88a3-ab82dc5ce2d8"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE LEGAL PRACTITIONERS ACT",
+        "section": "19",
+        "document_id": "b3ecb1c7-6136-4149-88a3-ab82dc5ce2d8"
+      },
+      {
+        "act": "UNZA Law Past Paper 2011",
+        "section": "2",
+        "document_id": "4035d948-eb68-42ef-acd2-20c24a087e03"
+      }
+    ]
+  },
+  {
+    "slug": "what-is-the-pass-mark-and-structure-of-the-ziale-lpqe-exam",
+    "category": "Study",
+    "question": "What is the pass mark and structure of the ZIALE LPQE exam?",
+    "answer": "I cannot provide an answer to your question based on the statute excerpts provided. The excerpts you have supplied cover the Explosives Act, Food Reserve Act, Land Survey Act, and Dairies and Dairy Produce Act. None of these statutes contain information about the ZIALE LPQE exam, its pass mark, or its structure.\n\nTo answer your question accurately, I would need access to the relevant legislation or regulations that govern the ZIALE (Zambia Institute of Advanced Legal Education) Legal Practice Qualifying Examination. I recommend consulting the ZIALE directly or reviewing the specific regulations that establish this examination.",
+    "sources": [
+      {
+        "act": "REPUBLIC OF ZAMBIA THE EXPLOSIVES ACT",
+        "section": "1029",
+        "document_id": "eb7b0c0e-3842-4586-8805-057d8edffd66"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE FOOD RESERVE ACT",
+        "section": "43",
+        "document_id": "f17d2ed0-6299-4f9d-bf9a-02c3242ef834"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE FOOD RESERVE ACT",
+        "section": "24",
+        "document_id": "f17d2ed0-6299-4f9d-bf9a-02c3242ef834"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE LAND SURVEY ACT",
+        "section": "3",
+        "document_id": "453e439e-58c4-40d0-a01e-2e33a144c277"
+      }
+    ]
+  },
+  {
+    "slug": "what-is-the-difference-between-summary-dismissal-and-dismissal-with-no",
+    "category": "Employment",
+    "question": "What is the difference between summary dismissal and dismissal with notice in Zambia?",
+    "answer": "# Summary Dismissal vs. Dismissal with Notice in Zambia\n\nUnder Zambian law, the key difference lies in when an employer must give advance notice and the circumstances that justify each type of dismissal.\n\n**Summary dismissal** is immediate dismissal without notice, but it is only permitted in specific circumstances [Employment Code Act, S.50]. An employer can summarily dismiss an employee for: gross misconduct inconsistent with the employment contract; wilful disobedience to a lawful order; lack of skill the employee was warranted to possess; habitual or substantial neglect of duties; continual absence without permission or reasonable excuse; or misconduct under the employer's disciplinary rules where summary dismissal is the specified punishment. When an employer summarily dismisses an employee, they must still pay all wages and accrued benefits due up to the date of dismissal [Employment Code Act, S.51].\n\n**Dismissal with notice**, by contrast, is the standard form of dismissal for other reasons (such as redundancy or performance issues that do not amount to gross misconduct). This requires the employer to give advance notice as prescribed in the Employment Code Act [Employment Code Act, S.53]. The notice period allows the employee time to seek alternative employment and provides procedural fairness.\n\nIn summary, summary dismissal is only for serious breaches and takes immediate effect, while dismissal with notice applies to other terminations and requires advance warning to the employee.",
+    "sources": [
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "50",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      },
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "51",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      },
+      {
+        "act": "LOCAL AUTHORITIES SUPERANNUATION FUND ACT",
+        "section": "32",
+        "document_id": "8f015d7d-3e55-4129-ace3-b3ff19b4eb60"
+      },
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "53",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      }
+    ]
+  },
+  {
+    "slug": "what-is-unfair-dismissal-and-what-remedies-are-available-in-zambia",
+    "category": "Employment",
+    "question": "What is unfair dismissal and what remedies are available in Zambia?",
+    "answer": "# Unfair Dismissal and Remedies in Zambia\n\n**What is Unfair Dismissal**\n\nUnfair dismissal occurs when an employer terminates an employee's contract without acting reasonably or fairly. For a dismissal to be fair, the employer must give a valid reason that relates to the employee's conduct, capacity, or the operational requirements of the business, and must follow the correct procedure. A key test applied in Zambian law requires that: (1) the employer genuinely believes the employee is guilty of misconduct; (2) this belief is based on reasonable grounds; and (3) the employer has conducted a reasonable investigation. The fairness of a dismissal is determined by whether the employer acted reasonably based on the circumstances of each case.\n\n**Available Remedies**\n\nWhen a dismissal is found to be unfair or wrongful, an employee may be awarded financial compensation. The primary remedy is compensatory damages designed to place the employee in the position they would have occupied if the contract had not been wrongfully terminated, including salary that would have been earned during the notice period. The employer bears the burden of proving that the employee failed to mitigate their losses before the court awards damages. In cases where the employer's conduct was particularly wrongful and caused undue distress or mental suffering, courts may award additional compensation beyond the standard measure of damages. Additionally, an employer who fails to pay wages and accrued benefits due on dismissal is liable to an administrative penalty [Employment Code Act, S.51].",
+    "sources": [
+      {
+        "act": "APP No. 287 of 2022",
+        "section": "",
+        "document_id": "430739ce-4912-44eb-8b22-0a5ff9f07c08"
+      },
+      {
+        "act": "Copyright Act",
+        "section": "2",
+        "document_id": "c872b9a4-a8bf-450e-a4f4-828552fe5823"
+      },
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "51",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      }
+    ]
+  },
+  {
+    "slug": "how-is-pro-rata-gratuity-calculated-in-zambia",
+    "category": "Employment",
+    "question": "How is pro rata gratuity calculated in Zambia?",
+    "answer": "# Pro Rata Gratuity Calculation in Zambia\n\nPro rata gratuity in Zambia is calculated based on the period of employment you have actually worked. When your employment contract is terminated, you receive gratuity payment that is proportional to how long you worked, rather than the full amount [Employment Code Act, S.73].\n\nThe standard gratuity rate is not less than 25 percent of your basic pay earned during the contract period [Employment Code Act, S.73]. However, this full rate applies only if you have completed a long-term contract (12 months or more). If your contract is terminated before completion, your gratuity is reduced proportionally. For example, if you worked for six months of a 12-month contract, you would receive approximately half of the 25 percent gratuity rate [Employment Code Act, S.73].\n\nTo calculate your pro rata gratuity, multiply your basic pay by 25 percent, then multiply that amount by the fraction representing your actual period of employment compared to the full contract period. This ensures you receive fair compensation based only on the time you actually worked for your employer.",
+    "sources": [
+      {
+        "act": "2023 HPIR 0107",
+        "section": "",
+        "document_id": "429a983b-c32b-4fe1-935f-b1b2f6302d72"
+      },
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "73",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE AFRICAN EDUCATION ACT",
+        "section": "35",
+        "document_id": "8f53a3ea-891b-4cd1-8664-8c1b5d9a5b0a"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE INCOME TAX ACT",
+        "section": "21",
+        "document_id": "881305d4-ef28-4b88-b3b0-00fb864fed40"
+      }
+    ]
+  },
+  {
+    "slug": "what-is-the-probation-period-under-zambian-employment-law",
+    "category": "Employment",
+    "question": "What is the probation period under Zambian employment law?",
+    "answer": "# Probation Periods Under Zambian Employment Law\n\nUnder Zambian law, the probation period depends on the employee's classification and sector. For employees in the education service, the probation periods are set out in [The African Education Act, S.6(1)]: Division I employees serve not less than two years, Division II employees serve not less than three years, and Division III employees serve not less than four years. However, the Secretary may reduce or extend these periods in particular cases after considering advice from the Teaching Service Commission.\n\nUpon completion of the probationary period, an employee may be confirmed in their appointment by the Secretary [The African Education Act, S.7(1)]. During probation, if it appears that a probationer is unlikely to merit confirmation, the employer must warn them in writing [The African Education Act, S.7(3)]. Regional Committees and employers have a duty to ensure that consideration is given to confirmation of probationers at the appropriate time [The African Education Act, S.7(2)].\n\nThe statutes provided relate specifically to education service appointments. For probation periods in other sectors of employment, you should consult the general Employment Code Act or relevant sector-specific legislation, as these excerpts do not cover the broader employment framework.",
+    "sources": [
+      {
+        "act": "REPUBLIC OF ZAMBIA THE AFRICAN EDUCATION ACT",
+        "section": "6",
+        "document_id": "8f53a3ea-891b-4cd1-8664-8c1b5d9a5b0a"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE AFRICAN EDUCATION ACT",
+        "section": "5",
+        "document_id": "8f53a3ea-891b-4cd1-8664-8c1b5d9a5b0a"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE IMMIGRATION AND DEPORTATION ACT",
+        "section": "3",
+        "document_id": "d20860e3-f0d8-4eac-810a-e7fa21df1611"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE AFRICAN EDUCATION ACT",
+        "section": "7",
+        "document_id": "8f53a3ea-891b-4cd1-8664-8c1b5d9a5b0a"
+      }
+    ]
+  },
+  {
+    "slug": "what-is-the-difference-between-a-contract-of-service-and-a-contract-fo",
+    "category": "Employment",
+    "question": "What is the difference between a contract of service and a contract for service in Zambia?",
+    "answer": "# Contract of Service vs Contract for Service in Zambia\n\nUnder Zambian law, the statutes provided distinguish between different **types of contracts of employment** rather than using the common law distinction between \"contract of service\" and \"contract for service.\" The Employment Code Act sets out four recognized forms: a permanent contract, a long-term contract, a contract for a specific task, and a probationary contract [Employment Code Act, S.19]. These categories determine how and when the contract can be terminated.\n\nThe key practical difference lies in **duration and termination**. A permanent contract may be terminated by either party subject to the notice and severance rules in the Act [Employment Code Act, S.19(2)]. A long-term or time-bound contract automatically expires on the specified date without requiring notice, except that early termination must follow the Act's procedures [Employment Code Act, S.19(3)]. A contract for a specific task terminates automatically once the task is completed [Employment Code Act, S.19(4)]. A probationary contract lasts no longer than three months [Employment Code Act, S.19(1)(d)].\n\nFor any contract lasting six months or more, the agreement must be in writing [Employment Code Act, S.22(1)]. The employer must explain the terms to the employee, who must enter into it voluntarily and with full understanding [Employment Code Act, S.22(2)]. In the absence of agreement otherwise, oral contracts are presumed to be for the period by which wages are calculated [Employment Code Act, S.20].",
+    "sources": [
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "4",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      },
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "19",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      },
+      {
+        "act": "Copyright Act",
+        "section": "19",
+        "document_id": "c872b9a4-a8bf-450e-a4f4-828552fe5823"
+      },
+      {
+        "act": "EMPLOYMENT CODE ACT",
+        "section": "22",
+        "document_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+      }
+    ]
+  },
+  {
+    "slug": "how-does-hire-purchase-work-under-zambian-law",
+    "category": "Consumer",
+    "question": "How does hire purchase work under Zambian law?",
+    "answer": "I appreciate your question, but I must be direct: the statute excerpts provided do not contain the actual text of the sections, only their headings and section numbers. Without the substantive provisions themselves, I cannot reliably explain how hire purchase works under Zambian law.\n\nTo give you an accurate answer citing the Hire-Purchase Act with confidence, I would need the full text of key sections such as Section 3 (Interpretation - which would define \"hire-purchase agreement\"), Section 13 (Appropriation of payments), Section 25 (Initial payments), and other operative provisions. The headings alone tell me what topics are covered, but not what the law actually requires.\n\nI recommend consulting the complete Hire-Purchase Act directly, or contacting the Zambian Law Development Centre or a qualified legal practitioner who can access the full statutory text. This will ensure you receive accurate guidance on hire purchase mechanics, buyer protections, seller remedies, and payment obligations under Zambian law.",
+    "sources": [
+      {
+        "act": "HIRE-PURCHASE ACT",
+        "section": "2",
+        "document_id": "6539082f-5dd8-4ac3-8df2-346e479440b6"
+      },
+      {
+        "act": "HIRE-PURCHASE ACT",
+        "section": "11",
+        "document_id": "6539082f-5dd8-4ac3-8df2-346e479440b6"
+      },
+      {
+        "act": "HIRE-PURCHASE ACT",
+        "section": "3",
+        "document_id": "6539082f-5dd8-4ac3-8df2-346e479440b6"
+      },
+      {
+        "act": "HIRE-PURCHASE ACT",
+        "section": "4",
+        "document_id": "6539082f-5dd8-4ac3-8df2-346e479440b6"
+      }
+    ]
+  },
+  {
+    "slug": "what-is-the-legal-process-for-evicting-a-tenant-in-zambia",
+    "category": "Land",
+    "question": "What is the legal process for evicting a tenant in Zambia?",
+    "answer": "# Legal Process for Evicting a Tenant in Zambia\n\nTo evict a tenant in Zambia, a landlord must follow a formal statutory process under the Landlord and Tenant (Business Premises) Act. The first step is to serve a written termination notice on the tenant in the prescribed form [Landlord and Tenant (Business Premises) Act, S.5]. This notice must specify the exact date when the tenancy will end and must be given between six and twelve months before that termination date [Landlord and Tenant (Business Premises) Act, S.5]. The tenant then has two months from receiving this notice to respond in writing regarding whether they will vacate the premises [Landlord and Tenant (Business Premises) Act, S.2].\n\nIf the tenant disputes the termination or applies to court, the eviction process becomes subject to court proceedings. When a court application is made, the tenancy will continue for at least three months from the date the court makes its final decision, even if the termination notice would otherwise end the tenancy earlier [Landlord and Tenant (Business Premises) Act, S.23]. This protection ensures the tenant has reasonable time to vacate after the court has resolved the matter.\n\nIn practical terms, you cannot simply remove a tenant without following these steps. You must issue proper notice with adequate advance warning, allow the tenant time to respond, and if they contest the eviction, allow the court process to conclude before enforcement. The entire process typically takes considerably longer than six months.",
+    "sources": [
+      {
+        "act": "LANDLORD AND TENANT (BUSINESS PREMISES) ACT",
+        "section": "12",
+        "document_id": "5fe8f030-caeb-4ec6-8f37-3331c0f8cc5c"
+      },
+      {
+        "act": "LANDLORD AND TENANT (BUSINESS PREMISES) ACT",
+        "section": "2",
+        "document_id": "5fe8f030-caeb-4ec6-8f37-3331c0f8cc5c"
+      },
+      {
+        "act": "LANDLORD AND TENANT (BUSINESS PREMISES) ACT",
+        "section": "5",
+        "document_id": "5fe8f030-caeb-4ec6-8f37-3331c0f8cc5c"
+      },
+      {
+        "act": "LANDLORD AND TENANT (BUSINESS PREMISES) ACT",
+        "section": "23",
+        "document_id": "5fe8f030-caeb-4ec6-8f37-3331c0f8cc5c"
+      }
+    ]
+  },
+  {
+    "slug": "how-does-substituted-service-of-court-documents-work-in-zambia",
+    "category": "Procedure",
+    "question": "How does substituted service of court documents work in Zambia?",
+    "answer": "# Substituted Service of Court Documents in Zambia\n\nSubstituted service is an alternative method of delivering court documents when direct personal service cannot be achieved. Under Zambian law, a court or judge may grant an order for substituted service only when it appears that prompt personal service cannot be effected [High Court Act, S.3]. This might apply, for example, when a defendant cannot be located or is deliberately avoiding service.\n\nTo obtain a substituted service order, you must apply to the court or a judge and support your application with an affidavit that explains why personal service is not possible [High Court Act, S.3]. The affidavit must set out the grounds for your application, such as the steps you have already taken to locate the person or evidence that they are evading service.\n\nOnce the court approves substituted service, the judge has broad discretion to decide how service should be effected. The order may authorize service by letter, public advertisement, or any other method the court considers appropriate and just [High Court Act, S.3]. For documents served out of jurisdiction, substituted service is permitted whether the defendant is outside or within Zambia's borders [High Court Act, S.17]. The key requirement is that the substitute method chosen must effectively bring the document to the attention of the person who should receive it.",
+    "sources": [
+      {
+        "act": "REPUBLIC OF ZAMBIA THE SUBORDINATE COURTS ACT",
+        "section": "4",
+        "document_id": "996df4ae-afbe-4148-90e0-0caf43c1ece8"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE HIGH COURT ACT",
+        "section": "3",
+        "document_id": "fb746a1d-08e7-4313-8f06-7b584ee321ee"
+      },
+      {
+        "act": "High Court Fees",
+        "section": "",
+        "document_id": "8b544574-13ab-4594-98d8-59228e089515"
+      },
+      {
+        "act": "High Court Forms",
+        "section": "",
+        "document_id": "59cbdd0c-66c1-4014-ab19-f317f2796e1e"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-recover-a-debt-through-the-courts-in-zambia",
+    "category": "Procedure",
+    "question": "How do I recover a debt through the courts in Zambia?",
+    "answer": "# Recovering a Debt Through the Courts in Zambia\n\nTo recover a debt through the courts in Zambia, you must first obtain a judgment or court order against the debtor. The law provides practical enforcement mechanisms once you have secured this judgment.\n\nAfter obtaining a judgment for payment of money, you can enforce it through garnishment proceedings [Subordinate Courts Act, S.38]. You may apply to the court clerk by filing an affidavit in the prescribed form to obtain a summons against a third party (called a garnishee) who owes money to your debtor. This allows the court to order that person to pay the debt directly to you, up to the amount owed [Subordinate Courts Act, S.38(1)].\n\nIf your debtor becomes insolvent or bankrupt, the court may appoint a trustee to manage their assets and distribute proceeds to creditors according to legal priority. You can prove your debt as a creditor in these proceedings. Additionally, if a debtor was wrongly declared bankrupt or their debts are paid in full, the court can annul the bankruptcy order [Bankruptcy Act, S.31].\n\nFor money-lending debts specifically, if the borrower defaults, the court has power to determine the loan contract and order payment of outstanding principal plus any interest the court considers fair up to the payment date [Money-Lenders Act, S.18(2)]. In all cases, consult a legal practitioner to ensure you follow the correct procedures and meet filing deadlines for your jurisdiction.",
+    "sources": [
+      {
+        "act": "MONEY-LENDERS ACT",
+        "section": "18",
+        "document_id": "59a2cf54-6e80-486b-897f-13e733da7f53"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE BANKRUPTCY ACT",
+        "section": "28",
+        "document_id": "59bddfc6-04b0-442b-a54c-b6eac0f52ccc"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE SUBORDINATE COURTS ACT",
+        "section": "38",
+        "document_id": "996df4ae-afbe-4148-90e0-0caf43c1ece8"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE BANKRUPTCY ACT",
+        "section": "31",
+        "document_id": "59bddfc6-04b0-442b-a54c-b6eac0f52ccc"
+      }
+    ]
+  },
+  {
+    "slug": "what-is-the-procedure-for-judicial-review-in-zambia",
+    "category": "Procedure",
+    "question": "What is the procedure for judicial review in Zambia?",
+    "answer": "# Judicial Review Procedure in Zambia\n\nJudicial review in Zambia is a remedy used to examine whether a court or public authority has acted lawfully and fairly, rather than to judge the correctness of their decision itself. A decision can be challenged through judicial review where the authority acted without jurisdiction, exceeded its jurisdiction, failed to follow natural justice procedures, made an error of law, or reached an unreasonable decision in the Wednesbury sense.\n\nThe procedural steps are as follows. First, you must apply for leave (permission) to bring a judicial review application. This application is filed in the High Court under the High Court Rules, Chapter 27 of the Laws of Zambia, and must be supported by an affidavit verifying the facts, a statement of case, and a list of authorities with skeleton arguments. Once leave is granted, you then file a Notice of Application for Judicial Review, which may be amended if necessary and should also be supported by affidavits and legal submissions.\n\nThroughout the proceedings, you must file further affidavits and supporting documents as needed. Both parties present oral arguments to the court. The court's role is strictly limited to reviewing the decision-making process and whether the authority acted fairly and lawfully; the judge will not substitute their own opinion for that of the authority. If the court finds the decision was illegal, irrational, or procedurally improper, it may quash the decision by issuing an order of certiorari.",
+    "sources": [
+      {
+        "act": "2023HP2307 The People v The Director General of Immigration and Another %E2%80%9",
+        "section": "",
+        "document_id": "540b3ec2-fd92-497d-a5fa-63e1b2786bd0"
+      },
+      {
+        "act": "2023 HP 1632",
+        "section": "",
+        "document_id": "8e3edeea-895d-44ea-b91c-0f168bd6bb5a"
+      },
+      {
+        "act": "UNZA Law Past Paper 2008",
+        "section": "2",
+        "document_id": "cbd7d698-31a9-48ca-a60d-2d7dd9a0257e"
+      },
+      {
+        "act": "REPUBLIC OF ZAMBIA THE HIGH COURT ACT",
+        "section": "1",
+        "document_id": "fb746a1d-08e7-4313-8f06-7b584ee321ee"
+      }
+    ]
+  },
+  {
+    "slug": "how-is-matrimonial-property-divided-on-divorce-in-zambia",
+    "category": "Family",
+    "question": "How is matrimonial property divided on divorce in Zambia?",
+    "answer": "# Property Division on Divorce in Zambia\n\nOn divorce in Zambia, the court divides matrimonial property between spouses according to the Matrimonial Causes Act. The court has power to order that property be settled for the benefit of the other spouse and children of the family [APP No. 73 of 2019, S.55]. Property division on divorce focuses only on \"matrimonial property\" - property acquired during the marriage with the intention that it would provide continuing support for both parties and their children. Non-matrimonial property (property owned before marriage, or acquired solely by one spouse without such joint intention) is not available for division.\n\nTo determine what qualifies as matrimonial property, the court examines the evidence and circumstances of each case. While property purchased by one spouse with their own money presumptively belongs to that purchaser, this presumption can be rebutted by evidence showing the parties intended the property to be a family asset. The court is guided by the need to do justice based on the particular facts of the case.\n\nIt is important to note that property adjustment on divorce is separate from maintenance orders. The court handles these through different legal processes and considers different factors for each.",
+    "sources": [
+      {
+        "act": "APP No. 73 of 2019",
+        "section": "",
+        "document_id": "eba9a5a9-dcb7-4847-921a-ad3941c1360b"
+      },
+      {
+        "act": "(MISCELLANEOUS PROVISIONS) ACT",
+        "section": "6",
+        "document_id": "02123b8c-2977-46d3-a3f9-5fa2edf4b47b"
+      },
+      {
+        "act": "Hpf D452 Josephine Mulenga v James Jeremy Chanda Kasamnda",
+        "section": "",
+        "document_id": "098c56f1-624c-4183-9809-18d9ae680829"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-register-a-business-name-in-zambia",
+    "category": "Business",
+    "question": "How do I register a business name in Zambia?",
+    "answer": "# How to Register a Business Name in Zambia\n\nTo register a business name in Zambia, you must follow the procedure set out in the [Registration of Business Names Act No. 16 of 2011]. A business name is a registered trading name for a sole trader or partnership, it is not a separate legal entity, so you remain personally liable for business debts.\n\n**First, clear your proposed name.** Create an account on the PACRA portal at portal.pacra.org.zm and apply for name clearance by proposing up to three names in order of preference. PACRA will check availability; an approved name is reserved for 30 days (extendable to 90 days).\n\n**Then, complete and file the registration form.** Download the official [PACRA BN Form III (Business Name Registration)] from PACRA's website. Complete it in duplicate using block letters and file it with PACRA either through the PACRA portal (portal.pacra.org.zm) or at a PACRA office. This form is prescribed under [Registration of Business Names Act No. 16 of 2011].\n\nOnce registered, remember to file an annual return using [PACRA BN Form XIV (Cessation of Business)] within three months of your financial year-end to keep your business name active on the register.",
+    "sources": [
+      {
+        "act": "Registration of Business Names Act",
+        "section": "",
+        "document_id": null
+      },
+      {
+        "act": "PACRA BN Form III (Business Name Registration)",
+        "section": "",
+        "document_id": "2701b547-3d70-4890-9224-1350231c9c25"
+      }
+    ]
+  },
+  {
+    "slug": "what-makes-a-contract-void-or-unenforceable-in-zambia",
+    "category": "Contract",
+    "question": "What makes a contract void or unenforceable in Zambia?",
+    "answer": "# What Makes a Contract Void or Unenforceable in Zambia?\n\nIn Zambian law, a contract becomes void or unenforceable when it lacks essential legal requirements or when statutory conditions are breached. A valid contract must be \"an agreement which is legally binding oral or written between one or more parties that is enforceable by law\" with reciprocal rights and obligations between the parties. When these elements are absent or compromised, the contract fails.\n\nSeveral specific situations render contracts void under Zambian statute. Under the Bankruptcy Act, certain property settlements become void if the settler becomes bankrupt within a defined period [Bankruptcy Act, S.45]. Specifically, settlements made without good faith and valuable consideration are void against the trustee if bankruptcy occurs within two years of the settlement, or within ten years if no valuable consideration is proven [Bankruptcy Act, S.45]. Similarly, contracts entered into under the Housing Act may become void when a vendor fails to disclose required notices to a purchaser [Housing (Statutory and Improvement Areas) Act, S.11 and S.22].\n\nAdditionally, contracts may become unenforceable when parties lack proper authority to enter them. Where a person acts on behalf of an unincorporated company, that person may cease to be bound by or entitled to benefits under the contract, though a court may apportion liability between the company and the unauthorized agent [2023 HP 1966, S.]. A contract is also compromised if either party fails to perform their obligations or performs them in a manner inconsistent with the agreement, constituting breach and entitling the innocent party to legal remedies.",
+    "sources": [
+      {
+        "act": "2016HP2291 Alice Ngandu Katengo v Evans Mwansa and Others 2024 %E2%80%93 Chawata",
+        "section": "",
+        "document_id": "818bdc1c-882a-4d08-8ef0-1c1149f91437"
+      },
+      {
+        "act": "Banking and Financial Services Act, 2026",
+        "section": "186",
+        "document_id": "31abb2b8-7a72-483a-b31a-8e99b4636640"
+      },
+      {
+        "act": "2023 HP 1966",
+        "section": "",
+        "document_id": "03aab161-434c-47a6-ae33-3e6a58777b92"
+      },
+      {
+        "act": "HOUSING (STATUTORY AND IMPROVEMENT AREAS) ACT",
+        "section": "22",
+        "document_id": "cd547d4e-64e0-40e9-aa4a-00f5e1ab27aa"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-change-ownership-of-a-car-in-zambia",
+    "category": "e-Government",
+    "question": "How do I change ownership of a car in Zambia?",
+    "answer": "# How to Change Car Ownership in Zambia\n\nTo legally own a car in Zambia, your name must appear on the registration certificate (the white book). Simply buying a car is not enough; you must complete a formal transfer at the Road Transport and Safety Agency (RTSA). The process is governed by the [Road Traffic Act No. 11 of 2002].\n\n**What you need to do:**\n\nBoth buyer and seller must work together on steps 1 to 6. First, complete a signed Letter of Sale (or a donation letter if the car is a gift). Then take the car for inspection at any RTSA office and collect your inspection report. The seller must obtain a tax clearance certificate for change of ownership from ZRA (you will need a TPIN). The buyer must get a Police anti-theft clearance report and swear a General Affidavit before a Commissioner for Oaths. Fill in Form MVR 1, signed by both parties. Finally, both of you go to RTSA with the original white book, both NRCs, and all documents listed above, pay the fee, and receive a new white book in the buyer's name. The seller must then file a separate online \"Notification of Change of Ownership\" at rtsa.org.zm to remove their liability.\n\n**Important notes:**\n\nConfirm the current transfer fee with RTSA before you pay (fees are set under SI No. 25 of 2024 and change regularly). The car must have valid road tax and a fitness certificate before transfer. Your insurance automatically ends when ownership changes, so you must arrange new cover immediately.",
+    "sources": [
+      {
+        "act": "RTSA guide: vehicle change of ownership",
+        "section": "",
+        "document_id": "d52bf27c-360b-490e-9bb2-6678a897dac2"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-get-a-tpin-in-zambia",
+    "category": "e-Government",
+    "question": "How do I get a TPIN in Zambia?",
+    "answer": "# How to Get a TPIN in Zambia\n\nA TPIN is your 10-digit Taxpayer Identification Number. You now need one for a bank account, employment, business, or vehicle and land transactions, not only if you owe tax [Income Tax Act, Cap. 323]. The Zambia Revenue Authority (ZRA) issues TPINs for free; beware of unofficial agents charging you.\n\n**The quickest way is online.** Go to portal.zra.org.zm (or use the TaxOnApp mobile app) and choose \"Get a TPIN\". Select your taxpayer type (individual, sole trader, partnership, company, or NGO), enter your name, NRC or passport number, address and contact details, and upload the required documents. For individuals, bring a copy of your NRC or passport and proof of address. For companies or businesses, bring your PACRA certificate and your directors' or partners' names and TPINs. Submit your application and you will usually receive your TPIN the same day. If you prefer to apply in person, take Form TPIN-1 to any ZRA office.\n\n**If your company was registered with PACRA after 2020, you may already have a TPIN.** The ZRA and PACRA automatically link their systems, so your TPIN is issued without a separate ZRA application. Keep your contact details up to date with the ZRA, as outdated information may cause problems later when you need tax clearance or file returns.",
+    "sources": [
+      {
+        "act": "ZRA guide: TPIN registration",
+        "section": "",
+        "document_id": "e463d9a8-1f0d-490f-8c5e-e3bfbcff62d8"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-pay-road-tax-in-zambia",
+    "category": "e-Government",
+    "question": "How do I pay road tax in Zambia?",
+    "answer": "# How to Pay Road Tax in Zambia\n\nRoad tax is your motor vehicle licence, separate from insurance and the fitness certificate. You need all three to drive legally. The Road Transport and Safety Agency (RTSA) manages road tax payments, which you can do entirely online through ZamPass and ZamPortal, available 24/7 [Road Traffic Act No. 11 of 2002; SI No. 25 of 2024].\n\n**Steps to pay online:**\n\n1. Log in to ZamPass using your NRC or driver's licence number plus your registered phone number or email (you must already be registered with RTSA as a vehicle owner or licence holder).\n2. Go to ZamPortal and select \"Motor Vehicle Licence (Road Tax)\".\n3. Choose your payment period: 1, 2, 3 or 4 quarters. Each quarter costs 25% of the annual fee with no extra surcharge.\n4. Pay by mobile money or bank transfer. Your licence disc will be posted to you or you can collect it at any RTSA office.\n\n**Fees and what to bring:**\n\nThe fee depends on your vehicle's gross weight band, not engine size. The exact amount varies by band. Check the current fee on the ZamPortal licence screen for your specific vehicle. You do not need to bring any documents for online payment. You can also pay at any RTSA service centre or visit rtsa.org.zm/pay-online.\n\nDriving with expired road tax is an offence and your vehicle can be impounded, with penalties reaching up to three times the annual tax.",
+    "sources": [
+      {
+        "act": "RTSA guide: road tax / motor vehicle licence",
+        "section": "",
+        "document_id": "84c8aa4f-0ddc-4ca1-8b85-73949edd8933"
+      }
+    ]
+  },
+  {
+    "slug": "how-much-is-import-duty-on-a-car-in-zambia",
+    "category": "e-Government",
+    "question": "How much is import duty on a car in Zambia?",
+    "answer": "# Import Duty on a Car in Zambia\n\nImport duty on a car in Zambia depends on the vehicle's age and engine size. **Newer vehicles** (roughly under two years old, and hybrids or electric vehicles) are charged on the Value for Duty Purposes (VDP), the Kwacha equivalent of the CIF value (Cost, Insurance and Freight), at a combined rate of 25% customs duty plus 30% excise plus 16% VAT. **Older vehicles** are charged a fixed specific duty in Kwacha per body type and engine size, which bundles customs, excise, VAT and fees together. All vehicles are also subject to a one-off carbon emission surtax based on engine size [Customs and Excise Act, Cap. 322].\n\nBecause the exact amount varies by vehicle, **do not rely on a general figure**. Instead, use the ZRA's official Motor Vehicle Tax Calculator on the ZRA portal (zra.org.zm) to calculate your duty. You will need your vehicle's CIF value, engine size, body type and year of manufacture.\n\nTo import, if the CIF value exceeds US$2,000 you must declare on ASYCUDAWorld and use a licensed clearing agent. Bring your commercial invoice, bill of lading or airway bill, packing list and Tax Identification Number (TPIN). Full duty is paid before the vehicle is released. The Zambia Revenue Authority (ZRA) is the responsible authority. Note: there is no import declaration fee in Zambia.",
+    "sources": [
+      {
+        "act": "ZRA guide: import duty and customs",
+        "section": "",
+        "document_id": "9a95223f-3ffe-4295-8266-38f960d7fa12"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-get-a-driver-s-licence-in-zambia",
+    "category": "e-Government",
+    "question": "How do I get a driver's licence in Zambia?",
+    "answer": "# How to Get a Driver's Licence in Zambia\n\nTo get a standard driver's licence in Zambia, you must be at least 18 years old and follow these steps: first, obtain a medical certificate from an approved medical facility; second, pass the computerised theory test at the Road Transport and Safety Agency (RTSA); third, pay the fee for a Provisional Driving Licence; and fourth, at least 7 days later, sit and pass the practical driving test. Once you pass the practical test, you pay the final printing fee to receive your licence [Road Traffic Act No. 11 of 2002].\n\nBring your National Registration Card (NRC) or passport and your medical certificate when you attend RTSA for the theory test. The theory and practical tests must be done in person at RTSA offices. Fees are charged separately for each stage (provisional licence, tests, and printing). Current fees are set under SI No. 25 of 2024, so you should confirm the exact amounts on the official RTSA portal or ZamPass website before attending.\n\nIf you already hold a licence, you can renew it online through ZamPortal or ZamPass before or after expiry. If your licence is lost, you must obtain a police report and a General Affidavit, then apply for a duplicate. If your licence is defaced, bring the old one to exchange it for a replacement.",
+    "sources": [
+      {
+        "act": "RTSA guide: driver's licence",
+        "section": "",
+        "document_id": "3c0e53fc-5c3c-4773-9146-172ff75f9eb8"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-apply-for-a-zambian-passport",
+    "category": "e-Government",
+    "question": "How do I apply for a Zambian passport?",
+    "answer": "# How to Apply for a Zambian Passport\n\n**Where to apply and getting started**\n\nYou can now apply for a Zambian passport online through **ZamPortal** (using your **ZamPass** account) or in person at a passport office, DNRPC office, or Zambian mission abroad. The Department of National Registration, Passport and Citizenship (DNRPC) in the Ministry of Home Affairs handles all passport applications [Passport Act No. 28 of 2016].\n\n**What you need to bring**\n\nYou must have a valid **National Registration Card (NRC)** - this is mandatory and you cannot get a passport without it. You will also need your full birth certificate, passport photos (full face, both ears visible, no headgear unless religious), and the application form signed by a person of standing who has known you for at least 2 years. If you lost a previous passport, bring a police report.\n\n**The process**\n\nIf you apply online, complete your application on ZamPortal, upload your documents, and pay by card or mobile money. However, you must then attend a passport office in person for biometric enrolment (fingerprints and photograph) - this is mandatory even for online applications. Processing takes about 14 days in Lusaka, Ndola, and Livingstone, and about 21 days in other provincial capitals. After that, you can track your application and collect your passport.\n\n**Fees**\n\nPassport fees vary by type (32-page, 48-page, and express options). Please **confirm the current fee on ZamPortal** before applying, as amounts are not consistently published online. Applications at missions abroad commonly cost around US$100.",
+    "sources": [
+      {
+        "act": "Guide: Zambian passport application",
+        "section": "",
+        "document_id": "7d115805-a9c2-4962-bb5a-27250047c7b9"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-get-or-replace-a-national-registration-card-nrc-in-zambia",
+    "category": "e-Government",
+    "question": "How do I get or replace a National Registration Card (NRC) in Zambia?",
+    "answer": "# Getting or Replacing Your National Registration Card (NRC) in Zambia\n\n## First-time NRC\n\nTo get your first NRC, you must be at least 16 years old and have had at least one parent who was a Zambian citizen when you were born. You must apply in person at a DNRPC (Department of National Registration, Passport and Citizenship) District Registration Office or during a mobile registration exercise in your area. Bring a deponent, a parent, blood relative, or legal guardian, who must present their original NRC (a photocopy will not be accepted). You will also need proof of your birth: a birth certificate, under-five card, record of birth, or a sworn affidavit. Your photograph will be taken at the office, and your card will be issued the same day. Your first NRC is free of charge [National Registration Act, Cap. 126].\n\n## Replacing a Lost or Damaged Card\n\nIf your NRC is lost, you must first obtain a police report. If it is damaged, bring the damaged card with you. Complete the replacement form at your nearest DNRPC District Registration Office. A replacement fee applies; please confirm the current amount on the official DNRPC portal or by contacting your local registration office, as the fee is not fixed in this guide.\n\n## Where to Go\n\nVisit any DNRPC District Registration Office nationwide, or watch for mobile enrolment campaigns in your area. If you do not yet have a birth certificate, arrange an affidavit or under-five card before attending.",
+    "sources": [
+      {
+        "act": "Guide: National Registration Card (NRC)",
+        "section": "",
+        "document_id": "34367fcc-b8a4-46a4-991b-efbd096fa8a1"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-register-for-napsa-in-zambia",
+    "category": "e-Government",
+    "question": "How do I register for NAPSA in Zambia?",
+    "answer": "# How to Register for NAPSA in Zambia\n\nNAPSA (the National Pension Scheme Authority) is Zambia's compulsory pension scheme for employees. Registration depends on whether you are an employee or self-employed.\n\n**If you are an employee:** Your employer is responsible for registering you with NAPSA. They must register with NAPSA within one month of hiring their first employee, then register each employee through the official eNAPSA portal at enapsa.napsa.co.zm. Your employer will receive login credentials by SMS. Once registered, your employer deducts 5% of your gross salary as your contribution and adds their own 5% employer contribution. You can verify that your employer is actually remitting by checking your statement on the NAPSA member portal.\n\n**If you are self-employed:** NAPSA registration is voluntary for you. You can register directly via the eNAPSA portal and arrange to make your own contributions (the combined rate is 10% of your earnings, split equally between employee and employer portions).\n\n**Contributions and benefits:** Contributions are capped at an earnings ceiling that changes each January. To confirm the current ceiling for 2026, check the official notice on napsa.co.zm rather than relying on an older figure. Once you have contributed for 180 months (15 years), you qualify for a monthly pension at retirement (typically age 55–65); if you have fewer than 180 months, you receive a one-off lump sum. Keep your beneficiary and next-of-kin details up to date with NAPSA to avoid delays in settling survivor and funeral benefits [National Pension Scheme Act No. 40 of 1996].",
+    "sources": [
+      {
+        "act": "NAPSA guide: pensions",
+        "section": "",
+        "document_id": "791431c6-ffa7-4402-ad2b-10394fb47800"
+      }
+    ]
+  },
+  {
+    "slug": "how-does-nhima-health-insurance-work-in-zambia",
+    "category": "e-Government",
+    "question": "How does NHIMA health insurance work in Zambia?",
+    "answer": "# How NHIMA Health Insurance Works in Zambia\n\nNHIMA is Zambia's compulsory national health insurance scheme managed by the National Health Insurance Management Authority. If you are a formal employee, your employer registers you automatically once you join. If you are self-employed or in the informal sector, you register yourself online at enhima.nhima.co.zm with a copy of your NRC (front and back). You can also register your spouse and up to five children under 18 as dependants under your membership [National Health Insurance Act No. 2 of 2018].\n\nFor formal employees, NHIMA contributions are 2% of your salary, split equally between you (1%) and your employer (1%), with no earnings cap. If you are self-employed or informal, your premium is set by income assessment. To find out what you will pay, contact NHIMA on hotline 8000 rather than relying on any published flat figure. You can confirm current contribution deadlines on nhima.co.zm.\n\nOnce registered, you use your NHIMA membership card or number at any accredited health facility. The scheme covers consultations, laboratory tests, medicines, and inpatient and specialist services within the benefit package. To get medicines, present a stamped prescription from an accredited facility to an accredited pharmacy. Care at non-accredited providers is not covered. Check nhima.co.zm to confirm which services and medicines fall within your benefit package and any waiting periods that apply.",
+    "sources": [
+      {
+        "act": "NHIMA guide: national health insurance",
+        "section": "",
+        "document_id": "5ef07c50-2ee5-4f8f-b2b9-a930151a05c1"
+      }
+    ]
+  },
+  {
+    "slug": "what-is-the-difference-between-zampass-zamportal-and-zamgov",
+    "category": "e-Government",
+    "question": "What is the difference between ZamPass, ZamPortal and ZamGov?",
+    "answer": "# The Difference Between ZamPass, ZamPortal and ZamGov\n\n**ZamPass is your digital ID login.** It is a single sign-on account that proves who you are across all connected government services. To create a ZamPass account, go to pass.gsb.gov.zm/registration and bring your NRC (or passport or refugee ID), a phone number and an email address. That is all you need, you do not require a driving licence or RTSA record just to register. ZamPass itself holds no services; it only identifies you [Government Gazette Notice No. 836 of 2016].\n\n**ZamPortal is the website where you find and apply for government services.** Visit zamportal.gov.zm to browse what is available, check requirements and fees, then log in with your ZamPass to submit applications and pay via the ZamPay gateway. The Smart Zambia Institute (in the Office of the President) runs ZamPortal and maintains ZamPass.\n\n**ZamGov is the mobile app version of ZamPortal, plus a digital wallet.** It uses the same ZamPass login and also stores your Digital ID, driver's licence and vehicle registration, and lets you sign PDFs electronically.\n\n**Important:** Fully live services today include RTSA (road tax, fitness, driver's licence, vehicle registration), passports, some Lands services and NRC issuance. Other services listed on the portal (NAPSA, NHIMA, ZRA tax, birth certificates, immigration) are still under development or remain on their own agency websites, check before you assume the full service is online. Immigration has its own portal at eservices.zambiaimmigration.gov.zm and ZRA tax at portal.zra.org.zm.",
+    "sources": [
+      {
+        "act": "Guide: Zambia e-government portals",
+        "section": "",
+        "document_id": "cd054688-6c63-4d8c-9b1d-0577353f6b82"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-get-a-business-or-trading-licence-from-the-council-in-zambia",
+    "category": "e-Government",
+    "question": "How do I get a business or trading licence from the council in Zambia?",
+    "answer": "# How to Get a Business or Trading Licence from the Council in Zambia\n\n**Before you apply to council, you must first register your business with PACRA (Patents and Companies Registration Agency) and obtain a ZRA TPIN (tax identification number) from the Zambia Revenue Authority. A council licence does not replace these; it sits on top of them.**\n\n**Apply to your council for trading authorisation** by visiting the council civic centre or using the national eRegistry at businesslicenses.gov.zm. Most small traders need a Local Government Business Levy certificate; larger or regulated businesses are licensed under the Trades Licensing Act. The council will classify your business (for example, hawker, retail, wholesale, or manufacturer), and this classification sets your fee. Bring your NRC or PACRA certificate, PACRA registration documents, ZRA TPIN, and details of your premises. If you are selling food or alcohol, you will also need a health permit and liquor licence respectively, and a fire-safety certificate is mandatory for commercial premises.\n\n**Pay the fee and obtain your certificate.** Confirm the current fee for your business class and council on the eRegistry, as fees vary by council and are re-gazetted annually. Your licence must be renewed every year. [Local Government Act No. 2 of 2019; Trades Licensing Act, Cap. 393]",
+    "sources": [
+      {
+        "act": "Council guide: business/trading licence",
+        "section": "",
+        "document_id": "ab3e5be7-0977-4b88-80d5-db9447c3b114"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-check-or-verify-a-land-title-in-zambia",
+    "category": "e-Government",
+    "question": "How do I check or verify a land title in Zambia?",
+    "answer": "# How to Check or Verify a Land Title in Zambia\n\nTo verify a land title in Zambia, you must carry out an official search called a **Digital Clearance** at the Lands and Deeds Registry. This is a mandatory first step before any land transaction and is the Ministry's digital confirmation of the title's details, including the name of the registered holder. You can submit your request online through ZamPortal (using ZamPass) or visit the Registry in person. The most important check is to confirm that the registered holder's name matches your seller's identification document exactly.\n\nWhen you submit your Digital Clearance request, bring the property description or reference number and your personal identification. The approval process can take a few weeks, so do not pay any deposit to the seller until you have received official clearance. Processing is quick online, but final approval requires time. If you are unsure of current fees for searches and registration services, confirm the amounts directly with the Lands and Deeds Registry or through ZILAS, as these are set under the Lands regulations on a fee-unit basis and may change.\n\nThe Lands and Deeds Registry, part of the Ministry of Lands and Natural Resources, is responsible for maintaining the digital title records under Zambia's leasehold system. All land in Zambia is held on leasehold from the State, and the Registry's records show who owns each title. By obtaining your Digital Clearance before any other step, you protect yourself and ensure the seller has the legal right to sell [Lands Act, Cap. 184; Lands and Deeds Registry Act].",
+    "sources": [
+      {
+        "act": "Lands guide: certificate of title",
+        "section": "",
+        "document_id": "e9c9c12c-65f1-4935-9d78-e30dc60cdc3a"
+      }
+    ]
+  },
+  {
+    "slug": "do-i-need-a-fire-safety-certificate-for-my-business-in-zambia",
+    "category": "e-Government",
+    "question": "Do I need a fire safety certificate for my business in Zambia?",
+    "answer": "# Do You Need a Fire Safety Certificate for Your Business in Zambia?\n\nYes, if you operate commercial premises in Zambia, you almost certainly need a fire safety certificate. Your local council will not issue or renew your trading licence without one. The certificate confirms your premises meet fire safety standards and is ranked by risk level (low, medium, high, or extra-high) based on what your business does and the building itself [Local Government Act No. 2 of 2019; council fire by-laws].\n\n**How to get one:**\n\nContact your local council's fire services department (for example, Lusaka City Council if you are in Lusaka). Bring your business details, PACRA registration, and allow access for a fire inspection. The council will inspect your premises, assign it a risk band, and issue the certificate once you pay the fee. The fee varies by risk band and changes each year, so you must confirm the current amount on your council's official portal or website rather than relying on an old figure. Some councils accept online payment.\n\n**Keep it current:**\n\nYour certificate must be renewed annually. The council checks it when you renew your trading licence each year. Plan for the fire certificate fee alongside your business levy and, if you trade in food, your health permit. Getting the certificate in time prevents delays to your licence renewal.",
+    "sources": [
+      {
+        "act": "Council guide: fire safety certificate",
+        "section": "",
+        "document_id": "7d2bbb63-f0a7-4b4b-85fb-1cd5d47d62f5"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-get-a-health-permit-for-a-food-business-in-zambia",
+    "category": "e-Government",
+    "question": "How do I get a health permit for a food business in Zambia?",
+    "answer": "# How to Get a Health Permit for a Food Business in Zambia\n\nIf you run any food business in Zambia, whether a restaurant, takeaway, grocery, bakery or bar, you must obtain a health permit from your local council's public health department. This is separate from your trading licence and is a legal requirement to operate.\n\n**Steps to follow:**\n\n1. Contact your council's public health department and submit an application with your business and premises details, your PACRA registration, and a copy of your trading licence.\n2. A health inspector will visit your premises to check your kitchen layout, ventilation, drainage, water supply, waste disposal and storage, and staff hygiene standards.\n3. Address any issues the inspector identifies.\n4. Pay the permit fee (confirm the current amount with your council, as fees are set per council and adjusted annually) and collect your health permit.\n5. Ensure your food handlers have medical and food-handler certificates where required.\n\n**What to bring:** Your PACRA registration certificate, business registration documents, and proof of staff medical/food-handler certificates if applicable. Allow the inspector full access to your premises.\n\nRemember that the health permit is distinct from your business levy and fire certificate, and you cannot legally operate a food business without it. Permits normally renew annually. [Public Health Act; Local Government Act No. 2 of 2019]",
+    "sources": [
+      {
+        "act": "Council guide: health / food premises permit",
+        "section": "",
+        "document_id": "2c166f21-8572-428d-b635-41d95035398d"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-get-a-liquor-licence-in-zambia",
+    "category": "e-Government",
+    "question": "How do I get a liquor licence in Zambia?",
+    "answer": "# How to Get a Liquor Licence in Zambia\n\nIf you sell alcohol in any form, whether in a bar, bottle store, restaurant, or grocery, you must obtain a liquor licence from your local council's liquor licensing committee. This is separate from your trading licence and other business permits. [Liquor Licensing Act No. 20 of 2011; SI No. 99 of 2011]\n\n**Steps to follow:**\n\n1. Contact your council's liquor licensing committee and apply for the class of licence that matches your business (for example, on-consumption for bars or off-consumption for bottle stores).\n2. Prepare and submit the required documents: your National Registration Card (NRC), PACRA business registration certificate, a police report, a health report, a Government Gazette notice, and confirmation of your premises.\n3. Place the required public notice as set out in the regulations.\n4. The committee will review your application; members of the public may lodge objections.\n5. If approved, pay the licence fee (confirm the current amount with your council, as fees vary by council and licence class) and collect your licence.\n6. Renew your licence as required by the regulations.\n\n**Important:** Operating without a liquor licence is an offence. Your licence is in addition to your trading licence, business levy, fire certificate, and (if you serve food) health permit. Contact your local council directly for the exact fee and application timeline for your area.",
+    "sources": [
+      {
+        "act": "Council guide: liquor licence",
+        "section": "",
+        "document_id": "7034f631-f9f5-427c-9db2-5b4aeec10d05"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-get-a-permit-to-sell-in-a-market-in-zambia",
+    "category": "e-Government",
+    "question": "How do I get a permit to sell in a market in Zambia?",
+    "answer": "# How to Get a Permit to Sell in a Market in Zambia\n\nTo sell in a council market in Zambia, you must obtain a stall allocation and a trading permit from your local council or market master. Trading from undesignated street spots is not permitted by law. The lawful route is to secure a designated space in an official market [Markets and Bus Stations Act; Local Government Act No. 2 of 2019].\n\n**Here are the concrete steps:**\n\n1. Apply to your council or market office (market master) for a stall or trading space allocation.\n2. Pay the market or stall levy (usually charged daily or monthly) and ask for a receipt every time you pay.\n3. If you are selling food, you will need to obtain a health check.\n4. If you plan to operate a larger shop, you will also need a council trading licence (business levy) and any required fire and health clearances.\n\n**What to bring:** Bring your national registration card (NRC), your stall or space application form, and a health certificate if you are selling food items.\n\n**Fees and contact:** Market and stall levies are set locally and vary by location and market. Do not rely on fixed amounts. Instead, confirm the current daily or monthly levy directly with your council office or market master on site, and always ask for a receipt when you pay. This protects you and ensures you have proof of payment.",
+    "sources": [
+      {
+        "act": "Council guide: market stall / vending permit",
+        "section": "",
+        "document_id": "56dc7f5a-2499-4807-9b5a-80e2536a7258"
+      }
+    ]
+  },
+  {
+    "slug": "what-licence-does-my-business-need-in-zambia",
+    "category": "e-Government",
+    "question": "What licence does my business need in Zambia?",
+    "answer": "# What Business Licence Does My Business Need in Zambia?\n\nThe licence you need depends on your business sector. After registering with PACRA and obtaining a council trading licence, if your business operates in a regulated sector, you must also get a licence from the relevant national regulator. Operating in a regulated sector without this licence is an offence, even if you have PACRA and council approvals. To find out which regulator oversees your activity, visit the national business licensing eRegistry at businesslicenses.gov.zm, which lists licences by sector.\n\n**Which regulator applies to you:** If you provide financial services, banking, lending or forex, contact the Bank of Zambia (BoZ). If you work in telecoms, internet, ICT or broadcasting, apply to the Zambia Information and Communications Technology Authority (ZICTA). For medicines, pharmacies or health products, the Zambia Medicines Regulatory Authority (ZAMRA) is responsible; health professionals register with the Health Professions Council (HPCZ). Energy businesses (fuel or electricity supply) need a licence from the Energy Regulation Board (ERB). Projects with environmental impact, such as manufacturing or mining, require clearance from the Zambia Environmental Management Agency (ZEMA) before operations begin. Mining, tourism and hospitality have their own licensing regimes under the Ministry of Mines and Ministry of Tourism respectively. Separately, you must register employees with NAPSA (pensions), NHIMA (health insurance) and WCFCB (workers' compensation) [Sector-specific statutes].\n\n**How to apply:** Contact your sector regulator with your PACRA certificate and TPIN, meet the sector-specific requirements they set, and pay the applicable licence fee. Fees and requirements vary widely by regulator and licence type, so confirm the current amount and exact criteria directly with the regulator before applying.",
+    "sources": [
+      {
+        "act": "Guide: sector business licences (which regulator)",
+        "section": "",
+        "document_id": "0fc308cf-2e95-4fa6-a5e0-63b73d6fd721"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-register-with-wcfcb-for-workers-compensation-in-zambia",
+    "category": "e-Government",
+    "question": "How do I register with WCFCB for workers' compensation in Zambia?",
+    "answer": "# How to Register with WCFCB for Workers' Compensation in Zambia\n\nTo register your business for workers' compensation cover, you must contact the **Workers' Compensation Fund Control Board (WCFCB)**. This is a legal requirement under the [Workers' Compensation Act] and covers work-related injuries, disability, and death separately from NAPSA (pensions) and NHIMA (health insurance).\n\n**Here are the steps:**\n\n1. Download the WCFCB Employer Registration form from the official WCFCB portal or Levy.\n2. Complete the form and submit it along with your PACRA business certificate, TPIN, employer details, and payroll information.\n3. Declare all your workers and their earnings to WCFCB.\n4. Pay the contribution assessed by WCFCB based on your payroll size and the risk class of your industry.\n5. Keep your registration and worker declarations up to date.\n\n**What you need:** PACRA certificate, TPIN, employer details, payroll records, and the completed WCFCB Employer Registration form. Contributions are assessed individually based on your payroll and industry risk class. **Confirm the current assessment rates and basis with WCFCB directly** before making payment. Once registered and current with payments, you can claim on the fund if a worker suffers a work-related injury.",
+    "sources": [
+      {
+        "act": "Guide: WCFCB workers' compensation registration",
+        "section": "",
+        "document_id": "1ba666a1-09da-4dc6-8f0d-2b51fa5dcb15"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-get-environmental-approval-or-an-eia-for-a-project-in-zambia",
+    "category": "e-Government",
+    "question": "How do I get environmental approval or an EIA for a project in Zambia?",
+    "answer": "# How to Get Environmental Approval for Your Project in Zambia\n\nIf your project could affect the environment, you need environmental clearance from the **Zambia Environmental Management Agency (ZEMA)** before you start work. This applies to mining, manufacturing, large developments, energy projects, and certain agricultural ventures [Environmental Management Act No. 12 of 2011]. Starting without approval is an offence and can stop your project.\n\n**The steps are straightforward.** First, contact ZEMA to find out whether your project needs a simple Environmental Project Brief (for lower-impact work) or a full Environmental Impact Assessment with an Environmental Impact Statement (for higher-impact projects). Second, hire a registered environmental consultant to prepare the required study, which includes public consultation if needed. Third, submit your study to ZEMA along with proof of payment, your details as the developer, your consultant's details, and information about your site or land. ZEMA will review your submission and may hold public hearings if it is a full EIA. Finally, if approved, ZEMA issues a decision letter setting out environmental conditions you must follow and monitor.\n\n**What you need to bring:** your project brief or Environmental Impact Statement, proof of your identity and your consultant's registration, site or land information, and proof of the application fee. Fees are scaled to your project size. **Check the current fee amount and confirm which assessment level applies to your project by contacting ZEMA directly or visiting their official portal**, as these details change.",
+    "sources": [
+      {
+        "act": "Guide: environmental approval / EIA (ZEMA)",
+        "section": "",
+        "document_id": "2dcb5337-46fb-4ef1-b06b-41a9992343b2"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-register-with-the-zda-for-investment-incentives-in-zambia",
+    "category": "e-Government",
+    "question": "How do I register with the ZDA for investment incentives in Zambia?",
+    "answer": "# How to Register with the ZDA for Investment Incentives in Zambia\n\nThe Zambia Development Agency (ZDA) is the responsible authority that issues investment certificates to unlock incentives such as tax and customs breaks for qualifying investments in priority sectors. Registration with the ZDA is separate from your PACRA company registration and does not replace any sector licences you may need. This process applies to both local and foreign investors, especially those undertaking larger projects.\n\n**Follow these steps:** First, incorporate your company with PACRA and obtain your TPIN. Second, download the ZDA Investor Application form from the official ZDA portal and submit it, demonstrating that your investment meets the thresholds required for the incentives you are seeking. Third, the ZDA will assess your application and, if approved, issue an investment certificate. Fourth, you must comply with any conditions and reporting requirements attached to your certificate.\n\n**Bring these documents:** your PACRA certificate of incorporation, TPIN, the completed ZDA Investor Application form, your business plan, proof of investment, and details of your sector and location. Note that **investment thresholds, available incentives and application fees change with each national Budget**, so you must confirm the current figures on the official ZDA portal before you apply. If you are a foreigner investing in your own business, you will also need an Investor's Permit from the Department of Immigration; confirm current requirements with that department. [Zambia Development Agency Act]",
+    "sources": [
+      {
+        "act": "Guide: ZDA investment registration and incentives",
+        "section": "",
+        "document_id": "3462b3f9-6b1c-4a44-aa46-f5d38628c63b"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-get-a-work-permit-in-zambia",
+    "category": "e-Government",
+    "question": "How do I get a work permit in Zambia?",
+    "answer": "# How to Get a Work Permit in Zambia\n\n**Understanding the correct permit:**\nZambia does not issue a \"work permit\". If you are employed by a Zambian company, you need an **Employment Permit** [Immigration and Deportation Act No. 18 of 2010]. If your work is short-term (up to about 6 months), you may qualify for a **Temporary Employment Permit** instead. If you plan to run your own business or invest in a Zambian company, you need an **Investor's Permit** (minimum investment: US$250,000 for a new business, US$150,000 to join an existing one).\n\n**Who applies and what you must provide:**\nYour **Zambian employer applies on your behalf**, you cannot apply yourself. Your employer, a practising lawyer, or a registered immigration consultant submits the application. You will need to provide an employment contract, your qualifications, a police clearance, and proof that the employer advertised the role in a newspaper and found no qualified Zambian available. You must also submit a succession plan showing how a Zambian will be trained to take your role. For a Temporary Employment Permit, requirements are lighter.\n\n**Where to apply and costs:**\nSubmit your application through the **Department of Immigration e-Services portal at eservices.zambiaimmigration.gov.zm**, or via ZamPortal under \"For Immigrants\". Before you start, **confirm the current fee on the official portal**, as fees are subject to change and are listed in both ZMW and USD depending on permit type.",
+    "sources": [
+      {
+        "act": "Immigration guide: permits and visas",
+        "section": "",
+        "document_id": "0bfa4e1b-cdbb-4e25-93cd-05efc76c2c55"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-get-a-tax-clearance-certificate-in-zambia",
+    "category": "e-Government",
+    "question": "How do I get a tax clearance certificate in Zambia?",
+    "answer": "# How to Get a Tax Clearance Certificate in Zambia\n\nA Tax Clearance Certificate (TCC) is issued by the Zambia Revenue Authority (ZRA) to confirm you are in good standing with all your tax obligations. You will need one for government tenders, licence renewals, work or residence permits, and many bank loans [Administered under the tax Acts by ZRA].\n\n**Before you apply**, make sure you are eligible: all your tax returns (Income Tax, PAYE, VAT, Turnover Tax as applicable) must be filed, all payments must be made, and your TPIN must be active with current details. The most common reason applications fail is an unfiled return or unpaid balance, so file even a nil return if you have no income.\n\n**To apply online**, go to TaxOnline at portal.zra.org.zm, log in, and navigate to e-Services, then Tax Clearance Certificate application. Select the tax types you want included, complete the questionnaire, upload any requested documents (such as proof of filed returns and payment, or financial statements if asked), and tick the declaration box. Once approved, you can download your certificate. Confirm whether any fee applies by checking the official ZRA portal.\n\nYour certificate is valid for one calendar year, so renew it before it expires.",
+    "sources": [
+      {
+        "act": "ZRA guide: Tax Clearance Certificate",
+        "section": "",
+        "document_id": "eeca09e3-3942-484d-8d34-e6a5249f5482"
+      }
+    ]
+  },
+  {
+    "slug": "how-much-is-property-transfer-tax-when-selling-land-in-zambia",
+    "category": "e-Government",
+    "question": "How much is property transfer tax when selling land in Zambia?",
+    "answer": "# Property Transfer Tax on Land Sales in Zambia\n\nWhen you sell land in Zambia, you must pay Property Transfer Tax (PTT) to the Zambia Revenue Authority (ZRA). As the seller, you pay tax on the higher of what you actually sold the land for or its open market value. The current rate is **8% of that value** [Property Transfer Tax Act, Cap. 340]. However, tax rates can change each year, so confirm the exact current rate on the ZRA portal or by contacting ZRA directly before you proceed.\n\n**What you need to do:** Within 14 days of ZRA assessing your transfer, you must pay the PTT. ZRA will need your Tax Identification Number (TPIN) and the buyer's TPIN, a copy of your sale agreement, and a property valuation. Once ZRA clears your PTT payment, you can register the land transfer at the Lands Registry. Importantly, you cannot complete the land registration without this PTT clearance, so this step comes before you go to Lands.\n\n**Key point:** ZRA may assess tax based on the open market value of the land even if you and the buyer agree on a lower price, so declaring a lower sale price will not reduce what you owe. To get the current confirmed rate and to start the process, visit the ZRA website or contact your nearest ZRA office.",
+    "sources": [
+      {
+        "act": "ZRA guide: Property Transfer Tax",
+        "section": "",
+        "document_id": "6a4da036-0523-46e8-bfe8-a6a18097ee8b"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-register-a-birth-and-get-a-birth-certificate-in-zambia",
+    "category": "e-Government",
+    "question": "How do I register a birth and get a birth certificate in Zambia?",
+    "answer": "# How to Register a Birth and Get a Birth Certificate in Zambia\n\n**For a newborn, act quickly.** You must notify the birth within one month to the Registrar of the district where the child was born [Births and Deaths Registration Act, Cap. 51]. You can do this through the health facility where the birth took place, the district civil-registration office (DNRPC), or your local council. Collect the original Record of Birth (the under-five clinic card or hospital record) and photocopies of both parents' National Registration Cards (NRCs).\n\n**Complete the required forms.** Fill out Form VIII (Notice of Birth). If the birth did not happen at a health facility, you will also need to complete Form IX (Independent Witness). Submit these forms along with the documents above to your district DNRPC office or civil-registration office. Your first birth certificate is free of charge.\n\n**Collect your certificate.** Once processed, collect the birth certificate from the same office where you submitted the forms. If you miss the one-month deadline, the process becomes late registration, which requires a family member who knows the child's birth history to swear a General Affidavit before a Commissioner for Oaths, together with a hospital record or baptismal certificate, and submit it to the Registrar-General in Lusaka.\n\n**Where to go:** Visit your district DNRPC or civil-registration office. The central office is the Registrar-General in Lusaka. You can find information and updates on ZamPortal (the official government portal). For current fees on replacement or lost certificates, confirm the amounts on the official portal.",
+    "sources": [
+      {
+        "act": "Guide: birth certificate",
+        "section": "",
+        "document_id": "4f836c15-d0fd-41fd-b803-3d870ea25076"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-get-a-marriage-certificate-in-zambia",
+    "category": "e-Government",
+    "question": "How do I get a marriage certificate in Zambia?",
+    "answer": "# How to Get a Marriage Certificate in Zambia\n\nTo obtain a civil marriage certificate in Zambia, you must follow the statutory procedure under the [Marriage Act, Cap. 50]. Both parties must visit your local council civic centre or marriage registry in person and meet with the Marriage Registrar. You will complete a Notice of Intended Marriage (Form 1), which triggers a mandatory 21-day public notice period. During this time, the notice is displayed publicly so that anyone with an objection may come forward.\n\nAfter the 21-day period has elapsed, the Marriage Registrar will solemnise the marriage in front of witnesses and issue your marriage certificate (Form 5 or 6). Within 7 days, a counterpart copy is sent to the Registrar-General's office for central record-keeping.\n\nBring both parties' valid National Registration Cards (NRCs); proof of single status or non-impediment (such as an affidavit, divorce decree, or death certificate of a previous spouse); proof of residence and age; and identified witnesses. If either party is under age, you must also provide High Court consent or parental consent. The Registrar-General's office manages the national records, and you can contact your local council to confirm current fees and booking arrangements, as costs vary by venue.\n\nNote that customary marriage is also recognised in Zambia but is handled differently and is not centrally registered like a civil marriage.",
+    "sources": [
+      {
+        "act": "Guide: marriage certificate",
+        "section": "",
+        "document_id": "d07016b7-cbf9-414e-8f60-58e4280b8274"
+      }
+    ]
+  },
+  {
+    "slug": "how-do-i-register-for-vat-in-zambia",
+    "category": "e-Government",
+    "question": "How do I register for VAT in Zambia?",
+    "answer": "# How to Register for VAT in Zambia\n\n**Who registers and why:** If your business makes taxable supplies and your annual turnover reaches K800,000 or more, you must register for VAT with the Zambia Revenue Authority (ZRA). Once registered, you will charge VAT (at the standard rate of 16%) on your sales, reclaim VAT you have paid on business purchases, and send the difference to ZRA each month. Note: even if you are on Turnover Tax, you may still need to register for VAT if your taxable supplies meet the threshold, so check with ZRA if you are unsure.\n\n**What you need to bring:** Gather your active Tax Payer Identification Number (TPIN), your PACRA business registration certificate, your bank details, and a record of your expected annual turnover. You will apply through the ZRA online portal.\n\n**The registration process:** Log in to the ZRA portal and select VAT as your tax type. Once approved, you must issue all invoices through ZRA's Smart Invoice electronic system. You will file a monthly VAT return; confirm the filing deadline (commonly the 18th of the following month) directly with ZRA when you register. You can also register voluntarily if you are below the K800,000 threshold.\n\n**Before you start:** Confirm the current VAT rate, the registration threshold, and all filing deadlines on the official ZRA portal, as these may change with each budget. The legal basis for VAT registration is the [Value Added Tax Act, Cap. 331].",
+    "sources": [
+      {
+        "act": "ZRA guide: VAT",
+        "section": "",
+        "document_id": "599da518-b31b-4e4f-9ab1-84dfa5d49493"
+      }
+    ]
+  }
+]
