@@ -191,6 +191,94 @@ class _HtmlToDocx(HTMLParser):
         self._flush_para()
 
 
+# ─── plain-text extraction (for "copy the draft" / mobile) ───────────────────
+
+
+class _HtmlToText(HTMLParser):
+    """Walk rendered HTML and emit clean, copyable plain text.
+
+    Legal drafts store their source Markdown with raw HTML in it (court captions,
+    parties tables), so returning that Markdown verbatim pastes tag soup. This
+    flattens the SAME rendered HTML the PDF uses into readable lines: block
+    elements break lines, <br> breaks, list items get a marker, table rows become
+    tab-separated lines. Entities are unescaped (convert_charrefs=True).
+    """
+
+    _LINE_BLOCKS = {"p", "div", "blockquote", "li", "tr",
+                    "h1", "h2", "h3", "h4", "h5", "h6"}
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.parts: list[str] = []
+        self.list_stack: list[str] = []
+        self.ol_counts: list[int] = []
+        self._first_cell = True
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "br":
+            self.parts.append("\n")
+        elif tag == "hr":
+            self.parts.append("\n" + "-" * 24 + "\n")
+        elif tag == "ul":
+            self.list_stack.append("ul")
+        elif tag == "ol":
+            self.list_stack.append("ol")
+            self.ol_counts.append(0)
+        elif tag == "li":
+            self.parts.append("\n")
+            if self.list_stack and self.list_stack[-1] == "ol":
+                self.ol_counts[-1] += 1
+                self.parts.append(f"{self.ol_counts[-1]}. ")
+            else:
+                self.parts.append("- ")
+        elif tag == "tr":
+            self.parts.append("\n")
+            self._first_cell = True
+        elif tag in ("td", "th"):
+            if not self._first_cell:
+                self.parts.append("\t")
+            self._first_cell = False
+        elif tag in self._LINE_BLOCKS:
+            self.parts.append("\n")
+
+    def handle_endtag(self, tag):
+        if tag == "ul" and self.list_stack:
+            self.list_stack.pop()
+        elif tag == "ol" and self.list_stack:
+            self.list_stack.pop()
+            if self.ol_counts:
+                self.ol_counts.pop()
+        elif tag in self._LINE_BLOCKS:
+            self.parts.append("\n")
+
+    def handle_data(self, data):
+        if data:
+            self.parts.append(data)
+
+
+def markdown_to_plaintext(body_md: str) -> str:
+    """Render a document's source Markdown (which may contain raw HTML) to clean
+    plain text suitable for copying into an email or Word document."""
+    html = md_lib.markdown(body_md or "", extensions=["extra", "tables", "sane_lists"])
+    parser = _HtmlToText()
+    parser.feed(html)
+    parser.close()
+    raw = "".join(parser.parts)
+    # Collapse runs of blank lines to at most one, trim trailing spaces per line.
+    out: list[str] = []
+    blanks = 0
+    for line in raw.split("\n"):
+        line = line.rstrip()
+        if not line.strip():
+            blanks += 1
+            if blanks <= 1:
+                out.append("")
+        else:
+            blanks = 0
+            out.append(line)
+    return "\n".join(out).strip()
+
+
 # ─── public render ───────────────────────────────────────────────────────────
 
 

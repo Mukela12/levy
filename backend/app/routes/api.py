@@ -473,9 +473,14 @@ def get_artifact_text(artifact_id: str, uid: str | None = Depends(optional_user)
     row = res.data[0]
     if row.get("owner_id") and row.get("owner_id") != uid:
         raise HTTPException(status_code=403, detail="not authorized for this artifact")
-    text = (row.get("meta") or {}).get("source_markdown")
-    if not text:
+    source_md = (row.get("meta") or {}).get("source_markdown")
+    if not source_md:
         raise HTTPException(status_code=409, detail="this document has no copyable text")
+    # Legal drafts store Markdown with embedded HTML (court captions, parties
+    # tables); flatten it to clean, copyable plain text rather than tag soup.
+    from ..services.docx_tools import markdown_to_plaintext
+
+    text = markdown_to_plaintext(source_md) or source_md
     return {"artifact_id": artifact_id, "title": row.get("title"), "text": text}
 
 

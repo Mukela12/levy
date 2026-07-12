@@ -17,6 +17,7 @@ row in `public.artifacts`. The bucket key is `<artifact_id>.pdf`.
 
 from __future__ import annotations
 
+import asyncio
 import io
 import re
 import time
@@ -354,7 +355,11 @@ async def pdf_generate(
     if not content_markdown.strip():
         return {"result": {"error": "content_markdown required"}}
 
-    pdf_bytes = _render_markdown_pdf(title=title, body_md=content_markdown, subtitle=subtitle)
+    # WeasyPrint is CPU-bound and can take seconds on a long document; run it off
+    # the event loop so one render never freezes other users' streaming turns.
+    pdf_bytes = await asyncio.to_thread(
+        _render_markdown_pdf, title, content_markdown, subtitle
+    )
     if not pdf_bytes:
         return {"result": {"error": "weasyprint produced no bytes"}}
 
@@ -532,7 +537,9 @@ async def pdf_generate_legal(
     if not body_markdown.strip():
         return {"result": {"error": "body_markdown required"}}
 
-    pdf_bytes = _render_legal_pdf(body_md=body_markdown)
+    # Off-load the CPU-bound render so a long court document doesn't block the
+    # event loop (and everyone else's streaming) while it rasterises.
+    pdf_bytes = await asyncio.to_thread(_render_legal_pdf, body_markdown)
     if not pdf_bytes:
         return {"result": {"error": "weasyprint produced no bytes"}}
 

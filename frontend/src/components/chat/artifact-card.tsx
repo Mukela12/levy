@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { FileText, Download, Loader2, Layers, Scissors, Globe, Copy, Check } from 'lucide-react'
+import { FileText, Download, Loader2, Layers, Scissors, Globe, Copy, Check, ChevronDown } from 'lucide-react'
 import { LevyLogo } from '@/components/ui/levy-logo'
 import type { ArtifactView } from '@/lib/api'
 
@@ -36,6 +36,9 @@ function formatBytes(n?: number): string {
 export function ArtifactCard({ artifact, onOpen }: ArtifactCardProps) {
   const [busy, setBusy] = useState<null | 'pdf' | 'docx'>(null)
   const [copied, setCopied] = useState(false)
+  const [showText, setShowText] = useState(false)
+  const [text, setText] = useState<string | null>(null)
+  const [textState, setTextState] = useState<'idle' | 'loading' | 'error'>('idle')
   const meta = SOURCE_META[artifact.source] ?? SOURCE_META.uploaded
   const Icon = meta.Icon
   const sizeLabel = formatBytes(artifact.size_bytes)
@@ -67,20 +70,42 @@ export function ArtifactCard({ artifact, onOpen }: ArtifactCardProps) {
     }
   }
 
-  // Copy the drafted text straight to the clipboard. Mobile downloads of signed
-  // PDF URLs are unreliable, and users asked to "just type the reply into
-  // copyable text", so this is the most dependable way to get a draft out.
-  async function handleCopy() {
+  // Fetch the plain text once and cache it. Mobile downloads of signed PDF URLs
+  // are unreliable and users asked to "just type the reply into copyable text",
+  // so reading/copying the text straight from the card is the dependable path.
+  async function ensureText(): Promise<string | null> {
+    if (text !== null) return text
+    setTextState('loading')
     try {
       const r = await fetch(`${API_URL}/api/artifacts/${artifact.id}/text`)
       if (!r.ok) throw new Error(`text ${r.status}`)
       const j = await r.json()
-      await navigator.clipboard.writeText(j.text || '')
+      const t = (j.text as string) || ''
+      setText(t)
+      setTextState('idle')
+      return t
+    } catch {
+      setTextState('error')
+      return null
+    }
+  }
+
+  async function handleCopy() {
+    const t = await ensureText()
+    if (t === null) return
+    try {
+      await navigator.clipboard.writeText(t)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      // best-effort
+      // clipboard blocked; the text is still visible in the panel to select
     }
+  }
+
+  async function handleToggleText() {
+    const next = !showText
+    setShowText(next)
+    if (next) await ensureText()
   }
 
   return (
@@ -114,11 +139,22 @@ export function ArtifactCard({ artifact, onOpen }: ArtifactCardProps) {
           </div>
         </div>
       </button>
-      <div className="border-t border-emerald-500/10 px-4 py-2 flex items-center gap-2 bg-black/20">
+      <div className="border-t border-emerald-500/10 px-4 py-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 bg-black/20">
+        {canWord && (
+          <button
+            type="button"
+            onClick={handleToggleText}
+            aria-expanded={showText}
+            className="flex items-center gap-1.5 text-[11px] text-emerald-400/85 hover:text-emerald-400 transition-colors"
+          >
+            <ChevronDown className={`size-3.5 transition-transform ${showText ? 'rotate-180' : ''}`} />
+            <span>{showText ? 'Hide text' : 'View text'}</span>
+          </button>
+        )}
         <button
           type="button"
           onClick={onOpen}
-          className="flex-1 text-[12px] text-emerald-400/80 hover:text-emerald-400 text-left transition-colors"
+          className="flex-1 min-w-[70px] text-[12px] text-white/40 hover:text-white/70 text-left transition-colors"
         >
           Open in viewer →
         </button>
@@ -153,10 +189,32 @@ export function ArtifactCard({ artifact, onOpen }: ArtifactCardProps) {
             aria-label="Copy the text"
           >
             {copied ? <Check className="size-3.5 text-emerald-400" /> : <Copy className="size-3.5" />}
-            <span>{copied ? 'Copied' : 'Copy text'}</span>
+            <span>{copied ? 'Copied' : 'Copy'}</span>
           </button>
         )}
       </div>
+      {canWord && showText && (
+        <div className="border-t border-emerald-500/10 bg-black/25 px-4 py-3">
+          {textState === 'loading' && (
+            <div className="flex items-center gap-2 text-[12px] text-white/40">
+              <Loader2 className="size-3.5 animate-spin" />
+              <span>Loading the text…</span>
+            </div>
+          )}
+          {textState === 'error' && (
+            <div className="text-[12px] text-red-300/80">
+              Couldn&apos;t load the text. Try the PDF or Word download instead.
+            </div>
+          )}
+          {text !== null && textState !== 'loading' && (
+            <div className="max-h-80 overflow-auto rounded-md border border-white/5 bg-black/30 p-3">
+              <pre className="m-0 whitespace-pre-wrap break-words font-sans text-[12.5px] leading-relaxed text-white/75 select-text">
+                {text}
+              </pre>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
