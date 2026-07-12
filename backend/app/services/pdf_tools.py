@@ -127,6 +127,33 @@ def _insert_artifact_row(
     return row.data[0]
 
 
+def _text_only_artifact(
+    *, title: str, source_markdown: str, meta: dict,
+    owner_id: str | None, session_id: str | None,
+) -> dict:
+    """Persist a document as a text-only artifact when the PDF render fails.
+
+    The user still gets the full document: the card's View text / Copy read the
+    stored source, and Word export renders from it on demand. Better a copyable
+    draft than a hard error on the drafting loop litigants depend on.
+    """
+    row = _insert_artifact_row(
+        kind="pdf", title=title, storage_path="artifacts/pending",
+        source="generated", size_bytes=0, page_count=None,
+        meta={**meta, "source_markdown": source_markdown, "pdf_failed": True},
+        owner_id=owner_id, session_id=session_id,
+    )
+    return {
+        "result": {
+            "artifact_id": row["id"], "title": title, "kind": "pdf",
+            "pdf_failed": True,
+            "note": "The PDF could not be rendered this time, but the full "
+                    "document text is on the card (View text / Copy / Word).",
+        },
+        "artifact": row, "db_sources": [], "web_sources": [],
+    }
+
+
 # ─── Tool: pdf_extract_pages ─────────────────────────────────────────────────
 
 
@@ -357,11 +384,19 @@ async def pdf_generate(
 
     # WeasyPrint is CPU-bound and can take seconds on a long document; run it off
     # the event loop so one render never freezes other users' streaming turns.
-    pdf_bytes = await asyncio.to_thread(
-        _render_markdown_pdf, title, content_markdown, subtitle
-    )
+    try:
+        pdf_bytes = await asyncio.to_thread(
+            _render_markdown_pdf, title, content_markdown, subtitle
+        )
+    except Exception:  # noqa: BLE001 — never lose the draft to a render error
+        pdf_bytes = None
     if not pdf_bytes:
-        return {"result": {"error": "weasyprint produced no bytes"}}
+        return _text_only_artifact(
+            title=title, source_markdown=content_markdown,
+            meta={"tool": "pdf_generate", "subtitle": subtitle,
+                  "slug": _slug(title), "layout": "memo"},
+            owner_id=owner_id, session_id=session_id,
+        )
 
     # Count pages by re-parsing what weasyprint emitted.
     try:
@@ -539,9 +574,16 @@ async def pdf_generate_legal(
 
     # Off-load the CPU-bound render so a long court document doesn't block the
     # event loop (and everyone else's streaming) while it rasterises.
-    pdf_bytes = await asyncio.to_thread(_render_legal_pdf, body_markdown)
+    try:
+        pdf_bytes = await asyncio.to_thread(_render_legal_pdf, body_markdown)
+    except Exception:  # noqa: BLE001 — never lose the draft to a render error
+        pdf_bytes = None
     if not pdf_bytes:
-        return {"result": {"error": "weasyprint produced no bytes"}}
+        return _text_only_artifact(
+            title=title, source_markdown=body_markdown,
+            meta={"tool": meta_tool, "slug": _slug(title), "layout": "legal"},
+            owner_id=owner_id, session_id=session_id,
+        )
 
     try:
         page_count = len(PdfReader(io.BytesIO(pdf_bytes)).pages)

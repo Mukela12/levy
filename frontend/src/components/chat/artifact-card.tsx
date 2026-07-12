@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { FileText, Download, Loader2, Layers, Scissors, Globe, Copy, Check, ChevronDown } from 'lucide-react'
 import { LevyLogo } from '@/components/ui/levy-logo'
 import type { ArtifactView } from '@/lib/api'
@@ -47,6 +47,17 @@ export function ArtifactCard({ artifact, onOpen }: ArtifactCardProps) {
   // Only Levy-generated documents carry editable source, so only they can be
   // exported to Word. Uploaded / extracted / merged / fetched PDFs cannot.
   const canWord = artifact.source === 'generated'
+  // When the PDF render failed, the document was still saved as text. Lead with
+  // it: no PDF to download, so auto-open the text and hide the PDF button.
+  const pdfFailed = (artifact.meta as { pdf_failed?: boolean } | undefined)?.pdf_failed === true
+
+  useEffect(() => {
+    if (pdfFailed) {
+      setShowText(true)
+      void ensureText()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pdfFailed])
 
   async function handleDownload(fmt: 'pdf' | 'docx') {
     if (busy) return
@@ -120,7 +131,7 @@ export function ArtifactCard({ artifact, onOpen }: ArtifactCardProps) {
     >
       <button
         type="button"
-        onClick={onOpen}
+        onClick={pdfFailed ? handleToggleText : onOpen}
         className="w-full text-left px-4 py-3.5 flex items-center gap-3 hover:bg-emerald-500/[0.04] transition-colors"
       >
         <span className="flex items-center justify-center size-10 rounded-lg bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 flex-shrink-0">
@@ -129,7 +140,7 @@ export function ArtifactCard({ artifact, onOpen }: ArtifactCardProps) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 text-[10px] font-medium tracking-[0.16em] uppercase text-emerald-400/80">
             {Icon ? <Icon className="size-3" /> : <LevyLogo size={12} />}
-            <span>{meta.label} PDF</span>
+            <span>{pdfFailed ? `${meta.label} · text` : `${meta.label} PDF`}</span>
           </div>
           <div className="text-[14px] font-semibold text-white/85 mt-0.5 truncate">
             {artifact.title}
@@ -151,23 +162,31 @@ export function ArtifactCard({ artifact, onOpen }: ArtifactCardProps) {
             <span>{showText ? 'Hide text' : 'View text'}</span>
           </button>
         )}
-        <button
-          type="button"
-          onClick={onOpen}
-          className="flex-1 min-w-[70px] text-[12px] text-white/40 hover:text-white/70 text-left transition-colors"
-        >
-          Open in viewer →
-        </button>
-        <button
-          type="button"
-          onClick={() => handleDownload('pdf')}
-          disabled={busy !== null}
-          className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-white/70 transition-colors disabled:opacity-50"
-          aria-label="Download PDF"
-        >
-          {busy === 'pdf' ? <Loader2 className="size-3.5 animate-spin" /> : <Download className="size-3.5" />}
-          <span>PDF</span>
-        </button>
+        {pdfFailed ? (
+          <span className="flex-1 min-w-[70px] text-[12px] text-amber-300/70">
+            PDF unavailable, text below
+          </span>
+        ) : (
+          <button
+            type="button"
+            onClick={onOpen}
+            className="flex-1 min-w-[70px] text-[12px] text-white/40 hover:text-white/70 text-left transition-colors"
+          >
+            Open in viewer →
+          </button>
+        )}
+        {!pdfFailed && (
+          <button
+            type="button"
+            onClick={() => handleDownload('pdf')}
+            disabled={busy !== null}
+            className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-white/70 transition-colors disabled:opacity-50"
+            aria-label="Download PDF"
+          >
+            {busy === 'pdf' ? <Loader2 className="size-3.5 animate-spin" /> : <Download className="size-3.5" />}
+            <span>PDF</span>
+          </button>
+        )}
         {canWord && (
           <button
             type="button"
