@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase'
 import {
   FolderOpen,
   Files,
+  Briefcase,
   GraduationCap,
   MessageSquare,
   Trash2,
@@ -218,6 +219,18 @@ export default function AppSidebar({ mobileSidebarOpen, onCloseMobile }: AppSide
 
       {/* Library Nav Links */}
       <div className="px-2 py-2 flex-shrink-0 space-y-px">
+        <Link
+          href="/matters"
+          data-tour="nav-matters"
+          className={`flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] font-medium transition-colors ${
+            pathname.startsWith('/matters')
+              ? 'bg-emerald-500/10 text-emerald-500'
+              : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.03]'
+          }`}
+        >
+          <Briefcase className="w-4 h-4" />
+          <span>Matters</span>
+        </Link>
         <Link
           href="/study"
           data-tour="nav-study"

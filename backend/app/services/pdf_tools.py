@@ -111,19 +111,29 @@ def _insert_artifact_row(
     session_id: str | None,
 ) -> dict:
     db = get_db()
-    row = db.table("artifacts").insert(
-        {
-            "kind": kind,
-            "title": title,
-            "storage_path": storage_path,
-            "source": source,
-            "size_bytes": size_bytes,
-            "page_count": page_count,
-            "meta": meta,
-            "owner_id": owner_id,
-            "session_id": session_id,
-        }
-    ).execute()
+    payload = {
+        "kind": kind,
+        "title": title,
+        "storage_path": storage_path,
+        "source": source,
+        "size_bytes": size_bytes,
+        "page_count": page_count,
+        "meta": meta,
+        "owner_id": owner_id,
+        "session_id": session_id,
+    }
+    # If this chat belongs to a Matter, link the draft to it too, so it shows
+    # under the case. Defensive: if the matters migration hasn't run yet the
+    # session lookup fails and we simply skip the link.
+    if session_id:
+        try:
+            s = (db.table("chat_sessions").select("matter_id")
+                 .eq("id", session_id).limit(1).execute().data)
+            if s and s[0].get("matter_id"):
+                payload["matter_id"] = s[0]["matter_id"]
+        except Exception:
+            pass
+    row = db.table("artifacts").insert(payload).execute()
     return row.data[0]
 
 

@@ -699,6 +699,47 @@ Final answer format:
 """
 
 
+def _render_matter_block(m: dict) -> str:
+    """Render a Matter's saved context as a system-prompt block so the agent
+    treats the case as already-known across sessions."""
+    parts = [
+        "\n\n## CURRENT MATTER (the case this chat belongs to)",
+        "Levy is assisting with one ongoing legal matter. Use these details in "
+        "your answers and in every document you draft, and do NOT ask the user "
+        "to re-supply what is already here. When the user tells you something "
+        "new and durable about the case (a fact, a hearing/deadline date, a "
+        "party, the cause number), call `update_matter` to save it so it "
+        "persists into their next session.",
+    ]
+    if m.get("title"):
+        parts.append(f"- Matter: {m['title']}")
+    if m.get("matter_type"):
+        parts.append(f"- Type: {m['matter_type']}")
+    if m.get("court"):
+        parts.append(f"- Court: {m['court']}")
+    if m.get("cause_number"):
+        parts.append(f"- Cause number: {m['cause_number']}")
+    parties = m.get("parties") or []
+    if parties:
+        pstr = "; ".join(
+            f"{p.get('name', '?')} ({p.get('role', 'party')})"
+            for p in parties if isinstance(p, dict) and p.get("name")
+        )
+        if pstr:
+            parts.append(f"- Parties: {pstr}")
+    dates = m.get("key_dates") or []
+    if dates:
+        dstr = "; ".join(
+            f"{d.get('label', 'date')} {d.get('date', '')}".strip()
+            for d in dates if isinstance(d, dict) and d.get("date")
+        )
+        if dstr:
+            parts.append(f"- Key dates: {dstr}")
+    if (m.get("facts") or "").strip():
+        parts.append("\nCase facts so far:\n" + m["facts"].strip()[:4000])
+    return "\n".join(parts)
+
+
 async def run_agent(
     *,
     user_query: str,
@@ -817,7 +858,27 @@ async def run_agent(
         except Exception:
             attachments_block = ""
 
-    system_prompt = SYSTEM_PROMPT + AGENT_SYSTEM_SUFFIX + attachments_block
+    # If this session belongs to a Matter (a persistent case), inject its
+    # context so Levy "remembers" the case across sessions and uses the right
+    # parties / court / cause number / facts / dates in answers and drafts.
+    matter_block = ""
+    if session_id:
+        try:
+            from ..db.supabase import get_db
+            db = get_db()
+            srow = (db.table("chat_sessions").select("matter_id")
+                    .eq("id", session_id).limit(1).execute().data)
+            mid = srow[0].get("matter_id") if srow else None
+            if mid:
+                mrow = (db.table("matters").select(
+                    "title,matter_type,court,cause_number,parties,facts,key_dates,status")
+                    .eq("id", mid).limit(1).execute().data)
+                if mrow:
+                    matter_block = _render_matter_block(mrow[0])
+        except Exception:
+            matter_block = ""
+
+    system_prompt = SYSTEM_PROMPT + AGENT_SYSTEM_SUFFIX + attachments_block + matter_block
     # Send the (large, static) system prompt as a cached block so it is billed
     # once per 5-minute window instead of on every one of the up-to-12 model
     # calls per message. This is the single biggest cost lever for the chat.

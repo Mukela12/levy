@@ -746,6 +746,47 @@ def build_tool_registry(
             owner_id=owner_id, session_id=session_id,
         )
 
+    # ── Matter workspace: record durable case facts so Levy remembers them ──
+    async def _update_matter(facts=None, add_date=None, set_fields=None):
+        """Save new information onto the Matter (case) this chat belongs to."""
+        if not session_id or not owner_id:
+            return {"result": {"error": "This chat is not linked to a matter."}}
+        from ..db.supabase import get_db
+        import datetime as _dt
+        db = get_db()
+        srow = (db.table("chat_sessions").select("matter_id")
+                .eq("id", session_id).limit(1).execute().data)
+        mid = srow[0].get("matter_id") if srow else None
+        if not mid:
+            return {"result": {"error": "This chat is not linked to a matter yet. "
+                    "Ask the user to attach it to a matter (or create one) first."}}
+        mrow = (db.table("matters").select("facts,key_dates")
+                .eq("id", mid).eq("owner_id", owner_id).limit(1).execute().data)
+        if not mrow:
+            return {"result": {"error": "matter not found"}}
+        cur = mrow[0]
+        update: dict = {}
+        if facts and str(facts).strip():
+            prev = (cur.get("facts") or "").strip()
+            update["facts"] = (prev + "\n" + str(facts).strip()).strip() if prev else str(facts).strip()
+        if isinstance(add_date, dict) and add_date.get("date"):
+            dates = list(cur.get("key_dates") or [])
+            dates.append({"label": add_date.get("label") or "Date",
+                          "date": add_date.get("date"), "note": add_date.get("note") or ""})
+            update["key_dates"] = dates
+        if isinstance(set_fields, dict):
+            for k in ("matter_type", "court", "cause_number", "title"):
+                if set_fields.get(k):
+                    update[k] = set_fields[k]
+            if isinstance(set_fields.get("parties"), list):
+                update["parties"] = set_fields["parties"]
+        if not update:
+            return {"result": {"error": "nothing to update"}}
+        update["updated_at"] = _dt.datetime.now(_dt.timezone.utc).isoformat()
+        db.table("matters").update(update).eq("id", mid).execute()
+        return {"result": {"ok": True, "saved": [k for k in update if k != "updated_at"]},
+                "db_sources": [], "web_sources": []}
+
     # ── Study Mode: exam cheat sheet ────────────────────────────────────────
     async def _make_cheat_sheet(title, area, topic, sections,
                                 key_statutes=None, key_cases=None,
@@ -1897,6 +1938,52 @@ def build_tool_registry(
                 "required": ["title", "content_markdown"],
             },
             handler=_generate,
+        ),
+        "update_matter": ToolDefinition(
+            name="update_matter",
+            description=(
+                "Save durable information onto the Matter (case) this chat "
+                "belongs to, so Levy remembers it in the user's next session. "
+                "Call this whenever the user tells you something lasting about "
+                "their case: a new fact, a hearing or filing deadline, a party, "
+                "the court, or the cause number. Only works when the chat is "
+                "linked to a matter; if it is not, tell the user to attach this "
+                "chat to a matter (or create one) first."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "facts": {
+                        "type": "string",
+                        "description": "New case fact(s) to append to the matter's running narrative. Keep it concise, one or two sentences of what was learned this turn.",
+                    },
+                    "add_date": {
+                        "type": "object",
+                        "description": "A key date to add to the matter.",
+                        "properties": {
+                            "label": {"type": "string", "description": "e.g. 'Hearing', 'Filing deadline'"},
+                            "date": {"type": "string", "description": "ISO date, e.g. 2026-08-06"},
+                            "note": {"type": "string"},
+                        },
+                    },
+                    "set_fields": {
+                        "type": "object",
+                        "description": "Set or correct matter fields.",
+                        "properties": {
+                            "matter_type": {"type": "string"},
+                            "court": {"type": "string"},
+                            "cause_number": {"type": "string"},
+                            "title": {"type": "string"},
+                            "parties": {
+                                "type": "array",
+                                "items": {"type": "object", "properties": {
+                                    "role": {"type": "string"}, "name": {"type": "string"}}},
+                            },
+                        },
+                    },
+                },
+            },
+            handler=_update_matter,
         ),
         "make_cheat_sheet": ToolDefinition(
             name="make_cheat_sheet",
