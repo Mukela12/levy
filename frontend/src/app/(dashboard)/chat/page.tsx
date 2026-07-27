@@ -30,6 +30,7 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 import { LevyLogo } from '@/components/ui/levy-logo'
+import { useTurnstile } from '@/lib/use-turnstile'
 
 function getGreeting(): string {
   const h = new Date().getHours()
@@ -102,6 +103,9 @@ export default function NewChatPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
   const [sessionId, setSessionId] = useState<string | null>(null)
+  // Free-trial state for signed-out visitors (server-authoritative, streamed
+  // back on the `trial` event so we can nudge before they hit the wall).
+  const [trialLeft, setTrialLeft] = useState<number | null>(null)
   const [accentLineWidth, setAccentLineWidth] = useState(0)
   const [webSearch, setWebSearch] = useState(false)
   // Seed payload for the input box (used by the "Review my draft" starter,
@@ -124,6 +128,10 @@ export default function NewChatPage() {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const { user, session, loading: authLoading } = useAuth()
   const router = useRouter()
+  // Browser check for signed-out visitors. Inert (and `enabled: false`) once
+  // signed in, or if no site key is configured — in which case the backend
+  // keeps requiring sign-in anyway.
+  const turnstile = useTurnstile(!authLoading && !user)
   const { send } = useChatStream()
   const seededRef = useRef(false)
 
@@ -287,12 +295,18 @@ export default function NewChatPage() {
         .filter((m) => m.content)
         .map((m) => ({ role: m.role, content: m.content }))
 
+      // Signed-out visitors get a short free trial, gated by a Turnstile
+      // challenge (single-use token per question). Solve it before sending so
+      // the request carries proof this is a real browser.
+      const turnstileToken = user ? null : await turnstile.getToken()
+
       await streamQuery(
         question,
-        { token: session?.access_token, webSearch, history },
+        { token: session?.access_token, webSearch, history, turnstileToken },
         undefined,
         undefined,
         {
+          onTrial: ({ remaining }) => setTrialLeft(remaining),
           onToken: (chunk) =>
             updateLast((last) => {
               // Append the chunk to the trailing text block, or start a new one
@@ -650,6 +664,40 @@ export default function NewChatPage() {
                 attachmentCount={stagedAttachments.length}
                 seed={inputSeed}
               />
+              {/* Cloudflare Turnstile. Normally invisible: it only renders a
+                  visible challenge when Cloudflare asks for interaction. */}
+              {turnstile.enabled && (
+                <div ref={turnstile.holderRef} className="mt-2 flex justify-center" />
+              )}
+              {turnstile.enabled && trialLeft !== null && (
+                <p className="mt-2 text-center text-[12px] text-white/40">
+                  {trialLeft > 0 ? (
+                    <>
+                      {trialLeft} free {trialLeft === 1 ? 'question' : 'questions'} left today.{' '}
+                      <button
+                        type="button"
+                        onClick={() => router.push('/auth/signup')}
+                        className="text-emerald-400/90 hover:text-emerald-400 underline underline-offset-2"
+                      >
+                        Sign up free
+                      </button>{' '}
+                      to keep your chats and drafts.
+                    </>
+                  ) : (
+                    <>
+                      That is your free questions for today.{' '}
+                      <button
+                        type="button"
+                        onClick={() => router.push('/auth/signup')}
+                        className="text-emerald-400/90 hover:text-emerald-400 underline underline-offset-2"
+                      >
+                        Sign up free
+                      </button>{' '}
+                      to keep going.
+                    </>
+                  )}
+                </p>
+              )}
             </div>
 
             {/* Breadth cue — the curated library is far bigger than the eight

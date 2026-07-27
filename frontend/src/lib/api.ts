@@ -554,6 +554,8 @@ export interface QuizEvent {
 }
 
 export interface StreamHandlers {
+  /** Free-trial budget for signed-out visitors, sent once at stream start. */
+  onTrial?: (info: { remaining: number; limit: number }) => void
   onThinking?: () => void
   onToken?: (text: string) => void
   onToolCall?: (call: ToolCallEvent) => void
@@ -581,6 +583,8 @@ export async function streamQuery(
     userId?: string
     sessionId?: string
     attachedDocIds?: string[]
+    /** Cloudflare Turnstile token — required for signed-out visitors. */
+    turnstileToken?: string | null
   },
   legacyOnChunk?: (text: string) => void,
   legacyOnDone?: (metadata: AgentDoneMetadata) => void,
@@ -601,16 +605,26 @@ export async function streamQuery(
       user_id: options?.userId,
       session_id: options?.sessionId,
       attached_doc_ids: options?.attachedDocIds,
+      turnstile_token: options?.turnstileToken ?? undefined,
     }),
   })
 
   if (!res.ok) {
     // Friendly, recognizable messages so callers can show them verbatim.
-    // 401/403 = anonymous chat is currently disabled (abuse guard); 429 = rate limited.
+    let detail = ''
+    try {
+      detail = ((await res.json()) as { detail?: string })?.detail || ''
+    } catch {
+      // non-JSON error body; fall through to the generic messages
+    }
+    // 402 = the free trial for signed-out visitors is used up for today.
+    if (res.status === 402)
+      throw new Error(detail || 'You have used your free questions for today. Please sign in to keep going — it is free.')
+    // 401/403 = not signed in, or the browser check could not be verified.
     if (res.status === 401 || res.status === 403)
-      throw new Error('Please sign in to chat with Levy. Anonymous chat is temporarily disabled to prevent abuse.')
+      throw new Error(detail || 'Please sign in to chat with Levy.')
     if (res.status === 429)
-      throw new Error('Levy is handling a lot of requests right now. Please wait a moment and try again.')
+      throw new Error(detail || 'Levy is handling a lot of requests right now. Please wait a moment and try again.')
     throw new Error(`API error: ${res.status}`)
   }
 
@@ -647,6 +661,12 @@ export async function streamQuery(
         continue
       }
       switch (parsed.type) {
+        case 'trial':
+          handlers?.onTrial?.({
+            remaining: Number(parsed.remaining ?? 0),
+            limit: Number(parsed.limit ?? 0),
+          })
+          break
         case 'thinking':
           handlers?.onThinking?.()
           break

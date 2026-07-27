@@ -34,6 +34,24 @@ class Settings(BaseSettings):
     # the X-Admin-Token header. If empty, those endpoints are denied.
     admin_api_token: str = ""
 
+    # ── Anonymous trial (Cloudflare Turnstile) ──────────────────────────────
+    # Anonymous chat was hard-disabled after a distributed flood used
+    # browser-like user-agents across many IPs, which per-IP limits cannot
+    # stop. Turnstile fixes exactly that: it proves a real browser per REQUEST
+    # (tokens are single-use), independent of IP.
+    #
+    # FAILS CLOSED BY DESIGN: while this secret is empty, anonymous chat stays
+    # blocked and everyone must sign in — the pre-existing behaviour. A missing
+    # or mistyped key can therefore never re-open the floodgates; it can only
+    # keep the door shut. Get the pair at
+    # https://dash.cloudflare.com → Turnstile: the SITE key is public and goes
+    # in the frontend as NEXT_PUBLIC_TURNSTILE_SITE_KEY, the SECRET key goes
+    # here (Railway env: TURNSTILE_SECRET_KEY) and must never reach the client.
+    turnstile_secret_key: str = ""
+    # Free questions an anonymous visitor may ask per day, per IP, before we
+    # ask them to sign up. Keep small: it is a shop window, not a free tier.
+    anon_trial_questions: int = 3
+
     # Agent loop
     agent_max_iterations: int = 12
     agent_tool_timeout_seconds: int = 25

@@ -15,6 +15,7 @@ import logging
 import tempfile
 import uuid
 from datetime import datetime, timezone
+import httpx
 from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, Header, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -76,6 +77,9 @@ class ChatRequest(BaseModel):
     user_id: str | None = None
     session_id: str | None = None
     attached_doc_ids: list[str] | None = None
+    # Cloudflare Turnstile token, required for anonymous (signed-out) callers.
+    # Ignored for authenticated requests.
+    turnstile_token: str | None = None
 
 
 class SearchRequest(BaseModel):
@@ -146,10 +150,58 @@ _ANON_HITS: dict[str, list[float]] = {}
 _ANON_LIMIT = 6        # max anonymous chat requests
 _ANON_WINDOW = 60.0    # per 60 seconds, per client IP
 
+# Anonymous free-trial counter: {ip: (utc_date_str, count_used_today)}. In
+# memory on purpose — this is a funnel nudge, not a security boundary, so a
+# worker restart or a second replica handing out a few extra free questions is
+# an acceptable trade for having no DB write on the hot path. The actual abuse
+# defence is Turnstile (single-use token per request) plus the per-IP window
+# and the bot-UA block below.
+_ANON_TRIAL: dict[str, tuple[str, int]] = {}
+_TURNSTILE_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
+
 
 def _client_ip(req: Request) -> str:
     xff = (req.headers.get("x-forwarded-for") or "").split(",")[0].strip()
     return xff or (req.client.host if req.client else "unknown")
+
+
+async def _verify_turnstile(token: str | None, ip: str) -> bool:
+    """Verify a Cloudflare Turnstile token. Returns True only on a confirmed
+    pass. Fails CLOSED on a missing secret, a missing token, a rejection, a
+    timeout, or any transport error — a challenge we could not confirm is not
+    a challenge that was passed."""
+    settings = get_settings()
+    secret = (settings.turnstile_secret_key or "").strip()
+    if not secret or not (token or "").strip():
+        return False
+    try:
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            resp = await client.post(
+                _TURNSTILE_VERIFY_URL,
+                data={"secret": secret, "response": token, "remoteip": ip},
+            )
+        if resp.status_code != 200:
+            return False
+        return bool(resp.json().get("success") is True)
+    except Exception:  # noqa: BLE001 — network/parse failure must not open the door
+        logger.warning("turnstile verification failed to complete; denying")
+        return False
+
+
+def _anon_trial_remaining(ip: str) -> int:
+    """Free questions left for this IP today (UTC day)."""
+    limit = get_settings().anon_trial_questions
+    today = datetime.now(timezone.utc).date().isoformat()
+    day, used = _ANON_TRIAL.get(ip, (today, 0))
+    if day != today:
+        used = 0
+    return max(0, limit - used)
+
+
+def _anon_trial_consume(ip: str) -> None:
+    today = datetime.now(timezone.utc).date().isoformat()
+    day, used = _ANON_TRIAL.get(ip, (today, 0))
+    _ANON_TRIAL[ip] = (today, (used + 1) if day == today else 1)
 
 
 @router.post("/chat/stream")
@@ -181,12 +233,46 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
     ua = http_request.headers.get("user-agent") or ""
     if _BOT_UA.search(ua):
         raise HTTPException(status_code=403, detail="Automated access to chat is not allowed.")
+
+    anon_trial = False
     if not uid:
-        # TEMPORARY HARD STOP: anonymous chat is disabled. A distributed flood
-        # (browser-like user-agents across many IPs) bypassed the per-IP rate
-        # limit and kept draining the LLM budget. Require sign-in until we add a
-        # bot challenge (e.g. Cloudflare Turnstile) to reopen anonymous access.
-        raise HTTPException(status_code=401, detail="Please sign in to use Levy chat.")
+        # Anonymous visitors get a short free trial so they can see what Levy
+        # does before creating an account (all our /answers SEO traffic lands
+        # here). Four layers guard it, because the original flood used
+        # browser-like user-agents spread across many IPs:
+        #   1. bot user-agent block (above)
+        #   2. Cloudflare Turnstile — a single-use token per request, so each
+        #      anonymous question costs one solved challenge. This is the layer
+        #      that actually defeats a distributed flood; IP limits cannot.
+        #   3. a per-IP sliding window (burst control)
+        #   4. a small per-IP daily trial allowance
+        # If Turnstile is not configured we fall back to the previous
+        # behaviour and require sign-in, so a missing key fails closed.
+        ip = _client_ip(http_request)
+        if not (get_settings().turnstile_secret_key or "").strip():
+            raise HTTPException(status_code=401, detail="Please sign in to use Levy chat.")
+
+        # Burst control. This existed before but was orphaned when anonymous
+        # chat was hard-disabled; re-wire it now that the door is open again.
+        now = time.time()
+        hits = [t for t in _ANON_HITS.get(ip, []) if now - t < _ANON_WINDOW]
+        if len(hits) >= _ANON_LIMIT:
+            raise HTTPException(status_code=429, detail="Too many requests. Please wait a moment and try again.")
+        hits.append(now)
+        _ANON_HITS[ip] = hits
+
+        if not await _verify_turnstile(request.turnstile_token, ip):
+            raise HTTPException(
+                status_code=401,
+                detail="We could not verify your browser. Please reload the page and try again, or sign in.",
+            )
+        if _anon_trial_remaining(ip) <= 0:
+            raise HTTPException(
+                status_code=402,
+                detail="You have used your free questions for today. Please sign in to keep going — it is free.",
+            )
+        _anon_trial_consume(ip)
+        anon_trial = True
 
     # Only honour a session_id the caller actually owns; otherwise ignore it
     # so nobody can read another user's attached documents via the agent.
@@ -264,6 +350,15 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
     task.add_done_callback(_INFLIGHT_RUNS.discard)
 
     async def event_stream():
+        # Tell an anonymous visitor how much of the free trial is left, so the
+        # UI can nudge them to sign up BEFORE they hit the wall mid-thought.
+        # Unknown event types are ignored by older clients.
+        if anon_trial:
+            yield _sse({
+                "type": "trial",
+                "remaining": _anon_trial_remaining(_client_ip(http_request)),
+                "limit": get_settings().anon_trial_questions,
+            })
         while True:
             event = await queue.get()
             if event is None:
