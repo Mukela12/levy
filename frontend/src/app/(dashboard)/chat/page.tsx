@@ -544,6 +544,40 @@ export default function NewChatPage() {
   const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Counsel'
   const greetingName = user ? displayName : 'there'
 
+  // Free-trial nudge for signed-out visitors. Rendered under BOTH composers
+  // (welcome screen and conversation view) — the count only arrives after the
+  // first answer, by which point the conversation view is the one on screen.
+  const trialNudge =
+    turnstile.enabled && trialLeft !== null ? (
+      <p className="mt-2 text-center text-[12px] text-white/40">
+        {trialLeft > 0 ? (
+          <>
+            {trialLeft} free {trialLeft === 1 ? 'question' : 'questions'} left today.{' '}
+            <button
+              type="button"
+              onClick={() => router.push('/auth/signup')}
+              className="text-emerald-400/90 hover:text-emerald-400 underline underline-offset-2"
+            >
+              Sign up free
+            </button>{' '}
+            to keep your chats and drafts.
+          </>
+        ) : (
+          <>
+            That is your free questions for today.{' '}
+            <button
+              type="button"
+              onClick={() => router.push('/auth/signup')}
+              className="text-emerald-400/90 hover:text-emerald-400 underline underline-offset-2"
+            >
+              Sign up free
+            </button>{' '}
+            to keep going.
+          </>
+        )}
+      </p>
+    ) : null
+
   return (
     <div className="flex flex-1 overflow-hidden" style={{ overscrollBehavior: 'none' }}>
       {/* Main chat area */}
@@ -669,35 +703,7 @@ export default function NewChatPage() {
               {turnstile.enabled && (
                 <div ref={turnstile.holderRef} className="mt-2 flex justify-center" />
               )}
-              {turnstile.enabled && trialLeft !== null && (
-                <p className="mt-2 text-center text-[12px] text-white/40">
-                  {trialLeft > 0 ? (
-                    <>
-                      {trialLeft} free {trialLeft === 1 ? 'question' : 'questions'} left today.{' '}
-                      <button
-                        type="button"
-                        onClick={() => router.push('/auth/signup')}
-                        className="text-emerald-400/90 hover:text-emerald-400 underline underline-offset-2"
-                      >
-                        Sign up free
-                      </button>{' '}
-                      to keep your chats and drafts.
-                    </>
-                  ) : (
-                    <>
-                      That is your free questions for today.{' '}
-                      <button
-                        type="button"
-                        onClick={() => router.push('/auth/signup')}
-                        className="text-emerald-400/90 hover:text-emerald-400 underline underline-offset-2"
-                      >
-                        Sign up free
-                      </button>{' '}
-                      to keep going.
-                    </>
-                  )}
-                </p>
-              )}
+              {trialNudge}
             </div>
 
             {/* Breadth cue — the curated library is far bigger than the eight
@@ -865,6 +871,7 @@ export default function NewChatPage() {
                 onUploadFile={user ? handleUploadFile : undefined}
                 attachmentCount={stagedAttachments.length}
               />
+                  {trialNudge}
                   <p className="mt-2 text-center text-[10px] text-white/25">
                     Levy provides legal information, not legal advice.
                   </p>
