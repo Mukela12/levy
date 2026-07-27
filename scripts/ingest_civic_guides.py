@@ -854,6 +854,40 @@ Trading without the council levy or a required sector licence is an offence even
 
 **Notes:** a foreigner investing in their own business also needs an Investor's Permit from the Department of Immigration (US$250,000 for a new business, US$150,000 to join an existing one). Governing law: Zambia Development Agency Act.""",
     },
+    {
+        "title": "Penalty units and fee units in Zambia: what they are and how to convert them to kwacha",
+        "short_name": "Guide: penalty units and fee units",
+        "authority": "Ministry of Finance / Ministry of Justice (value set by Statutory Instrument)",
+        "law": "Fees and Fines Act, Chapter 45 of the Laws of Zambia; Fees and Fines (Fee and Penalty Unit Value) Regulations, 2014 as amended by Statutory Instrument No. 25 of 2024",
+        "url": "https://www.parliament.gov.zm/sites/default/files/documents/acts/Fees%20and%20Fines%20Act.pdf",
+        "body": """Zambian law almost never writes a fine or a government fee as a kwacha amount. It writes it in **units**, and a separate Statutory Instrument says what a unit is worth. That is why an Act can say "a fine not exceeding one hundred thousand penalty units" and a fee schedule can say "6,500 fee units" without either giving you a number you can actually pay. This guide converts them.
+
+**The two units**
+- A **penalty unit** measures a FINE, that is a punishment for an offence. When a section says "liable to a fine not exceeding X penalty units", X is the maximum the court may impose, not a fixed amount and not what you necessarily pay.
+- A **fee unit** measures a CHARGE for a government service, such as filing a case, a licence, a passport or a citizenship application.
+
+Both are defined under the Fees and Fines Act, Chapter 45, and both currently carry the **same value**.
+
+**The current value: 40 ngwee (K0.40) per unit.** The value was raised from 30 ngwee to 40 ngwee by the Fees and Fines (Fee and Penalty Unit Value) (Amendment) Regulations, Statutory Instrument No. 25 of 2024, which took effect on 15 April 2024 and applies to both fee units and penalty units. **This figure is set by Statutory Instrument and can be changed again at any time, so confirm the current value before relying on a number** — check the latest SI on parliament.gov.zm, or ask the office charging you.
+
+**The arithmetic**
+
+    kwacha  =  number of units  x  unit value (currently K0.40)
+    units   =  kwacha amount    ÷  unit value
+
+Worked examples at K0.40:
+- 6,500 fee units = 6,500 x 0.40 = **K2,600**
+- 12,500 fee units = 12,500 x 0.40 = **K5,000**
+- 62,500 fee units = 62,500 x 0.40 = **K25,000**
+- A fine "not exceeding 300,000 penalty units" = a maximum of **K120,000**
+- A fine "not exceeding 30 penalty units" = a maximum of **K12**
+
+**Reading a maximum correctly.** "Not exceeding X penalty units" is a ceiling on the court's power, not a tariff. A first offender, or a minor breach, will usually attract far less. Where an Act sets a fine "or imprisonment", the court chooses; where it says "and", both may follow.
+
+**If you are asked to pay a fine on the spot.** Traffic and similar on-the-spot fines are issued under their own schedules and should come with a written notice or ticket showing the offence and the amount. Ask for the notice and a receipt, and check that the amount matches the schedule for that offence. If the amount quoted does not correspond to any published figure, or no receipt is offered, you are entitled to ask which provision it is charged under and to pay at the station or court office against a receipt rather than in cash to an individual. Nothing here is an accusation against any officer; it is simply the paper trail you are entitled to.
+
+**Where the number comes from.** The offence or the fee is in the parent Act or its regulations, in units. The value of a unit is in the Fees and Fines Act and the current Fee and Penalty Unit Value Regulations. You need both to get to kwacha, which is exactly why the amount is rarely written on the document in front of you.""",
+    },
 ]
 
 

@@ -22,12 +22,12 @@ import {
   X,
   Loader2,
   ArrowUpToLine,
-  TrendingUp,
-  Globe,
-  Leaf,
   Home,
-  Banknote,
   FileSearch,
+  Users,
+  Car,
+  GraduationCap,
+  ShieldCheck,
 } from 'lucide-react'
 import { LevyLogo } from '@/components/ui/levy-logo'
 
@@ -38,57 +38,63 @@ function getGreeting(): string {
   return 'Good evening'
 }
 
-// Eight practice areas, ordered by how often the test users actually
-// reached for them. Each prompt is a single focused question so the
-// agent answers it directly instead of unrolling a four-section essay.
+// Eight starting points, ordered by what real users actually arrive with.
+//
+// These were previously ordered by what our TEST users reached for, which put
+// foreign-investment thresholds first. The 11-25 Jul review showed four of ten
+// new signups opened with that exact canned question and never came back,
+// while the people who stayed arrived with a father who had vanished for nine
+// years, a K3,000 traffic stop, a bail application to draft, and a mock exam.
+// Each prompt is one focused question so the agent answers it directly instead
+// of unrolling a four-section essay.
 const quickActions = [
   {
-    icon: TrendingUp,
-    label: 'Investment Law',
-    description:
-      'What is the minimum investment threshold for foreign investors in Zambia, and which incentives apply?',
-  },
-  {
-    icon: Globe,
-    label: 'International Law',
-    description:
-      'How are international treaties enforced in Zambian courts, and what jurisdiction applies to cross-border disputes?',
-  },
-  {
-    icon: BookOpen,
-    label: 'Company Registration',
-    description:
-      'What are the steps and forms required to register a private limited company with PACRA?',
-  },
-  {
     icon: Search,
-    label: 'Employment Law',
+    label: 'Unfair dismissal',
     description:
-      'What does Section 52 of the Employment Code Act require for a valid termination of employment?',
+      'I was dismissed from my job without notice or a hearing. What are my rights and what can I claim?',
+  },
+  {
+    icon: Users,
+    label: 'Custody & maintenance',
+    description:
+      'How do I apply for custody of my child and an order for maintenance, and what does the court consider?',
   },
   {
     icon: Gavel,
-    label: 'Criminal Law',
+    label: 'Draft a court document',
     description:
-      'What are the constitutional rights of an arrested person in Zambia?',
+      'Help me draft an affidavit in support of my application, and walk me through what to file next.',
   },
   {
-    icon: Banknote,
-    label: 'Tax Law',
+    icon: GraduationCap,
+    label: 'Study & mock exam',
     description:
-      'What are the current corporate income tax rates and turnover-tax thresholds in Zambia?',
+      'Quiz me on the law of contract in Zambia with a graded multiple-choice mock exam, with citations and explanations.',
+  },
+  {
+    icon: Car,
+    label: 'Traffic stops & fines',
+    description:
+      'The police stopped me and asked me to pay a fine. What is a penalty unit worth, and what does the law actually say?',
   },
   {
     icon: Home,
-    label: 'Property Law',
+    label: 'Land & title',
     description:
-      'How is land tenure regulated under the Lands Act, and what is the procedure for converting customary land?',
+      'How do I check or transfer a land title in Zambia, and what do I do if someone has lodged a caveat against it?',
   },
   {
-    icon: Leaf,
-    label: 'Environmental',
+    icon: BookOpen,
+    label: 'Register a business',
     description:
-      'Which environmental impact assessment requirements apply to a mining operation in Zambia?',
+      'What are the steps and forms required to register a company or business name with PACRA?',
+  },
+  {
+    icon: ShieldCheck,
+    label: 'Arrest & bail',
+    description:
+      'What are my rights if I am arrested in Zambia, and how do I apply for bail?',
   },
 ]
 

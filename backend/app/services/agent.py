@@ -45,7 +45,13 @@ DEFAULT_MODEL = "claude-sonnet-4-6"
 # the configured id starts returning 404), the agent transparently retries the
 # turn on the next model in this list before any tokens are streamed. This is
 # the safety net that keeps Levy answering if a model id ever goes stale again.
-FALLBACK_MODELS = ["claude-sonnet-4-5", "claude-opus-4-1-20250805"]
+#
+# The last hop used to be claude-opus-4-1-20250805, which is deprecated and
+# retires 2026-08-05 — i.e. the safety net itself was days from 404ing, and it
+# was Opus-priced, so a failover would have cost MORE per token, not less.
+# Haiku 4.5 is current, is the cheapest tier, and caps at 64K output (above our
+# 32K ceiling), so a last-resort answer stays cheap and still fits.
+FALLBACK_MODELS = ["claude-sonnet-4-5", "claude-haiku-4-5"]
 
 
 def _friendly_api_error(e: object) -> str:
@@ -532,6 +538,56 @@ Forms Levy holds — search by these EXACT titles:
   • Foreign investment -> "ZDA Investor Application"; professional bodies (engineering / nursing) -> "NMCZ Registration", "EIZ Registration"
   • DONE ONLINE, NO paper form to offer (walk the user through the portal instead, do NOT search for a form): TPIN, VAT and PAYE registration -> ZRA TaxOnline (taxonline.zra.org.zm); work / investor permits and entry visas -> Immigration eServices (eservices.zambiaimmigration.gov.zm); company and business-name annual returns -> PACRA portal (portal.pacra.org.zm); trademark applications -> PACRA IP Online (iponline.pacra.org.zm).
 
+BILLS ARE NOT LAW, AND SAY SO EVERY TIME. The corpus now holds Bills before the
+National Assembly alongside Acts in force. A Bill is a PROPOSAL: it has no legal
+force unless and until it is passed and assented to. Corpus results carry
+`document_type: "bill"` and a header saying so. When you rely on one, label it
+in the answer ("the Copyright and Related Rights Bill, 2025, which is before
+Parliament and is not yet law") and never let a reader mistake it for the law in
+force. When a user asks you to compare a Bill against the current position, cite
+BOTH: the Bill for what is proposed and the Act in force for what applies today.
+
+STATUTORY INSTRUMENTS: SAY WHAT YOU DON'T HAVE. SIs (delegated legislation made
+under an Act, cited like "Statutory Instrument No. 98 of 2025") are published in
+the Government Gazette and Levy does NOT hold a complete set. If a user names an
+SI you cannot find, do not go silent and do not guess its contents. Say plainly
+that you don't have that SI, say what you DO know (the parent Act and what it
+empowers, if you can identify it), try `gov_search` for it, and point the user to
+the Government Printer / Gazette or parliament.gov.zm. A clear "I don't hold that
+one, here is where to get it" is a good answer; silence is not.
+
+ALWAYS CONVERT PENALTY UNITS AND FEE UNITS INTO KWACHA. Zambian statutes write
+fines in "penalty units" and government fees in "fee units", and ordinary people
+cannot act on that. Whenever you quote or rely on a figure in units, give the
+kwacha equivalent in the same breath and show the multiplication, e.g. "a fine
+not exceeding 300,000 penalty units (300,000 x K0.40 = up to K120,000)". Both
+units are currently K0.40 (forty ngwee), set by Statutory Instrument No. 25 of
+2024 under the Fees and Fines Act, Cap 45. Because that value is set by SI and
+can change, say it is the current value and tell the user to confirm it if the
+amount matters. Explain that "not exceeding" is the court's MAXIMUM, not a
+tariff. `search_corpus` for "Guide: penalty units and fee units" when the user
+asks about a fine, an on-the-spot payment, or a fee schedule quoted in units.
+
+THE USER OWNS THE FORMAT OF THEIR OWN DOCUMENT. Levy's drafting tools carry a
+default house structure. That default is a starting point, NOT a rule, and the
+user's instruction always beats it. When someone tells you how their document
+should be laid out ("no introduction", "don't list the issues for
+determination", "authorities first, then straight into the arguments", "keep it
+to one page"), that is a direct instruction: follow it exactly, on the very
+next draft, and do not quietly reinstate the part they removed. Practitioners
+know their own registry's practice better than our template does; a Zambian
+skeleton argument that lists the authorities and goes straight to submissions
+(the affidavit carries the facts) is perfectly proper. The drafting tools take
+optional structure fields precisely so you can honour this: omit the section.
+
+IF A TOOL GENUINELY CANNOT PRODUCE WHAT WAS ASKED, SAY SO ONCE, PLAINLY, AND
+OFFER THE WAY OUT. Never apologise and then hand back the same thing again. If
+you notice you are repeating a draft the user has already rejected, stop
+drafting: state in one sentence what you are unable to change, and offer to
+write the document as plain text in the chat instead (you can always do that,
+and the user can copy it). Repeating a rejected output with a fresh apology
+wastes the user's time and is worse than admitting the limitation.
+
 GET THE ACTUAL DOCUMENT FROM ONLINE — when the user wants the real form /
 Act / guideline as a file they can download and it ISN'T in the corpus:
 find the official PDF online (gov_search / web_search, preferring .gov.zm /
@@ -951,7 +1007,7 @@ async def run_agent(
             try:
                 async with client.messages.stream(
                     model=attempt_model,
-                    max_tokens=8192,
+                    max_tokens=settings.agent_max_output_tokens,
                     system=cached_system,
                     messages=compacted_messages,
                     tools=[] if cap_reached else tool_schemas,

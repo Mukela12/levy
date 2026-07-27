@@ -1360,23 +1360,31 @@ def build_tool_registry(
         court_division: str,
         applicant_name: str,
         respondent_name: str,
-        introduction: str,
-        issues: list[str],
         submissions: list[dict],
-        prayer: str,
+        introduction: str | None = None,
+        issues: list[str] | None = None,
+        prayer: str | None = None,
         supporting_document: str | None = None,
         cause_number: str | None = None,
         authorities_cases: list[str] | None = None,
         authorities_statutes: list[str] | None = None,
+        authorities_position: str | None = None,
         counsel_name: str | None = None,
         counsel_firm: str | None = None,
         template_id: str | None = None,
     ):
         """Draft Skeletal Arguments in support of an application.
 
-        Renders the IRAC-style structure Zambian counsel use: Introduction →
-        Issues for Determination → Submissions (one per issue, with
-        authorities woven in) → Prayer → List of Authorities → signature.
+        Default shape is the IRAC structure Zambian counsel commonly use:
+        Introduction -> Issues for Determination -> Submissions -> Prayer ->
+        List of Authorities -> signature.
+
+        That is a DEFAULT, not a rule. `introduction`, `issues` and `prayer`
+        are optional: omit any of them and the section is left out entirely
+        and the remaining sections renumber themselves. `authorities_position`
+        moves the List of Authorities to the top. Many advocates open with the
+        authorities and go straight to submissions, and the affidavit (not the
+        skeleton) carries the facts, so honour what the user asks for.
         """
         mode = (procedural_mode or "").strip()
         applicant = (applicant_name or "").strip()
@@ -1394,16 +1402,14 @@ def build_tool_registry(
         cases = [c.strip() for c in (authorities_cases or []) if c and c.strip()]
         statutes = [s.strip() for s in (authorities_statutes or []) if s and s.strip()]
 
+        # Only the submissions are structurally required — a skeleton with no
+        # argument in it is not a document. Introduction, issues and prayer are
+        # opt-out: a user who says "no introduction, no issues for
+        # determination" gets exactly that.
         if not mode:
             return {"result": {"error": "procedural_mode required"}}
-        if not introduction or not introduction.strip():
-            return {"result": {"error": "introduction required"}}
-        if not cleaned_issues:
-            return {"result": {"error": "issues must be a non-empty list"}}
         if not cleaned_subs:
             return {"result": {"error": "submissions must be a non-empty list"}}
-        if not prayer or not prayer.strip():
-            return {"result": {"error": "prayer required"}}
 
         mode_lower = mode.lower()
         if "petition" in mode_lower:
@@ -1428,42 +1434,46 @@ def build_tool_registry(
             f'{support_doc.upper()}</div>'
         )
 
-        # 1.0 Introduction
-        intro_paragraphs = [
-            f'<p>{p}</p>'
-            for p in introduction.strip().split("\n\n")
-            if p.strip()
-        ]
-        intro_section = (
-            '<h2 style="text-align:left;letter-spacing:0;font-size:12pt;'
-            'margin-top:14pt;">1.0 INTRODUCTION</h2>'
-            + "".join(
-                f'<p><strong>1.{i+1}</strong> {p[3:-4] if p.startswith("<p>") and p.endswith("</p>") else p}</p>'
+        # Sections are numbered by what is actually PRESENT, so omitting the
+        # introduction doesn't leave the document starting at "3.0".
+        _H = ('<h2 style="text-align:left;letter-spacing:0;font-size:12pt;'
+              'margin-top:14pt;">{n}.0 {label}</h2>')
+        section_no = 0
+
+        # Introduction (optional)
+        intro_section = ""
+        if introduction and introduction.strip():
+            section_no += 1
+            intro_paragraphs = [
+                p.strip() for p in introduction.strip().split("\n\n") if p.strip()
+            ]
+            intro_section = _H.format(n=section_no, label="INTRODUCTION") + "".join(
+                f'<p><strong>{section_no}.{i+1}</strong> {p}</p>'
                 for i, p in enumerate(intro_paragraphs)
             )
-        )
 
-        # 2.0 Issues for Determination
-        issues_section = (
-            '<h2 style="text-align:left;letter-spacing:0;font-size:12pt;'
-            'margin-top:14pt;">2.0 ISSUES FOR DETERMINATION</h2>'
-            + "".join(
-                f'<p><strong>2.{i+1}</strong> {issue}</p>'
+        # Issues for Determination (optional)
+        issues_section = ""
+        if cleaned_issues:
+            section_no += 1
+            issues_section = _H.format(n=section_no, label="ISSUES FOR DETERMINATION") + "".join(
+                f'<p><strong>{section_no}.{i+1}</strong> {issue}</p>'
                 for i, issue in enumerate(cleaned_issues)
             )
-        )
 
-        # 3.0 Submissions — one block per submission item.
+        # Submissions — always present; one block per submission item.
+        section_no += 1
+        subs_no = section_no
         sub_blocks = []
         for s_idx, sub in enumerate(cleaned_subs):
-            title = sub["title"] or f"Submission on Issue {s_idx + 1}"
+            title = sub["title"] or f"Submission {s_idx + 1}"
             sub_blocks.append(
                 f'<h3 style="text-align:left;font-size:11.5pt;margin-top:12pt;">'
-                f'3.{s_idx + 1} {title}</h3>'
+                f'{subs_no}.{s_idx + 1} {title}</h3>'
             )
             for p_idx, para in enumerate(sub["paragraphs"]):
                 sub_blocks.append(
-                    f'<p><strong>3.{s_idx + 1}.{p_idx + 1}</strong> {para}</p>'
+                    f'<p><strong>{subs_no}.{s_idx + 1}.{p_idx + 1}</strong> {para}</p>'
                 )
             if sub["citations"]:
                 cites = "; ".join(sub["citations"])
@@ -1472,17 +1482,17 @@ def build_tool_registry(
                     f'Authority: {cites}</p>'
                 )
         submissions_section = (
-            '<h2 style="text-align:left;letter-spacing:0;font-size:12pt;'
-            'margin-top:14pt;">3.0 SUBMISSIONS</h2>'
-            + "".join(sub_blocks)
+            _H.format(n=subs_no, label="SUBMISSIONS") + "".join(sub_blocks)
         )
 
-        # 4.0 Prayer
-        prayer_section = (
-            '<h2 style="text-align:left;letter-spacing:0;font-size:12pt;'
-            'margin-top:14pt;">4.0 PRAYER</h2>'
-            f'<p><strong>4.1</strong> {prayer.strip()}</p>'
-        )
+        # Prayer (optional)
+        prayer_section = ""
+        if prayer and prayer.strip():
+            section_no += 1
+            prayer_section = (
+                _H.format(n=section_no, label="PRAYER")
+                + f'<p><strong>{section_no}.1</strong> {prayer.strip()}</p>'
+            )
 
         # List of Authorities
         authorities_section_parts = []
@@ -1518,17 +1528,19 @@ def build_tool_registry(
         template = _fetch_template(template_id)
         letterhead = pdf_tools.render_template_letterhead(template)
 
-        body_md = "\n\n".join([
-            letterhead,
-            heading_html,
-            doc_title,
-            intro_section,
-            issues_section,
-            submissions_section,
-            prayer_section,
-            authorities_section,
-            signature,
-        ])
+        # Authorities go last by default, but many advocates open with the list
+        # and go straight into the argument — `authorities_position="start"`
+        # renders it immediately after the document title.
+        at_start = (authorities_position or "").strip().lower() in ("start", "top", "first", "before")
+        parts = [letterhead, heading_html, doc_title]
+        if at_start and authorities_section:
+            parts.append(authorities_section)
+        parts += [intro_section, issues_section, submissions_section, prayer_section]
+        if not at_start and authorities_section:
+            parts.append(authorities_section)
+        parts.append(signature)
+        # Drop the sections the caller opted out of, so we don't emit blank gaps.
+        body_md = "\n\n".join(p for p in parts if p and p.strip())
 
         artifact_title = (
             f"Skeletal Arguments — {applicant} v {respondent}"
@@ -2696,14 +2708,24 @@ def build_tool_registry(
                 "Draft Skeletal Arguments in support of an application and "
                 "save as a PDF artifact. Call AFTER `draft_summons` and "
                 "`draft_affidavit` (the affidavit lays out the facts; "
-                "skeletal arguments lay out the law). Uses the IRAC-style "
-                "structure Zambian counsel use:\n\n"
+                "skeletal arguments lay out the law). DEFAULT structure:\n\n"
                 "  1.0 INTRODUCTION       — short paragraphs framing the matter\n"
                 "  2.0 ISSUES FOR DETERMINATION — numbered 'Whether…' questions\n"
                 "  3.0 SUBMISSIONS        — one block per submission, "
                 "                            each with paragraphs + cited authorities\n"
                 "  4.0 PRAYER             — what the Court is asked to do\n"
                 "  LIST OF AUTHORITIES    — cases + statutes, separated\n\n"
+                "THAT SHAPE IS A DEFAULT, NOT A RULE — follow the user's "
+                "instructions over it. Only `submissions` is required. OMIT "
+                "`introduction`, `issues` and/or `prayer` entirely when the "
+                "user asks for a document without them (e.g. 'no introduction, "
+                "no issues for determination, just the authorities then the "
+                "arguments') — the section is dropped and the rest renumber "
+                "automatically. Set `authorities_position: \"start\"` to put "
+                "the List of Authorities first. Many advocates draft exactly "
+                "this way: the affidavit carries the facts, so the skeleton "
+                "lists authorities and goes straight into argument. Never "
+                "re-insert a section the user told you to leave out.\n\n"
                 "Pull statutory citations from a prior `search_corpus` so "
                 "they reference the actual section text. Case citations "
                 "should use Zambian form where available (Appeal No., SCZ "
@@ -2764,6 +2786,11 @@ def build_tool_registry(
                         "items": {"type": "string"},
                         "description": "Statutes / Rules relied upon (Acts, sections, Order numbers).",
                     },
+                    "authorities_position": {
+                        "type": "string",
+                        "enum": ["start", "end"],
+                        "description": "Where the List of Authorities goes. 'end' (default) or 'start' to open the document with the authorities and go straight into the submissions.",
+                    },
                     "counsel_name": {"type": "string"},
                     "counsel_firm": {"type": "string"},
                     "template_id": {
@@ -2776,10 +2803,7 @@ def build_tool_registry(
                     "court_division",
                     "applicant_name",
                     "respondent_name",
-                    "introduction",
-                    "issues",
                     "submissions",
-                    "prayer",
                 ],
             },
             handler=_draft_skeletal,

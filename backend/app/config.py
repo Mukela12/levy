@@ -38,6 +38,17 @@ class Settings(BaseSettings):
     agent_max_iterations: int = 12
     agent_tool_timeout_seconds: int = 25
     agent_max_tool_result_chars: int = 8000
+    # Output ceiling per model call. This was 8192, which silently truncated or
+    # killed our most valuable answers: real teaching/research/drafting replies
+    # already reach ~9K tokens, so they hit the cap and produced nothing (12
+    # dropped answers in the 11-25 Jul window, plus users typing "Continue" to
+    # hand-crank a truncated lesson back to life). We stream every call, so the
+    # HTTP-timeout reason for a low cap does not apply. 32K sits inside the
+    # output limit of every model in the chain (Sonnet 4.6 128K, Sonnet 4.5 and
+    # Haiku 4.5 64K). Billing is per token GENERATED, so a higher ceiling costs
+    # nothing extra on short answers, and it removes the retry loop that was
+    # double-billing us on long ones.
+    agent_max_output_tokens: int = 32_000
 
     # Context management
     # Trigger compaction when the running input-token total approaches Claude
