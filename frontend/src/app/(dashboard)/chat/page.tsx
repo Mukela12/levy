@@ -580,6 +580,19 @@ export default function NewChatPage() {
 
   return (
     <div className="flex flex-1 overflow-hidden" style={{ overscrollBehavior: 'none' }}>
+      {/* Cloudflare Turnstile host. Mounted ONCE here, outside the welcome /
+          conversation branches, because those swap composers when the first
+          message sends. Previously this div lived inside the welcome screen,
+          so it unmounted on the first send and every later question failed
+          with "Cannot find Widget" / error 300010. Normally invisible:
+          appearance is interaction-only, so it only draws when Cloudflare
+          actually wants the user to interact. */}
+      {turnstile.enabled && (
+        <div
+          ref={turnstile.holderRef}
+          className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50"
+        />
+      )}
       {/* Main chat area */}
       <div className="flex-1 flex flex-col min-w-0 relative">
         {!hasMessages ? (
@@ -698,11 +711,6 @@ export default function NewChatPage() {
                 attachmentCount={stagedAttachments.length}
                 seed={inputSeed}
               />
-              {/* Cloudflare Turnstile. Normally invisible: it only renders a
-                  visible challenge when Cloudflare asks for interaction. */}
-              {turnstile.enabled && (
-                <div ref={turnstile.holderRef} className="mt-2 flex justify-center" />
-              )}
               {trialNudge}
             </div>
 

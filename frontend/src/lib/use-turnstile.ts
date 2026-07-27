@@ -109,14 +109,18 @@ export function useTurnstile(active: boolean) {
   const getToken = useCallback(async (): Promise<string | null> => {
     if (!enabled) return null
 
-    const armNext = () => {
+    // Ask the widget for a new token. Returns false if there is no live widget
+    // to ask — the caller must not then sit waiting for a callback that can
+    // never fire.
+    const armNext = (): boolean => {
       const id = widgetId.current
-      if (id && window.turnstile) {
-        try {
-          window.turnstile.reset(id)
-        } catch {
-          // reset can throw if the widget was torn down mid-flight
-        }
+      if (!id || !window.turnstile) return false
+      try {
+        window.turnstile.reset(id)
+        return true
+      } catch {
+        // The widget was torn down (e.g. its host div unmounted).
+        return false
       }
     }
 
@@ -137,8 +141,13 @@ export function useTurnstile(active: boolean) {
         clearTimeout(timer)
         resolve(t)
       }
-      // Nothing banked: ask the widget for a new one.
-      armNext()
+      // Nothing banked: ask the widget for a new one. If there is no live
+      // widget, fail fast instead of waiting out the timeout.
+      if (!armNext()) {
+        clearTimeout(timer)
+        waiterRef.current = null
+        resolve(null)
+      }
     })
   }, [enabled])
 
