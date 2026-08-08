@@ -700,6 +700,62 @@ def _extract_domain(url: str) -> str:
         return ""
 
 
+# Employment dates as people actually type them. Zambia writes day-first, so
+# "04/09/2026" is 4 September — parsing it American-style would silently move a
+# termination date five months and change every figure in the payout.
+_DATE_FORMATS = (
+    "%Y-%m-%d",      # 2026-09-04
+    "%d/%m/%Y",      # 04/09/2026  (day-first: the Zambian convention)
+    "%d-%m-%Y",      # 04-09-2026
+    "%d.%m.%Y",      # 04.09.2026
+    "%d %B %Y",      # 4 September 2026
+    "%d %b %Y",      # 4 Sep 2026
+    "%B %d, %Y",     # September 4, 2026
+    "%b %d, %Y",     # Sep 4, 2026
+    "%d/%m/%y",      # 04/09/26
+)
+
+
+def _parse_one_date(raw: str):
+    """Parse a single user-supplied date, or return None."""
+    import datetime as _dt
+
+    s = (raw or "").strip().replace(",", ", ").replace("  ", " ")
+    # Drop ordinal suffixes: "4th September 2026" -> "4 September 2026"
+    s = re.sub(r"\b(\d{1,2})(st|nd|rd|th)\b", r"\1", s, flags=re.I)
+    for fmt in _DATE_FORMATS:
+        try:
+            return _dt.datetime.strptime(s, fmt).date()
+        except ValueError:
+            continue
+    return None
+
+
+def _parse_service_dates(start_date: str, termination_date: str):
+    """Turn a start/end pair into (years_of_service, assumption_note).
+
+    Returns an error string instead when either date can't be read or the
+    range is backwards — better a clear message than a plausible wrong number.
+    """
+    start = _parse_one_date(start_date)
+    end = _parse_one_date(termination_date)
+    if start is None:
+        return f"Could not read the start date {start_date!r}. Use DD/MM/YYYY or '4 September 2026'."
+    if end is None:
+        return f"Could not read the termination date {termination_date!r}. Use DD/MM/YYYY or '4 September 2026'."
+    if end < start:
+        return (f"The termination date ({end.isoformat()}) is before the start date "
+                f"({start.isoformat()}). Check which is which.")
+    days = (end - start).days
+    years = round(days / 365.25, 4)
+    note = (
+        f"Service length derived from {start.isoformat()} to {end.isoformat()} "
+        f"= {days} days = {years:g} years (365.25-day year). Day-first reading: "
+        f"{start.strftime('%d %B %Y')} to {end.strftime('%d %B %Y')}."
+    )
+    return years, note
+
+
 # ─── Registry ────────────────────────────────────────────────────────────────
 
 
@@ -747,6 +803,60 @@ def build_tool_registry(
         )
 
     # ── Matter workspace: record durable case facts so Levy remembers them ──
+    async def _create_matter(title, matter_type=None, court=None, cause_number=None,
+                             parties=None, facts=None, key_date=None):
+        """Open a Matter for this case and attach the current chat to it.
+
+        This exists because the agent kept trying to save real case facts (a
+        hearing date, who the lead complainant was) into a Matter that had
+        never been created, and `update_matter` could only fail. Now it can
+        create one in the same turn the user says yes.
+        """
+        if not session_id or not owner_id:
+            return {"result": {"error": "Matters need a signed-in session. "
+                    "Tell the user to sign in, then offer again."}}
+        from ..db.supabase import get_db
+        import datetime as _dt
+        db = get_db()
+
+        clean_title = (title or "").strip()
+        if not clean_title:
+            return {"result": {"error": "A matter needs a title."}}
+
+        row: dict = {"owner_id": owner_id, "title": clean_title[:200]}
+        for key, val in (("matter_type", matter_type), ("court", court),
+                         ("cause_number", cause_number)):
+            if val and str(val).strip():
+                row[key] = str(val).strip()
+        if isinstance(parties, list) and parties:
+            row["parties"] = [p for p in parties if isinstance(p, dict) and p.get("name")]
+        if facts and str(facts).strip():
+            row["facts"] = str(facts).strip()
+        if isinstance(key_date, dict) and key_date.get("date"):
+            row["key_dates"] = [{"label": key_date.get("label") or "Date",
+                                 "date": key_date["date"],
+                                 "note": key_date.get("note") or ""}]
+
+        created = db.table("matters").insert(row).execute().data
+        if not created:
+            return {"result": {"error": "Could not create the matter."}}
+        mid = created[0]["id"]
+
+        # Attach this chat — and any drafts already produced in it — to the
+        # new matter, so the case container starts with the work already done.
+        db.table("chat_sessions").update({"matter_id": mid}).eq("id", session_id).execute()
+        try:
+            db.table("artifacts").update({"matter_id": mid}) \
+              .eq("session_id", session_id).is_("matter_id", "null").execute()
+        except Exception:
+            pass  # artifacts.matter_id is best-effort; never fail the matter on it
+
+        return {"result": {"ok": True, "matter_id": mid, "title": clean_title,
+                           "attached_this_chat": True,
+                           "note": "Matter opened and this chat attached. "
+                                   "Future chats can be attached from the Matters page."},
+                "db_sources": [], "web_sources": []}
+
     async def _update_matter(facts=None, add_date=None, set_fields=None):
         """Save new information onto the Matter (case) this chat belongs to."""
         if not session_id or not owner_id:
@@ -758,8 +868,17 @@ def build_tool_registry(
                 .eq("id", session_id).limit(1).execute().data)
         mid = srow[0].get("matter_id") if srow else None
         if not mid:
-            return {"result": {"error": "This chat is not linked to a matter yet. "
-                    "Ask the user to attach it to a matter (or create one) first."}}
+            # Recoverable, and the agent is told exactly how to recover. The
+            # old message said "ask the user to create one first" and the
+            # agent had no tool to do it with, so the save was simply lost.
+            return {"result": {
+                "error": "no_matter",
+                "recoverable": True,
+                "how_to_fix": "There is no Matter for this case yet. Offer to open "
+                              "one for the user in a single short sentence, and if "
+                              "they agree call create_matter with the case details "
+                              "you already know, then retry this save.",
+            }}
         mrow = (db.table("matters").select("facts,key_dates")
                 .eq("id", mid).eq("owner_id", owner_id).limit(1).execute().data)
         if not mrow:
@@ -1867,8 +1986,10 @@ def build_tool_registry(
 
     async def _calculate_entitlements(
         monthly_basic_pay: float,
-        years_of_service: float,
         termination_reason: str,
+        years_of_service: float | None = None,
+        start_date: str | None = None,
+        termination_date: str | None = None,
         contract_type: str = "unspecified",
         notice_given_by_employer: bool | None = None,
         accrued_leave_days: float | None = None,
@@ -1881,7 +2002,23 @@ def build_tool_registry(
         The maths is pure Python (no model arithmetic). Returns the structured
         breakdown as an `entitlement_breakdown` envelope field, which the agent
         loop forwards over SSE so the UI renders a calculator card inline.
+
+        Service length can be given either as `years_of_service` or as a pair of
+        dates. Dates are preferred: users supply dates, and converting them to a
+        fraction of a year is exactly the arithmetic the model should not be
+        doing by hand.
         """
+        derived_note = None
+        if years_of_service is None and start_date and termination_date:
+            parsed = _parse_service_dates(start_date, termination_date)
+            if isinstance(parsed, str):
+                return {"result": {"error": parsed}}
+            years_of_service, derived_note = parsed
+        if years_of_service is None:
+            return {"result": {"error": (
+                "Service length is missing. Provide either years_of_service, or "
+                "both start_date and termination_date (any common format)."
+            )}}
         try:
             breakdown = calculate_entitlements(
                 monthly_basic_pay=monthly_basic_pay,
@@ -1896,6 +2033,8 @@ def build_tool_registry(
             )
         except Exception as e:  # noqa: BLE001
             return {"result": {"error": f"could not compute entitlements: {e}"}}
+        if derived_note:
+            breakdown.setdefault("assumptions", []).insert(0, derived_note)
         return {
             "result": {"breakdown": breakdown, "ok": True},
             "db_sources": [],
@@ -1951,6 +2090,61 @@ def build_tool_registry(
             },
             handler=_generate,
         ),
+        "create_matter": ToolDefinition(
+            name="create_matter",
+            description=(
+                "Open a Matter (a case file) for this case and attach the current "
+                "chat to it. A Matter is how Levy remembers a case between "
+                "sessions: parties, court, cause number, a running facts summary "
+                "and key dates, plus every chat and draft that belongs to it.\n\n"
+                "Call this when the user agrees to save their case, or when "
+                "update_matter comes back with error 'no_matter' and the user "
+                "says yes to your offer. Do NOT call it unprompted on a one-off "
+                "question — only when the user is clearly running an actual case "
+                "(a dispute with a hearing, a filing, an employer, a landlord) "
+                "and would benefit from Levy remembering it next time.\n\n"
+                "Fill in every field you already know from the conversation. Do "
+                "not interrogate the user for the rest; a Matter with just a "
+                "title is useful and the details can be added later."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "description": "Short name for the case, as the user would recognise it, e.g. 'Unfair dismissal - Kankomba v Zampalm' or 'Late father's estate'.",
+                    },
+                    "matter_type": {
+                        "type": "string",
+                        "description": "e.g. 'Unfair dismissal', 'Child maintenance', 'Land dispute', 'Estate administration'.",
+                    },
+                    "court": {"type": "string", "description": "Court or division, if known, e.g. 'Industrial Relations Division, Ndola High Court'."},
+                    "cause_number": {"type": "string", "description": "Cause/case number if the user has one."},
+                    "parties": {
+                        "type": "array",
+                        "description": "Parties known so far.",
+                        "items": {"type": "object", "properties": {
+                            "role": {"type": "string", "description": "e.g. Applicant, Respondent, Complainant"},
+                            "name": {"type": "string"}}},
+                    },
+                    "facts": {
+                        "type": "string",
+                        "description": "A short opening summary of the case in the user's own terms. Two or three sentences.",
+                    },
+                    "key_date": {
+                        "type": "object",
+                        "description": "The most important known date, if any.",
+                        "properties": {
+                            "label": {"type": "string", "description": "e.g. 'Hearing', 'Filing deadline'"},
+                            "date": {"type": "string", "description": "ISO date, e.g. 2026-08-06"},
+                            "note": {"type": "string"},
+                        },
+                    },
+                },
+                "required": ["title"],
+            },
+            handler=_create_matter,
+        ),
         "update_matter": ToolDefinition(
             name="update_matter",
             description=(
@@ -1958,9 +2152,9 @@ def build_tool_registry(
                 "belongs to, so Levy remembers it in the user's next session. "
                 "Call this whenever the user tells you something lasting about "
                 "their case: a new fact, a hearing or filing deadline, a party, "
-                "the court, or the cause number. Only works when the chat is "
-                "linked to a matter; if it is not, tell the user to attach this "
-                "chat to a matter (or create one) first."
+                "the court, or the cause number. If it returns error 'no_matter', "
+                "the case has no Matter yet — offer to open one in a single short "
+                "sentence, and call create_matter if the user agrees."
             ),
             input_schema={
                 "type": "object",
@@ -2287,15 +2481,22 @@ def build_tool_registry(
                 "— e.g. 'what would a worker of 8 years on K2500 be entitled "
                 "to after resigning', 'how much severance', 'calculate my "
                 "gratuity', 'what do I get if I'm made redundant'.\n\n"
+                "It serves BOTH sides. Employers and HR use it to work out what "
+                "a package must contain and whether they are compliant; "
+                "employees use it to check what they are owed. Same statute, "
+                "same figures — answer either without taking a side.\n\n"
                 "The maths is done deterministically server-side, so always "
-                "use this tool instead of computing figures yourself. Gather "
-                "the inputs from the conversation first; if the user hasn't "
-                "given monthly basic pay, years of service, or how the "
-                "employment ended, ask for those before calling. The UI "
+                "use this tool instead of computing figures yourself. That "
+                "includes the DATES: pass start_date and termination_date "
+                "exactly as the user wrote them and let the tool derive the "
+                "service length — do not convert dates to a number of years in "
+                "your head. Gather inputs from the conversation first; if "
+                "monthly basic pay, service length, or how the employment "
+                "ended is missing, ask for those before calling. The UI "
                 "renders the result as a breakdown card. After it runs, "
                 "explain the contested / needs-input items in plain language "
                 "and offer to search case law for any contested point (e.g. "
-                "gratuity on resignation)."
+                "gratuity on resignation, or redundancy under one year)."
             ),
             input_schema={
                 "type": "object",
@@ -2304,9 +2505,17 @@ def build_tool_registry(
                         "type": "number",
                         "description": "Monthly basic pay in ZMW (Kwacha), excluding allowances.",
                     },
+                    "start_date": {
+                        "type": "string",
+                        "description": "PREFERRED. Date employment began, as the user wrote it (e.g. '22/09/2025' — read day-first — or '22 September 2025'). Pair with termination_date and omit years_of_service.",
+                    },
+                    "termination_date": {
+                        "type": "string",
+                        "description": "PREFERRED. Last day of employment, as the user wrote it. Pair with start_date.",
+                    },
                     "years_of_service": {
                         "type": "number",
-                        "description": "Total years of continuous service (decimals allowed, e.g. 8.5).",
+                        "description": "Fallback when no dates are available: total years of continuous service (decimals allowed, e.g. 8.5). If you have dates, send those instead.",
                     },
                     "termination_reason": {
                         "type": "string",
@@ -2349,7 +2558,10 @@ def build_tool_registry(
                         "description": "Was NHIMA being contributed? False flags an employer compliance breach.",
                     },
                 },
-                "required": ["monthly_basic_pay", "years_of_service", "termination_reason"],
+                # Service length is required, but it can arrive either as
+                # years_of_service or as a start/termination date pair — so it
+                # is validated in the handler rather than pinned here.
+                "required": ["monthly_basic_pay", "termination_reason"],
             },
             handler=_calculate_entitlements,
         ),

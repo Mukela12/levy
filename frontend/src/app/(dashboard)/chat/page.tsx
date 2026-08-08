@@ -108,13 +108,18 @@ export default function NewChatPage() {
   const [trialLeft, setTrialLeft] = useState<number | null>(null)
   const [accentLineWidth, setAccentLineWidth] = useState(0)
   const [webSearch, setWebSearch] = useState(false)
-  // Seed payload for the input box (used by the "Review my draft" starter,
-  // which pre-fills a primer so the lawyer pastes their own text rather
-  // than firing an empty turn).
+  // Seed payload for the input box. An empty `text` focuses the box without
+  // filling it (see chat-input.tsx).
   const [inputSeed, setInputSeed] = useState<{ text: string; nonce: number }>({
     text: '',
     nonce: 0,
   })
+  // "Review my draft" is a MODE, not a pre-filled template. The old version
+  // seeded the box with a primer ending in "--- MY DRAFT ---" and every single
+  // person who clicked it (4 of 4, over three months) pressed send without
+  // pasting anything. Now the box stays empty, so there is nothing to send by
+  // accident, and the primer is attached at send time instead.
+  const [reviewArmed, setReviewArmed] = useState(false)
   // Staged attachments for the very first message: persisted into the
   // chat_session_documents join table once the session is created.
   const [stagedAttachments, setStagedAttachments] = useState<LibraryDocument[]>([])
@@ -219,7 +224,18 @@ export default function NewChatPage() {
     return data.id
   }
 
-  async function handleSend(question: string) {
+  const REVIEW_PRIMER =
+    'Please review the following draft and give me a candid critique — ' +
+    'strengths, gaps and missing provisions, any enforceability or legal ' +
+    'issues (with citations to Zambian law), and language/style fixes. ' +
+    'Then offer to produce a clean revised version.\n\n--- MY DRAFT ---\n'
+
+  async function handleSend(rawQuestion: string) {
+    // Attach the review primer at send time, so the user only ever typed (or
+    // pasted) their own draft and could not fire the template on its own.
+    const question = reviewArmed ? REVIEW_PRIMER + rawQuestion : rawQuestion
+    if (reviewArmed) setReviewArmed(false)
+
     // Signed-in: hand the stream to the shared provider so it keeps running
     // even if the user switches chats, then move to the saved-thread route.
     if (user) {
@@ -673,21 +689,20 @@ export default function NewChatPage() {
               ))}
             </div>
 
-            {/* Review-my-work starter — distinct from the Q&A cards because it
-                pre-fills the box with a primer and lets the lawyer paste their
-                own draft (the "criticise my work / find gaps" workflow). */}
+            {/* Review-my-work starter. Arms a mode and focuses an EMPTY box —
+                it deliberately pre-fills nothing, because the template version
+                was sent empty by every user who tried it. */}
             <button
-              onClick={() =>
-                setInputSeed((s) => ({
-                  text:
-                    'Please review the following draft and give me a candid critique — ' +
-                    'strengths, gaps and missing provisions, any enforceability or legal ' +
-                    'issues (with citations to Zambian law), and language/style fixes. ' +
-                    'Then offer to produce a clean revised version.\n\n--- MY DRAFT ---\n',
-                  nonce: s.nonce + 1,
-                }))
-              }
-              className="mb-6 max-w-3xl w-full flex items-center gap-2.5 px-3.5 py-3 rounded-lg text-left transition-colors duration-150 group border border-emerald-500/20 bg-emerald-500/[0.04] hover:border-emerald-500/35 hover:bg-emerald-500/[0.07] relative z-10"
+              onClick={() => {
+                setReviewArmed(true)
+                setInputSeed((s) => ({ text: '', nonce: s.nonce + 1 }))
+              }}
+              aria-pressed={reviewArmed}
+              className={`mb-6 max-w-3xl w-full flex items-center gap-2.5 px-3.5 py-3 rounded-lg text-left transition-colors duration-150 group border relative z-10 ${
+                reviewArmed
+                  ? 'border-emerald-500/60 bg-emerald-500/[0.12]'
+                  : 'border-emerald-500/20 bg-emerald-500/[0.04] hover:border-emerald-500/35 hover:bg-emerald-500/[0.07]'
+              }`}
             >
               <FileSearch className="w-4 h-4 text-emerald-400/70 flex-shrink-0" />
               <span className="flex-1 min-w-0">
@@ -695,9 +710,30 @@ export default function NewChatPage() {
                   Review my draft
                 </span>
                 <span className="block text-[11px] text-white/40 truncate">
-                  Paste a contract, affidavit or submission. Levy critiques it and finds gaps.
+                  {reviewArmed
+                    ? 'Paste your draft below and send — Levy will critique it.'
+                    : 'Paste a contract, affidavit or submission. Levy critiques it and finds gaps.'}
                 </span>
               </span>
+              {reviewArmed && (
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setReviewArmed(false)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.stopPropagation()
+                      setReviewArmed(false)
+                    }
+                  }}
+                  className="flex-shrink-0 text-[10.5px] font-medium uppercase tracking-wider text-emerald-300/80 border border-emerald-400/30 rounded px-2 py-1 hover:bg-emerald-400/10"
+                >
+                  Review on · cancel
+                </span>
+              )}
             </button>
 
             <div className="w-full max-w-3xl relative z-10">
@@ -710,6 +746,11 @@ export default function NewChatPage() {
                 onUploadFile={user ? handleUploadFile : undefined}
                 attachmentCount={stagedAttachments.length}
                 seed={inputSeed}
+                placeholder={
+                  reviewArmed
+                    ? 'Paste your draft here, then send…'
+                    : undefined
+                }
               />
               {trialNudge}
             </div>

@@ -89,9 +89,15 @@ export function ChatInput({
 
   // Seed the box + drop the caret at the end so the user can paste/type
   // straight after the primer. Keyed on nonce so repeat clicks re-seed.
+  //
+  // An EMPTY seed text means "just focus me" — used by starters that arm a
+  // mode instead of pre-filling words. Pre-filling a template that ends in a
+  // placeholder turned out to be a trap: every user who met one pressed send
+  // without replacing the placeholder, so the box now stays empty and there
+  // is nothing to send by accident.
   useEffect(() => {
-    if (!seed || !seed.text) return
-    setMessage(seed.text)
+    if (!seed) return
+    if (seed.text) setMessage(seed.text)
     const el = textareaRef.current
     if (el) {
       el.focus()

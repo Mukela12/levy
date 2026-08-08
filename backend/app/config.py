@@ -68,6 +68,23 @@ class Settings(BaseSettings):
     # double-billing us on long ones.
     agent_max_output_tokens: int = 32_000
 
+    # Cross-vendor fallback (Moonshot Kimi). Every model in the fallback chain
+    # used to be an Anthropic model, so an Anthropic outage — or just hitting
+    # our org rate limit in a busy hour — took Levy down entirely. Kimi runs on
+    # different infrastructure, so it survives failures no Claude-to-Claude
+    # fallback can. Empty key = the fallback is simply never attempted.
+    #
+    # This is a RESILIENCE lever, not a cost one: benchmarked on Levy's real
+    # workload Kimi came out dearer per turn than Claude (see services/kimi.py
+    # for the numbers and why the sticker price misleads).
+    moonshot_api_key: str = ""
+    kimi_fallback_model: str = "kimi-k2.6"
+
+    # Primary agent model, env-overridable so the cheaper tier can be A/B'd
+    # against the answer-feedback signal without a code change. Empty = the
+    # default in agent.py.
+    agent_model: str = ""
+
     # Context management
     # Trigger compaction when the running input-token total approaches Claude
     # Sonnet 4's 200K window. We leave headroom for the new turn's tools +

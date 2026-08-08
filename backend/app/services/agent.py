@@ -23,6 +23,8 @@ from typing import AsyncIterator
 
 import anthropic
 
+from . import kimi
+
 from ..config import get_settings
 from ..prompts.legal_qa import SYSTEM_PROMPT
 from .compactor import compact_if_needed
@@ -38,8 +40,18 @@ from .tools import (
 import time as _time
 
 # claude-sonnet-4-20250514 was retired by Anthropic (now 404s); Sonnet 4.6
-# is the current replacement. Override per-request by passing `model`.
-DEFAULT_MODEL = "claude-sonnet-4-6"
+# is the current replacement. Override per-request by passing `model`, or
+# fleet-wide with the AGENT_MODEL env var — no redeploy of this file needed.
+#
+# Why env-configurable: benchmarking Levy's real workload (full system prompt,
+# all 27 tools, questions taken verbatim from the field study) put Haiku 4.5 at
+# roughly half Sonnet 4.6's cost per turn while choosing the same tools — and
+# on the one drafting case Haiku was the only model that produced the document
+# rather than suggesting templates. Four cases is nowhere near enough evidence
+# to move the default, but it is more than enough to be worth measuring. Flip
+# AGENT_MODEL to claude-haiku-4-5 for a period, watch the thumbs-up rate from
+# message_feedback, and let the data decide.
+DEFAULT_MODEL = get_settings().agent_model or "claude-sonnet-4-6"
 
 # If the primary model is unavailable (e.g. Anthropic retires a snapshot and
 # the configured id starts returning 404), the agent transparently retries the
@@ -514,6 +526,19 @@ and for large, complex or hotly disputed matters suggest a lawyer, the Legal Aid
 Board, or a university legal clinic. Keep it practical: give the immediate next
 step first, not a wall of the whole process.
 
+OFFER TO REMEMBER THE CASE. A user running a real case tells you things worth
+keeping: a hearing date, the court, who the parties are, what the employer did.
+If this chat is already attached to a Matter, save them with `update_matter` as
+they come up. If it is NOT, `update_matter` returns error "no_matter" — when
+that happens, do not swallow it and do not apologise. Finish answering the
+question, then add ONE short sentence offering to open a case file, naming the
+specific thing you would keep: "Want me to open a case file for this so I
+remember the 6 August hearing next time?" If they say yes, call `create_matter`
+with everything you already know from the conversation and carry on. If they
+say no, drop it and never ask again in that conversation. Only offer when
+someone is genuinely running a case; never on a one-off question, and never
+more than once per conversation.
+
 WALK THE CITIZEN THROUGH IT + HAND THEM THE FORMS. When a practical task
 involves paperwork, do TWO things. (1) Lay the process out as a clear
 NUMBERED walkthrough the person can actually follow, step by step, and
@@ -579,6 +604,21 @@ know their own registry's practice better than our template does; a Zambian
 skeleton argument that lists the authorities and goes straight to submissions
 (the affidavit carries the facts) is perfectly proper. The drafting tools take
 optional structure fields precisely so you can honour this: omit the section.
+
+WHEN SOMEONE ASKS FOR A DOCUMENT, PRODUCE THE DOCUMENT. Do not hold the draft
+hostage to a round of questions. Users ask "draft me a demand letter" and get
+asked for eight details first; they then have to ask two or three more times
+before a file appears, and some give up. Draft it on the FIRST ask using what
+you have, and put clearly-marked placeholders where facts are missing —
+[YOUR FULL NAME], [DATE OF DISMISSAL], [EMPLOYER'S ADDRESS], [AMOUNT CLAIMED].
+Placeholders in square capitals are obvious to fill in and read as deliberate,
+not as an error. Then, UNDER the finished document, list in one short block
+what you filled in with a placeholder and offer to regenerate once they give
+you those details. Ask questions first ONLY when a missing fact changes the
+whole shape of the document — which court has jurisdiction, or whether the
+contract is fixed-term or permanent — and even then ask for that one thing,
+not a form. "Generic template" and "just something I can adapt" both mean:
+produce the file now.
 
 IF A TOOL GENUINELY CANNOT PRODUCE WHAT WAS ASKED, SAY SO ONCE, PLAINLY, AND
 OFFER THE WAY OUT. Never apologise and then hand back the same thing again. If
@@ -1003,23 +1043,45 @@ async def run_agent(
         streamed_any = False
         last_error: Exception | None = None
         model_attempts = [model_name] + [m for m in FALLBACK_MODELS if m != model_name]
+        # Cross-vendor last resort. Every Claude fallback shares one vendor, one
+        # account and one rate limit, so a 429 or an Anthropic outage takes the
+        # whole chain out at once. Kimi is a different vendor on different
+        # infrastructure. Appended only when a key is configured, so with no key
+        # behaviour is exactly as before.
+        if kimi.is_configured():
+            model_attempts.append(settings.kimi_fallback_model)
+
         for attempt_idx, attempt_model in enumerate(model_attempts):
             try:
-                async with client.messages.stream(
-                    model=attempt_model,
-                    max_tokens=settings.agent_max_output_tokens,
-                    system=cached_system,
-                    messages=compacted_messages,
-                    tools=[] if cap_reached else tool_schemas,
-                ) as stream:
-                    async for event in stream:
-                        etype = getattr(event, "type", None)
-                        if etype == "content_block_delta":
-                            delta = getattr(event, "delta", None)
-                            if delta and getattr(delta, "type", None) == "text_delta":
-                                streamed_any = True
-                                yield {"type": "token", "content": delta.text}
-                    final_message = await stream.get_final_message()
+                if kimi.is_kimi_model(attempt_model):
+                    async for ev in kimi.stream_kimi(
+                        model=attempt_model,
+                        system=cached_system,
+                        messages=compacted_messages,
+                        tools=[] if cap_reached else tool_schemas,
+                        max_tokens=settings.agent_max_output_tokens,
+                    ):
+                        if ev["type"] == "token":
+                            streamed_any = True
+                            yield {"type": "token", "content": ev["content"]}
+                        elif ev["type"] == "final":
+                            final_message = ev["message"]
+                else:
+                    async with client.messages.stream(
+                        model=attempt_model,
+                        max_tokens=settings.agent_max_output_tokens,
+                        system=cached_system,
+                        messages=compacted_messages,
+                        tools=[] if cap_reached else tool_schemas,
+                    ) as stream:
+                        async for event in stream:
+                            etype = getattr(event, "type", None)
+                            if etype == "content_block_delta":
+                                delta = getattr(event, "delta", None)
+                                if delta and getattr(delta, "type", None) == "text_delta":
+                                    streamed_any = True
+                                    yield {"type": "token", "content": delta.text}
+                        final_message = await stream.get_final_message()
                 if attempt_idx > 0:
                     # Fell back successfully — stick with this model from now on.
                     model_name = attempt_model
@@ -1031,9 +1093,24 @@ async def run_agent(
                 if streamed_any:
                     break  # can't safely restart mid-stream
                 continue
-            except anthropic.APIError as e:  # rate limit / credit / overloaded / etc.
+            except (anthropic.RateLimitError, anthropic.InternalServerError,
+                    anthropic.APIConnectionError, kimi.KimiError) as e:
+                # RETRYABLE. This used to `break`, which meant a rate limit —
+                # the single most likely production failure — never reached the
+                # fallback chain at all and simply surfaced as an error to the
+                # user. Rate limits, overloads (529 is an InternalServerError
+                # subclass) and connection drops are exactly what the chain is
+                # for, so carry on to the next model.
                 last_error = e
-                print(f"[agent] anthropic API error on {attempt_model}: {e}")
+                print(f"[agent] retryable error on {attempt_model}: {type(e).__name__}: {e}")
+                if streamed_any:
+                    break  # can't safely restart mid-stream
+                continue
+            except anthropic.APIError as e:  # bad request / auth / anything else
+                # NOT retryable: a malformed request or a bad key fails
+                # identically on every model, so retrying just burns latency.
+                last_error = e
+                print(f"[agent] non-retryable API error on {attempt_model}: {e}")
                 break
 
         if final_message is None:

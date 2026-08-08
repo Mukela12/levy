@@ -16,6 +16,7 @@ import { EntitlementCard } from './entitlement-card'
 import { PrecedentCard } from './precedent-card'
 import { CheatSheetCard } from './cheat-sheet-card'
 import { QuizCard } from './quiz-card'
+import { AnswerFeedback } from './answer-feedback'
 import type {
   ApplicationPlan,
   ArtifactView,
@@ -49,6 +50,8 @@ export type MessageBlock =
   | { kind: 'attachments'; docs: Array<{ id: string; title: string }> }
 
 interface ChatMessageProps {
+  /** Row id of the saved message; enables the feedback control. */
+  messageId?: string
   role: 'user' | 'assistant'
   content: string
   blocks?: MessageBlock[]
@@ -73,6 +76,7 @@ interface ChatMessageProps {
 }
 
 export function ChatMessage({
+  messageId,
   role,
   content,
   blocks,
@@ -429,10 +433,18 @@ export function ChatMessage({
           </div>
         )}
 
-        {timing && (
-          <div className="flex items-center gap-1 text-[10px] text-white/15">
-            <Clock className="w-2.5 h-2.5" />
-            <span>{(timing.total_ms / 1000).toFixed(1)}s</span>
+        {/* Footer: timing + the thumbs. Only on a finished, saved answer —
+            a message with no id is still streaming or was never persisted,
+            and there would be nothing for a vote to attach to. */}
+        {(timing || (messageId && !isStreaming)) && (
+          <div className="flex items-center gap-3">
+            {timing && (
+              <div className="flex items-center gap-1 text-[10px] text-white/15">
+                <Clock className="w-2.5 h-2.5" />
+                <span>{(timing.total_ms / 1000).toFixed(1)}s</span>
+              </div>
+            )}
+            {messageId && !isStreaming && <AnswerFeedback messageId={messageId} />}
           </div>
         )}
       </div>

@@ -182,13 +182,35 @@ def calculate_entitlements(
 
     # 4) Severance pay (s.54) + redundancy (s.55) + medical (s.38(6)).
     if reason == "redundancy":
-        items.append(LineItem(
-            item="Redundancy / severance pay",
-            status="owed",
-            basis="Employment Code Act 2019, s.54(d) & s.55(3)",
-            amount=_money(2 * pay * years),
-            formula=f"2 months x K{pay:,.2f} x {years:g} years served",
-        ))
+        # Under one completed year the statute is genuinely open: s.55(3) says
+        # "for every year served", and whether that pro-rates a part-year or
+        # requires a completed year is not settled. Employers ask this exact
+        # question, so give the pro-rated figure but never assert it as fixed.
+        if 0 < years < 1:
+            items.append(LineItem(
+                item="Redundancy / severance pay",
+                status="contested",
+                basis="Employment Code Act 2019, s.54(d) & s.55(3)",
+                amount=_money(2 * pay * years),
+                formula=f"2 months x K{pay:,.2f} x {years:g} years served (pro-rated)",
+                note=(
+                    "The employee has served under one full year. s.55(3) sets "
+                    "the minimum at two months' pay 'for every year served' and "
+                    "does not say in terms whether a part-year is pro-rated or "
+                    "whether a completed year is required. The pro-rated figure "
+                    "is shown as the prudent basis. Check the contract and any "
+                    "collective agreement first — they often settle it — and "
+                    "treat this as the point to take advice on."
+                ),
+            ))
+        else:
+            items.append(LineItem(
+                item="Redundancy / severance pay",
+                status="owed",
+                basis="Employment Code Act 2019, s.54(d) & s.55(3)",
+                amount=_money(2 * pay * years),
+                formula=f"2 months x K{pay:,.2f} x {years:g} years served",
+            ))
     elif reason == "death":
         items.append(LineItem(
             item="Severance pay (death in service)",
@@ -242,14 +264,29 @@ def calculate_entitlements(
             formula=f"If payable: 25% x basic earned (~K{gratuity_amount:,.2f})",
             note="Whether gratuity is payable on resignation (rather than employer-initiated termination) is contested and turns on the contract terms and case law. Treat the figure as indicative only.",
         ))
-    elif ctype in {"permanent", "unspecified"}:
+    elif ctype in {"permanent", "indefinite"}:
+        # The user has TOLD us the contract is permanent. s.73 gratuity attaches
+        # to long-term contracts, so carrying a large "conditional" figure here
+        # invites an employer to budget for money they do not owe — and it is
+        # the biggest line in the breakdown. Say it does not apply, and show no
+        # amount, while leaving the contractual route open.
+        items.append(LineItem(
+            item="Gratuity",
+            status="not_applicable",
+            basis="Employment Code Act 2019, s.73",
+            note=("Statutory gratuity under s.73 attaches to long-term contracts. "
+                  "On a permanent / indefinite contract it does not arise. It is "
+                  "still payable if the contract of employment or a collective "
+                  "agreement provides for it — check those."),
+        ))
+    elif ctype == "unspecified":
         items.append(LineItem(
             item="Gratuity (long-term contract)",
             status="conditional",
             basis="Employment Code Act 2019, s.73",
             amount=gratuity_amount,
             formula=f"If a long-term contract: 25% x basic earned (~K{gratuity_amount:,.2f})",
-            note="s.73 gratuity attaches to long-term contracts. Confirm the contract type; a permanent/indefinite contract may not attract statutory gratuity.",
+            note="s.73 gratuity attaches to long-term contracts. Confirm the contract type; a permanent/indefinite contract does not attract statutory gratuity.",
         ))
 
     # 6) NAPSA / NHIMA — compliance, not a payout to the employee.

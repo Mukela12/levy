@@ -204,6 +204,46 @@ def _anon_trial_consume(ip: str) -> None:
     _ANON_TRIAL[ip] = (today, (used + 1) if day == today else 1)
 
 
+def _visitor_hash(ip: str) -> str:
+    """A day-scoped, salted digest of the caller's IP.
+
+    Groups one visitor's questions together within a day so we can measure the
+    anonymous funnel, without storing an IP or anything that survives to the
+    next day. Salted with the service key so the digest cannot be recomputed
+    by anyone holding only the table.
+    """
+    import hashlib
+
+    day = datetime.now(timezone.utc).date().isoformat()
+    salt = (get_settings().supabase_key or "levy")[:32]
+    return hashlib.sha256(f"{salt}|{day}|{ip}".encode()).hexdigest()[:32]
+
+
+def _log_anon(outcome: str, ip: str, *, trial_number: int | None = None,
+              duration_ms: int | None = None, had_sources: bool | None = None) -> None:
+    """Record one anonymous attempt. Content-free, and never raises.
+
+    Anonymous runs are not persisted as chat sessions, so without this the
+    free trial is invisible: we could not tell a drop in demand from people
+    simply using the trial instead of signing up.
+    """
+    try:
+        row = {"outcome": outcome, "visitor_hash": _visitor_hash(ip)}
+        if trial_number is not None:
+            row["trial_number"] = trial_number
+        if duration_ms is not None:
+            row["duration_ms"] = duration_ms
+        if had_sources is not None:
+            row["had_sources"] = had_sources
+        get_db().table("anon_events").insert(row).execute()
+    except Exception:  # noqa: BLE001 — telemetry must never break a user's request
+        # WARNING, not debug: telemetry that fails silently is worse than no
+        # telemetry, because the dashboard reads "no anonymous traffic" rather
+        # than "logging is broken". A wrong settings field name got this far
+        # once already.
+        logger.warning("anon_events insert failed", exc_info=True)
+
+
 @router.post("/chat/stream")
 async def chat_stream(request: ChatRequest, http_request: Request, authorization: str | None = Header(default=None)):
     """
@@ -232,9 +272,12 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
     # public chat endpoint. Signed-in users are exempt.
     ua = http_request.headers.get("user-agent") or ""
     if _BOT_UA.search(ua):
+        if not uid:
+            _log_anon("bot_blocked", _client_ip(http_request))
         raise HTTPException(status_code=403, detail="Automated access to chat is not allowed.")
 
     anon_trial = False
+    anon_trial_number: int | None = None
     if not uid:
         # Anonymous visitors get a short free trial so they can see what Levy
         # does before creating an account (all our /answers SEO traffic lands
@@ -250,6 +293,7 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
         # behaviour and require sign-in, so a missing key fails closed.
         ip = _client_ip(http_request)
         if not (get_settings().turnstile_secret_key or "").strip():
+            _log_anon("no_turnstile_key", ip)
             raise HTTPException(status_code=401, detail="Please sign in to use Levy chat.")
 
         # Burst control. This existed before but was orphaned when anonymous
@@ -257,22 +301,28 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
         now = time.time()
         hits = [t for t in _ANON_HITS.get(ip, []) if now - t < _ANON_WINDOW]
         if len(hits) >= _ANON_LIMIT:
+            _log_anon("rate_limited", ip)
             raise HTTPException(status_code=429, detail="Too many requests. Please wait a moment and try again.")
         hits.append(now)
         _ANON_HITS[ip] = hits
 
         if not await _verify_turnstile(request.turnstile_token, ip):
+            _log_anon("turnstile_failed", ip)
             raise HTTPException(
                 status_code=401,
                 detail="We could not verify your browser. Please reload the page and try again, or sign in.",
             )
         if _anon_trial_remaining(ip) <= 0:
+            _log_anon("trial_exhausted", ip)
             raise HTTPException(
                 status_code=402,
                 detail="You have used your free questions for today. Please sign in to keep going — it is free.",
             )
         _anon_trial_consume(ip)
         anon_trial = True
+        # 1-based: which of today's free questions this one was.
+        anon_trial_number = get_settings().anon_trial_questions - _anon_trial_remaining(ip)
+        _log_anon("asked", ip, trial_number=anon_trial_number)
 
     # Only honour a session_id the caller actually owns; otherwise ignore it
     # so nobody can read another user's attached documents via the agent.
@@ -311,6 +361,8 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
     acc = RunAccumulator()
 
     async def _drive():
+        run_started = time.time()
+        run_failed = False
         try:
             async for event in run_agent(
                 user_query=request.query,
@@ -324,6 +376,7 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
                 acc.consume(event)
                 await queue.put(event)
         except Exception as e:  # noqa: BLE001
+            run_failed = True
             logger.exception("agent run failed")
             msg = (
                 "Levy ran into a problem answering that. Please try again. If you pasted a very "
@@ -336,14 +389,38 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
                 acc.blocks.append({"kind": "text", "text": msg})
             await queue.put({"type": "error", "message": msg})
         finally:
-            await queue.put(None)  # stream sentinel
             # Durable, server-owned save (signed-in threads only). Anonymous
             # callers have no session and aren't persisted.
+            #
+            # This runs BEFORE the stream sentinel so the saved row id can still
+            # reach the client: the consumer stops reading the moment it sees
+            # the sentinel, so anything queued after it is discarded. The save
+            # is a single indexed insert on a worker thread, and the durability
+            # guarantee is unchanged — this task is detached, so it completes
+            # even when the reader has gone away.
             if safe_session_id and uid:
                 try:
-                    await asyncio.to_thread(acc.save, safe_session_id)
+                    saved_id = await asyncio.to_thread(acc.save, safe_session_id)
+                    # Hand the row id to the client so it can attach feedback to
+                    # this answer straight away. Votes happen while the answer is
+                    # still on screen; requiring a reload first loses nearly all
+                    # of them. Older clients ignore unknown event types.
+                    if saved_id:
+                        await queue.put({"type": "saved", "message_id": saved_id})
                 except Exception:
                     logger.exception("durable save failed")
+            await queue.put(None)  # stream sentinel — must be last
+            # Anonymous runs have no session row, so this is the only record
+            # that the question was ever asked. Content-free; see _log_anon.
+            if anon_trial:
+                await asyncio.to_thread(
+                    _log_anon,
+                    "failed" if (run_failed or not acc.has_content()) else "answered",
+                    _client_ip(http_request),
+                    trial_number=anon_trial_number,
+                    duration_ms=int((time.time() - run_started) * 1000),
+                    had_sources=bool(acc.citations),
+                )
 
     task = asyncio.create_task(_drive())
     _INFLIGHT_RUNS.add(task)
@@ -825,6 +902,64 @@ def move_document_to_folder(document_id: str, request: MoveDocumentRequest, uid:
     db = get_db()
     db.table("legal_documents").update({"folder_id": request.folder_id}).eq("id", document_id).execute()
     return {"status": "ok", "folder_id": request.folder_id}
+
+
+# ─── Answer feedback ─────────────────────────────────────────────────────────
+
+
+class FeedbackRequest(BaseModel):
+    rating: str                    # 'up' | 'down'
+    reason: str | None = None      # optional free text after a thumbs-down
+
+
+@router.post("/messages/{message_id}/feedback")
+def submit_feedback(message_id: str, request: FeedbackRequest, uid: str = Depends(require_user)):
+    """Record a thumbs up/down on one of Levy's answers.
+
+    Until now nothing in Levy recorded whether an answer was any good — every
+    quality judgement came from reading conversations by hand. Voting again on
+    the same message replaces the previous vote rather than stacking.
+    """
+    from ..db.supabase import get_db
+
+    rating = (request.rating or "").strip().lower()
+    if rating not in ("up", "down"):
+        raise HTTPException(status_code=400, detail="rating must be 'up' or 'down'")
+
+    db = get_db()
+    # Only accept feedback on an assistant message in a thread the caller owns,
+    # so nobody can vote on (or probe for) another user's conversations.
+    row = (db.table("chat_messages").select("id,role,session_id")
+           .eq("id", message_id).limit(1).execute().data)
+    if not row:
+        raise HTTPException(status_code=404, detail="message not found")
+    msg = row[0]
+    if msg.get("role") != "assistant":
+        raise HTTPException(status_code=400, detail="feedback applies to Levy's answers only")
+    owner = (db.table("chat_sessions").select("user_id")
+             .eq("id", msg["session_id"]).limit(1).execute().data)
+    if not owner or owner[0].get("user_id") != uid:
+        raise HTTPException(status_code=404, detail="message not found")
+
+    reason = (request.reason or "").strip()[:2000] or None
+    db.table("message_feedback").upsert({
+        "message_id": message_id,
+        "session_id": msg["session_id"],
+        "user_id": uid,
+        "rating": rating,
+        "reason": reason,
+    }, on_conflict="message_id,user_id").execute()
+    return {"status": "ok", "rating": rating}
+
+
+@router.delete("/messages/{message_id}/feedback")
+def clear_feedback(message_id: str, uid: str = Depends(require_user)):
+    """Undo a vote (the user clicked the same thumb again)."""
+    from ..db.supabase import get_db
+
+    get_db().table("message_feedback").delete() \
+        .eq("message_id", message_id).eq("user_id", uid).execute()
+    return {"status": "ok"}
 
 
 # ─── Per-thread document attachment ──────────────────────────────────────────

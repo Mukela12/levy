@@ -99,11 +99,16 @@ class RunAccumulator:
             or any(b.get("kind") in special for b in self.blocks)
         )
 
-    def save(self, session_id: str) -> None:
-        """Persist the assembled assistant message. No-op if nothing meaningful."""
+    def save(self, session_id: str) -> str | None:
+        """Persist the assembled assistant message. No-op if nothing meaningful.
+
+        Returns the new row id so the caller can hand it to the client, which
+        needs it to attach feedback to this answer without waiting for a
+        reload — votes happen right after reading, or not at all.
+        """
         if not self.has_content():
-            return
-        get_db().table("chat_messages").insert({
+            return None
+        res = get_db().table("chat_messages").insert({
             "session_id": session_id,
             "role": "assistant",
             "content": self.content,
@@ -114,3 +119,7 @@ class RunAccumulator:
             "artifacts": self.artifacts or None,
             "compaction": self.compaction,
         }).execute()
+        try:
+            return (res.data or [{}])[0].get("id")
+        except Exception:  # noqa: BLE001 — never fail a save over the return value
+            return None

@@ -18,6 +18,8 @@ import type {
 } from '@/lib/api'
 
 export interface Message {
+  /** chat_messages row id. Present once the message is saved; enables feedback. */
+  id?: string
   role: 'user' | 'assistant'
   content: string
   blocks?: MessageBlock[]
@@ -369,6 +371,11 @@ export function ChatStreamProvider({ children }: { children: React.ReactNode }) 
                 },
               }
             }),
+          // The server persisted the answer and told us its row id. Attach it
+          // to the on-screen message so the reader can vote straight away
+          // rather than after a reload — which is when nobody votes.
+          onSaved: (messageId) =>
+            updateLast(sid, (last) => ({ ...last, id: messageId })),
           onDone: (metadata) => {
             let finalMsg: Message | null = null
             commit((prev) => {

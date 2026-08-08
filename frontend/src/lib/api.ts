@@ -132,6 +132,31 @@ export async function listSessionDocuments(sessionId: string): Promise<{ documen
   return r.json()
 }
 
+// ─── Answer feedback ────────────────────────────────────────────────────────
+
+/** Record a thumbs up/down on one of Levy's answers. Re-voting replaces. */
+export async function submitFeedback(
+  messageId: string,
+  rating: 'up' | 'down',
+  reason?: string,
+): Promise<void> {
+  const r = await fetch(`${API_URL}/api/messages/${messageId}/feedback`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
+    body: JSON.stringify({ rating, reason: reason ?? null }),
+  })
+  if (!r.ok) throw new Error(`feedback ${r.status}`)
+}
+
+/** Undo a vote (the user clicked the same thumb again). */
+export async function clearFeedback(messageId: string): Promise<void> {
+  const r = await fetch(`${API_URL}/api/messages/${messageId}/feedback`, {
+    method: 'DELETE',
+    headers: await authHeaders(),
+  })
+  if (!r.ok) throw new Error(`feedback-clear ${r.status}`)
+}
+
 // ─── Folders ────────────────────────────────────────────────────────────────
 
 export interface FolderRow {
@@ -556,6 +581,12 @@ export interface QuizEvent {
 export interface StreamHandlers {
   /** Free-trial budget for signed-out visitors, sent once at stream start. */
   onTrial?: (info: { remaining: number; limit: number }) => void
+  /**
+   * Row id of the saved assistant message, emitted once the server has
+   * persisted it. Needed so the answer can take feedback immediately —
+   * votes happen while the answer is on screen, or not at all.
+   */
+  onSaved?: (messageId: string) => void
   onThinking?: () => void
   onToken?: (text: string) => void
   onToolCall?: (call: ToolCallEvent) => void
@@ -661,6 +692,9 @@ export async function streamQuery(
         continue
       }
       switch (parsed.type) {
+        case 'saved':
+          handlers?.onSaved?.(parsed.message_id as string)
+          break
         case 'trial':
           handlers?.onTrial?.({
             remaining: Number(parsed.remaining ?? 0),

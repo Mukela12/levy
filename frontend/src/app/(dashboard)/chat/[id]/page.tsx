@@ -151,6 +151,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
                   {showGlow && <ThinkingGlow />}
                   {!showGlow && (
                     <ChatMessage
+                      messageId={msg.id}
                       role={msg.role}
                       content={msg.content}
                       blocks={msg.blocks}
@@ -312,12 +313,13 @@ async function loadMessagesFromDB(id: string): Promise<Message[]> {
   const supabase = createClient()
   const { data } = await supabase
     .from('chat_messages')
-    .select('role, content, blocks, tool_calls, citations, web_sources, artifacts, compaction')
+    .select('id, role, content, blocks, tool_calls, citations, web_sources, artifacts, compaction')
     .eq('session_id', id)
     .order('created_at', { ascending: true })
 
   if (!data) return []
   return data.map((m) => ({
+    id: m.id as string,
     role: m.role as 'user' | 'assistant',
     content: m.content,
     blocks: m.blocks as MessageBlock[] | undefined,
