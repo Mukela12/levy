@@ -1,0 +1,24 @@
+{
+  "default_branch": "main",
+  "branches": [
+    "claude/gracious-mclean-3f2951",
+    "codex/canopy-ui-integration",
+    "main",
+    "main-history-2026-08-08",
+    "production"
+  ],
+  "parent": {
+    "claude/gracious-mclean-3f2951": "main",
+    "codex/canopy-ui-integration": "main",
+    "main": null,
+    "main-history-2026-08-08": "main",
+    "production": "main"
+  },
+  "order": [
+    "main",
+    "claude/gracious-mclean-3f2951",
+    "codex/canopy-ui-integration",
+    "main-history-2026-08-08",
+    "production"
+  ]
+}

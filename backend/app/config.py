@@ -85,6 +85,11 @@ class Settings(BaseSettings):
     # default in agent.py.
     agent_model: str = ""
 
+    # Read-only aggregate stats endpoint (/api/admin/feedback-stats), so a
+    # scheduled agent can report on the model A/B without database access.
+    # Unset = the endpoint 404s, so it cannot be left accidentally open.
+    admin_stats_token: str = ""
+
     # Context management
     # Trigger compaction when the running input-token total approaches Claude
     # Sonnet 4's 200K window. We leave headroom for the new turn's tools +
