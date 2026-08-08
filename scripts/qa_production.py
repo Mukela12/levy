@@ -43,6 +43,30 @@ with httpx.Client(timeout=60.0, follow_redirects=True) as c:
     r = c.delete(f"{API}/api/messages/{UUID0}/feedback")
     check("feedback DELETE requires auth", r.status_code in (401, 403), f"HTTP {r.status_code}")
 
+    print("\n1b. The three independent failure modes each have a live monitor")
+    # Anthropic (chat), OpenAI (the embedding SPOF that silently kills corpus
+    # search while chat keeps answering), and the cross-vendor fallback.
+    for path, label in (("/health/llm", "Anthropic chat"),
+                        ("/health/embeddings", "embedding provider"),
+                        ("/health/fallback", "cross-vendor fallback")):
+        try:
+            r = c.get(f"{API}{path}")
+            j = r.json()
+        except Exception as e:  # noqa: BLE001
+            check(f"{label} health responds", False, str(e)[:90])
+            continue
+        check(f"{label} healthy", r.status_code == 200 and j.get("ok") is True,
+              f"HTTP {r.status_code} {json.dumps(j)[:120]}")
+
+    # The fallback must be ARMED, not merely reachable — an unconfigured chain
+    # also returns 200, so assert the distinction explicitly.
+    j = c.get(f"{API}/health/fallback").json()
+    check("cross-vendor fallback is armed (key present)", j.get("configured") is True,
+          json.dumps(j)[:120])
+    check("fallback really answered (not just configured)",
+          j.get("ok") is True and (j.get("output_tokens") or 0) > 0,
+          json.dumps(j)[:120])
+
     print("\n2. Anonymous chat gates still hold")
     # Bot UA must be refused outright.
     r = c.post(f"{API}/api/chat/stream", json={"query": "hi"},
