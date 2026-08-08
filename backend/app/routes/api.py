@@ -14,7 +14,7 @@ import asyncio
 import logging
 import tempfile
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import httpx
 from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, Header, Request
 from fastapi.responses import StreamingResponse
@@ -22,7 +22,7 @@ from pydantic import BaseModel
 import json
 import time
 from ..services import rag
-from ..services.agent import run_agent
+from ..services.agent import run_agent, DEFAULT_MODEL as DEFAULT_AGENT_MODEL
 from ..services.chat_persist import RunAccumulator
 from ..services.ingester import ingest_pdf
 from ..services.embedder import get_query_embedding
@@ -960,6 +960,82 @@ def clear_feedback(message_id: str, uid: str = Depends(require_user)):
     get_db().table("message_feedback").delete() \
         .eq("message_id", message_id).eq("user_id", uid).execute()
     return {"status": "ok"}
+
+
+@router.get("/admin/feedback-stats")
+def feedback_stats(days: int = 7, authorization: str | None = Header(default=None)):
+    """Aggregate answer-feedback + anonymous-funnel counts, for unattended reads.
+
+    Exists so a scheduled agent can report on the Haiku-vs-Sonnet switch
+    without database credentials. Gated by ADMIN_STATS_TOKEN — unset means the
+    endpoint is off entirely, so it cannot be left accidentally open.
+
+    Deliberately returns NO free text. Thumbs-down reasons are the most
+    valuable signal we have, but they are things people wrote about their own
+    legal problems; they stay in the database and are read locally with
+    scripts/watch_feedback.py. This endpoint reports only how many are waiting.
+    """
+    token = (get_settings().admin_stats_token or "").strip()
+    if not token:
+        raise HTTPException(status_code=404, detail="not found")
+    supplied = (authorization or "").removeprefix("Bearer ").strip()
+    # Constant-time compare so the token can't be recovered by timing.
+    import hmac
+
+    if not supplied or not hmac.compare_digest(supplied, token):
+        raise HTTPException(status_code=401, detail="unauthorized")
+
+    days = max(1, min(int(days or 7), 90))
+    since = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+    db = get_db()
+
+    fb = (db.table("message_feedback").select("message_id,rating,reason")
+          .gte("created_at", since).execute().data or [])
+
+    # Attribute each vote to the model that actually produced the answer.
+    by_model: dict[str, dict[str, int]] = {}
+    if fb:
+        ids = [f["message_id"] for f in fb]
+        models: dict[str, str] = {}
+        for i in range(0, len(ids), 50):
+            for r in (db.table("chat_messages").select("id,model")
+                      .in_("id", ids[i:i + 50]).execute().data or []):
+                models[r["id"]] = r.get("model") or "unrecorded"
+        for f in fb:
+            m = models.get(f["message_id"], "unrecorded")
+            slot = by_model.setdefault(m, {"votes": 0, "up": 0, "down": 0})
+            slot["votes"] += 1
+            slot["up" if f["rating"] == "up" else "down"] += 1
+
+    ev = (db.table("anon_events").select("outcome,trial_number,had_sources,visitor_hash")
+          .gte("created_at", since).execute().data or [])
+    outcomes: dict[str, int] = {}
+    for e in ev:
+        outcomes[e["outcome"]] = outcomes.get(e["outcome"], 0) + 1
+    asked = outcomes.get("asked", 0)
+    answered = outcomes.get("answered", 0)
+
+    return {
+        "days": days,
+        "current_model": DEFAULT_AGENT_MODEL,
+        "feedback": {
+            "total_votes": len(fb),
+            "by_model": [
+                {"model": m, **v,
+                 "up_rate": round(v["up"] / v["votes"], 3) if v["votes"] else None}
+                for m, v in sorted(by_model.items(), key=lambda kv: -kv[1]["votes"])
+            ],
+            # Count only — the text stays in the database on purpose.
+            "written_reasons_waiting": sum(
+                1 for f in fb if f["rating"] == "down" and (f.get("reason") or "").strip()),
+        },
+        "anonymous_funnel": {
+            "distinct_visitor_days": len({e["visitor_hash"] for e in ev if e.get("visitor_hash")}),
+            "outcomes": outcomes,
+            "answer_rate": round(answered / asked, 3) if asked else None,
+            "answers_citing_corpus": sum(1 for e in ev if e.get("had_sources")),
+        },
+    }
 
 
 # ─── Per-thread document attachment ──────────────────────────────────────────
