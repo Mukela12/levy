@@ -120,6 +120,66 @@ def health_llm():
         )
 
 
+@app.get("/health/fallback")
+async def health_fallback():
+    """Is the cross-vendor fallback actually reachable?
+
+    Every model in Levy's fallback chain used to be an Anthropic model on one
+    account behind one rate limit, so nothing survived an Anthropic-wide event.
+    Kimi is the cross-vendor last resort — but a fallback that has never been
+    exercised is not a fallback, and this path only runs in production when
+    Claude is already failing, which is the worst moment to discover the key is
+    missing or the balance is empty.
+
+    So: a real (tiny) generation against the configured Kimi model.
+      200 {ok:true}                     — armed and answering
+      200 {ok:false, reason:"not_configured"} — deliberately off, NOT an error
+      503 {ok:false, reason:...}        — configured but broken; fix it now
+
+    Point an uptime checker here alongside /health/llm and /health/embeddings.
+    """
+    from .config import get_settings
+    from .services import kimi
+
+    settings = get_settings()
+    model = settings.kimi_fallback_model
+
+    if not kimi.is_configured():
+        # A deliberate off-state, not a failure: with no key the agent simply
+        # never appends Kimi to the chain. 200 so a monitor doesn't page.
+        return {"ok": False, "configured": False, "reason": "not_configured",
+                "detail": "MOONSHOT_API_KEY is unset; the chain is Claude-only."}
+
+    try:
+        final = None
+        async for ev in kimi.stream_kimi(
+            model=model,
+            system="Reply with the single word: ok",
+            messages=[{"role": "user", "content": "ping"}],
+            tools=[],
+            max_tokens=64,   # k2.6 is a reasoning model; leave room for its
+                             # reasoning tokens or it finishes on length alone
+        ):
+            if ev["type"] == "final":
+                final = ev["message"]
+        if final is None:
+            raise kimi.KimiError("stream ended without a final message")
+        return {"ok": True, "configured": True, "model": model,
+                "output_tokens": final.usage.output_tokens}
+    except Exception as e:  # noqa: BLE001
+        msg = str(e)
+        low = msg.lower()
+        reason = ("quota_or_billing" if ("insufficient balance" in low or "quota" in low)
+                  else "auth" if ("401" in msg or "unauthorized" in low or "invalid api key" in low)
+                  else "rate_limited" if "429" in msg
+                  else "model_not_found" if "404" in msg
+                  else "provider_error")
+        return JSONResponse(
+            status_code=503,
+            content={"ok": False, "configured": True, "model": model, "reason": reason},
+        )
+
+
 @app.get("/health/embeddings")
 def health_embeddings():
     """Synthetic embedding ping for uptime monitoring.
