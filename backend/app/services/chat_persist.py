@@ -22,9 +22,17 @@ class RunAccumulator:
         self.web_sources: list[dict] = []
         self.artifacts: list[dict] = []
         self.compaction: dict | None = None
+        # Which model actually produced this answer. Taken from the `done`
+        # event rather than from config, because the agent rewrites it when a
+        # fallback engages — if Sonnet rate-limits and Kimi answers, this must
+        # say Kimi. Without it, answer feedback cannot be attributed to a
+        # model and any A/B between tiers proves nothing.
+        self.model: str | None = None
 
     def consume(self, e: dict) -> None:
         t = e.get("type")
+        if t == "done" and e.get("model"):
+            self.model = str(e["model"])
         if t == "token":
             chunk = e.get("content", "")
             self.content += chunk
@@ -118,6 +126,11 @@ class RunAccumulator:
             "web_sources": self.web_sources or None,
             "artifacts": self.artifacts or None,
             "compaction": self.compaction,
+            # Populated so message_feedback can be sliced by model. The columns
+            # have existed since the initial schema but were never written.
+            "model": self.model,
+            "provider": ("moonshot" if (self.model or "").startswith("kimi")
+                         else "anthropic" if self.model else None),
         }).execute()
         try:
             return (res.data or [{}])[0].get("id")
