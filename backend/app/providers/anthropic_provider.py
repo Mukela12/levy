@@ -12,7 +12,13 @@ from ..config import get_settings
 # Default model. Claude Sonnet 4.6 balances quality, speed, and cost; it
 # replaced claude-sonnet-4-20250514, which Anthropic retired (calls to the
 # old id now 404). Override per-request by passing `model`.
-DEFAULT_MODEL = "claude-sonnet-4-6"
+#
+# Reads the SAME `AGENT_MODEL` setting as services/agent.py on purpose. These
+# were two independent hardcoded constants, which meant /health/llm (which
+# imports this one) could report a model that no longer served anybody — a
+# healthcheck that lies is worse than none, and stale duplicated model
+# constants are what caused the June 2026 outage in the first place.
+DEFAULT_MODEL = get_settings().agent_model or "claude-sonnet-4-6"
 
 
 def generate_response(
