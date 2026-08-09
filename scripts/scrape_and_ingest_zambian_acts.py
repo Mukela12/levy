@@ -19,7 +19,7 @@ moj.gov.zm, etc.). For each Act we:
 Idempotent: every PDF is hashed and skipped if already in the table.
 
 Usage:
-  /Users/mukelakatungu/levy/.claude/worktrees/lucid-bartik-c2ad7f/.venv/bin/python \
+  backend/.venv/bin/python \
       scripts/scrape_and_ingest_zambian_acts.py
 """
 

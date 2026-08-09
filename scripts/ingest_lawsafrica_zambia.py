@@ -16,7 +16,7 @@ commercial licence from Laws.Africa. The script refuses to run without a
 token, and prints this reminder.
 
 Usage:
-  /Users/mukelakatungu/levy/.claude/worktrees/lucid-bartik-c2ad7f/.venv/bin/python \
+  backend/.venv/bin/python \
       scripts/ingest_lawsafrica_zambia.py --limit 150 --nature judgment
 """
 

@@ -22,7 +22,7 @@ For each landmark case we:
 Idempotent: PDFs hashed, re-runs skip what's already in.
 
 Usage:
-  /Users/mukelakatungu/levy/.claude/worktrees/lucid-bartik-c2ad7f/.venv/bin/python \
+  backend/.venv/bin/python \
       scripts/scrape_and_ingest_zambian_caselaw.py
 """
 

@@ -14,7 +14,7 @@ Two guards, because the source filenames are NOT reliable:
      out to be a Library Studies paper). Non-law papers are skipped.
 
 Run with the working venv python so `-m ocrmypdf` uses a healthy pyexpat:
-  .../lucid-bartik-c2ad7f/.venv/bin/python scripts/ingest_unza_past_papers.py
+  backend/.venv/bin/python scripts/ingest_unza_past_papers.py
 """
 from __future__ import annotations
 import io, os, re, subprocess, sys, tempfile

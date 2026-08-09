@@ -13,7 +13,7 @@ For every PDF in INPUT_DIR:
      the UI knows it's part of the global library and can render the PDF.
 
 Run with:
-  /Users/mukelakatungu/levy/.claude/worktrees/lucid-bartik-c2ad7f/.venv/bin/python \
+  backend/.venv/bin/python \
       scripts/ingest_global_library.py
 """
 

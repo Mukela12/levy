@@ -19,7 +19,7 @@ Strategy:
 Politeness: small delay between requests; capped at --limit ingested.
 
 Usage:
-  /Users/mukelakatungu/levy/.claude/worktrees/lucid-bartik-c2ad7f/.venv/bin/python \
+  backend/.venv/bin/python \
       scripts/harvest_judiciary_judgments.py --limit 150 --scan 1200
 """
 
