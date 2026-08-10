@@ -182,6 +182,102 @@ export function renderWelcomeEmail({ fullName }: WelcomeOptions = {}): EmailTemp
   }
 }
 
+/**
+ * Second broadcast to the tester list (the first was 9 July 2026).
+ *
+ * Two notes on judgement calls in the copy:
+ *
+ * 1. The investor paragraph is forward facing on purpose. Several people on
+ *    this list are running live legal matters, including a hearing in the
+ *    Industrial Relations Division. To them, "we have funding problems" reads
+ *    as "this might disappear before my case is done", and the quiet response
+ *    is to stop using it rather than to make an introduction. Saying Levy is
+ *    being taken from a test project to a properly run business is equally
+ *    true and opens the same door.
+ *
+ * 2. There is an unsubscribe link. The first send had none, which was
+ *    survivable once; a second broadcast without one starts costing
+ *    deliverability. It is a mailto so it needs no new route, and it is a
+ *    valid List-Unsubscribe target if that header is added later.
+ */
+export function renderProductUpdateEmail({ preview = false }: AnnouncementOptions = {}): EmailTemplate {
+  const subject = preview
+    ? 'Preview | Levy now keeps your case together'
+    : 'Levy now keeps your whole case in one place'
+
+  const unsubscribeHref = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Unsubscribe from Levy updates')}`
+
+  const bodyHtml = `
+    <p style="margin:0 0 18px;font-size:16px;line-height:1.8;color:#244233;">Hi,</p>
+    <p style="margin:0 0 18px;font-size:16px;line-height:1.8;color:#244233;">It has been about a month since my last update. In that time I have been reading how Levy actually gets used, and building the things people kept needing and not finding.</p>
+    <p style="margin:0 0 24px;font-size:16px;line-height:1.8;color:#244233;">Here is what changed.</p>
+
+    <div style="background:#f7faf7;border:1px solid #dbe8dd;border-radius:20px;padding:22px 22px 6px;">
+      <div style="font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#0d6b37;margin-bottom:14px;">What is new</div>
+      <div style="font-size:15px;line-height:1.8;color:#224132;">
+        <p style="margin:0 0 12px;"><strong>Case files.</strong> If you are running an actual case, Levy can now hold it together in one place: the parties, the court, your cause number, key dates and every draft. It remembers across sessions, so you stop re-explaining your situation every time you come back. Levy will offer to open one when it sees you are working a real matter.</p>
+        <p style="margin:0 0 12px;"><strong>Ask for a document, get a document.</strong> Levy now writes the draft on the first ask and marks anything it does not know with a clear placeholder, instead of interviewing you first and making you ask three times.</p>
+        <p style="margin:0 0 12px;"><strong>Every draft is copyable.</strong> Documents come back as clean text you can select and paste straight into Word, as well as a downloadable file. No more fighting a PDF to reuse your own words.</p>
+        <p style="margin:0 0 12px;"><strong>Terminal benefits, done properly.</strong> The entitlements calculator now takes the actual dates from a contract and works out the service period itself, so it is no longer doing arithmetic in its head. It works from either side, whether you are checking what you are owed or working out what a package must contain.</p>
+        <p style="margin:0 0 12px;"><strong>Fines and fees in kwacha.</strong> Zambian law writes penalties in penalty units and government charges in fee units. Levy now converts them, so you get a number you can act on.</p>
+        <p style="margin:0 0 12px;"><strong>More of the law, and what is not law yet.</strong> More Acts, more judgments, plus pending Bills. Levy now says plainly when something is still a Bill and not yet in force.</p>
+        <p style="margin:0 0 12px;"><strong>Tell Levy when it is wrong.</strong> There is a thumbs up and down on every answer now, with a box to say what went wrong. I read all of it, and it decides what I build next.</p>
+        <p style="margin:0 0 12px;"><strong>Fewer lost answers.</strong> Long answers were being cut off and sometimes dropped entirely. That is fixed, and Levy now falls back to a second provider if the first is unavailable, so it keeps answering when it previously would have failed.</p>
+        <p style="margin:0 0 12px;"><strong>Share it without a login.</strong> Anyone can now try Levy with a few free questions before making an account, so you can send it to someone who needs it.</p>
+      </div>
+    </div>
+
+    <div style="background:#f4f7fb;border:1px solid #d5e0ee;border-radius:20px;padding:22px;margin-top:14px;">
+      <div style="font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#1f4f86;margin-bottom:12px;">Where Levy goes next</div>
+      <p style="margin:0 0 14px;font-size:15px;line-height:1.8;color:#22364d;">Levy has been built and paid for by one person, as a test of whether Zambian law could be made genuinely accessible. It is now doing real work for real cases, and it deserves to be run as a proper business rather than a side project: a stronger legal library, faster answers, and someone able to work on it full time.</p>
+      <p style="margin:0 0 14px;font-size:15px;line-height:1.8;color:#22364d;">So I am opening conversations with investors and partners who want to help take it there. If that sounds like you, or you know someone it might be, I would genuinely like to hear from you.</p>
+      <p style="margin:0;font-size:15px;line-height:1.8;color:#22364d;">Reply to this email and it comes straight to me.</p>
+    </div>
+
+    <div style="background:#fffaf4;border:1px solid #f1dcc2;border-radius:20px;padding:22px;margin-top:14px;">
+      <div style="font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#b7651d;margin-bottom:12px;">Tell me what is broken</div>
+      <p style="margin:0 0 14px;font-size:15px;line-height:1.8;color:#4b3622;">If Levy gives you a wrong answer, misses a source you expected, or gets the law wrong, I want to know. Use the thumbs down in the app, or write to me at <a href="mailto:${CONTACT_EMAIL}" style="color:#b7651d;text-decoration:none;font-weight:700;">${CONTACT_EMAIL}</a>.</p>
+      <p style="margin:0;font-size:15px;line-height:1.8;color:#4b3622;">Levy gives legal information, not legal advice. For anything serious, please still see a qualified lawyer.</p>
+    </div>
+  `
+
+  return {
+    subject,
+    html: buildHtml({
+      eyebrow: preview ? 'Levy Preview Send' : 'Levy Legal AI',
+      title: 'Your Case, In One Place',
+      intro:
+        'Case files, documents you can actually reuse, terminal benefits from real dates, and a way to tell Levy when it is wrong.',
+      bodyHtml,
+      primaryCta: { href: SITE_URL, label: 'Open Levy at levylegal.ai' },
+      footerNote:
+        (preview
+          ? 'Preview email sent from Levy&rsquo;s product update template.'
+          : 'You are receiving this because you created a Levy account during its early phase.') +
+        ` &middot; <a href="${unsubscribeHref}" style="color:#708476;text-decoration:underline;">Unsubscribe</a>`,
+    }),
+    text:
+      `Levy now keeps your whole case in one place.\n\n` +
+      `WHAT IS NEW\n` +
+      `- Case files: the parties, court, cause number, key dates and every draft, remembered across sessions.\n` +
+      `- Ask for a document and get one on the first ask, with clear placeholders for anything missing.\n` +
+      `- Every draft is copyable as clean text, not just a PDF.\n` +
+      `- Terminal benefits calculated from the actual contract dates, for either side of an exit.\n` +
+      `- Penalty units and fee units converted into kwacha.\n` +
+      `- More Acts and judgments, plus pending Bills, clearly marked as not yet law.\n` +
+      `- Thumbs up and down on every answer, with a box to say what went wrong.\n` +
+      `- Fewer lost answers, and a second provider as backup so Levy keeps answering.\n` +
+      `- Anyone can try Levy with a few free questions before making an account.\n\n` +
+      `WHERE LEVY GOES NEXT\n` +
+      `Levy has been built and paid for by one person. It is now doing real work for real cases and deserves to be run as a proper business. I am opening conversations with investors and partners who want to help take it there. If that is you, or you know someone it might be, reply to this email.\n\n` +
+      `Tell me what is broken: ${CONTACT_EMAIL}\n` +
+      `Levy gives legal information, not legal advice.\n` +
+      `Open Levy: ${SITE_URL}\n` +
+      `GitHub: ${GITHUB_URL}\n` +
+      `Unsubscribe: reply to this email with "unsubscribe".`,
+  }
+}
+
 export function renderTesterAnnouncementEmail({ preview = false }: AnnouncementOptions = {}): EmailTemplate {
   const subject = preview
     ? 'Preview | Levy just got better'

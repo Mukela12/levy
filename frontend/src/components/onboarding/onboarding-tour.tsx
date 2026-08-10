@@ -90,6 +90,19 @@ const STEPS: Step[] = [
     pad: 4,
   },
   {
+    // Matters shipped with a sidebar link and a data-tour anchor, but no tour
+    // step ever used it — and not one user has created a Matter since. The
+    // agent even tried twice to save a real hearing date into a case file that
+    // did not exist. Nothing was wrong with the feature; nothing introduced it.
+    selector: '[data-tour="nav-matters"]',
+    route: '/chat',
+    title: 'Keep a case together',
+    body:
+      'Running an actual case? A Matter holds the parties, the court, your cause number, key dates and every draft, so Levy remembers it next time instead of you re-explaining. Levy will offer to open one when it sees you are working a real matter.',
+    side: 'auto',
+    requiresMenu: true,
+  },
+  {
     selector: '[data-tour="nav-study"]',
     route: '/chat',
     title: 'Study mode',
