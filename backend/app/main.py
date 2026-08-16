@@ -5,8 +5,10 @@ FastAPI application entry point.
 Run with: uvicorn app.main:app --reload
 """
 
+import asyncio
 import logging
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,6 +21,60 @@ logger = logging.getLogger("levy")
 # production. Enable locally with LEVY_ENABLE_DOCS=1.
 _docs_enabled = os.environ.get("LEVY_ENABLE_DOCS", "").strip() in ("1", "true", "yes")
 
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Let in-flight answers finish before the process exits.
+
+    Levy answers on a DETACHED task (`_drive()` in routes/api.py) so a run
+    survives the user closing their tab, and only writes the assistant message
+    to the database at the very end. That protects against a CLIENT
+    disconnect. It did nothing for a SERVER shutdown: on every deploy, any run
+    still mid-flight was killed before it reached `acc.save()`, so the user
+    watched their answer stop mid-sentence and the thread was left with a
+    question and no reply — the exact "no reply" failure that drove people
+    away in the July field study, reintroduced by the act of deploying.
+
+    A Levy turn is long: multi-step agent loops with corpus searches routinely
+    take 20-60 seconds, and drafting turns longer, so the window is wide.
+
+    `_INFLIGHT_RUNS` already held precisely the right set of tasks. It existed
+    to keep strong references so asyncio could not garbage-collect a detached
+    task; it was never awaited. Now it is.
+
+    Pair this with RAILWAY_DEPLOYMENT_DRAINING_SECONDS set above the p95 turn
+    length, or the platform kills the process before this hook can finish.
+    """
+    yield  # startup: nothing to do
+
+    from .routes.api import _INFLIGHT_RUNS
+
+    pending = [t for t in _INFLIGHT_RUNS if not t.done()]
+    if not pending:
+        return
+    logger.info("shutdown: waiting for %d in-flight answer(s) to save", len(pending))
+    try:
+        done, still_running = await asyncio.wait(
+            pending, timeout=SHUTDOWN_GRACE_SECONDS,
+        )
+        if still_running:
+            # Bounded on purpose: a wedged run must not block the deploy
+            # forever. Log it loudly, because each one is a user who lost an
+            # answer and we should know the real number.
+            logger.warning(
+                "shutdown: %d run(s) did not finish within %ss; their answers are lost",
+                len(still_running), SHUTDOWN_GRACE_SECONDS,
+            )
+        else:
+            logger.info("shutdown: all in-flight answers saved")
+    except Exception:  # noqa: BLE001 — never let cleanup block the exit
+        logger.exception("shutdown: error while draining in-flight runs")
+
+
+# Bounded so a wedged run cannot hold a deploy open indefinitely. Must be LESS
+# than RAILWAY_DEPLOYMENT_DRAINING_SECONDS, or the platform SIGKILLs us first
+# and the hook never completes.
+SHUTDOWN_GRACE_SECONDS = int(os.environ.get("LEVY_SHUTDOWN_GRACE_SECONDS", "90"))
+
 app = FastAPI(
     title="Levy",
     description="AI-powered Zambian legal research assistant using RAG",
@@ -26,6 +82,7 @@ app = FastAPI(
     docs_url="/docs" if _docs_enabled else None,
     redoc_url="/redoc" if _docs_enabled else None,
     openapi_url="/openapi.json" if _docs_enabled else None,
+    lifespan=lifespan,
 )
 
 # CORS — restrict to our own frontends. The API authenticates with a bearer

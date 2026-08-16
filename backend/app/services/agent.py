@@ -66,6 +66,45 @@ DEFAULT_MODEL = get_settings().agent_model or "claude-sonnet-4-6"
 FALLBACK_MODELS = ["claude-sonnet-4-5", "claude-haiku-4-5"]
 
 
+def _is_retryable(e: Exception) -> bool:
+    """Should this failure fall through to the next model in the chain?
+
+    Learned the hard way on 2026-08-16: Levy's Anthropic credit ran out, chat
+    went down, and the cross-vendor Kimi fallback served ZERO turns — because
+    Anthropic reports credit exhaustion as **HTTP 400 BadRequestError**, not a
+    429. The previous version treated every 400 as "malformed request, would
+    fail on any model" and broke out of the loop, so the one failure the
+    fallback existed for was the one it could not catch. The healthcheck had
+    always called this state `credit_or_bad_request`, which is exactly the
+    ambiguity that has to be resolved here rather than assumed away.
+
+    Retryable, because a DIFFERENT VENDOR CAN SERVE IT:
+      - rate limits (429), overloads (529), connection drops
+      - credit / quota exhaustion (400 with balance wording)
+      - auth failures (401/403) — a revoked or wrong Anthropic key says
+        nothing about the Moonshot key
+      - any Kimi-side failure, so the chain keeps moving
+
+    Not retryable: a genuinely malformed request (a bad tool schema, an
+    invalid parameter). That fails the same way everywhere.
+    """
+    if isinstance(e, kimi.KimiError):
+        return True
+    if isinstance(e, (anthropic.RateLimitError, anthropic.InternalServerError,
+                      anthropic.APIConnectionError)):
+        return True
+    # A wrong/revoked Anthropic key is not a reason to stop answering, because
+    # the fallback vendor authenticates separately.
+    if isinstance(e, (anthropic.AuthenticationError, anthropic.PermissionDeniedError)):
+        return True
+    if isinstance(e, anthropic.BadRequestError):
+        blob = f"{getattr(e, 'message', '')} {e}".lower()
+        return any(k in blob for k in (
+            "credit", "balance", "quota", "billing", "insufficient", "payment",
+        ))
+    return False
+
+
 def _friendly_api_error(e: object) -> str:
     """Map a raw Anthropic API error to a calm, user-facing sentence.
 
@@ -1093,25 +1132,17 @@ async def run_agent(
                 if streamed_any:
                     break  # can't safely restart mid-stream
                 continue
-            except (anthropic.RateLimitError, anthropic.InternalServerError,
-                    anthropic.APIConnectionError, kimi.KimiError) as e:
-                # RETRYABLE. This used to `break`, which meant a rate limit —
-                # the single most likely production failure — never reached the
-                # fallback chain at all and simply surfaced as an error to the
-                # user. Rate limits, overloads (529 is an InternalServerError
-                # subclass) and connection drops are exactly what the chain is
-                # for, so carry on to the next model.
+            except anthropic.APIError as e:
                 last_error = e
+                if not _is_retryable(e):
+                    # A genuinely malformed request fails identically on every
+                    # model, so retrying only burns latency.
+                    print(f"[agent] non-retryable API error on {attempt_model}: {e}")
+                    break
                 print(f"[agent] retryable error on {attempt_model}: {type(e).__name__}: {e}")
                 if streamed_any:
                     break  # can't safely restart mid-stream
                 continue
-            except anthropic.APIError as e:  # bad request / auth / anything else
-                # NOT retryable: a malformed request or a bad key fails
-                # identically on every model, so retrying just burns latency.
-                last_error = e
-                print(f"[agent] non-retryable API error on {attempt_model}: {e}")
-                break
 
         if final_message is None:
             yield {"type": "error", "message": _friendly_api_error(last_error)}
