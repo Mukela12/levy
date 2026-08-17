@@ -3,9 +3,21 @@
 import { useEffect, useState } from 'react'
 import { FileText, Download, Loader2, Layers, Scissors, Globe, Copy, Check, ChevronDown } from 'lucide-react'
 import { LevyLogo } from '@/components/ui/levy-logo'
-import type { ArtifactView } from '@/lib/api'
+import { authHeaders, type ArtifactView } from '@/lib/api'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
+
+/** Ask Supabase Storage to serve the file as an attachment, not inline. */
+function withDownloadParam(url: string, filename: string): string {
+  try {
+    const u = new URL(url)
+    u.searchParams.set('download', filename)
+    return u.toString()
+  } catch {
+    return url
+  }
+}
+
 
 interface ArtifactCardProps {
   artifact: ArtifactView
@@ -39,6 +51,7 @@ export function ArtifactCard({ artifact, onOpen }: ArtifactCardProps) {
   const [showText, setShowText] = useState(false)
   const [text, setText] = useState<string | null>(null)
   const [textState, setTextState] = useState<'idle' | 'loading' | 'error'>('idle')
+  const [downloadFailed, setDownloadFailed] = useState(false)
   const meta = SOURCE_META[artifact.source] ?? SOURCE_META.uploaded
   const Icon = meta.Icon
   const sizeLabel = formatBytes(artifact.size_bytes)
@@ -63,11 +76,22 @@ export function ArtifactCard({ artifact, onOpen }: ArtifactCardProps) {
     if (busy) return
     setBusy(fmt)
     try {
-      const r = await fetch(`${API_URL}/api/artifacts/${artifact.id}/${fmt}`)
+      // MUST send the bearer token. These artifacts are owner-scoped, so an
+      // unauthenticated GET is a 403 — which is exactly what shipped: every
+      // Download on a signed-in user's own document failed, silently. It
+      // survived testing because anonymous-demo artifacts have owner_id NULL
+      // and are served by capability, so the logged-out path looked fine.
+      const r = await fetch(`${API_URL}/api/artifacts/${artifact.id}/${fmt}`, {
+        headers: await authHeaders(),
+      })
       if (!r.ok) throw new Error(`download ${r.status}`)
       const j = await r.json()
       const a = document.createElement('a')
-      a.href = j.signed_url
+      // `a.download` is ignored on cross-origin URLs, so on mobile (most of
+      // Levy's traffic) the file would just open in a tab. Supabase honours a
+      // `download` query param by setting Content-Disposition: attachment,
+      // which makes it a real save on both mobile and desktop.
+      a.href = withDownloadParam(j.signed_url, `${artifact.title}.${fmt}`)
       a.download = `${artifact.title}.${fmt}`
       a.target = '_blank'
       a.rel = 'noopener noreferrer'
@@ -75,7 +99,12 @@ export function ArtifactCard({ artifact, onOpen }: ArtifactCardProps) {
       a.click()
       a.remove()
     } catch {
-      // best-effort; user can retry
+      // A dead button that reports nothing is worse than an error: the user
+      // who hit this clicked Download, saw nothing happen, and left for
+      // ChatGPT mid-emergency. Say something and offer the text instead.
+      setDownloadFailed(true)
+      setShowText(true)
+      void ensureText()
     } finally {
       setBusy(null)
     }
@@ -88,7 +117,9 @@ export function ArtifactCard({ artifact, onOpen }: ArtifactCardProps) {
     if (text !== null) return text
     setTextState('loading')
     try {
-      const r = await fetch(`${API_URL}/api/artifacts/${artifact.id}/text`)
+      const r = await fetch(`${API_URL}/api/artifacts/${artifact.id}/text`, {
+        headers: await authHeaders(),
+      })
       if (!r.ok) throw new Error(`text ${r.status}`)
       const j = await r.json()
       const t = (j.text as string) || ''
@@ -212,6 +243,13 @@ export function ArtifactCard({ artifact, onOpen }: ArtifactCardProps) {
           </button>
         )}
       </div>
+      {downloadFailed && (
+        <div className="border-t border-amber-500/15 bg-amber-500/5 px-4 py-2 text-[12px] text-amber-300/80">
+          {canWord
+            ? 'The download didn\u2019t go through. The full text is below, ready to copy.'
+            : 'The download didn\u2019t go through. Please try again.'}
+        </div>
+      )}
       {canWord && showText && (
         <div className="border-t border-emerald-500/10 bg-black/25 px-4 py-3">
           {textState === 'loading' && (

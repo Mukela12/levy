@@ -8,7 +8,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
  * from the Supabase browser client, so callers don't have to thread a token
  * through every function.
  */
-async function authHeaders(): Promise<Record<string, string>> {
+export async function authHeaders(): Promise<Record<string, string>> {
   try {
     const { createClient } = await import('@/lib/supabase')
     const supabase = createClient()

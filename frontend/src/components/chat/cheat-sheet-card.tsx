@@ -9,23 +9,42 @@
 
 import { useState } from 'react'
 import { BookOpen, ChevronDown, ChevronUp, Download, Loader2, FileText, AlertTriangle, Scale, Lightbulb } from 'lucide-react'
-import type { CheatSheet } from '@/lib/api'
+import { authHeaders, type CheatSheet } from '@/lib/api'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
+
+/** Ask Supabase Storage to serve the file as an attachment, not inline. */
+function withDownloadParam(url: string, filename: string): string {
+  try {
+    const u = new URL(url)
+    u.searchParams.set('download', filename)
+    return u.toString()
+  } catch {
+    return url
+  }
+}
+
 
 export function CheatSheetCard({ sheet }: { sheet: CheatSheet }) {
   const [expanded, setExpanded] = useState(true)
   const [busy, setBusy] = useState<null | 'pdf' | 'docx'>(null)
+  const [failed, setFailed] = useState(false)
 
   async function download(fmt: 'pdf' | 'docx') {
     if (busy || !sheet.artifact_id) return
     setBusy(fmt)
     try {
-      const r = await fetch(`${API_URL}/api/artifacts/${sheet.artifact_id}/${fmt}`)
+      // Owner-scoped artifact: without the bearer token this is a 403 and the
+      // student's cheat sheet simply never downloads.
+      const r = await fetch(`${API_URL}/api/artifacts/${sheet.artifact_id}/${fmt}`, {
+        headers: await authHeaders(),
+      })
       if (!r.ok) throw new Error(`download ${r.status}`)
       const j = await r.json()
       const a = document.createElement('a')
-      a.href = j.signed_url
+      // Cross-origin `download` is ignored; the query param makes Supabase
+      // send Content-Disposition: attachment so it actually saves on mobile.
+      a.href = withDownloadParam(j.signed_url, `${sheet.title}.${fmt}`)
       a.download = `${sheet.title}.${fmt}`
       a.target = '_blank'
       a.rel = 'noopener noreferrer'
@@ -33,7 +52,7 @@ export function CheatSheetCard({ sheet }: { sheet: CheatSheet }) {
       a.click()
       a.remove()
     } catch {
-      // best-effort
+      setFailed(true)
     } finally {
       setBusy(null)
     }
@@ -136,6 +155,11 @@ export function CheatSheetCard({ sheet }: { sheet: CheatSheet }) {
                 {busy === 'docx' ? <Loader2 className="size-3.5 animate-spin" /> : <FileText className="size-3.5" />}
                 <span>Word</span>
               </button>
+              {failed && (
+                <span className="text-[12px] text-amber-300/80">
+                  Download didn&apos;t go through. Please try again.
+                </span>
+              )}
             </div>
           )}
         </div>
