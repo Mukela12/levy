@@ -92,11 +92,26 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key>
 
 ## Deploy
 
-| Component | Tool             | Command                                              |
-|-----------|------------------|------------------------------------------------------|
-| Backend   | Railway CLI      | `cd backend && railway up --service levy-api`        |
-| Frontend  | Vercel CLI       | `cd frontend && vercel deploy --prod --yes`          |
-| DB schema | Supabase Mgmt API| Apply files in `supabase/migrations/`                |
+| Component | Tool              | Command                                       |
+|-----------|-------------------|-----------------------------------------------|
+| Backend   | Railway CLI       | `cd backend && railway up --service levy-api` |
+| Frontend  | push to `main`    | auto-deploys, see below                       |
+| DB schema | Supabase Mgmt API | Apply files in `supabase/migrations/`         |
+
+**The frontend deploys on push.** The Vercel project is connected to
+`Mukela12/levy` with production branch `main`, so merging to `main` ships it.
+Other branches get a preview URL.
+
+Two things about that setup are easy to get wrong:
+
+- The project's **Root Directory is `frontend`**, because a git build clones
+  the repo root and there is no `package.json` there. If you ever deploy from
+  the CLI, run `vercel --prod` from the **repo root**, not from `frontend/`,
+  or it looks for `frontend/frontend` and fails.
+- **Railway is not connected to git.** The backend still needs an explicit
+  `railway up`, and a push alone does not ship it. `railway link` is stored
+  per directory and has drifted before, so check `railway status` says project
+  `levy-api` before deploying rather than assuming.
 
 The Railway image bakes the BGE-base model (`~440MB`) into the image at build time so the first request doesn't pay model-load latency. Build uses CPU-only torch (`+cpu` index) — full CUDA torch is ~5GB and unnecessary on Railway's CPU runners.
 
