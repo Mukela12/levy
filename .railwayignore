@@ -1,0 +1,32 @@
+# `railway up` must now be run from the REPO ROOT, not from backend/, because
+# the service has rootDirectory=backend (needed so git-triggered builds, which
+# clone the repo root, can find the Dockerfile). Running it from backend/
+# uploads that directory's contents and Railway then looks for backend/backend:
+#   Build Failed: lstat .../snapshot-target-unpack/backend: no such file
+#
+# From the root, the upload would otherwise include the frontend's 691MB of
+# node_modules and a 167MB local venv, so keep it to what the image needs.
+
+.git/
+.claude/
+node_modules/
+.venv/
+venv/
+.next/
+out/
+dist/
+build/
+
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+.env
+.env.*
+!.env.example
+
+docs/
+*.log
+.DS_Store

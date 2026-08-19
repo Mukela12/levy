@@ -103,13 +103,30 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key>
 changes, so a frontend-only commit does not trigger a five-minute image build.
 
 Each has a root directory set, because a git build clones the repo root:
-Vercel's is `frontend`, Railway's is `backend`. If you ever deploy by hand,
-run `vercel --prod` from the **repo root** (not `frontend/`, or it looks for
-`frontend/frontend`), and `railway up` from `backend/`.
+Vercel's is `frontend`, Railway's is `backend`.
 
-`railway link` is stored per directory and has drifted before, putting a
-"successful" command into the wrong project. Check `railway status` says
-`levy-api` before running anything that writes.
+**Manual deploys now run from the repo root, both of them.** The root
+directory is applied on top of whatever you upload, so deploying from inside
+`frontend/` or `backend/` makes the builder look for `frontend/frontend` or
+`backend/backend` and fail:
+
+```
+Build Failed: lstat .../snapshot-target-unpack/backend: no such file or directory
+```
+
+```bash
+cd ~/levy && vercel --prod        # frontend
+cd ~/levy && railway up --detach  # backend
+```
+
+`.railwayignore` keeps that upload small, since the repo root also holds the
+frontend's node_modules and a local venv.
+
+`railway link` is stored **per directory** and has drifted three times now,
+putting a "successful" command into an unrelated project. The repo root was
+linked to `welcoming-light` the first time `railway up` was tried from there.
+Always confirm `railway status` prints `levy-api` before running anything that
+writes.
 
 **Never commit `backend/.env`, and keep it in `backend/.dockerignore`.**
 `app/config.py` calls `load_dotenv(override=True)`, so a `.env` inside the
