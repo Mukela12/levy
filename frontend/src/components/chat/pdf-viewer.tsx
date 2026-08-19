@@ -48,6 +48,10 @@ export function PdfViewer({ citation, onClose }: PdfViewerProps) {
   const [error, setError] = useState<string | null>(null)
   const [pageNum, setPageNum] = useState<number>(1)
   const [pageCount, setPageCount] = useState<number>(1)
+  // Not every corpus document has a stored PDF (bills, civic guides, some
+  // Acts, OCR-backfilled judgments). For those we show the indexed text
+  // rather than a dead panel.
+  const [docText, setDocText] = useState<{ title?: string; text: string } | null>(null)
   // Only one shell can mount at a time — otherwise the desktop + mobile
   // bodies both render `<div ref={containerRef}>`, the ref ends up
   // pointing to the last-mounted (mobile, `md:hidden`) element, and the
@@ -69,6 +73,7 @@ export function PdfViewer({ citation, onClose }: PdfViewerProps) {
   useEffect(() => {
     setMeta(null)
     setError(null)
+    setDocText(null)
     setPageNum(citation?.pageStart ?? 1)
   }, [citation?.documentId, citation?.actName, citation?.pageStart])
 
@@ -125,8 +130,24 @@ export function PdfViewer({ citation, onClose }: PdfViewerProps) {
           authInit,
         )
         if (!r.ok) {
-          const text = await r.text()
-          throw new Error(text || `pdf url ${r.status}`)
+          const body = await r.text()
+          // 404 here means the document was ingested as text, not that it is
+          // missing. Show the text instead of an error the reader can do
+          // nothing with.
+          if (r.status === 404) {
+            const tr = await fetch(
+              `${API_URL}/api/documents/${documentId}/text`,
+              authInit,
+            )
+            if (tr.ok) {
+              const tj = await tr.json()
+              if (controller.signal.aborted) return
+              setDocText({ title: tj.short_name || tj.title, text: tj.text || '' })
+              setPageCount(1)
+              return
+            }
+          }
+          throw new Error(body || `pdf url ${r.status}`)
         }
         const j = (await r.json()) as PdfDocMeta
         if (controller.signal.aborted) return
@@ -254,7 +275,17 @@ export function PdfViewer({ citation, onClose }: PdfViewerProps) {
             <Loader2 className="size-4 animate-spin" /> loading PDF…
           </div>
         )}
-        {error && (
+        {docText && !loading && (
+          <div className="w-full max-w-[46rem] py-5 px-5">
+            <p className="text-[11px] uppercase tracking-wider text-white/30 mb-3">
+              Full text
+            </p>
+            <pre className="m-0 whitespace-pre-wrap break-words font-sans text-[13px] leading-[1.75] text-white/75 select-text">
+              {docText.text}
+            </pre>
+          </div>
+        )}
+        {error && !docText && (
           <div className="max-w-md py-12 px-6 text-center">
             <p className="text-[13px] text-amber-400/85 mb-1">This PDF couldn't be rendered.</p>
             <p className="text-[11.5px] text-white/45 leading-relaxed mb-3">
@@ -273,7 +304,7 @@ export function PdfViewer({ citation, onClose }: PdfViewerProps) {
             <p className="text-[10.5px] text-white/25 mt-4 break-all">{error}</p>
           </div>
         )}
-        {!loading && !error && (
+        {!loading && !error && !docText && (
           <div ref={containerRef} className="w-full flex justify-center py-3 px-3" />
         )}
       </div>

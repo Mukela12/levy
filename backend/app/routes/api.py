@@ -496,6 +496,66 @@ def get_document_pdf_url(document_id: str, expires_in: int = 3600, uid: str | No
     }
 
 
+@router.get("/documents/{document_id}/text")
+def get_document_text(document_id: str, uid: str | None = Depends(optional_user)):
+    """Full text of a legal document, assembled from its indexed chunks.
+
+    Not every document in the corpus has a stored PDF. Bills, the civic
+    procedure guides, a handful of Acts and the OCR-backfilled judgments were
+    ingested as text, so `pdf_storage_path` is NULL for 104 of 528 documents.
+    The citation viewer only ever asked for a PDF, so clicking any of those
+    citations showed a dead panel with the raw JSON body
+    `{"detail":"no PDF stored for this document"}` printed at the user. The
+    text was in `legal_chunks` the whole time.
+
+    Same authorization as the PDF route: global library readable by anyone,
+    user-uploaded documents only by their owner.
+    """
+    from ..db.supabase import get_db
+
+    db = get_db()
+    res = (
+        db.table("legal_documents")
+        .select("id, title, short_name, document_type, canonical_url, is_global, owner_id")
+        .eq("id", document_id)
+        .limit(1)
+        .execute()
+    )
+    if not res.data:
+        raise HTTPException(status_code=404, detail="document not found")
+    row = res.data[0]
+    if not row.get("is_global") and row.get("owner_id") != uid:
+        raise HTTPException(status_code=403, detail="not authorized for this document")
+
+    chunks = (
+        db.table("legal_chunks")
+        .select("content, chunk_index")
+        .eq("document_id", document_id)
+        .order("chunk_index")
+        .execute()
+    ).data or []
+    if not chunks:
+        raise HTTPException(status_code=404, detail="no text stored for this document")
+
+    # Chunk 0 is the synthetic retrieval header (title, issuer, "cite this
+    # as..."), which is useful to the embedder and noise to a reader who is
+    # already looking at the document. Drop it when the real text follows.
+    body = [c for c in chunks if (c.get("content") or "").strip()]
+    if len(body) > 1:
+        body = body[1:]
+    text = "\n\n".join((c.get("content") or "").strip() for c in body)
+
+    return {
+        "document_id": row["id"],
+        "title": row.get("title"),
+        "short_name": row.get("short_name"),
+        "document_type": row.get("document_type"),
+        "canonical_url": row.get("canonical_url"),
+        "chunk_count": len(body),
+        "text": text,
+    }
+
+
 @router.post("/artifacts/sweep")
 def sweep_old_artifacts(
     older_than_days: int = 30,
