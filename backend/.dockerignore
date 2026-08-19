@@ -1,0 +1,31 @@
+# The image is built with `COPY . .`, so anything here would otherwise be
+# baked into the production image. Two of these mattered in practice:
+#
+#   .env   — app/config.py calls load_dotenv(override=True), so a baked .env
+#            OUTRANKS Railway's own variables. Every `railway up` shipped the
+#            developer's local settings to production and silently overrode
+#            the configured ones. It also put real secrets in an image layer.
+#   .venv  — 167MB of local virtualenv, wrong platform, copied for nothing.
+#
+# Git-triggered builds never see .env (it is gitignored), but `railway up`
+# uploads the working directory as-is, so this file is what actually protects
+# the image regardless of how it is built.
+
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+tests/
+.git/
+.gitignore
+*.log
+.DS_Store
