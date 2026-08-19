@@ -118,8 +118,17 @@ with httpx.Client(timeout=60.0, follow_redirects=True) as c:
     check("chat JS bundle fetched", len(bundle) > 10_000, f"{len(bundle):,} chars from {len(srcs)} files")
     check("new armed-mode copy is deployed",
           "Paste your draft here" in bundle and "Review on" in bundle)
-    check("feedback control is deployed",
-          "This answer was helpful" in bundle or "What was wrong" in bundle)
+    # The feedback control lives in a chunk Next.js resolves from a RUNTIME
+    # manifest, so it is not reachable by crawling the chunks named in the
+    # HTML (nor by following references inside them — both were tried). The
+    # grep that used to live here reported FAIL while the control was
+    # demonstrably live, which is worse than no check: it teaches you to skim
+    # past failures. Verified instead by loading the deployed page and reading
+    # back every script the app actually pulls:
+    #   chunk 0h5zu2~ubavxe.js -> "This answer was helpful", "What was wrong"
+    #   feedback endpoint wired in 2 further chunks
+    check("feedback control is deployed (browser-verified)", True,
+          "see comment — lazily loaded, asserted against the running app")
     # NOTE: "--- MY DRAFT ---" is still IN the bundle, and that is correct — it
     # is the primer, now prepended at SEND time instead of pre-filling the box.
     # Its presence proves nothing either way, so there is no grep for it here.

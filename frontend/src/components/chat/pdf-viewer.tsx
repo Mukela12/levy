@@ -7,6 +7,33 @@ import { useAuth } from '@/components/auth/auth-provider'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
 
+/** True when the panel is empty because we hold no source, not because
+ *  rendering failed. The two need different copy: one is our gap, the other
+ *  is a file problem the reader might work around. */
+function isMissingSource(raw: string | null): boolean {
+  return !!raw && /no (PDF|text) stored/i.test(raw)
+}
+
+/** Never show a reader a raw JSON body. Pull out the message if there is one,
+ *  and translate the cases we know about into something actionable. */
+function humaniseError(raw: string | null): string {
+  if (!raw) return ''
+  let msg = raw
+  try {
+    const parsed = JSON.parse(raw)
+    if (parsed && typeof parsed.detail === 'string') msg = parsed.detail
+  } catch {
+    const m = raw.match(/"detail"\s*:\s*"([^"]+)"/)
+    if (m) msg = m[1]
+  }
+  if (/no (PDF|text) stored/i.test(msg)) {
+    return 'We do not have the full document on file yet, only the passages Levy cited above.'
+  }
+  if (/not authorized/i.test(msg)) return 'You do not have access to this document.'
+  if (/not found/i.test(msg)) return 'This document is no longer available.'
+  return msg
+}
+
 interface PdfDocMeta {
   document_id: string
   title?: string
@@ -287,9 +314,13 @@ export function PdfViewer({ citation, onClose }: PdfViewerProps) {
         )}
         {error && !docText && (
           <div className="max-w-md py-12 px-6 text-center">
-            <p className="text-[13px] text-amber-400/85 mb-1">This PDF couldn't be rendered.</p>
+            <p className="text-[13px] text-amber-400/85 mb-1">
+              {isMissingSource(error) ? 'This document is not on file.' : "This PDF couldn't be rendered."}
+            </p>
             <p className="text-[11.5px] text-white/45 leading-relaxed mb-3">
-              Some scanned or password-protected files don't render in-browser. You can still download the original.
+              {isMissingSource(error)
+                ? 'Levy quoted it from the indexed passages above. Those are accurate, we just do not hold the full document yet.'
+                : "Some scanned or password-protected files don't render in-browser. You can still download the original."}
             </p>
             {meta?.signed_url && (
               <a
@@ -301,7 +332,7 @@ export function PdfViewer({ citation, onClose }: PdfViewerProps) {
                 Open in new tab
               </a>
             )}
-            <p className="text-[10.5px] text-white/25 mt-4 break-all">{error}</p>
+            <p className="text-[10.5px] text-white/25 mt-4 break-all">{humaniseError(error)}</p>
           </div>
         )}
         {!loading && !error && !docText && (
