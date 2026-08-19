@@ -94,24 +94,28 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key>
 
 | Component | Tool              | Command                                       |
 |-----------|-------------------|-----------------------------------------------|
-| Backend   | Railway CLI       | `cd backend && railway up --service levy-api` |
-| Frontend  | push to `main`    | auto-deploys, see below                       |
+| Backend   | push to `main`    | auto-deploys when `backend/**` changes        |
+| Frontend  | push to `main`    | auto-deploys                                  |
 | DB schema | Supabase Mgmt API | Apply files in `supabase/migrations/`         |
 
-**The frontend deploys on push.** The Vercel project is connected to
-`Mukela12/levy` with production branch `main`, so merging to `main` ships it.
-Other branches get a preview URL.
+**Both deploy on push to `main`.** Vercel and Railway are each connected to
+`Mukela12/levy`. Railway only rebuilds when something under `backend/**`
+changes, so a frontend-only commit does not trigger a five-minute image build.
 
-Two things about that setup are easy to get wrong:
+Each has a root directory set, because a git build clones the repo root:
+Vercel's is `frontend`, Railway's is `backend`. If you ever deploy by hand,
+run `vercel --prod` from the **repo root** (not `frontend/`, or it looks for
+`frontend/frontend`), and `railway up` from `backend/`.
 
-- The project's **Root Directory is `frontend`**, because a git build clones
-  the repo root and there is no `package.json` there. If you ever deploy from
-  the CLI, run `vercel --prod` from the **repo root**, not from `frontend/`,
-  or it looks for `frontend/frontend` and fails.
-- **Railway is not connected to git.** The backend still needs an explicit
-  `railway up`, and a push alone does not ship it. `railway link` is stored
-  per directory and has drifted before, so check `railway status` says project
-  `levy-api` before deploying rather than assuming.
+`railway link` is stored per directory and has drifted before, putting a
+"successful" command into the wrong project. Check `railway status` says
+`levy-api` before running anything that writes.
+
+**Never commit `backend/.env`, and keep it in `backend/.dockerignore`.**
+`app/config.py` calls `load_dotenv(override=True)`, so a `.env` inside the
+image outranks the real environment. When `railway up` was baking one in,
+production silently ran the developer's local settings and every variable
+configured on Railway was dead config that looked live.
 
 The Railway image bakes the BGE-base model (`~440MB`) into the image at build time so the first request doesn't pay model-load latency. Build uses CPU-only torch (`+cpu` index) — full CUDA torch is ~5GB and unnecessary on Railway's CPU runners.
 
