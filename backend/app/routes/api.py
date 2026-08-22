@@ -219,14 +219,36 @@ def _visitor_hash(ip: str) -> str:
     return hashlib.sha256(f"{salt}|{day}|{ip}".encode()).hexdigest()[:32]
 
 
+# The production QA suite deliberately probes the anonymous gates: it sends a
+# bot user-agent and a forged Turnstile token to prove both are refused. Those
+# probes were being recorded as real funnel events, and they dominated the
+# table — 24 of one week's 29 events were QA runs, which made a healthy front
+# door read as a 62% Turnstile failure rate. A funnel metric that counts your
+# own test traffic is worse than no metric, because it hides the real visitors
+# inside the noise. QA now identifies itself and is not logged.
+QA_PROBE_HEADER = "x-levy-qa-probe"
+
+
+def _is_qa_probe(http_request: Request | None) -> bool:
+    if http_request is None:
+        return False
+    try:
+        return http_request.headers.get(QA_PROBE_HEADER, "").strip() == "1"
+    except Exception:  # noqa: BLE001
+        return False
+
+
 def _log_anon(outcome: str, ip: str, *, trial_number: int | None = None,
-              duration_ms: int | None = None, had_sources: bool | None = None) -> None:
+              duration_ms: int | None = None, had_sources: bool | None = None,
+              http_request: Request | None = None) -> None:
     """Record one anonymous attempt. Content-free, and never raises.
 
     Anonymous runs are not persisted as chat sessions, so without this the
     free trial is invisible: we could not tell a drop in demand from people
     simply using the trial instead of signing up.
     """
+    if _is_qa_probe(http_request):
+        return
     try:
         row = {"outcome": outcome, "visitor_hash": _visitor_hash(ip)}
         if trial_number is not None:
@@ -273,7 +295,7 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
     ua = http_request.headers.get("user-agent") or ""
     if _BOT_UA.search(ua):
         if not uid:
-            _log_anon("bot_blocked", _client_ip(http_request))
+            _log_anon("bot_blocked", _client_ip(http_request), http_request=http_request)
         raise HTTPException(status_code=403, detail="Automated access to chat is not allowed.")
 
     anon_trial = False
@@ -293,7 +315,7 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
         # behaviour and require sign-in, so a missing key fails closed.
         ip = _client_ip(http_request)
         if not (get_settings().turnstile_secret_key or "").strip():
-            _log_anon("no_turnstile_key", ip)
+            _log_anon("no_turnstile_key", ip, http_request=http_request)
             raise HTTPException(status_code=401, detail="Please sign in to use Levy chat.")
 
         # Burst control. This existed before but was orphaned when anonymous
@@ -301,19 +323,19 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
         now = time.time()
         hits = [t for t in _ANON_HITS.get(ip, []) if now - t < _ANON_WINDOW]
         if len(hits) >= _ANON_LIMIT:
-            _log_anon("rate_limited", ip)
+            _log_anon("rate_limited", ip, http_request=http_request)
             raise HTTPException(status_code=429, detail="Too many requests. Please wait a moment and try again.")
         hits.append(now)
         _ANON_HITS[ip] = hits
 
         if not await _verify_turnstile(request.turnstile_token, ip):
-            _log_anon("turnstile_failed", ip)
+            _log_anon("turnstile_failed", ip, http_request=http_request)
             raise HTTPException(
                 status_code=401,
                 detail="We could not verify your browser. Please reload the page and try again, or sign in.",
             )
         if _anon_trial_remaining(ip) <= 0:
-            _log_anon("trial_exhausted", ip)
+            _log_anon("trial_exhausted", ip, http_request=http_request)
             raise HTTPException(
                 status_code=402,
                 detail="You have used your free questions for today. Please sign in to keep going — it is free.",
@@ -322,7 +344,7 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
         anon_trial = True
         # 1-based: which of today's free questions this one was.
         anon_trial_number = get_settings().anon_trial_questions - _anon_trial_remaining(ip)
-        _log_anon("asked", ip, trial_number=anon_trial_number)
+        _log_anon("asked", ip, trial_number=anon_trial_number, http_request=http_request)
 
     # Only honour a session_id the caller actually owns; otherwise ignore it
     # so nobody can read another user's attached documents via the agent.
@@ -420,6 +442,7 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
                     trial_number=anon_trial_number,
                     duration_ms=int((time.time() - run_started) * 1000),
                     had_sources=bool(acc.citations),
+                    http_request=http_request,
                 )
 
     task = asyncio.create_task(_drive())

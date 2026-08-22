@@ -27,6 +27,11 @@ def check(label: str, cond: bool, detail: str = "") -> None:
 
 UUID0 = "00000000-0000-0000-0000-000000000000"
 BROWSER_UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+
+# Marks this suite's deliberate bot / forged-token probes so the backend does
+# not record them in anon_events. Without it, every QA run wrote three fake
+# funnel failures and the anonymous funnel read as mostly-broken.
+QA_PROBE = "X-Levy-QA-Probe"
               "(KHTML, like Gecko) Chrome/126.0 Safari/537.36")
 
 with httpx.Client(timeout=60.0, follow_redirects=True) as c:
@@ -70,12 +75,12 @@ with httpx.Client(timeout=60.0, follow_redirects=True) as c:
     print("\n2. Anonymous chat gates still hold")
     # Bot UA must be refused outright.
     r = c.post(f"{API}/api/chat/stream", json={"query": "hi"},
-               headers={"User-Agent": "python-requests/2.31.0"})
+               headers={"User-Agent": "python-requests/2.31.0", QA_PROBE: "1"})
     check("bot user-agent blocked", r.status_code == 403, f"HTTP {r.status_code}")
 
     # Browser UA, no Turnstile token -> must NOT be allowed through.
     r = c.post(f"{API}/api/chat/stream", json={"query": "hi"},
-               headers={"User-Agent": BROWSER_UA})
+               headers={"User-Agent": BROWSER_UA, QA_PROBE: "1"})
     check("no Turnstile token is refused", r.status_code in (401, 402, 429),
           f"HTTP {r.status_code}")
     check("refusal is not a 500", r.status_code != 500, f"HTTP {r.status_code}")
@@ -83,7 +88,7 @@ with httpx.Client(timeout=60.0, follow_redirects=True) as c:
     # A forged token must fail Turnstile verification, not slip through.
     r = c.post(f"{API}/api/chat/stream",
                json={"query": "hi", "turnstile_token": "forged-token-qa-probe"},
-               headers={"User-Agent": BROWSER_UA})
+               headers={"User-Agent": BROWSER_UA, QA_PROBE: "1"})
     check("forged Turnstile token is rejected", r.status_code in (401, 402, 429),
           f"HTTP {r.status_code}")
 
