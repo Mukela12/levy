@@ -27,12 +27,12 @@ def check(label: str, cond: bool, detail: str = "") -> None:
 
 UUID0 = "00000000-0000-0000-0000-000000000000"
 BROWSER_UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+              "(KHTML, like Gecko) Chrome/126.0 Safari/537.36")
 
 # Marks this suite's deliberate bot / forged-token probes so the backend does
 # not record them in anon_events. Without it, every QA run wrote three fake
 # funnel failures and the anonymous funnel read as mostly-broken.
 QA_PROBE = "X-Levy-QA-Probe"
-              "(KHTML, like Gecko) Chrome/126.0 Safari/537.36")
 
 with httpx.Client(timeout=60.0, follow_redirects=True) as c:
     print("\n1. Backend is live and running the new code")
