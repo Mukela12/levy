@@ -1,0 +1,17 @@
+# Extra dependencies for the corpus harvesting + OCR scripts.
+#
+# Deliberately NOT in backend/requirements.txt: OCR is offline tooling and the
+# production image has no use for it, so adding it there would grow the Railway
+# build for nothing.
+#
+# The cost of that separation is that a rebuilt venv silently loses OCR. That
+# already happened: ocrmypdf disappeared, the backfill discarded its exit code,
+# and a batch of perfectly readable Supreme Court judgments was recorded as
+# unreadable scans. Both scripts now preflight and refuse to start, but install
+# this first and it never comes up:
+#
+#   backend/.venv/bin/pip install -r scripts/requirements-harvest.txt
+#
+# System binaries are NOT pip-installable and are checked by preflight too:
+#   brew install tesseract ghostscript
+ocrmypdf>=16

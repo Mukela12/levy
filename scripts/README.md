@@ -68,3 +68,39 @@ grep -vE '^(torch|sentence-transformers)==|^--extra-index-url' requirements.txt 
 - **Never scrape zambialii.org, and never ingest the Zambia Law Reports.**
   Source only from official government sites (judiciaryzambia.com,
   parliament.gov.zm, and similar).
+
+
+## Corpus harvesting and OCR
+
+`harvest_court_decisions.py` walks the Judiciary of Zambia's per-court decision
+archives and ingests judgments; `ocr_backfill_tesseract.py` promotes scanned
+ones to full text. The harvester OCRs inline by default, so one command does
+both and a run is never half finished.
+
+```bash
+backend/.venv/bin/pip install -r scripts/requirements-harvest.txt
+brew install tesseract ghostscript          # not pip-installable
+
+# look first, write nothing
+backend/.venv/bin/python scripts/harvest_court_decisions.py \
+    --court supreme --max-pages 2 --dry-run
+
+# bounded real run, OCR included
+backend/.venv/bin/python scripts/harvest_court_decisions.py \
+    --court supreme --limit 25 --max-pages 5
+```
+
+Both scripts preflight the OCR toolchain and refuse to start if it is missing.
+That check exists because it once wasn't there: `ocrmypdf` had vanished from a
+rebuilt venv, the backfill threw away its exit code, and nine readable Supreme
+Court judgments were logged as "too little text" and written off.
+
+Two rules that are not negotiable:
+
+- **Sources are official government sites only.** judiciaryzambia.com is fine.
+  **ZambiaLII must never be scraped** and the Zambia Law Reports must never be
+  ingested.
+- **A judgment's court comes from its citation, not from the archive it was
+  filed under.** The Supreme Court archive also links Constitutional Court and
+  High Court decisions, and calling a High Court decision binding Supreme Court
+  authority misleads a practitioner about precedent.

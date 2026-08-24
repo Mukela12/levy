@@ -52,6 +52,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 import time
@@ -67,6 +68,13 @@ sys.path.insert(0, str(REPO / "scripts"))
 # title/citation parsing, storage upload, page counting, area inference.
 from harvest_judiciary_judgments import (  # noqa: E402
     BASE, DOWNLOAD_DIR, derive, infer_area, pages_of, slug, upload,
+)
+# One OCR path, shared with the batch backfill. Harvesting and OCR are not
+# separate chores: about three quarters of Supreme Court PDFs are scanned
+# images, so a harvest that stops at ingest leaves most judgments findable by
+# name and silent on their reasoning, which is the part that decides a case.
+from ocr_backfill_tesseract import (  # noqa: E402
+    OcrUnavailable, preflight as ocr_preflight, promote_scanned,
 )
 
 sys.path.insert(0, str(REPO / "backend"))
@@ -84,6 +92,29 @@ COURTS = {
 }
 
 CAT_ROOT = f"{BASE}/category/resources/decisions"
+
+# Resolving a post to its PDF costs one HTTP fetch, and the answer never
+# changes. Without a record of that, every resumed run re-fetches every post it
+# has already dealt with: one bounded run spent 14 of its 74 fetches
+# rediscovering PDFs it already held. Across 77 archive pages that is roughly
+# an hour of requests to someone else's server for no new data. This maps
+# post URL -> PDF URL (or null when a post has no judgment PDF) so a resumed
+# run skips straight past everything it has seen.
+CACHE_PATH = Path(__file__).resolve().parent / ".harvest_cache.json"
+
+
+def load_cache() -> dict:
+    try:
+        return json.loads(CACHE_PATH.read_text())
+    except Exception:  # noqa: BLE001
+        return {}
+
+
+def save_cache(cache: dict) -> None:
+    try:
+        CACHE_PATH.write_text(json.dumps(cache))
+    except Exception:  # noqa: BLE001
+        pass
 
 # Listing pages link to plenty that is not a decision.
 SKIP_POST = re.compile(
@@ -219,9 +250,20 @@ def main() -> int:
     ap.add_argument("--limit", type=int, default=25, help="max judgments to INGEST")
     ap.add_argument("--max-pages", type=int, default=5, help="max archive pages to walk")
     ap.add_argument("--delay", type=float, default=1.0, help="seconds between HTTP requests")
+    ap.add_argument("--no-ocr", action="store_true",
+                    help="ingest only; leave scanned judgments as header stubs")
     ap.add_argument("--dry-run", action="store_true",
                     help="discover and report only; download and ingest nothing")
     args = ap.parse_args()
+
+    # Fail before the first network call, not after 200 downloads. A missing
+    # ocrmypdf previously looked exactly like a batch of unreadable scans.
+    if not args.dry_run and not args.no_ocr:
+        problem = ocr_preflight()
+        if problem:
+            print(f"!! OCR toolchain unavailable: {problem}")
+            print("!! Re-run with --no-ocr to harvest anyway and OCR later.")
+            return 1
 
     courts = list(COURTS) if args.court == "all" else [args.court]
     have = already()
@@ -230,6 +272,9 @@ def main() -> int:
           f"limit={args.limit} max_pages={args.max_pages} delay={args.delay}s\n")
 
     ingested = seen_posts = found_pdfs = skipped = failed = rejected = reclassified = 0
+    ocr_done = ocr_failed = cached_hits = 0
+    cache = load_cache()
+    print(f"Resume cache holds {len(cache)} resolved posts.")
     by_source: dict[str, int] = {}
 
     with client() as c:
@@ -243,8 +288,15 @@ def main() -> int:
                     if ingested >= args.limit:
                         print("  reached --limit")
                         break
-                    seen_posts += 1
-                    pdf = pdf_on_post(c, post, args.delay)
+                    if post in cache:
+                        pdf = cache[post]          # may be None: no PDF there
+                        cached_hits += 1
+                    else:
+                        seen_posts += 1
+                        pdf = pdf_on_post(c, post, args.delay)
+                        cache[post] = pdf
+                        if len(cache) % 25 == 0:
+                            save_cache(cache)
                     if not pdf:
                         continue
                     found_pdfs += 1
@@ -317,15 +369,44 @@ def main() -> int:
                         continue
                     have.add(pdf)
                     ingested += 1
-                    print(f"    [{ingested}/{args.limit}] ({area}) {title[:62]}")
+                    doc_id = res["document"]["id"]
+                    note = ""
+                    if not args.no_ocr:
+                        # Was it a scan? ingest_form_pdf reports how many
+                        # chunks it made; a scanned PDF yields exactly the one
+                        # synthetic header chunk. Read chunks_created, NOT
+                        # document.total_chunks, which is not on that record
+                        # and would read as 0 for every judgment — OCRing
+                        # documents whose real extracted text is better than
+                        # anything Tesseract would produce.
+                        chunks = res.get("chunks_created") or 0
+                        if chunks <= 1:
+                            try:
+                                ok, detail = promote_scanned(doc_id, title=title[:56])
+                                note = f"  OCR:{detail}" if ok else f"  OCR failed:{detail}"
+                                if ok:
+                                    ocr_done += 1
+                                else:
+                                    ocr_failed += 1
+                            except OcrUnavailable as e:
+                                print(f"\n  !! ocrmypdf stopped working mid-run: {e}")
+                                print("  !! Stopping: everything after this would be a false stub.")
+                                raise SystemExit(1)
+                            except Exception as e:  # noqa: BLE001
+                                ocr_failed += 1
+                                note = f"  OCR error:{str(e)[:40]}"
+                    print(f"    [{ingested}/{args.limit}] ({area}) {title[:52]}{note}")
                 if ingested >= args.limit:
                     break
             if ingested >= args.limit:
                 break
 
-    print(f"\nSUMMARY posts_visited={seen_posts} pdfs_found={found_pdfs} "
+    save_cache(cache)
+    print(f"\nSUMMARY posts_visited={seen_posts} cached_skips={cached_hits} pdfs_found={found_pdfs} "
           f"ingested={ingested} skipped={skipped} rejected={rejected} failed={failed}")
     print(f"        court decided by: {by_source}   reclassified_off_archive={reclassified}")
+    if not args.no_ocr and not args.dry_run:
+        print(f"        OCR promoted={ocr_done} ocr_failed={ocr_failed}")
     if args.dry_run:
         print("DRY RUN: nothing was downloaded or written.")
     return 0

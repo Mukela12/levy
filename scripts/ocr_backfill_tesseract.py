@@ -94,10 +94,95 @@ def chunk_text(text: str, target: int = 1100) -> list[str]:
     return chunks
 
 
+def preflight() -> str | None:
+    """Return an error string if OCR cannot possibly work, else None.
+
+    Called BEFORE any network or database work. The failure this guards
+    against is not hypothetical: ocrmypdf vanished from the venv when it was
+    rebuilt, and because nothing checked, a whole batch of readable Supreme
+    Court judgments was recorded as unreadable scans.
+    """
+    import shutil
+    try:
+        r = subprocess.run([sys.executable, "-m", "ocrmypdf", "--version"],
+                           capture_output=True, text=True, timeout=60)
+        if r.returncode != 0:
+            return (f"`{sys.executable} -m ocrmypdf` exits {r.returncode}. "
+                    f"Install it:  {sys.executable} -m pip install ocrmypdf")
+    except Exception as e:  # noqa: BLE001
+        return (f"cannot run ocrmypdf ({type(e).__name__}). "
+                f"Install it:  {sys.executable} -m pip install ocrmypdf")
+    if not shutil.which("tesseract"):
+        return "tesseract is not on PATH. Install it:  brew install tesseract"
+    if not shutil.which("gs"):
+        return "ghostscript is not on PATH. Install it:  brew install ghostscript"
+    return None
+
+
+def promote_scanned(did: str, *, title: str, min_chars: int = 500) -> tuple[bool, str]:
+    """OCR one header-only judgment into full-text chunks.
+
+    Returns (ok, detail). Raises OcrUnavailable if the toolchain is broken,
+    because that is a stop-everything condition rather than a per-document one.
+
+    Shared by this script's batch mode and by harvest_court_decisions.py, so a
+    freshly harvested scan is promoted in the same run that fetched it. A
+    judgment that is ingested but never OCR'd is findable by name and useless
+    for its reasoning, which is the part a lawyer actually needs.
+    """
+    db = get_db()
+    row = (retry(lambda: db.table("legal_documents")
+                 .select("id,title,short_name,pdf_storage_path,total_chunks")
+                 .eq("id", did).limit(1).execute().data) or [])
+    if not row:
+        return False, "document not found"
+    r = row[0]
+    if not r.get("pdf_storage_path"):
+        return False, "no stored PDF"
+    ex = retry(lambda: db.table("legal_chunks").select("id,metadata")
+               .eq("document_id", did).execute().data) or []
+    base = (ex[0].get("metadata") if ex else {}) or {}
+    citation = r.get("short_name") or base.get("act_name") or title
+    old_ids = [c["id"] for c in ex]
+
+    bucket, _, key = r["pdf_storage_path"].partition("/")
+    pdf = retry(lambda: db.storage.from_(bucket).download(key))
+    text = ocr_pdf(pdf)                      # may raise OcrUnavailable
+    if len(text.strip()) < min_chars:
+        return False, f"too little text ({len(text.strip())})"
+
+    pieces = chunk_text(text)
+    if not pieces:
+        return False, "no chunks after OCR"
+    embs = retry(lambda: get_embeddings(pieces))
+    meta = {"document_type": "judgment", "act_name": citation,
+            "ocr": True, "ocr_engine": "tesseract"}
+    if base.get("category"):
+        meta["category"] = base["category"]
+    if base.get("issuing_authority"):
+        meta["issuing_authority"] = base["issuing_authority"]
+    recs = [{"document_id": did, "content": t, "embedding": e,
+             "metadata": {**meta, "is_header": i == 0},
+             "chunk_index": i, "page_start": 1, "page_end": 1}
+            for i, (t, e) in enumerate(zip(pieces, embs))]
+    # insert first (never leave the doc with zero chunks), then drop the header
+    retry(lambda: insert_chunks(recs))
+    if old_ids:
+        retry(lambda: db.table("legal_chunks").delete().in_("id", old_ids).execute())
+    retry(lambda: db.table("legal_documents").update({"total_chunks": len(recs)})
+          .eq("id", did).execute())
+    return True, f"{len(recs)} chunks"
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, default=200)
     args = ap.parse_args()
+
+    problem = preflight()
+    if problem:
+        print(f"!! OCR toolchain unavailable: {problem}")
+        return 1
 
     db = get_db()
     rows = retry(lambda: db.table("legal_documents")
@@ -109,62 +194,27 @@ def main() -> int:
     done = failed = 0
     for r in scanned[: args.limit]:
         did = r["id"]; title = (r.get("title") or "")[:56]
-        try:
-            ex = retry(lambda: db.table("legal_chunks").select("id,metadata")
-                       .eq("document_id", did).execute().data) or []
-        except Exception as e:
-            print(f"  ! read: {str(e)[:55]} :: {title}", flush=True); failed += 1; continue
-        base = (ex[0].get("metadata") if ex else {}) or {}
-        citation = r.get("short_name") or base.get("act_name") or title
-        old_ids = [c["id"] for c in ex]
-
-        try:
-            bucket, _, key = r["pdf_storage_path"].partition("/")
-            pdf = retry(lambda: db.storage.from_(bucket).download(key))
-        except Exception as e:
-            print(f"  ! download: {str(e)[:55]} :: {title}", flush=True); failed += 1; continue
-
         t0 = time.time()
         try:
-            text = ocr_pdf(pdf)
+            ok, detail = promote_scanned(did, title=title)
         except subprocess.TimeoutExpired:
             print(f"  ! OCR timeout (>900s) :: {title}", flush=True); failed += 1; continue
         except OcrUnavailable as e:
-            # Not this judgment's fault, and the next one will fail identically.
-            # Stop rather than marking the whole batch unreadable.
+            # Not this judgment's fault, and every remaining one fails the same
+            # way. Stop rather than recording a broken toolchain as 200 bad scans.
             print(f"\n  !! ocrmypdf could not run: {e}")
             print("  !! Aborting: this is a broken toolchain, not a bad scan.")
-            print("  !! Fix with:  backend/.venv/bin/pip install ocrmypdf")
+            print(f"  !! Fix with:  {sys.executable} -m pip install ocrmypdf")
             print(f"\nSUMMARY done={done} failed={failed} aborted=True")
             return 1
-        except Exception as e:
-            print(f"  ! OCR: {str(e)[:55]} :: {title}", flush=True); failed += 1; continue
-        if len(text.strip()) < 500:
-            print(f"  ! too little text ({len(text.strip())}) — keeping header :: {title}", flush=True); failed += 1; continue
-
-        pieces = chunk_text(text)
-        if not pieces:
-            failed += 1; continue
-        try:
-            embs = retry(lambda: get_embeddings(pieces))
-            meta = {"document_type": "judgment", "act_name": citation, "ocr": True, "ocr_engine": "tesseract"}
-            if base.get("category"):
-                meta["category"] = base["category"]
-            if base.get("issuing_authority"):
-                meta["issuing_authority"] = base["issuing_authority"]
-            recs = [{"document_id": did, "content": t, "embedding": e,
-                     "metadata": {**meta, "is_header": i == 0},
-                     "chunk_index": i, "page_start": 1, "page_end": 1}
-                    for i, (t, e) in enumerate(zip(pieces, embs))]
-            # insert first (never leave the doc with zero chunks), then drop old header
-            retry(lambda: insert_chunks(recs))
-            if old_ids:
-                retry(lambda: db.table("legal_chunks").delete().in_("id", old_ids).execute())
-            retry(lambda: db.table("legal_documents").update({"total_chunks": len(recs)}).eq("id", did).execute())
+        except Exception as e:  # noqa: BLE001
+            print(f"  ! {str(e)[:70]} :: {title}", flush=True); failed += 1; continue
+        if ok:
             done += 1
-            print(f"  [{done}] {len(recs):>3} chunks, {int(time.time()-t0)}s <- {title}", flush=True)
-        except Exception as e:
-            print(f"  ! store: {str(e)[:70]} :: {title}", flush=True); failed += 1; continue
+            print(f"  [{done}] {detail:>12}, {int(time.time()-t0)}s <- {title}", flush=True)
+        else:
+            failed += 1
+            print(f"  ! {detail} — keeping header :: {title}", flush=True)
 
     print(f"\nSUMMARY done={done} failed={failed}", flush=True)
     return 0

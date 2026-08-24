@@ -51,3 +51,4 @@ frontend/.eslintcache
 
 # Local working files (field-study drafts, scraped samples) — never shipped.
 scratchpad/
+.harvest_cache.json
