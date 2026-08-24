@@ -44,6 +44,14 @@ def retry(fn, n=8, d=1.2):
     raise last
 
 
+class OcrUnavailable(RuntimeError):
+    """ocrmypdf could not run at all, as opposed to a scan it could not read.
+
+    Worth its own type: the first means STOP, every remaining judgment will
+    fail the same way; the second means skip this one and carry on.
+    """
+
+
 def ocr_pdf(pdf_bytes: bytes) -> str:
     """OCR a scanned PDF with Tesseract via ocrmypdf; return the sidecar text."""
     with tempfile.TemporaryDirectory() as td:
@@ -51,7 +59,17 @@ def ocr_pdf(pdf_bytes: bytes) -> str:
         ip.write_bytes(pdf_bytes)
         cmd = [sys.executable, "-m", "ocrmypdf", "--force-ocr", "-l", "eng",
                "--optimize", "0", "--quiet", "--sidecar", str(side), str(ip), str(op)]
-        subprocess.run(cmd, capture_output=True, text=True, timeout=900)
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=900)
+        # Check the return code. This used to be discarded, so when ocrmypdf
+        # was missing from the venv entirely, every judgment came back with an
+        # empty sidecar and the script reported "too little text (0)" — which
+        # reads as "this scan is unreadable" when the truth was "the OCR tool
+        # never ran". Nine Supreme Court judgments were written off that way
+        # before anyone looked at the exit code.
+        if proc.returncode != 0:
+            err = (proc.stderr or proc.stdout or "").strip().splitlines()
+            tail = err[-1] if err else f"exit {proc.returncode}"
+            raise OcrUnavailable(tail[:160])
         if not side.exists():
             return ""
         return "\n".join(side.read_text(errors="ignore").split("\f"))  # form-feeds -> newlines
@@ -111,6 +129,14 @@ def main() -> int:
             text = ocr_pdf(pdf)
         except subprocess.TimeoutExpired:
             print(f"  ! OCR timeout (>900s) :: {title}", flush=True); failed += 1; continue
+        except OcrUnavailable as e:
+            # Not this judgment's fault, and the next one will fail identically.
+            # Stop rather than marking the whole batch unreadable.
+            print(f"\n  !! ocrmypdf could not run: {e}")
+            print("  !! Aborting: this is a broken toolchain, not a bad scan.")
+            print("  !! Fix with:  backend/.venv/bin/pip install ocrmypdf")
+            print(f"\nSUMMARY done={done} failed={failed} aborted=True")
+            return 1
         except Exception as e:
             print(f"  ! OCR: {str(e)[:55]} :: {title}", flush=True); failed += 1; continue
         if len(text.strip()) < 500:
