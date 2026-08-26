@@ -211,7 +211,14 @@ CITATION_COURT = [
     (re.compile(r"\bSCZ\b", re.I), "Supreme Court of Zambia"),
     (re.compile(r"\bCCZ\b", re.I), "Constitutional Court of Zambia"),
     (re.compile(r"\bCAZ\b", re.I), "Court of Appeal of Zambia"),
-    (re.compile(r"\bH(PF|PA|P|K|N|J|B)\b", re.I), "High Court of Zambia"),
+    # High Court registries and divisions. Trailing letters must be allowed,
+    # not terminated by \b: 2022/HPIR/578 is the Industrial Relations Division
+    # and matched nothing, so it fell through to the archive and was filed as
+    # Supreme Court authority. HP alone is too greedy to anchor on, so list the
+    # divisional codes explicitly, longest first.
+    # Lookbehind on letters, not \b: citations run straight off the year as
+    # "2023HP2307", where \b never fires between the digit and the H.
+    (re.compile(r"(?<![A-Za-z])H(PIR|PComm|PF|PA|PC|PR|PS|P|K|N|J|B)\w*", re.I), "High Court of Zambia"),
 ]
 BENCH_COURT = [
     (re.compile(r"\bJJ\.?S\b|\bCJ\b|\bDCJ\b", re.I), "Supreme Court of Zambia"),
