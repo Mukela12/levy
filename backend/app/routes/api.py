@@ -91,11 +91,22 @@ class SearchRequest(BaseModel):
 # --- Endpoints ---
 
 @router.post("/chat")
-def chat(request: ChatRequest):
+def chat(request: ChatRequest, uid: str = Depends(require_user)):
     """
     Full RAG pipeline: embed query → search → generate answer with citations.
 
-    This is the main endpoint users interact with.
+    SIGNED-IN ONLY. This shipped completely open: no auth, no Turnstile, no
+    rate limit, and every call ran an embedding plus a full Sonnet generation.
+    Anyone with the URL could spend Anthropic and OpenAI credit at will. That
+    is not theoretical here — the Anthropic balance ran out on 16 August and
+    users mid-emergency got no reply at all, so an unmetered public drain on
+    the same balance is a live risk, not a tidy-up.
+
+    Nothing calls it. The frontend's sendQuery() has no callers; the app talks
+    to /chat/stream, which has always been gated by Turnstile and a trial
+    limit. It is kept (rather than deleted) because it is the documented
+    non-streaming entry point and is useful for scripted evaluation, but it now
+    costs a real account to use.
     """
     if not request.query.strip():
         raise HTTPException(status_code=400, detail="Query cannot be empty")
@@ -113,9 +124,15 @@ def chat(request: ChatRequest):
 
 
 @router.post("/search")
-def search(request: SearchRequest):
+def search(request: SearchRequest, uid: str = Depends(require_user)):
     """
     Retrieval only — returns matching chunks without LLM generation.
+
+    SIGNED-IN ONLY, for the same reason as /chat: it was open and every call
+    bought an embedding. Cheaper per call than generation, but the corpus is
+    the asset and an open retrieval endpoint hands over an unlimited read of
+    it. The one real caller, the dashboard search page, already sends a bearer
+    token; the backend simply never looked at it.
 
     Use this endpoint to:
     - Test retrieval quality independently
