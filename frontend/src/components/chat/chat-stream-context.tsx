@@ -138,6 +138,61 @@ export function ChatStreamProvider({ children }: { children: React.ReactNode }) 
     [commit],
   )
 
+  // When the network stream dies mid-answer, the server-side durable run
+  // usually finishes anyway and saves the complete reply; the client just
+  // never hears about it. A user watched exactly that ("You stopped?") while
+  // the full answer sat in the database. So on a broken or prematurely closed
+  // stream, poll the session's saved messages until the assistant row appears,
+  // then swap it in for the stalled placeholder. Runs take up to a couple of
+  // minutes, so poll patiently and give up quietly after three.
+  const recoverSaved = useCallback(
+    (sid: string, knownIds: Set<string>) => {
+      const supabase = createClient()
+      const startedAt = Date.now()
+      const tick = async () => {
+        if (Date.now() - startedAt > 180_000) return
+        try {
+          const { data } = await supabase
+            .from('chat_messages')
+            .select('id, role, content, blocks, tool_calls, citations, web_sources, artifacts')
+            .eq('session_id', sid)
+            .eq('role', 'assistant')
+            .order('created_at', { ascending: false })
+            .limit(1)
+          const row = data?.[0]
+          if (row && !knownIds.has(row.id as string)) {
+            commit((prev) => {
+              const c = prev[sid]
+              if (!c || c.messages.length === 0) return prev
+              const msgs = [...c.messages]
+              const last = msgs[msgs.length - 1]
+              // Only replace the stalled assistant placeholder, and only while
+              // this session is still stuck; a new send resets everything.
+              if (last.role !== 'assistant' || c.status === 'idle') return prev
+              msgs[msgs.length - 1] = {
+                id: row.id as string,
+                role: 'assistant',
+                content: (row.content as string) ?? '',
+                blocks: (row.blocks as MessageBlock[] | null) ?? undefined,
+                toolCalls: (row.tool_calls as ToolCallView[] | null) ?? undefined,
+                citations: (row.citations as Message['citations'] | null) ?? undefined,
+                webSources: (row.web_sources as Message['webSources'] | null) ?? undefined,
+                artifacts: (row.artifacts as Message['artifacts'] | null) ?? undefined,
+              }
+              return { ...prev, [sid]: { ...c, status: 'idle', messages: msgs } }
+            })
+            return
+          }
+        } catch {
+          // transient network failure: keep polling until the deadline
+        }
+        setTimeout(tick, 4000)
+      }
+      setTimeout(tick, 4000)
+    },
+    [commit],
+  )
+
   const send = useCallback(
     (sid: string, question: string, opts: SendOptions) => {
       const cur = sessionsRef.current[sid] ?? EMPTY_SESSION
@@ -178,6 +233,13 @@ export function ChatStreamProvider({ children }: { children: React.ReactNode }) 
 
       // Persist the user turn (fire-and-forget; streaming proceeds regardless).
       void saveMessage(sid, 'user', userMsg)
+
+      // For stream-drop recovery: every assistant id we already know about.
+      // A recovered row must be newer than all of these.
+      const knownIds = new Set(
+        cur.messages.map((m) => m.id).filter((x): x is string => Boolean(x)),
+      )
+      let runCompleted = false
 
       streamQuery(
         question,
@@ -377,6 +439,7 @@ export function ChatStreamProvider({ children }: { children: React.ReactNode }) 
           onSaved: (messageId) =>
             updateLast(sid, (last) => ({ ...last, id: messageId })),
           onDone: (metadata) => {
+            runCompleted = true
             let finalMsg: Message | null = null
             commit((prev) => {
               const c = prev[sid]
@@ -402,7 +465,12 @@ export function ChatStreamProvider({ children }: { children: React.ReactNode }) 
               content: (last.content || '') + (last.content ? '\n\n' : '') + `_Error: ${msg}_`,
             })),
         },
-      ).catch((e) => {
+      ).then(() => {
+        // The stream closed cleanly but the run never announced completion:
+        // a proxy or flaky network cut the connection early. The durable run
+        // is still going server-side; go fetch what it saves.
+        if (!runCompleted && opts.token) recoverSaved(sid, knownIds)
+      }).catch((e) => {
         const friendly =
           e instanceof Error && !e.message.startsWith('API error') && !e.message.startsWith('No response')
             ? e.message
@@ -420,6 +488,9 @@ export function ChatStreamProvider({ children }: { children: React.ReactNode }) 
           }
           return { ...prev, [sid]: { ...c, status: 'error', messages: msgs } }
         })
+        // Mid-stream failures leave a half-answer on screen; the server-side
+        // run usually still finishes and saves. Recover it when signed in.
+        if (opts.token) recoverSaved(sid, knownIds)
       })
     },
     [commit, updateLast],
