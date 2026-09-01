@@ -137,7 +137,19 @@ def root():
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    """Liveness, plus WHICH CODE is serving.
+
+    A narration fix sat committed and pushed while production served two-day-old
+    code, and every external check was consistent with either world: a user hit
+    the old behaviour at 18:07 and probes showed the new one an hour later, with
+    nothing to say when the deploy actually landed. Railway injects the git SHA
+    into the container, so exposing it makes "is my commit live?" a curl instead
+    of an argument with the deploy dashboard's login screen.
+    """
+    return {
+        "status": "ok",
+        "commit": os.environ.get("RAILWAY_GIT_COMMIT_SHA", "")[:7] or None,
+    }
 
 
 @app.get("/health/llm")
