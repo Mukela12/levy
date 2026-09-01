@@ -54,7 +54,7 @@ from app.services.form_ingester import ingest_form_pdf  # noqa: E402
 
 BASE = "https://judiciaryzambia.com"
 BUCKET = "legal-docs"
-DOWNLOAD_DIR = Path("/Users/mukelakatungu/levy-test-fixtures/judiciary-judgments")
+DOWNLOAD_DIR = Path.home() / "levy-test-fixtures" / "judiciary-judgments"
 DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 SITEMAPS = [
