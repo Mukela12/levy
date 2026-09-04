@@ -78,7 +78,7 @@ export function PdfViewer({ citation, onClose }: PdfViewerProps) {
   // Not every corpus document has a stored PDF (bills, civic guides, some
   // Acts, OCR-backfilled judgments). For those we show the indexed text
   // rather than a dead panel.
-  const [docText, setDocText] = useState<{ title?: string; text: string } | null>(null)
+  const [docText, setDocText] = useState<{ title?: string; text: string; canonicalUrl?: string } | null>(null)
   // Only one shell can mount at a time — otherwise the desktop + mobile
   // bodies both render `<div ref={containerRef}>`, the ref ends up
   // pointing to the last-mounted (mobile, `md:hidden`) element, and the
@@ -169,7 +169,11 @@ export function PdfViewer({ citation, onClose }: PdfViewerProps) {
             if (tr.ok) {
               const tj = await tr.json()
               if (controller.signal.aborted) return
-              setDocText({ title: tj.short_name || tj.title, text: tj.text || '' })
+              setDocText({
+                title: tj.short_name || tj.title,
+                text: tj.text || '',
+                canonicalUrl: tj.canonical_url || undefined,
+              })
               setPageCount(1)
               return
             }
@@ -304,9 +308,21 @@ export function PdfViewer({ citation, onClose }: PdfViewerProps) {
         )}
         {docText && !loading && (
           <div className="w-full max-w-[46rem] py-5 px-5">
-            <p className="text-[11px] uppercase tracking-wider text-white/30 mb-3">
-              Full text
-            </p>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <p className="text-[11px] uppercase tracking-wider text-white/30 m-0">
+                Full text
+              </p>
+              {docText.canonicalUrl && (
+                <a
+                  href={docText.canonicalUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11.5px] text-emerald-300/90 hover:text-emerald-200 underline underline-offset-2"
+                >
+                  View the original
+                </a>
+              )}
+            </div>
             <pre className="m-0 whitespace-pre-wrap break-words font-sans text-[13px] leading-[1.75] text-white/75 select-text">
               {docText.text}
             </pre>
