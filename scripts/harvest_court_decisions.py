@@ -374,14 +374,29 @@ def main() -> int:
                         skipped += 1
                         continue
                     try:
-                        sp = upload(content, key)
+                        # Always record canonical_url FIRST, on its own, so a
+                        # judgment is reachable even if the PDF upload then
+                        # fails. Flaky-network upload failures used to leave the
+                        # doc with chunks but no link at all — an orphan a user
+                        # could not open. Now the worst case is "text + source
+                        # link, no stored PDF", which the viewer redirects to.
                         get_db().table("legal_documents").update({
-                            "is_global": True, "owner_id": None, "pdf_storage_path": sp,
-                            "pdf_page_count": pages_of(content), "pdf_size_bytes": len(content),
+                            "is_global": True, "owner_id": None,
                             "canonical_url": pdf, "document_type": "judgment",
                         }).eq("id", res["document"]["id"]).execute()
+                        try:
+                            sp = upload(content, key)
+                            get_db().table("legal_documents").update({
+                                "pdf_storage_path": sp,
+                                "pdf_page_count": pages_of(content),
+                                "pdf_size_bytes": len(content),
+                            }).eq("id", res["document"]["id"]).execute()
+                        except Exception as e:  # noqa: BLE001
+                            # Non-fatal: the judgment is still openable via the
+                            # link and searchable via its chunks.
+                            print(f"    ~ pdf store skipped (linked instead): {str(e)[:50]}")
                     except Exception as e:  # noqa: BLE001
-                        print(f"    ! storage: {str(e)[:80]}")
+                        print(f"    ! ingest/link: {str(e)[:80]}")
                         failed += 1
                         continue
                     have.add(pdf)
