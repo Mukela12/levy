@@ -136,10 +136,20 @@ def listing_pages(c: httpx.Client, slug_name: str, max_pages: int, delay: float)
     """Yield (page_number, html) for the archive, stopping when it runs out."""
     for n in range(1, max_pages + 1):
         url = f"{CAT_ROOT}/{slug_name}/" if n == 1 else f"{CAT_ROOT}/{slug_name}/page/{n}/"
-        try:
-            r = c.get(url)
-        except Exception as e:  # noqa: BLE001
-            print(f"  ! page {n}: {str(e)[:70]}")
+        r = None
+        # A transient network blip must not end the whole run: one broken pipe
+        # on page 12 of 105 silently discarded the remaining 93 pages while
+        # looking like a completed harvest. Retry each page a few times, and
+        # only a real HTTP end-of-archive (non-200) stops the walk.
+        for attempt in range(3):
+            try:
+                r = c.get(url)
+                break
+            except Exception as e:  # noqa: BLE001
+                print(f"  ! page {n} attempt {attempt+1}: {str(e)[:60]}")
+                time.sleep(3 * (attempt + 1))
+        if r is None:
+            print(f"  ! page {n}: unreachable after 3 attempts; stopping walk")
             return
         time.sleep(delay)
         if r.status_code != 200:
