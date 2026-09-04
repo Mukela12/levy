@@ -254,17 +254,23 @@ def health_embeddings():
     """Synthetic embedding ping for uptime monitoring.
 
     Corpus search and case-law search both embed the user's query before the
-    vector lookup, and the corpus is embedded with one provider (no compatible
-    fallback). If that provider's quota is exhausted or its key is bad, every
-    search fails while chat's LLM still answers, so it is easy to miss. Point
-    an uptime checker at this path. 200 {ok:true} on success, 503 otherwise.
+    vector lookup. The primary provider now has a second route to the identical
+    model, so an empty billing balance no longer takes search down; this ping
+    also reports whether that fallback route is configured, so a monitor can
+    warn when the safety net is absent. 200 {ok:true} on success, 503 otherwise.
     """
     try:
         from .services.embedder import get_query_embedding
         from .config import get_settings
 
+        settings = get_settings()
         vec = get_query_embedding("ping")
-        return {"ok": True, "provider": get_settings().embedding_provider, "dims": len(vec)}
+        return {
+            "ok": True,
+            "provider": settings.embedding_provider,
+            "dims": len(vec),
+            "fallback_ready": bool(settings.openai_api_key_fallback),
+        }
     except Exception as e:
         from .config import get_settings
 

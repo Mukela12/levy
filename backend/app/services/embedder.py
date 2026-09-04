@@ -4,7 +4,10 @@ Embedding Service — Multi-provider embedding system with automatic fallback.
 Providers:
   1. Voyage AI (voyage-law-2) — Legal-optimized, 1024 dims.
   2. OpenAI (text-embedding-3-small) — Configurable dimensions; the project
-     uses 768 to match the existing pgvector(768) schema.
+     uses 768 to match the existing pgvector(768) schema. A SECOND route to
+     this SAME model (a fallback OpenAI/Azure key) is tried automatically when
+     the primary key hits an account-level failure, so an empty balance no
+     longer takes all of search down.
   3. Local (BAAI/bge-base-en-v1.5) — Free fallback, 768 dims, CPU.
 
 The selected provider is set by `EMBEDDING_PROVIDER` in .env. Each provider
@@ -66,13 +69,48 @@ def _get_openai_client():
     return _openai_client
 
 
-def _openai_embed(texts: list[str]) -> list[list[float]]:
+_openai_fallback_client = None
+
+
+def _get_openai_fallback_client():
+    """Client for the second route to the identical embedding model.
+
+    Returns None when no fallback is configured, in which case behaviour is
+    exactly as before this existed.
+    """
+    global _openai_fallback_client
+    settings = get_settings()
+    if not settings.openai_api_key_fallback:
+        return None
+    if _openai_fallback_client is None:
+        from openai import OpenAI
+        kwargs = {"api_key": settings.openai_api_key_fallback}
+        if settings.openai_fallback_base_url:
+            kwargs["base_url"] = settings.openai_fallback_base_url
+        _openai_fallback_client = OpenAI(**kwargs)
+    return _openai_fallback_client
+
+
+def _is_account_level_error(e: Exception) -> bool:
+    """True for failures a retry on the SAME key will not fix: no credit, bad
+    key, org rate limit. These are exactly the cases the second route helps
+    with; a malformed-input 400 is not one and fails identically on both."""
+    blob = f"{getattr(e, 'status_code', '')} {getattr(e, 'message', '')} {e}".lower()
+    return any(k in blob for k in (
+        "insufficient_quota", "quota", "credit", "billing", "balance",
+        "exceeded your current", "429", "rate limit", "rate_limit",
+        "401", "invalid api key", "incorrect api key", "invalid_api_key",
+        "permission", "account", "deactivated", "suspended",
+    ))
+
+
+def _openai_embed(texts: list[str], client=None) -> list[list[float]]:
     """
     Generate embeddings using OpenAI text-embedding-3-small (or whatever
     `openai_embedding_model` is configured), reduced to the configured
     `embedding_dimensions` so the vectors fit the existing pgvector schema.
     """
-    client = _get_openai_client()
+    client = client or _get_openai_client()
     settings = get_settings()
     model = settings.openai_embedding_model
     dims = settings.embedding_dimensions
@@ -109,6 +147,57 @@ def _local_embed(texts: list[str]) -> list[list[float]]:
 
 # ─── Public API (with fallback) ──────────────────────────────────────────
 
+def _openai_embed_resilient(texts: list[str], *, label: str) -> list[list[float]]:
+    """Embed with OpenAI, retrying transient blips on the primary key, then
+    falling over to the second route (same model) on an account-level failure.
+
+    The corpus-corruption rule still holds: we never fall back to a DIFFERENT
+    model. The fallback is the identical model on another account/endpoint, so
+    its vectors are interchangeable with everything already stored.
+    """
+    settings = get_settings()
+    last_err: Exception | None = None
+    account_level = False
+    for attempt in range(1, 4):
+        try:
+            if attempt == 1:
+                print(f"  Using OpenAI ({settings.openai_embedding_model}) for {label} (attempt {attempt})...")
+            t0 = time.time()
+            result = _openai_embed(texts)
+            if attempt > 1 or account_level:
+                print(f"  OpenAI recovered on attempt {attempt}")
+            else:
+                print(f"  OpenAI: {len(result)} embeddings in {time.time()-t0:.1f}s ({len(result[0])} dims)")
+            return result
+        except Exception as e:  # noqa: BLE001
+            last_err = e
+            account_level = _is_account_level_error(e)
+            print(f"  OpenAI attempt {attempt} failed: {str(e)[:120]}")
+            # An account-level failure will not heal by retrying the same key —
+            # go straight to the fallback route instead of burning the backoff.
+            if account_level:
+                break
+            if attempt < 3:
+                time.sleep(2 * attempt)
+
+    fb = _get_openai_fallback_client()
+    if fb is not None:
+        print("  Primary OpenAI exhausted; trying the fallback embedding route (same model)...")
+        for attempt in range(1, 3):
+            try:
+                result = _openai_embed(texts, client=fb)
+                print(f"  Fallback route answered: {len(result)} embeddings ({len(result[0])} dims)")
+                return result
+            except Exception as e:  # noqa: BLE001
+                last_err = e
+                print(f"  Fallback attempt {attempt} failed: {str(e)[:120]}")
+                if attempt < 2:
+                    time.sleep(2)
+
+    # Both routes gone. Raise rather than embed with an incompatible model.
+    raise RuntimeError(f"OpenAI embedding failed (primary+fallback) for {label}: {last_err}")
+
+
 def get_embeddings(texts: list[str], batch_size: int = 128) -> list[list[float]]:
     """
     Generate embeddings for a list of texts.
@@ -133,27 +222,10 @@ def get_embeddings(texts: list[str], batch_size: int = 128) -> list[list[float]]
             return _local_embed(texts)
 
     elif provider == "openai":
-        # Retry up to 3 times — most failures are transient connection blips.
-        # We DO NOT silently fall back to the local model because its vectors
-        # are incompatible with OpenAI's. Mixing the two corrupts the corpus.
-        last_err: Exception | None = None
-        for attempt in range(1, 4):
-            try:
-                print(f"  Using OpenAI ({settings.openai_embedding_model}) for {len(texts)} texts (attempt {attempt})...")
-                t0 = time.time()
-                result = _openai_embed(texts)
-                elapsed = time.time() - t0
-                print(f"  OpenAI: {len(result)} embeddings in {elapsed:.1f}s ({len(result[0])} dims)")
-                return result
-            except Exception as e:
-                last_err = e
-                print(f"  OpenAI attempt {attempt} failed: {e}")
-                if attempt < 3:
-                    time.sleep(2 * attempt)
-        # Out of retries — raise. The caller decides whether to skip the
-        # document or escalate; never embed half a document with the wrong
-        # provider.
-        raise RuntimeError(f"OpenAI embedding failed after 3 attempts: {last_err}")
+        # Retry transient blips on the primary key, then fall over to the second
+        # route (identical model) on an account-level failure. We still NEVER
+        # fall back to a different model: incompatible vectors corrupt the corpus.
+        return _openai_embed_resilient(texts, label=f"{len(texts)} texts")
 
     elif provider == "local":
         print(f"  Using local model for {len(texts)} texts...")
@@ -185,16 +257,9 @@ def get_query_embedding(query: str) -> list[float]:
             return _local_embed([query])[0]
 
     elif provider == "openai":
-        # Same no-silent-fallback policy as get_embeddings.
-        last_err: Exception | None = None
-        for attempt in range(1, 4):
-            try:
-                return _openai_embed([query])[0]
-            except Exception as e:
-                last_err = e
-                if attempt < 3:
-                    time.sleep(1 * attempt)
-        raise RuntimeError(f"OpenAI query embedding failed: {last_err}")
+        # Same policy, plus the second-route fallback, so a signed-in lawyer's
+        # search still resolves when the primary billing account is empty.
+        return _openai_embed_resilient([query], label="query")[0]
 
     elif provider == "local":
         return _local_embed([query])[0]

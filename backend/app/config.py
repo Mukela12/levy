@@ -18,6 +18,17 @@ class Settings(BaseSettings):
 
     # OpenAI (for embeddings — text-embedding-3-small w/ configurable dims)
     openai_api_key: str = ""
+    # Fallback route for embeddings, used ONLY when the primary OpenAI key
+    # fails on an account-level error (empty balance, bad key, rate limit).
+    # It MUST serve the IDENTICAL model at the IDENTICAL dimensions, or the
+    # vectors it returns are incompatible with the corpus and search silently
+    # returns wrong matches. Two safe options:
+    #   * a second OpenAI account/org key   -> leave base_url empty
+    #   * an Azure OpenAI text-embedding-3-small deployment -> set base_url
+    # A different MODEL (Voyage, Cohere, local BGE) is NOT a valid fallback
+    # here, however tempting: its vectors do not live in the same space.
+    openai_api_key_fallback: str = ""
+    openai_fallback_base_url: str = ""
 
     # Anthropic (for chat)
     anthropic_api_key: str = ""
