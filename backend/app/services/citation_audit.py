@@ -80,6 +80,11 @@ _EDGE_STOP = {"in", "see", "eg", "e.g", "compare", "following", "applying",
               "authority", "leading", "case", "matter", "cf", "also", "under",
               "including", "cite", "cited", "held", "read", "per"}
 
+# words that end a party name on the right: they begin the surrounding legal
+# prose, not the litigant ("... v Loretta Kunda Court of Appeal Case No...")
+_RIGHT_STOP = {"court", "appeal", "case", "no", "judgment", "held", "decided",
+               "supra", "ibid", "the", "scz", "caz", "ccz", "app", "ruling"}
+
 _NUMCITE = re.compile(
     r"\b(?:APP|SCZ|CAZ|CCZ|HP[CFA]?|SP|Appeal|ZR|ZMSC|ZMCA|ZMHC|ZMIC|ZMCC)\b"
     r"|\b(?:No\.?\s*)?\d{1,4}\s*(?:of|/)\s*\d{4}\b|\b\d{4}\b", re.I)
@@ -132,6 +137,8 @@ def _party_right(text: str, start: int) -> tuple[str, int]:
         raw = m.group(0)
         w = raw.strip(".,;:()[]")
         low = w.lower()
+        if low in _RIGHT_STOP and tokens:
+            break
         if w and (w[0].isupper() or w.isdigit() or low in _CONNECTORS or low in ("others",)):
             tokens.append(w)
             pos = m.end()
@@ -162,6 +169,12 @@ def extract_citations(text: str) -> list[dict]:
         tail = text[after:after + 60]
         cm = re.match(r"\s*[\(\[]\s*([^)\]]{3,58})\s*[\)\]]", tail)
         cite = (cm.group(1).strip() if cm else "")
+        if not cite:
+            # unbracketed tail: "... v Loretta Kunda Court of Appeal Case No.
+            # 142 of 2019" still carries the number that verifies the match
+            nm = re.search(r"(?:No\.?\s*)?(\d{1,4})\s*(?:of|/)\s*(\d{4})", tail)
+            if nm:
+                cite = f"{nm.group(1)} of {nm.group(2)}"
         # only audit things that look like real case references: either a
         # citation-ish tail exists nearby, or both parties are multiword/known
         numeric = bool(_NUMCITE.search(cite)) or bool(_NUMCITE.search(tail[:40]))
@@ -202,6 +215,24 @@ def _num_tokens(s: str) -> list[str]:
     return re.findall(r"\d+", s or "")
 
 
+def _tok_in(tok: str, hay: str) -> bool:
+    """Token membership tolerant of one-letter spelling drift.
+
+    The measured miss: the model cites "Loretta" while the stored title says
+    "Loreta" (the judgment's own OCR). Exact membership called a case we hold
+    unverified. A ratio floor of 0.86 tolerates that drift without letting
+    different surnames through ("banda" vs "bandra" fails, "zulu" vs "zule"
+    fails on length-4 words).
+    """
+    if tok in hay:
+        return True
+    if len(tok) < 5:
+        return False
+    from difflib import SequenceMatcher
+    return any(SequenceMatcher(None, tok, w).ratio() >= 0.86
+               for w in hay.split() if abs(len(w) - len(tok)) <= 2)
+
+
 def _match_case(c: dict, index: list[dict]) -> dict | None:
     """Match a cited case to a held judgment, biased hard toward precision.
 
@@ -222,8 +253,8 @@ def _match_case(c: dict, index: list[dict]) -> dict | None:
         if r.get("document_type") != "judgment":
             continue
         hay = r["_ntitle"] + " " + r["_nshort"]
-        a_hit = all(w in hay for w in na.split()[:2])
-        b_hit = all(w in hay for w in nb.split()[:2])
+        a_hit = all(_tok_in(w, hay) for w in na.split()[:2])
+        b_hit = all(_tok_in(w, hay) for w in nb.split()[:2])
         if not (a_hit and b_hit):
             continue
         hay_years = [n for n in _num_tokens(hay) if len(n) == 4]
