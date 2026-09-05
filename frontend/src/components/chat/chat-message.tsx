@@ -18,6 +18,7 @@ import { CheatSheetCard } from './cheat-sheet-card'
 import { QuizCard } from './quiz-card'
 import { AnswerFeedback } from './answer-feedback'
 import type {
+  CitationVerdict,
   ApplicationPlan,
   ArtifactView,
   CaseLawMatch,
@@ -48,6 +49,10 @@ export type MessageBlock =
   // store it on the user message so attachments are scoped to one message
   // (not the whole session) and remain visible in the chat history.
   | { kind: 'attachments'; docs: Array<{ id: string; title: string }> }
+  // Per-citation verification verdicts for the finished answer, produced
+  // server-side by matching every authority named in the prose against the
+  // document library. Rendered as the authorities panel under the answer.
+  | { kind: 'citation_audit'; citations: CitationVerdict[] }
 
 interface ChatMessageProps {
   /** Row id of the saved message; enables the feedback control. */
@@ -237,6 +242,17 @@ export function ChatMessage({
                       key={`law-${block.toolCallId}`}
                       cases={cases}
                       onOpenCase={(documentId, title) =>
+                        onOpenCitation?.({ document_id: documentId, act_name: title, page_start: 1 } as ChunkUsed)
+                      }
+                    />
+                  )
+                }
+                if (block.kind === 'citation_audit') {
+                  return (
+                    <CitationAuditPanel
+                      key={`audit-${idx}`}
+                      citations={block.citations}
+                      onOpen={(documentId, title) =>
                         onOpenCitation?.({ document_id: documentId, act_name: title, page_start: 1 } as ChunkUsed)
                       }
                     />
@@ -470,6 +486,111 @@ export function ThinkingGlow({ label = 'Thinking' }: { label?: string }) {
           {`${label}…`}
         </TextShimmer>
       </div>
+    </div>
+  )
+}
+
+/* ── Authorities panel ────────────────────────────────────────────────────
+   Per-citation verification badges. Design intent: a legal instrument, not a
+   status toast — hairline rules, engraved-mark SVGs drawn for this panel (no
+   icon-font glyphs, no emoji), tabular rhythm, and wording addressed to a
+   practitioner. Verified rows open the held document; unverified rows say
+   plainly that the authority is not in the library and must be checked. */
+
+function VerifiedMark() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0">
+      <circle cx="8" cy="8" r="7.25" stroke="currentColor" strokeWidth="1" opacity="0.45" />
+      <circle cx="8" cy="8" r="5" stroke="currentColor" strokeWidth="0.75" opacity="0.25" />
+      <path d="M5.2 8.2l1.9 1.9 3.7-4.1" stroke="currentColor" strokeWidth="1.4"
+            strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function UnverifiedMark() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0">
+      <circle cx="8" cy="8" r="7.25" stroke="currentColor" strokeWidth="1" opacity="0.45"
+              strokeDasharray="2.4 2.1" />
+      <path d="M8 4.6v4.2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <circle cx="8" cy="11.4" r="0.9" fill="currentColor" />
+    </svg>
+  )
+}
+
+function CitationAuditPanel({
+  citations,
+  onOpen,
+}: {
+  citations: CitationVerdict[]
+  onOpen?: (documentId: string, title: string) => void
+}) {
+  if (!citations || citations.length === 0) return null
+  const verified = citations.filter((c) => c.status === 'verified')
+  const missing = citations.filter((c) => c.status !== 'verified')
+  return (
+    <div className="my-3 rounded-lg border border-white/[0.07] bg-white/[0.015] overflow-hidden">
+      <div className="flex items-baseline justify-between px-4 pt-3 pb-2 border-b border-white/[0.05]">
+        <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-white/40">
+          Authorities cited
+        </span>
+        <span className="text-[10.5px] tabular-nums text-white/30">
+          {verified.length} verified
+          {missing.length > 0 && (
+            <span className="text-amber-300/60"> · {missing.length} not in library</span>
+          )}
+        </span>
+      </div>
+      <ul className="divide-y divide-white/[0.04] m-0 p-0 list-none">
+        {citations.map((c, i) => {
+          const isVerified = c.status === 'verified' && c.document_id
+          const row = (
+            <div className="flex items-center gap-3 px-4 py-2.5">
+              <span className={isVerified ? 'text-emerald-400/90' : 'text-amber-300/80'}>
+                {isVerified ? <VerifiedMark /> : <UnverifiedMark />}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[12.5px] leading-snug text-white/80 truncate">
+                  {c.text}
+                </span>
+                <span className="block text-[10px] uppercase tracking-[0.14em] text-white/25 mt-0.5">
+                  {c.kind === 'case' ? 'Judgment' : 'Statute'}
+                  {!isVerified && (
+                    <span className="normal-case tracking-normal text-amber-300/55">
+                      {'  ·  not in the library, verify before relying on it'}
+                    </span>
+                  )}
+                </span>
+              </span>
+              {isVerified && (
+                <span className="flex items-center gap-1 text-[10.5px] text-emerald-400/50 group-hover:text-emerald-300/90 transition-colors shrink-0">
+                  Open
+                  <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                    <path d="M3.5 8.5l5-5M5 3.5h3.5V7" stroke="currentColor" strokeWidth="1.2"
+                          strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
+              )}
+            </div>
+          )
+          return (
+            <li key={i}>
+              {isVerified ? (
+                <button
+                  type="button"
+                  onClick={() => onOpen?.(c.document_id as string, c.title || c.text)}
+                  className="group w-full text-left hover:bg-emerald-500/[0.035] transition-colors"
+                >
+                  {row}
+                </button>
+              ) : (
+                row
+              )}
+            </li>
+          )
+        })}
+      </ul>
     </div>
   )
 }

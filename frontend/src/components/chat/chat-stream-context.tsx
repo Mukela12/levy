@@ -436,6 +436,11 @@ export function ChatStreamProvider({ children }: { children: React.ReactNode }) 
           // The server persisted the answer and told us its row id. Attach it
           // to the on-screen message so the reader can vote straight away
           // rather than after a reload — which is when nobody votes.
+          onCitationAudit: (citations) =>
+            updateLast(sid, (last) => ({
+              ...last,
+              blocks: [...(last.blocks ?? []), { kind: 'citation_audit', citations }],
+            })),
           onSaved: (messageId) =>
             updateLast(sid, (last) => ({ ...last, id: messageId })),
           onDone: (metadata) => {

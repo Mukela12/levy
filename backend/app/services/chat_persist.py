@@ -53,6 +53,11 @@ class RunAccumulator:
                     c["durationMs"] = e.get("ms")
                     c["db"] = e.get("db", [])
                     c["web"] = e.get("web", [])
+        elif t == "citation_audit":
+            # Persisted as a block so history reloads render the same verdicts
+            # the live stream showed.
+            self.blocks.append({"kind": "citation_audit",
+                                "citations": e.get("citations") or []})
         elif t == "artifact":
             a = e.get("artifact")
             if a and not any(x.get("id") == a.get("id") for x in self.artifacts):

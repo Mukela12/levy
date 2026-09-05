@@ -29,6 +29,14 @@ interface ChatResponse {
   timing: { embedding_ms: number; retrieval_ms: number; generation_ms: number; total_ms: number }
 }
 
+export interface CitationVerdict {
+  text: string
+  kind: 'case' | 'statute'
+  status: 'verified' | 'not_found'
+  document_id?: string
+  title?: string
+}
+
 interface ChunkUsed {
   id: string
   document_id?: string
@@ -599,6 +607,7 @@ export interface StreamHandlers {
   onCaseLaw?: (event: CaseLawEvent) => void
   onCheatSheet?: (event: CheatSheetEvent) => void
   onQuiz?: (event: QuizEvent) => void
+  onCitationAudit?: (citations: CitationVerdict[]) => void
   onDone?: (metadata: AgentDoneMetadata) => void
   onError?: (message: string) => void
 }
@@ -692,6 +701,9 @@ export async function streamQuery(
         continue
       }
       switch (parsed.type) {
+        case 'citation_audit':
+          handlers?.onCitationAudit?.((parsed.citations as CitationVerdict[]) ?? [])
+          break
         case 'saved':
           handlers?.onSaved?.(parsed.message_id as string)
           break

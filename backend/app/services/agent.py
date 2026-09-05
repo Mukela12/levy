@@ -1392,6 +1392,23 @@ async def run_agent(
 
         messages.append({"role": "user", "content": tool_results_content})
 
+    # Per-citation verification of the finished answer. The retrieved-sources
+    # strip only proves what was SEARCHED; this checks what the prose CLAIMS,
+    # which is where a model hallucinates an authority. Verified citations
+    # carry the held document's id so the client opens it in one click;
+    # unmatched ones are shown honestly as not in the library.
+    try:
+        from .citation_audit import audit_answer
+        _answer_text = "".join(
+            getattr(b, "text", "") for b in final_message.content
+            if getattr(b, "type", None) == "text"
+        ) if final_message is not None else ""
+        _audit = audit_answer(_answer_text)
+    except Exception:  # noqa: BLE001 — verification must never break an answer
+        _audit = []
+    if _audit:
+        yield {"type": "citation_audit", "citations": _audit}
+
     yield {
         "type": "sources",
         "db": list(db_sources_acc.values()),
