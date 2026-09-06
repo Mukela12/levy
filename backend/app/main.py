@@ -269,7 +269,10 @@ def health_embeddings():
             "ok": True,
             "provider": settings.embedding_provider,
             "dims": len(vec),
+            # same-model second key (identical vectors, instant failover)
             "fallback_ready": bool(settings.openai_api_key_fallback),
+            # independent-vendor second space (Gemini column; needs backfill)
+            "gemini_space_ready": bool(settings.gemini_api_key),
         }
     except Exception as e:
         from .config import get_settings

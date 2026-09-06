@@ -147,6 +147,47 @@ def _local_embed(texts: list[str]) -> list[list[float]]:
 
 # ─── Public API (with fallback) ──────────────────────────────────────────
 
+# ─── Gemini Provider (the SECOND embedding space) ────────────────────────
+#
+# gemini-embedding-001 at 768 dims fills `embedding_gemini`, a separate
+# column searched by separate RPCs. Gemini vectors NEVER go into the primary
+# column and OpenAI vectors never into the Gemini one: the two spaces are
+# incompatible, and mixing them is silent search corruption. The free tier
+# makes this the affordable cross-vendor redundancy.
+
+_GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001"
+
+
+def gemini_available() -> bool:
+    return bool(get_settings().gemini_api_key)
+
+
+def gemini_embed(texts: list[str], *, task: str = "RETRIEVAL_DOCUMENT") -> list[list[float]]:
+    """Embed with Gemini for the second space. Batched; raises on failure."""
+    import httpx
+    key = get_settings().gemini_api_key
+    if not key:
+        raise RuntimeError("GEMINI_API_KEY is not configured")
+    out: list[list[float]] = []
+    B = 90  # batchEmbedContents cap is 100; leave headroom
+    with httpx.Client(timeout=120) as c:
+        for i in range(0, len(texts), B):
+            batch = texts[i:i + B]
+            r = c.post(f"{_GEMINI_URL}:batchEmbedContents",
+                       headers={"x-goog-api-key": key},
+                       json={"requests": [
+                           {"model": "models/gemini-embedding-001",
+                            "content": {"parts": [{"text": t[:8000]}]},
+                            "taskType": task,
+                            "outputDimensionality": 768} for t in batch]})
+            r.raise_for_status()
+            embs = [e["values"] for e in r.json()["embeddings"]]
+            if any(len(e) != 768 for e in embs):
+                raise RuntimeError("gemini returned wrong dimensionality")
+            out.extend(embs)
+    return out
+
+
 def _openai_embed_resilient(texts: list[str], *, label: str) -> list[list[float]]:
     """Embed with OpenAI, retrying transient blips on the primary key, then
     falling over to the second route (same model) on an account-level failure.
@@ -266,6 +307,31 @@ def get_query_embedding(query: str) -> list[float]:
 
     else:
         raise ValueError(f"Unknown embedding provider: {provider}")
+
+
+def get_query_embedding_ex(query: str) -> dict:
+    """Query embedding plus WHICH SPACE it belongs to.
+
+    {"vector": [...], "space": "openai" | "gemini"}
+
+    The caller must search the matching column: an OpenAI vector against the
+    primary embeddings, a Gemini vector against embedding_gemini, never
+    crossed. Gemini is used only when every OpenAI route (primary key and
+    fallback key) is down, so a total OpenAI account failure degrades search
+    to the second space instead of taking it offline.
+    """
+    settings = get_settings()
+    if settings.embedding_provider != "openai":
+        return {"vector": get_query_embedding(query), "space": settings.embedding_provider}
+    try:
+        return {"vector": _openai_embed_resilient([query], label="query")[0],
+                "space": "openai"}
+    except Exception:
+        if not gemini_available():
+            raise
+        print("  OpenAI routes exhausted; answering the query from the Gemini space")
+        return {"vector": gemini_embed([query], task="RETRIEVAL_QUERY")[0],
+                "space": "gemini"}
 
 
 def get_embedding_dimensions() -> int:

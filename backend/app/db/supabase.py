@@ -50,6 +50,7 @@ def search_chunks(
     *,
     caller_user_id: str | None = None,
     attached_doc_ids: list[str] | None = None,
+    space: str = "openai",
 ) -> list[dict]:
     """
     Vector similarity search via Supabase RPC.
@@ -63,8 +64,12 @@ def search_chunks(
     behaves identically to the old global-only search.
     """
     db = get_db()
+    # `space` picks WHICH embedding column the vector is compared against.
+    # The query vector and the column must come from the same model; the
+    # embedder reports the space alongside the vector, and crossing them
+    # would return confidently wrong matches.
     result = db.rpc(
-        "search_legal_chunks_scoped",
+        "search_legal_chunks_scoped" if space == "openai" else "search_legal_chunks_scoped_gemini",
         {
             "query_embedding": query_embedding,
             "match_count": top_k,

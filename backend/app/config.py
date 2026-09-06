@@ -29,6 +29,11 @@ class Settings(BaseSettings):
     # here, however tempting: its vectors do not live in the same space.
     openai_api_key_fallback: str = ""
     openai_fallback_base_url: str = ""
+    # Gemini (gemini-embedding-001 at 768 dims) powers the SECOND embedding
+    # space: the corpus is dual-embedded so that when the OpenAI account is
+    # down, queries embed with Gemini and search the Gemini-embedded column.
+    # Never mix the two spaces; each provider searches only its own vectors.
+    gemini_api_key: str = ""
 
     # Anthropic (for chat)
     anthropic_api_key: str = ""

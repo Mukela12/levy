@@ -36,7 +36,7 @@ except Exception:
 
 from ..config import get_settings
 from ..db.supabase import search_chunks
-from .embedder import get_query_embedding
+from .embedder import get_query_embedding, get_query_embedding_ex
 from . import pdf_tools
 from . import templates as templates_service
 from .entitlements import calculate_entitlements
@@ -194,14 +194,15 @@ async def _search_corpus(
     """Vector search across the ingested Zambian-law corpus, scoped by caller."""
     settings = get_settings()
     threshold = threshold if threshold is not None else settings.similarity_threshold
-    embedding = await asyncio.to_thread(get_query_embedding, query)
+    emb = await asyncio.to_thread(get_query_embedding_ex, query)
     chunks = await asyncio.to_thread(
         search_chunks,
-        embedding,
+        emb["vector"],
         top_k=top_k,
         threshold=threshold,
         caller_user_id=caller_user_id,
         attached_doc_ids=attached_doc_ids,
+        space=emb["space"],
     )
 
     results = []
@@ -263,9 +264,10 @@ async def _search_case_law(
     hit per case (highest-scoring chunk), and enriches with court/year/area
     from legal_documents. Returns structured precedent the UI renders as cards.
     """
-    embedding = await asyncio.to_thread(get_query_embedding, query)
+    emb = await asyncio.to_thread(get_query_embedding_ex, query)
     # Over-fetch broadly (judgments are a minority of chunks) at a low threshold.
-    chunks = await asyncio.to_thread(search_chunks, embedding, top_k=80, threshold=0.2)
+    chunks = await asyncio.to_thread(search_chunks, emb["vector"], top_k=80,
+                                     threshold=0.2, space=emb["space"])
 
     # Keep judgment chunks, dedupe by document (first = highest similarity).
     best: dict[str, dict] = {}
