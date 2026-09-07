@@ -31,6 +31,14 @@ load_dotenv(REPO / "backend" / ".env")
 from app.db.supabase import get_db                       # noqa: E402
 from app.services.embedder import gemini_embed           # noqa: E402
 
+import os as _os
+import httpx
+_URL = _os.environ.get("SUPABASE_URL", "").rstrip("/")
+_KEY = _os.environ.get("SUPABASE_KEY", "")
+_HDRS = {"apikey": _KEY, "Authorization": f"Bearer {_KEY}",
+         "Content-Type": "application/json", "Prefer": "return=minimal"}
+_pool = httpx.Client(limits=httpx.Limits(max_connections=8, max_keepalive_connections=8))
+
 
 def main() -> int:
     ap = argparse.ArgumentParser()
@@ -70,12 +78,35 @@ def main() -> int:
                 return 1
             time.sleep(10)
             continue
-        for r, e in zip(rows, embs):
-            db.table("legal_chunks").update({"embedding_gemini": e}).eq("id", r["id"]).execute()
+        # Parallel per-row updates. A partial-column upsert would be one
+        # round trip but cannot work: Postgres enforces NOT NULL on the
+        # proposed insert tuple BEFORE conflict resolution, so an id+column
+        # upsert dies on the table's content column (verified against the
+        # live schema). Sixteen concurrent updates get within 2x of the
+        # single-request ideal without any migration.
+        # one POOLED client shared by all workers: httpx.Client is thread-safe
+        # and reuses connections, where per-call clients meant bursts of fresh
+        # TLS handshakes that this network's flakiness kept killing
+        from concurrent.futures import ThreadPoolExecutor
+        def _put(pair):
+            r, e = pair
+            for attempt in range(4):
+                try:
+                    resp = _pool.patch(
+                        f"{_URL}/rest/v1/legal_chunks?id=eq.{r['id']}",
+                        headers=_HDRS, json={"embedding_gemini": e}, timeout=30)
+                    if resp.status_code < 300:
+                        return
+                except Exception:
+                    pass
+                time.sleep(2 ** attempt)
+            raise RuntimeError(f"update failed for {r['id']}")
+        with ThreadPoolExecutor(max_workers=6) as ex:
+            list(ex.map(_put, zip(rows, embs)))
         done += len(rows)
         if done % 900 < args.batch:
             print(f"  [{done:,}/{min(args.limit,total):,}]", flush=True)
-        time.sleep(1.2)  # stay under free-tier RPM without measuring it
+        time.sleep(0.1)  # paid tier: politeness only
 
     left = (db.table("legal_chunks").select("id", count="exact")
             .is_("embedding_gemini", "null").limit(1).execute()).count or 0
