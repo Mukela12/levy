@@ -42,7 +42,7 @@ from app.services import laws_africa  # noqa: E402
 from app.services.form_ingester import ingest_form_pdf  # noqa: E402
 
 BUCKET = "legal-docs"
-DOWNLOAD_DIR = Path("/Users/mukelakatungu/levy-test-fixtures/lawsafrica-zm")
+DOWNLOAD_DIR = Path.home() / "levy-test-fixtures" / "lawsafrica-zm"
 DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
