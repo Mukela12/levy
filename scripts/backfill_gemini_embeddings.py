@@ -25,6 +25,8 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO / "backend"))
+sys.path.insert(0, str(REPO / "scripts"))
+import _dns_resilient  # noqa: E402,F401  survive the flaky local resolver (it killed a run)
 from dotenv import load_dotenv
 load_dotenv(REPO / "backend" / ".env")
 
@@ -53,10 +55,11 @@ def main() -> int:
 
     done = failed = 0
     backoff = 5
+    batch_size = 24  # adaptive: shrinks on 429, grows on success
     while done < args.limit:
         rows = (db.table("legal_chunks").select("id,content")
                 .is_("embedding_gemini", "null")
-                .limit(args.batch).execute().data) or []
+                .limit(batch_size).execute().data) or []
         if not rows:
             print("nothing left to embed", flush=True)
             break
@@ -64,12 +67,21 @@ def main() -> int:
         try:
             embs = gemini_embed(texts, task="RETRIEVAL_DOCUMENT")
             backoff = 5
+            batch_size = min(args.batch, batch_size + 8)
         except Exception as e:  # noqa: BLE001
             msg = str(e)
             if "429" in msg or "RESOURCE_EXHAUSTED" in msg:
-                print(f"  rate limited; sleeping {backoff}s", flush=True)
-                time.sleep(backoff)
-                backoff = min(backoff * 2, 300)
+                # a batch that trips the tokens-per-minute ceiling trips it
+                # every time at that size: shrink until batches fit, regrow
+                # on success so throughput tracks the real quota
+                batch_size = max(8, batch_size // 2)
+                # The quota is per-minute and one batch spends it whole, so
+                # exponential backoff only wastes the refill window (a 300s
+                # nap forfeits four whole windows). Sleep one window and go:
+                # throughput then self-adapts to whatever quota the key has,
+                # and rises automatically when the paid limits propagate.
+                print("  minute quota spent; sleeping 61s", flush=True)
+                time.sleep(61)
                 continue
             print(f"  ! embed error: {msg[:100]}", flush=True)
             failed += 1
@@ -106,7 +118,7 @@ def main() -> int:
         done += len(rows)
         if done % 900 < args.batch:
             print(f"  [{done:,}/{min(args.limit,total):,}]", flush=True)
-        time.sleep(0.1)  # paid tier: politeness only
+        
 
     left = (db.table("legal_chunks").select("id", count="exact")
             .is_("embedding_gemini", "null").limit(1).execute()).count or 0
