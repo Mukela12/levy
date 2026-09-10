@@ -93,12 +93,34 @@ _NUMCITE = re.compile(
 # with optional "No. 3 of 2019" / "Cap. 87" tails.
 _ACT = re.compile(
     r"\b(?P<name>"
-    r"(?:[A-Z][A-Za-z’'\-]+(?:\s+(?:of|and|the|[A-Z][A-Za-z’'\-]+)){0,7}\s+(?:Act|Code|Rules|Order))"
+    r"(?:[A-Z][A-Za-z’'\-]+(?:\s+(?:of|and|the|[A-Z][A-Za-z’'\-]+)){0,7}\s+(?:Act|Code|Rules|Regulations))(?![A-Za-z])"
     r"|Constitution(?:\s+of\s+Zambia)?"
     r")"
     r"(?P<tail>\s*,?\s*(?:No\.?\s*\d+\s*of\s*\d{4}|\(?Cap\.?\s*\d+\)?|\d{4}))?")
 
 _TITLECASE_STOP = {"The", "This", "That", "These", "Those", "A", "An"}
+
+# A statute's name never starts with these. Measured in the first live week:
+# answer headings ("## What Order 14 Actually Says") and prose ("a prohibited
+# act", "the key rules") were being extracted as statutes and shown to users
+# as "not in the library, verify before relying on it" — "What Order",
+# "Only Person Who Can Order", "Some Act". A junk NOT FOUND badge is almost as
+# corrosive as a false VERIFIED: it teaches the reader to ignore the panel.
+_NOT_A_STATUTE_START = {
+    "what", "does", "says", "say", "actually", "only", "who", "not", "an",
+    "honest", "reassessment", "now", "your", "most", "important", "although",
+    "letter", "demand", "three", "modes", "commencing", "action", "contracts",
+    "one", "paragraph", "key", "venue", "some", "prohibited", "part", "time",
+    "employee", "correct", "which", "why", "how", "when", "where", "under",
+    "per", "see", "within", "through", "beyond", "in", "any", "each", "every",
+    "relevant", "applicable", "governing", "same", "other", "such", "new",
+    "old", "main", "principal", "judicial", "hc", "first", "second", "third",
+    "yes", "no", "however", "because", "if", "and", "or", "but", "so",
+}
+# Suffix words carry no identity: "Rules" alone, or "Venue Rules", say nothing
+# about WHICH instrument. At least one token must be a proper content word.
+_WEAK_TOKENS = {"the", "of", "and", "zambia", "act", "code", "rules",
+                "regulations", "court", "courts", "high"}
 
 
 def _clean(text: str) -> str:
@@ -187,19 +209,46 @@ def extract_citations(text: str) -> list[dict]:
         seen.add(key)
         out.append({"kind": "case", "text": display, "a": a, "b": b, "cite": cite})
 
+    candidates = []
     for m in _ACT.finditer(text):
-        name = m.group("name").strip()
+        nm = m.group("name").strip()
+        # two instruments conjoined: split at " and " when the left side
+        # already ends with an instrument word
+        pieces = re.split(r"\s+and\s+(?:the\s+)?", nm)
+        if len(pieces) > 1 and re.search(r"(Act|Code|Rules|Regulations)$", pieces[0]):
+            for pc in pieces:
+                candidates.append((pc, ""))
+        else:
+            candidates.append((nm, m.group("tail") or ""))
+    for name, tail in candidates:
+        name = name.strip()
         # "Under the Employment Code Act" -> "Employment Code Act"
         parts = name.split()
         while parts and parts[0].lower() in ("under", "per", "see", "within",
                                              "through", "beyond", "the", "in"):
             parts.pop(0)
+        # A heading glued to a real name: "Discipline Under the Employment Code
+        # Act", "Objection The High Court Act". The instrument is the tail after
+        # the last "Under the" or mid-name capital "The", so keep only that.
+        joined = " ".join(parts)
+        for sep in (" Under the ", " under the ", " Under ", " The "):
+            if sep in joined:
+                joined = joined.rsplit(sep, 1)[-1]
+        parts = joined.split()
+        # peel any heading/prose words off the front
+        while parts and parts[0].lower().strip(".,") in (_NOT_A_STATUTE_START | {"of", "the"}):
+            parts.pop(0)
         name = " ".join(parts)
-        if not parts:
+        if not parts or len(parts) < 2:
+            continue
+        content = [w for w in parts[:-1] if w.lower() not in _WEAK_TOKENS]
+        if not content and not name.lower().startswith(("high court", "subordinate court",
+                                                        "supreme court", "court of appeal",
+                                                        "constitutional court")):
             continue
         if name.split()[0] in _TITLECASE_STOP and len(name.split()) < 3:
             continue
-        display = (name + (m.group("tail") or "")).strip(" ,")
+        display = (name + tail).strip(" ,")
         key = _norm(name)
         if key in seen or len(key) < 8:
             continue
@@ -292,7 +341,7 @@ def _match_statute(c: dict, index: list[dict]) -> dict | None:
     toks = [t for t in name.split() if t not in ("the", "of", "zambia")]
     if len(toks) >= 2:
         for r in index:
-            if r.get("document_type") in ("act", "bill") and all(t in r["_ntitle"] for t in toks):
+            if r.get("document_type") in ("act", "bill", "court_rule") and all(t in r["_ntitle"] for t in toks):
                 return r
     return None
 

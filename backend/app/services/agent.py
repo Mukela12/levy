@@ -18,6 +18,7 @@ Event shapes emitted to the client:
 from __future__ import annotations
 
 import json
+import re
 import time
 from typing import AsyncIterator
 
@@ -202,7 +203,7 @@ class _NarrationGate:
         if len(self._buf) >= self.FLUSH_AT:
             self._armed = False
             out, self._buf = self._buf, ""
-            return out
+            return _strip_filler_opening(out)
         return ""
 
     def finalize(self, ended_in_tool_use: bool) -> str:
@@ -211,7 +212,48 @@ class _NarrationGate:
             return ""
         self._armed = False
         out, self._buf = self._buf, ""
-        return "" if ended_in_tool_use else out
+        return "" if ended_in_tool_use else _strip_filler_opening(out)
+
+
+# Filler sentences a model opens an ANSWERING turn with. The gate above only
+# drops text before a tool call; the week after it shipped, 21% of answers
+# still opened with "Great question!", "Of course!", "I apologize for that!",
+# "Excellent." — or wrote "Let me search for this case..." as prose on a turn
+# that never called a tool at all. The system prompt names these openers and
+# the model uses them anyway, so they are removed mechanically from the one
+# place they occur: the start of a turn's first emitted text. Substantive
+# openers ("Yes.", "No.", "Under the Employment Code Act...") never match.
+# Deliberately NOT stripped: an acknowledgement that the user caught an error
+# ("You are right to challenge that"). When Levy is correcting a legal mistake,
+# saying so plainly is the substance, not filler.
+_FILLER_OPENING = re.compile(
+    r"^\s*(?:"
+    r"(?:great|good|excellent|interesting|fair|important|very good) "
+    r"(?:question|point|catch|challenge|follow-up question)[!.]"
+    r"|(?:of course|certainly|absolutely|sure|excellent|perfect|great|good|understood|got it)[!.,]"
+    r"|i (?:apologi[sz]e|am sorry|'m sorry)(?: for (?:that|the confusion|the delay|this))?[!.]"
+    r"|(?:i now have|now i have|i have|good\. i have) (?:everything|all|enough|sufficient)[^.!?\n]{0,80}[.!]"
+    r"|(?:let me|i'll|i will) (?:search|fetch|check|look|find|pull|retrieve|try|verify|"
+    r"confirm|research|review|get|ground)[^.!?\n]{0,140}[.!]"
+    r")\s*",
+    re.IGNORECASE,
+)
+
+
+def _strip_filler_opening(text: str) -> str:
+    """Peel leading filler sentences; never return an empty answer."""
+    out = text
+    for _ in range(5):          # several can be chained: "Great question! Let me..."
+        m = _FILLER_OPENING.match(out)
+        if not m or m.end() == 0:
+            break
+        rest = out[m.end():]
+        if not rest.strip():    # the whole thing was filler: keep it, do not blank an answer
+            break
+        out = rest
+    if out is not text and out[:1].islower():
+        out = out[:1].upper() + out[1:]
+    return out
 
 
 AGENT_SYSTEM_SUFFIX = """
