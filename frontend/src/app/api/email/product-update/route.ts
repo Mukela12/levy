@@ -28,6 +28,10 @@ const EDITIONS = {
 } as const
 const LATEST_EDITION: keyof typeof EDITIONS = 'citations'
 
+// 30 sends at 150ms apart is under 7 a second, comfortably inside Resend's 10.
+const SEND_INTERVAL_MS = 150
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
 function authorized(request: NextRequest) {
   const expected = process.env.LEVY_EMAIL_ADMIN_TOKEN
   if (!expected) throw new Error('Missing LEVY_EMAIL_ADMIN_TOKEN')
@@ -82,24 +86,38 @@ export async function POST(request: NextRequest) {
     const results: Array<{ email: string; id: string }> = []
     const failures: Array<{ email: string; error: string }> = []
 
+    const send = (recipient: string) =>
+      sendLevyEmail({
+        to: [recipient],
+        subject: email.subject,
+        html: email.html,
+        text: email.text,
+        // Lets Gmail and Apple Mail show their own unsubscribe button, which
+        // people use instead of the spam button when it is offered.
+        headers: {
+          'List-Unsubscribe': `<mailto:${process.env.LEVY_EMAIL_REPLY_TO || 'mukelakatungu@levylegal.ai'}?subject=unsubscribe>`,
+        },
+      })
+
     for (const recipient of recipients) {
       try {
-        const result = await sendLevyEmail({
-          to: [recipient],
-          subject: email.subject,
-          html: email.html,
-          text: email.text,
-          // Lets Gmail and Apple Mail show their own unsubscribe button, which
-          // people use instead of the spam button when it is offered.
-          headers: {
-            'List-Unsubscribe': `<mailto:${process.env.LEVY_EMAIL_REPLY_TO || 'mukelakatungu@levylegal.ai'}?subject=unsubscribe>`,
-          },
-        })
+        let result
+        try {
+          result = await send(recipient)
+        } catch (error) {
+          // Resend allows 10 requests a second. The 11 September send lost 4 of
+          // 30 to 429s before the pacing below existed; one retry after the
+          // window resets is safe because a 429 means nothing was sent.
+          if (!(error instanceof Error && error.message.includes('(429)'))) throw error
+          await sleep(1100)
+          result = await send(recipient)
+        }
         results.push({ email: recipient, id: result.id })
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown send failure'
         failures.push({ email: recipient, error: message })
       }
+      await sleep(SEND_INTERVAL_MS)
     }
 
     return NextResponse.json({
