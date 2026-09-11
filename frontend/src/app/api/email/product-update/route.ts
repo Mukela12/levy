@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendLevyEmail } from '@/lib/email/resend'
-import { renderProductUpdateEmail } from '@/lib/email/templates'
+import { renderCitationUpdateEmail, renderProductUpdateEmail } from '@/lib/email/templates'
 
 /**
  * Second broadcast to the tester list. Same shape as tester-update, with two
@@ -16,7 +16,17 @@ type ProductUpdateRequest = {
   recipients: string[] | string
   preview?: boolean
   dryRun?: boolean
+  /** Which broadcast to render. Defaults to the latest. */
+  edition?: keyof typeof EDITIONS
 }
+
+// Each broadcast keeps its template, so an old one can still be re-rendered
+// for reference. 'case-files' went out 10 August 2026.
+const EDITIONS = {
+  'case-files': renderProductUpdateEmail,
+  citations: renderCitationUpdateEmail,
+} as const
+const LATEST_EDITION: keyof typeof EDITIONS = 'citations'
 
 function authorized(request: NextRequest) {
   const expected = process.env.LEVY_EMAIL_ADMIN_TOKEN
@@ -52,12 +62,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'At least one recipient is required' }, { status: 400 })
     }
 
-    const email = renderProductUpdateEmail({ preview: Boolean(payload.preview) })
+    const edition = payload.edition ?? LATEST_EDITION
+    if (!Object.hasOwn(EDITIONS, edition)) {
+      return NextResponse.json({ error: `Unknown edition: ${edition}` }, { status: 400 })
+    }
+    const email = EDITIONS[edition]({ preview: Boolean(payload.preview) })
 
     if (payload.dryRun) {
       return NextResponse.json({
         ok: true,
         dryRun: true,
+        edition,
         subject: email.subject,
         wouldSendTo: recipients.length,
         recipients,
@@ -74,6 +89,11 @@ export async function POST(request: NextRequest) {
           subject: email.subject,
           html: email.html,
           text: email.text,
+          // Lets Gmail and Apple Mail show their own unsubscribe button, which
+          // people use instead of the spam button when it is offered.
+          headers: {
+            'List-Unsubscribe': `<mailto:${process.env.LEVY_EMAIL_REPLY_TO || 'mukelakatungu@levylegal.ai'}?subject=unsubscribe>`,
+          },
         })
         results.push({ email: recipient, id: result.id })
       } catch (error) {

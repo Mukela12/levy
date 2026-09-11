@@ -3,6 +3,7 @@ type SendEmailParams = {
   subject: string
   html: string
   text: string
+  headers?: Record<string, string>
 }
 
 const RESEND_API_URL = 'https://api.resend.com/emails'
@@ -13,7 +14,7 @@ function requiredEnv(name: string, fallback?: string) {
   return value
 }
 
-export async function sendLevyEmail({ to, subject, html, text }: SendEmailParams) {
+export async function sendLevyEmail({ to, subject, html, text, headers }: SendEmailParams) {
   const apiKey = requiredEnv('RESEND_API_KEY')
   const from = requiredEnv('LEVY_EMAIL_FROM', 'Mukela Katungu <mukelakatungu@levylegal.ai>')
   const replyTo = requiredEnv('LEVY_EMAIL_REPLY_TO', 'mukelakatungu@levylegal.ai')
@@ -31,6 +32,7 @@ export async function sendLevyEmail({ to, subject, html, text }: SendEmailParams
       html,
       text,
       reply_to: replyTo,
+      ...(headers ? { headers } : {}),
     }),
     cache: 'no-store',
   })

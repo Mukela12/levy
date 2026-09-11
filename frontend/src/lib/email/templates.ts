@@ -2,7 +2,9 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://levylegal.ai'
 const CONTACT_EMAIL = process.env.LEVY_EMAIL_REPLY_TO || 'mukelakatungu@levylegal.ai'
 const GITHUB_URL = 'https://github.com/Mukela12'
 const GITHUB_LOGO_URL = 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png'
-const LEVY_LOGO_URL = `${SITE_URL.replace(/\/$/, '')}/levy-logo.svg`
+// PNG, not the site's SVG: Gmail strips SVG images, and most of the list is on
+// Gmail, so the SVG rendered as a broken box with alt text.
+const LEVY_LOGO_URL = `${SITE_URL.replace(/\/$/, '')}/levy-logo-email.png`
 
 type EmailTemplate = {
   subject: string
@@ -274,6 +276,95 @@ export function renderProductUpdateEmail({ preview = false }: AnnouncementOption
       `Levy gives legal information, not legal advice.\n` +
       `Open Levy: ${SITE_URL}\n` +
       `GitHub: ${GITHUB_URL}\n` +
+      `Unsubscribe: reply to this email with "unsubscribe".`,
+  }
+}
+
+/**
+ * Third broadcast (the second was 10 August 2026).
+ *
+ * The "What verified does not mean" card is there on purpose. The badge only
+ * proves an authority exists in the library, not that Levy described it
+ * correctly, and a user caught exactly that gap in the week before this send.
+ * Lawyers will read "verified" as stronger than it is unless we say so first.
+ */
+export function renderCitationUpdateEmail({ preview = false }: AnnouncementOptions = {}): EmailTemplate {
+  const subject = preview
+    ? 'Preview | Levy now checks the cases it cites'
+    : 'Levy now checks the cases it cites'
+
+  const unsubscribeHref = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Unsubscribe from Levy updates')}`
+
+  const bodyHtml = `
+    <p style="margin:0 0 18px;font-size:16px;line-height:1.8;color:#244233;">Hi,</p>
+    <p style="margin:0 0 18px;font-size:16px;line-height:1.8;color:#244233;">It has been a month since my last update. The question lawyers keep asking me is a fair one: how do I know Levy isn&#39;t making up the cases it cites? Most of this month&#39;s work is an answer to that.</p>
+    <p style="margin:0 0 24px;font-size:16px;line-height:1.8;color:#244233;">Here is what changed.</p>
+
+    <div style="background:#f7faf7;border:1px solid #dbe8dd;border-radius:20px;padding:22px 22px 6px;">
+      <div style="font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#0d6b37;margin-bottom:14px;">What is new</div>
+      <div style="font-size:15px;line-height:1.8;color:#224132;">
+        <p style="margin:0 0 12px;"><strong>Every citation is checked.</strong> Under each answer, Levy now lists the cases and Acts it cited and checks each one against its library. The ones it finds are marked verified and open with a tap. Anything it can&#39;t find is marked as not in the library, so you know to check it yourself before relying on it.</p>
+        <p style="margin:0 0 12px;"><strong>Over 1,100 judgments.</strong> The case law library has grown from 146 judgments to 1,137, from the Supreme Court, Court of Appeal, Constitutional Court and High Court, all from the Judiciary&#39;s own published archive. Each one is labelled by court from the judgment&#39;s own text, so a High Court decision is never passed off as a Supreme Court one.</p>
+        <p style="margin:0 0 12px;"><strong>Court fees and rules.</strong> The Judiciary&#39;s court fee schedules and several sets of court rules are now in the library, so a question about filing fees is answered from the schedule itself.</p>
+        <p style="margin:0 0 12px;"><strong>Every source opens.</strong> Tap a cited source and you get the document. Where Levy doesn&#39;t hold the PDF, it shows you the full text with a link to the original on the official site, instead of an error.</p>
+        <p style="margin:0 0 12px;"><strong>Downloads fixed.</strong> A bug was stopping some drafted documents from downloading. That is fixed.</p>
+        <p style="margin:0 0 12px;"><strong>Fewer half answers.</strong> If your connection drops while Levy is answering, it now picks up the finished answer once it is saved, instead of leaving you with half of one.</p>
+        <p style="margin:0 0 12px;"><strong>Straight to the point.</strong> Levy now starts with the answer, not with &ldquo;Great question&rdquo; or a description of what it is about to search.</p>
+      </div>
+    </div>
+
+    <div style="background:#f4f7fb;border:1px solid #d5e0ee;border-radius:20px;padding:22px;margin-top:14px;">
+      <div style="font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#1f4f86;margin-bottom:12px;">What verified does not mean</div>
+      <p style="margin:0 0 14px;font-size:15px;line-height:1.8;color:#22364d;">A verified mark means the case or Act is real, it is in the library, and you can open it. It does not mean Levy described it correctly.</p>
+      <p style="margin:0;font-size:15px;line-height:1.8;color:#22364d;">Last week one of you caught Levy describing a court rule wrongly before it had actually read it. It corrected itself when challenged, and stopping that from happening in the first place is what I am working on next. Until then, open the source before you rely on it.</p>
+    </div>
+
+    <div style="background:#f7faf7;border:1px solid #dbe8dd;border-radius:20px;padding:22px;margin-top:14px;">
+      <div style="font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#0d6b37;margin-bottom:12px;">Revising for ZIALE?</div>
+      <p style="margin:0;font-size:15px;line-height:1.8;color:#224132;">Several of you are using Levy to prepare for ZIALE, and it works well for that. Paste in a problem question or a Trial Advocacy scenario and ask it to critique your answer, or ask for revision notes on a procedure with the rules and cases behind each step.</p>
+    </div>
+
+    <div style="background:#fffaf4;border:1px solid #f1dcc2;border-radius:20px;padding:22px;margin-top:14px;">
+      <div style="font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#b7651d;margin-bottom:12px;">Tell me what is broken</div>
+      <p style="margin:0 0 14px;font-size:15px;line-height:1.8;color:#4b3622;">If Levy gets something wrong, use the thumbs down under the answer, or reply to this email. It comes straight to me and I read every one.</p>
+      <p style="margin:0 0 14px;font-size:15px;line-height:1.8;color:#4b3622;">And if Levy has been useful to you, the best thing you can do is send it to one colleague or classmate who would use it. Signing up at <a href="${SITE_URL}" style="color:#b7651d;text-decoration:none;font-weight:700;">levylegal.ai</a> is free.</p>
+      <p style="margin:0;font-size:15px;line-height:1.8;color:#4b3622;">Levy gives legal information, not legal advice.</p>
+    </div>
+  `
+
+  return {
+    subject,
+    html: buildHtml({
+      eyebrow: preview ? 'Levy Preview Send' : 'Levy Legal AI',
+      title: 'Every Citation, Checked',
+      intro:
+        'Levy now marks which of its citations it has verified, the case law library has grown to over 1,100 judgments, and every source opens.',
+      bodyHtml,
+      primaryCta: { href: SITE_URL, label: 'Open Levy at levylegal.ai' },
+      footerNote:
+        (preview
+          ? 'Preview email sent from Levy&rsquo;s citation update template.'
+          : 'You are receiving this because you created a Levy account.') +
+        ` &middot; <a href="${unsubscribeHref}" style="color:#708476;text-decoration:underline;">Unsubscribe</a>`,
+    }),
+    text:
+      `Levy now checks the cases it cites.\n\n` +
+      `It has been a month since my last update. The question lawyers keep asking me is a fair one: how do I know Levy isn't making up the cases it cites? Most of this month's work is an answer to that.\n\n` +
+      `WHAT IS NEW\n` +
+      `- Every citation is checked: under each answer Levy lists the cases and Acts it cited, marks the ones in its library as verified, and flags the rest so you check them yourself.\n` +
+      `- Over 1,100 judgments: up from 146 to 1,137, from the Supreme Court, Court of Appeal, Constitutional Court and High Court, each labelled by court from its own text.\n` +
+      `- Court fee schedules and several sets of court rules are now in the library.\n` +
+      `- Every source opens: where Levy doesn't hold the PDF, it shows the full text and links to the original.\n` +
+      `- Downloads of drafted documents are fixed.\n` +
+      `- If your connection drops mid-answer, Levy picks up the finished answer once it is saved.\n` +
+      `- Levy now starts with the answer, without the preamble.\n\n` +
+      `WHAT VERIFIED DOES NOT MEAN\n` +
+      `A verified mark means the authority is real and in the library. It does not mean Levy described it correctly. Last week one of you caught Levy describing a court rule wrongly before it had read it. Stopping that is what I am working on next. Until then, open the source before you rely on it.\n\n` +
+      `REVISING FOR ZIALE?\n` +
+      `Paste in a problem question or a Trial Advocacy scenario and ask Levy to critique your answer, or ask for revision notes on a procedure with the rules and cases behind each step.\n\n` +
+      `If Levy gets something wrong, use the thumbs down or reply to this email. If it has been useful, send it to one colleague or classmate who would use it. Signing up is free.\n\n` +
+      `Levy gives legal information, not legal advice.\n` +
+      `Open Levy: ${SITE_URL}\n` +
       `Unsubscribe: reply to this email with "unsubscribe".`,
   }
 }
