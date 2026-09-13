@@ -588,7 +588,7 @@ export interface QuizEvent {
 
 export interface StreamHandlers {
   /** Free-trial budget for signed-out visitors, sent once at stream start. */
-  onTrial?: (info: { remaining: number; limit: number }) => void
+  onTrial?: (info: { remaining: number; limit: number; pass?: string }) => void
   /**
    * Row id of the saved assistant message, emitted once the server has
    * persisted it. Needed so the answer can take feedback immediately —
@@ -625,6 +625,8 @@ export async function streamQuery(
     attachedDocIds?: string[]
     /** Cloudflare Turnstile token — required for signed-out visitors. */
     turnstileToken?: string | null
+    /** Server-issued pass from an earlier solved challenge; replaces the token. */
+    anonPass?: string | null
   },
   legacyOnChunk?: (text: string) => void,
   legacyOnDone?: (metadata: AgentDoneMetadata) => void,
@@ -646,6 +648,7 @@ export async function streamQuery(
       session_id: options?.sessionId,
       attached_doc_ids: options?.attachedDocIds,
       turnstile_token: options?.turnstileToken ?? undefined,
+      anon_pass: options?.anonPass ?? undefined,
     }),
   })
 
@@ -711,6 +714,7 @@ export async function streamQuery(
           handlers?.onTrial?.({
             remaining: Number(parsed.remaining ?? 0),
             limit: Number(parsed.limit ?? 0),
+            pass: typeof parsed.pass === 'string' ? parsed.pass : undefined,
           })
           break
         case 'thinking':

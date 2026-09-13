@@ -4,9 +4,14 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 // Cloudflare Turnstile, used to let signed-out visitors try Levy without an
 // account. Anonymous chat was hard-disabled after a distributed flood used
-// browser-like user-agents across many IPs; Turnstile issues a SINGLE-USE
-// token per request, so each anonymous question costs one solved challenge,
-// which is the part per-IP limits could never do.
+// browser-like user-agents across many IPs. Turnstile tokens are single-use,
+// so the FIRST anonymous question costs one solved challenge; the server then
+// issues a pass bound to the visitor's IP that covers the rest of the visit.
+//
+// This hook used to re-arm the widget the moment a token was spent, so the
+// checkbox reappeared while the first answer was still streaming, and again
+// after the last free question. It now only asks Cloudflare for a token when a
+// caller actually needs one.
 //
 // The site key is public by design. If it is unset the hook reports
 // `enabled: false`, the UI keeps asking people to sign in, and the backend
@@ -32,11 +37,15 @@ export function useTurnstile(active: boolean) {
   const tokenRef = useRef<string | null>(null)
   const waiterRef = useRef<((t: string | null) => void) | null>(null)
   const [ready, setReady] = useState(false)
+  // Whether the widget may draw. Hidden once a token is in hand, so a solved
+  // widget does not sit over the composer; shown again only for a new ask.
+  const [showing, setShowing] = useState(true)
 
   const enabled = active && !!SITE_KEY
 
   // Deliver a token to whoever is waiting, or bank it for the next getToken().
   const deliver = useCallback((t: string | null) => {
+    if (t) setShowing(false)
     if (waiterRef.current) {
       const w = waiterRef.current
       waiterRef.current = null
@@ -58,6 +67,10 @@ export function useTurnstile(active: boolean) {
           // Only shows a visible challenge when Cloudflare wants interaction;
           // otherwise it stays out of the way.
           appearance: 'interaction-only',
+          // A banked token expires after 5 minutes. Auto-refresh would pop a
+          // fresh challenge while someone is only reading; getToken() asks for
+          // a new one if and when it is actually needed.
+          'refresh-expired': 'never',
           callback: (t: string) => deliver(t),
           'error-callback': () => deliver(null),
           'expired-callback': () => deliver(null),
@@ -102,9 +115,10 @@ export function useTurnstile(active: boolean) {
   }, [enabled, deliver])
 
   /**
-   * Resolve a fresh single-use token, then immediately arm the widget for the
-   * next question. Resolves null (rather than hanging) if the challenge fails
-   * or takes too long — the caller then falls back to asking for sign-in.
+   * Resolve a single-use token: the one banked by the initial solve if there
+   * is one, otherwise a fresh challenge. Resolves null (rather than hanging)
+   * if the challenge fails or takes too long; the caller then shows the
+   * server's "could not verify" message.
    */
   const getToken = useCallback(async (): Promise<string | null> => {
     if (!enabled) return null
@@ -116,6 +130,7 @@ export function useTurnstile(active: boolean) {
       const id = widgetId.current
       if (!id || !window.turnstile) return false
       try {
+        setShowing(true)
         window.turnstile.reset(id)
         return true
       } catch {
@@ -124,11 +139,12 @@ export function useTurnstile(active: boolean) {
       }
     }
 
-    // A token banked by the initial solve is used first.
+    // A token banked by the initial solve is used first. Deliberately NOT
+    // re-arming here: the server's pass covers later questions, and a reset
+    // now is what made the checkbox reappear mid-answer.
     if (tokenRef.current) {
       const t = tokenRef.current
       tokenRef.current = null
-      armNext()
       return t
     }
 
@@ -151,5 +167,5 @@ export function useTurnstile(active: boolean) {
     })
   }, [enabled])
 
-  return { holderRef, ready, enabled, getToken }
+  return { holderRef, ready, enabled, showing, getToken }
 }

@@ -106,6 +106,10 @@ export default function NewChatPage() {
   // Free-trial state for signed-out visitors (server-authoritative, streamed
   // back on the `trial` event so we can nudge before they hit the wall).
   const [trialLeft, setTrialLeft] = useState<number | null>(null)
+  // Proof of one solved challenge, issued by the server with the first answer.
+  // Memory only: a reload re-verifies once, which is the cost of not letting a
+  // pass outlive the page it was earned on.
+  const anonPassRef = useRef<string | null>(null)
   const [accentLineWidth, setAccentLineWidth] = useState(0)
   const [webSearch, setWebSearch] = useState(false)
   // Seed payload for the input box. An empty `text` focuses the box without
@@ -136,7 +140,9 @@ export default function NewChatPage() {
   // Browser check for signed-out visitors. Inert (and `enabled: false`) once
   // signed in, or if no site key is configured — in which case the backend
   // keeps requiring sign-in anyway.
-  const turnstile = useTurnstile(!authLoading && !user)
+  // No challenge once the free questions are gone: verifying for a question
+  // you are not allowed to ask is the worst version of this.
+  const turnstile = useTurnstile(!authLoading && !user && trialLeft !== 0)
   const { send } = useChatStream()
   const seededRef = useRef(false)
 
@@ -311,18 +317,21 @@ export default function NewChatPage() {
         .filter((m) => m.content)
         .map((m) => ({ role: m.role, content: m.content }))
 
-      // Signed-out visitors get a short free trial, gated by a Turnstile
-      // challenge (single-use token per question). Solve it before sending so
-      // the request carries proof this is a real browser.
-      const turnstileToken = user ? null : await turnstile.getToken()
+      // Signed-out visitors get a short free trial. The first question is
+      // gated by a Turnstile challenge; the server then hands back a pass that
+      // covers the rest of the visit, so the checkbox is not shown again.
+      const anonPass = anonPassRef.current
 
-      await streamQuery(
+      const run = (turnstileToken: string | null, anonPass: string | null) => streamQuery(
         question,
-        { token: session?.access_token, webSearch, history, turnstileToken },
+        { token: session?.access_token, webSearch, history, turnstileToken, anonPass },
         undefined,
         undefined,
         {
-          onTrial: ({ remaining }) => setTrialLeft(remaining),
+          onTrial: ({ remaining, pass }) => {
+            setTrialLeft(remaining)
+            if (pass) anonPassRef.current = pass
+          },
           onToken: (chunk) =>
             updateLast((last) => {
               // Append the chunk to the trailing text block, or start a new one
@@ -536,6 +545,17 @@ export default function NewChatPage() {
             })),
         },
       )
+
+      try {
+        await run(anonPass ? null : await turnstile.getToken(), anonPass)
+      } catch (e) {
+        // The pass is bound to the IP it was issued to. If the visitor's
+        // network changed (mobile data does this), the server refuses it and
+        // nothing has streamed yet, so fall back to one fresh challenge.
+        if (!anonPass || !(e instanceof Error) || !/verify your browser/i.test(e.message)) throw e
+        anonPassRef.current = null
+        await run(await turnstile.getToken(), null)
+      }
     } catch (e) {
       const errorMsg: Message = {
         role: 'assistant',
@@ -606,7 +626,7 @@ export default function NewChatPage() {
       {turnstile.enabled && (
         <div
           ref={turnstile.holderRef}
-          className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50"
+          className={`fixed bottom-3 left-1/2 -translate-x-1/2 z-50 ${turnstile.showing ? '' : 'hidden'}`}
         />
       )}
       {/* Main chat area */}

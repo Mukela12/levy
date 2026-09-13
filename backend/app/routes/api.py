@@ -14,6 +14,8 @@ import asyncio
 import logging
 import tempfile
 import uuid
+import hmac
+import hashlib
 from datetime import datetime, timedelta, timezone
 import httpx
 from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, Header, Request
@@ -80,6 +82,9 @@ class ChatRequest(BaseModel):
     # Cloudflare Turnstile token, required for anonymous (signed-out) callers.
     # Ignored for authenticated requests.
     turnstile_token: str | None = None
+    # Pass issued after a solved challenge; stands in for turnstile_token on
+    # later questions in the same visit. See _issue_anon_pass.
+    anon_pass: str | None = None
 
 
 class SearchRequest(BaseModel):
@@ -205,6 +210,37 @@ async def _verify_turnstile(token: str | None, ip: str) -> bool:
         return False
 
 
+# One solved challenge per visit, not per question. Spending a single-use
+# Turnstile token on every question meant re-arming the widget after each one,
+# and visitors Cloudflare had asked to tick the box once were asked again while
+# their first answer was still streaming. The pass is an HMAC over (ip, expiry)
+# keyed off the Turnstile secret, so it proves "this IP solved a challenge
+# recently" and nothing more. Bound to the IP, it cannot be replayed from
+# elsewhere, and the per-IP daily trial cap still decides how many questions
+# anyone gets, so it buys an attacker no extra questions.
+_ANON_PASS_TTL = 6 * 3600
+
+
+def _anon_pass_sig(ip: str, exp: int) -> str:
+    secret = (get_settings().turnstile_secret_key or "").strip()
+    key = hashlib.sha256(b"levy-anon-pass:" + secret.encode()).digest()
+    return hmac.new(key, f"{ip}|{exp}".encode(), hashlib.sha256).hexdigest()
+
+
+def _issue_anon_pass(ip: str) -> str:
+    exp = int(time.time()) + _ANON_PASS_TTL
+    return f"{exp}.{_anon_pass_sig(ip, exp)}"
+
+
+def _anon_pass_valid(anon_pass: str | None, ip: str) -> bool:
+    if not anon_pass or not (get_settings().turnstile_secret_key or "").strip():
+        return False
+    exp_s, _, sig = anon_pass.partition(".")
+    if not exp_s.isdigit() or int(exp_s) < time.time():
+        return False
+    return hmac.compare_digest(sig, _anon_pass_sig(ip, int(exp_s)))
+
+
 def _anon_trial_remaining(ip: str) -> int:
     """Free questions left for this IP today (UTC day)."""
     limit = get_settings().anon_trial_questions
@@ -317,6 +353,7 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
 
     anon_trial = False
     anon_trial_number: int | None = None
+    anon_pass: str | None = None
     if not uid:
         # Anonymous visitors get a short free trial so they can see what Levy
         # does before creating an account (all our /answers SEO traffic lands
@@ -345,7 +382,8 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
         hits.append(now)
         _ANON_HITS[ip] = hits
 
-        if not await _verify_turnstile(request.turnstile_token, ip):
+        if not (_anon_pass_valid(request.anon_pass, ip)
+                or await _verify_turnstile(request.turnstile_token, ip)):
             _log_anon("turnstile_failed", ip, http_request=http_request)
             raise HTTPException(
                 status_code=401,
@@ -359,6 +397,7 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
             )
         _anon_trial_consume(ip)
         anon_trial = True
+        anon_pass = _issue_anon_pass(ip)
         # 1-based: which of today's free questions this one was.
         anon_trial_number = get_settings().anon_trial_questions - _anon_trial_remaining(ip)
         _log_anon("asked", ip, trial_number=anon_trial_number, http_request=http_request)
@@ -475,6 +514,7 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
                 "type": "trial",
                 "remaining": _anon_trial_remaining(_client_ip(http_request)),
                 "limit": get_settings().anon_trial_questions,
+                "pass": anon_pass,
             })
         while True:
             event = await queue.get()
