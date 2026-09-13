@@ -70,7 +70,7 @@ const EMPTY_SESSION: SessionState = { messages: [], status: 'idle', loaded: fals
 
 async function saveMessage(sid: string, role: string, m: Partial<Message>) {
   const supabase = createClient()
-  await supabase.from('chat_messages').insert({
+  const row = {
     session_id: sid,
     role,
     content: m.content ?? '',
@@ -80,7 +80,15 @@ async function saveMessage(sid: string, role: string, m: Partial<Message>) {
     web_sources: m.webSources ?? null,
     artifacts: m.artifacts ?? null,
     compaction: m.compaction ?? null,
-  })
+  }
+  // One retry on a flaky connection. The server also repairs a missing user
+  // turn when it saves the answer, so this is the first line, not the last.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const { error } = await supabase.from('chat_messages').insert(row)
+    if (!error) return
+    if (attempt === 1) console.warn('chat_messages insert failed', error.message)
+    await new Promise((r) => setTimeout(r, 1500))
+  }
 }
 
 export function ChatStreamProvider({ children }: { children: React.ReactNode }) {

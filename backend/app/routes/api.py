@@ -25,7 +25,7 @@ import json
 import time
 from ..services import rag
 from ..services.agent import run_agent, DEFAULT_MODEL as DEFAULT_AGENT_MODEL
-from ..services.chat_persist import RunAccumulator
+from ..services.chat_persist import RunAccumulator, ensure_user_turn
 from ..services.ingester import ingest_pdf
 from ..services.embedder import get_query_embedding
 from ..db.supabase import search_chunks, get_db
@@ -437,6 +437,7 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
     # saves the reply — so the thread is never left with a dangling no-reply.
     queue: asyncio.Queue = asyncio.Queue()
     acc = RunAccumulator()
+    asked_at = datetime.now(timezone.utc)
 
     async def _drive():
         run_started = time.time()
@@ -477,6 +478,16 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
             # guarantee is unchanged — this task is detached, so it completes
             # even when the reader has gone away.
             if safe_session_id and uid:
+                try:
+                    # The question first: the client's own insert can drop on a
+                    # bad connection, and an answer with no question above it
+                    # made people re-paste everything.
+                    await asyncio.to_thread(
+                        ensure_user_turn, safe_session_id, request.query, asked_at,
+                        request.attached_doc_ids,
+                    )
+                except Exception:
+                    logger.exception("user turn repair failed")
                 try:
                     saved_id = await asyncio.to_thread(acc.save, safe_session_id)
                     # Hand the row id to the client so it can attach feedback to

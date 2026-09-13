@@ -8,7 +8,64 @@ the frontend's event->message reducer so a reloaded thread renders identically
 """
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
+
 from ..db.supabase import get_db
+
+
+def ensure_user_turn(
+    session_id: str,
+    content: str,
+    asked_at: datetime,
+    attached_doc_ids: list[str] | None = None,
+) -> str | None:
+    """Make sure the question that produced this answer is saved.
+
+    The client saves the user turn fire-and-forget over the phone's own
+    connection, while the answer is saved here on the server. When the phone's
+    insert dropped, the thread showed an answer with no question above it and
+    the person re-pasted their whole scenario (seen twice in one morning on
+    11 September). Idempotent: if a user row with this content already exists
+    in the session since shortly before the question was asked, nothing is
+    written. Returns the inserted row id, or None when no repair was needed.
+    """
+    text = (content or "").strip()
+    if not session_id or not text:
+        return None
+    db = get_db()
+    since = (asked_at - timedelta(minutes=5)).isoformat()
+    try:
+        rows = (db.table("chat_messages").select("id,content")
+                .eq("session_id", session_id).eq("role", "user")
+                .gte("created_at", since).order("created_at", desc=True).limit(20)
+                .execute().data or [])
+    except Exception:  # noqa: BLE001 — a failed check must not block the answer's save
+        return None
+    if any((r.get("content") or "").strip() == text for r in rows):
+        return None
+
+    blocks = None
+    if attached_doc_ids:
+        try:
+            docs = (db.table("legal_documents").select("id,title")
+                    .in_("id", list(attached_doc_ids)).execute().data or [])
+            if docs:
+                blocks = [{"kind": "attachments",
+                           "docs": [{"id": d["id"], "title": d.get("title") or "Document"} for d in docs]}]
+        except Exception:  # noqa: BLE001
+            blocks = None
+    res = db.table("chat_messages").insert({
+        "session_id": session_id,
+        "role": "user",
+        "content": text,
+        "blocks": blocks,
+        # Backdated to when the question arrived so it sorts above its answer.
+        "created_at": asked_at.astimezone(timezone.utc).isoformat(),
+    }).execute()
+    try:
+        return (res.data or [{}])[0].get("id")
+    except Exception:  # noqa: BLE001
+        return None
 
 
 class RunAccumulator:

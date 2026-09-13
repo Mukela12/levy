@@ -83,6 +83,17 @@ class Settings(BaseSettings):
     # nothing extra on short answers, and it removes the retry loop that was
     # double-billing us on long ones.
     agent_max_output_tokens: int = 32_000
+    # Extended thinking budget per model call (tokens). Levy's failures were
+    # rarely knowledge gaps; they were the model describing a rule before it
+    # had read it, or answering from memory when the library came up empty.
+    # A thinking pass before each action is where "is this in the tool results
+    # or am I assuming it?" gets asked. 0 disables. Billed as output tokens.
+    agent_thinking_budget: int = 2048
+    # Vision: pages of a scanned PDF rendered to images per read_pdf_pages
+    # call, and how many of those may be returned as images (the rest as a
+    # note). Each page image is roughly 1,500 input tokens.
+    agent_vision_max_pages: int = 6
+    agent_vision_max_images: int = 4
 
     # Cross-vendor fallback (Moonshot Kimi). Every model in the fallback chain
     # used to be an Anthropic model, so an Anthropic outage — or just hitting
