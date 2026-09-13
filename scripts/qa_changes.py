@@ -119,19 +119,22 @@ print("\n5. Retryable-error handling (the bug that made fallback unreachable)")
 import anthropic
 
 agent_src = (REPO / "backend/app/services/agent.py").read_text()
-check("RateLimitError is in the retryable except clause",
-      "anthropic.RateLimitError" in agent_src and
-      "except (anthropic.RateLimitError" in agent_src)
-check("retryable branch continues rather than breaking",
-      agent_src.count("# RETRYABLE.") == 1)
+# The retry decision moved into _is_retryable() in August; test the decision,
+# not the shape of the except clause.
+from app.services.agent import _is_retryable
+import httpx as _hx
+_resp = _hx.Response(429, request=_hx.Request("POST", "https://api.anthropic.com/v1/messages"))
+check("a 429 rate limit is retryable (falls through to the next model)",
+      _is_retryable(anthropic.RateLimitError("rate limited", response=_resp, body=None)))
+_bad = _hx.Response(400, request=_hx.Request("POST", "https://api.anthropic.com/v1/messages"))
+check("a malformed request is not retried on every model",
+      not _is_retryable(anthropic.BadRequestError("bad request", response=_bad, body={"error": {"message": "invalid"}})))
+check("retryable errors continue to the next attempt",
+      "if not _is_retryable(e):" in agent_src and "continue" in agent_src.split("if not _is_retryable(e):")[1][:900])
 check("kimi appended to the attempt chain",
       "model_attempts.append(settings.kimi_fallback_model)" in agent_src)
-check("a rate limit really is an APIError subclass (so order matters)",
+check("a rate limit really is an APIError subclass",
       issubclass(anthropic.RateLimitError, anthropic.APIError))
-# The specific clause must come BEFORE the generic APIError clause or it is dead code.
-check("specific except precedes generic APIError except",
-      agent_src.index("except (anthropic.RateLimitError") <
-      agent_src.index("except anthropic.APIError as e:  # bad request"))
 
 print("\n6. Study Mode untouched")
 for t in ("make_cheat_sheet", "make_quiz", "search_past_papers"):
