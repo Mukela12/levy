@@ -83,7 +83,34 @@ _EDGE_STOP = {"in", "see", "eg", "e.g", "compare", "following", "applying",
 # words that end a party name on the right: they begin the surrounding legal
 # prose, not the litigant ("... v Loretta Kunda Court of Appeal Case No...")
 _RIGHT_STOP = {"court", "appeal", "case", "no", "judgment", "held", "decided",
-               "supra", "ibid", "the", "scz", "caz", "ccz", "app", "ruling"}
+               "supra", "ibid", "the", "scz", "caz", "ccz", "app", "ruling",
+               "selected", "supreme", "constitutional", "high", "industrial",
+               "subordinate", "lord", "per", "in", "at", "on", "is", "was", "were",
+               "that", "this", "what", "which", "where", "when"}
+
+# Heading and prose words that never begin, or make up, a litigant's name.
+# The second live week produced "FULL LEGAL ANALYSIS Kumwenda v Zimco", "1 Care
+# International ... v", "The Critical Legal Question Preparation v Overt Act":
+# a heading or a list number glued to a real citation, or an heading that
+# merely contains " v ".
+_HEADING_WORDS = {
+    "analysis", "legal", "full", "question", "issue", "issues", "summary", "facts",
+    "holding", "rule", "application", "conclusion", "step", "critical", "preparation",
+    "overt", "key", "note", "answer", "irac", "model", "framework", "test", "principle",
+    "principles", "position", "statutory", "procedure", "procedural", "requirement",
+    "requirements", "element", "elements", "stage", "point", "doctrine", "distinction",
+    "versus", "standard", "burden", "proof", "approach", "difference", "between",
+    "comparison", "preliminary", "introduction", "background", "discussion",
+    "assessment", "evaluation", "what", "why", "how", "when", "where", "which",
+}
+_COURT_WORDS = {"court", "supreme", "appeal", "high", "constitutional", "subordinate",
+                "industrial", "relations", "division", "of"}
+# Reporters that place an authority outside Zambia. They are shown as foreign
+# rather than as "not in the library": fairly flagged, differently worded.
+_FOREIGN_CITE = re.compile(
+    r"(?:\b(?:All\s?ER|A\.?C\.?|Q\.?B\.?D?|K\.?B\.?|W\.?L\.?R\.?|Ch\.?\s?D?|Cr\s?App\s?R|EWCA|EWHC|UKHL|UKSC|"
+    r"H\.?L\.?|P\.?C\.?|Lloyd'?s\s?Rep|BCLC|FLR|TLR|App\s?Cas|SCR|SASR|CLR|NZLR|ALR)\b)")
+_ZM_CITE = re.compile(r"\b(?:ZR|ZMSC|ZMCA|ZMHC|ZMIC|ZMCC|SCZ|CAZ|CCZ|HP[CFA]?|APP|Appeal|Zambia|Zambian)\b", re.I)
 
 _NUMCITE = re.compile(
     r"\b(?:APP|SCZ|CAZ|CCZ|HP[CFA]?|SP|Appeal|ZR|ZMSC|ZMCA|ZMHC|ZMIC|ZMCC)\b"
@@ -128,16 +155,28 @@ def _clean(text: str) -> str:
     return re.sub(r"[*_`#]+", "", text or "")
 
 
+_QUOTES = "\"'\u201c\u201d\u2018\u2019"
+
+
+def _all_heading(tokens: list[str]) -> bool:
+    return bool(tokens) and all(
+        t.lower() in _HEADING_WORDS or t.lower() in _CONNECTORS or t.lower() in _COURT_WORDS
+        for t in tokens)
+
+
 def _party_left(text: str, end: int) -> str:
     """Walk left from the pivot collecting the capitalised run."""
     tokens = []
     for m in reversed(list(_WORD.finditer(text[:end]))):
-        w = m.group(0).strip(".,;:()[]")
+        raw = m.group(0)
+        w = raw.strip(".,;:()[]" + _QUOTES)
         if not w:
             break
         if w[0].isupper() or w.isdigit() or w.lower() in _CONNECTORS:
             tokens.append(w)
-            if len(tokens) >= 8:
+            # an opening quote starts the name; nothing before it belongs.
+            # (Brackets are kept: "Zambia Sugar (Z) Ltd" is one party.)
+            if raw[:1] in _QUOTES or len(tokens) >= 8:
                 break
         else:
             break
@@ -145,9 +184,26 @@ def _party_left(text: str, end: int) -> str:
     # trim sentence-lead words off the left edge, then stray connectors
     while tokens and tokens[0].lower().strip(".") in _EDGE_STOP:
         tokens.pop(0)
+    # list numbers ("1.", "2)") and heading words glued to the name
+    changed = True
+    while tokens and changed:
+        changed = False
+        if re.fullmatch(r"\d+[.)]?", tokens[0]):
+            tokens.pop(0); changed = True; continue
+        if tokens[0].lower() in _HEADING_WORDS:
+            tokens.pop(0); changed = True; continue
+        if tokens[0] == "The" and len(tokens) > 1 and tokens[1].lower() in _HEADING_WORDS:
+            tokens.pop(0); tokens.pop(0); changed = True; continue
+    # "Supreme Court and <Party>": court prose ahead of the litigant
+    for i in range(1, min(5, len(tokens))):
+        if tokens[i].lower() in ("and", "in") and all(t.lower() in _COURT_WORDS for t in tokens[:i]):
+            tokens = tokens[i + 1:]
+            break
     while tokens and tokens[0].lower() in _CONNECTORS and not (
             len(tokens) > 1 and tokens[0] == "The" and tokens[1][0].isupper()):
         tokens.pop(0)
+    if _all_heading(tokens):
+        return ""
     return " ".join(tokens)
 
 
@@ -157,20 +213,27 @@ def _party_right(text: str, start: int) -> tuple[str, int]:
     pos = start
     for m in _WORD.finditer(text, start):
         raw = m.group(0)
-        w = raw.strip(".,;:()[]")
+        w = raw.strip(".,;:()[]" + _QUOTES)
         low = w.lower()
         if low in _RIGHT_STOP and tokens:
+            break
+        # a bracket opens the citation tail, which is parsed separately
+        if raw[:1] in "([" and tokens:
             break
         if w and (w[0].isupper() or w.isdigit() or low in _CONNECTORS or low in ("others",)):
             tokens.append(w)
             pos = m.end()
-            if len(tokens) >= 8 or raw.endswith((",", ".", ";", ":", ")")):
+            if len(tokens) >= 8 or raw.endswith((",", ".", ";", ":", ")") + tuple(_QUOTES)):
                 break
         else:
             break
-    # drop a trailing connector
-    while tokens and tokens[-1].lower() in _CONNECTORS:
+    # drop a trailing connector, a stray single letter, or heading words
+    while tokens and (tokens[-1].lower() in _CONNECTORS
+                      or (len(tokens[-1]) == 1 and len(tokens) > 1)
+                      or tokens[-1].lower() in _HEADING_WORDS):
         tokens.pop()
+    if _all_heading(tokens):
+        return "", pos
     return " ".join(tokens), pos
 
 
@@ -185,7 +248,8 @@ def extract_citations(text: str) -> list[dict]:
         b, after = _party_right(text, pm.end())
         if not a or not b:
             continue
-        if _norm(a).split()[:1] == ["v"] or len(_norm(a)) < 3 or len(_norm(b)) < 3:
+        # "R" (the Crown) is a real party in the English cases Zambian courts cite
+        if _norm(a).split()[:1] == ["v"] or (len(_norm(a)) < 3 and a != "R") or len(_norm(b)) < 3:
             continue
         # optional "(APP No. 142 of 2019)" style tail
         tail = text[after:after + 60]
@@ -207,17 +271,25 @@ def extract_citations(text: str) -> list[dict]:
         if key in seen:
             continue
         seen.add(key)
-        out.append({"kind": "case", "text": display, "a": a, "b": b, "cite": cite})
+        # English and other foreign reports: a reporter abbreviation in the
+        # tail, or a pre-independence year with no Zambian marker anywhere.
+        near = (cite + " " + tail[:60])
+        ym = re.search(r"\b(1[89]\d\d)\b", near)
+        foreign = bool(_FOREIGN_CITE.search(near)) or (
+            bool(ym) and int(ym.group(1)) < 1964 and not _ZM_CITE.search(near + " " + a + " " + b))
+        out.append({"kind": "case", "text": display, "a": a, "b": b, "cite": cite,
+                    "foreign": foreign})
 
     candidates = []
     for m in _ACT.finditer(text):
         nm = m.group("name").strip()
-        # two instruments conjoined: split at " and " when the left side
-        # already ends with an instrument word
-        pieces = re.split(r"\s+and\s+(?:the\s+)?", nm)
-        if len(pieces) > 1 and re.search(r"(Act|Code|Rules|Regulations)$", pieces[0]):
+        # Two instruments conjoined ("the Wills Act and the ILRA") split only
+        # where the left side already ends with an instrument word. Splitting
+        # at every "and" cut the Fees and Fines Act down to "Fines Act".
+        pieces = re.sub(r"\b(Act|Code|Rules|Regulations)\s+and\s+(?:the\s+)?", r"\1|", nm).split("|")
+        if len(pieces) > 1:
             for pc in pieces:
-                candidates.append((pc, ""))
+                candidates.append((pc.strip(), ""))
         else:
             candidates.append((nm, m.group("tail") or ""))
     for name, tail in candidates:
@@ -253,7 +325,8 @@ def extract_citations(text: str) -> list[dict]:
         if key in seen or len(key) < 8:
             continue
         seen.add(key)
-        out.append({"kind": "statute", "text": display, "name": name})
+        foreign = name.startswith(("English ", "UK ", "United Kingdom ", "British ")) or "(UK)" in display
+        out.append({"kind": "statute", "text": display, "name": name, "foreign": foreign})
 
     return out[:20]
 
@@ -355,13 +428,19 @@ def audit_answer(text: str) -> list[dict]:
         index = _load_index()
         out = []
         for c in cites:
-            row = _match_case(c, index) if c["kind"] == "case" else _match_statute(c, index)
+            foreign = bool(c.get("foreign"))
+            row = None
+            if not foreign:
+                row = _match_case(c, index) if c["kind"] == "case" else _match_statute(c, index)
             if row:
                 out.append({"text": c["text"], "kind": c["kind"], "status": "verified",
                             "document_id": row["id"],
                             "title": row.get("title"), })
             else:
-                out.append({"text": c["text"], "kind": c["kind"], "status": "not_found"})
+                verdict = {"text": c["text"], "kind": c["kind"], "status": "not_found"}
+                if foreign:
+                    verdict["foreign"] = True
+                out.append(verdict)
         return out
     except Exception:  # noqa: BLE001 — the audit must never break an answer
         return []

@@ -558,7 +558,9 @@ function CitationAuditPanel({
                   {c.kind === 'case' ? 'Judgment' : 'Statute'}
                   {!isVerified && (
                     <span className="normal-case tracking-normal text-amber-300/55">
-                      {'  ·  not in the library, verify before relying on it'}
+                      {c.foreign
+                        ? '  ·  foreign authority, outside the Zambian library; check the original report'
+                        : '  ·  not in the library, verify before relying on it'}
                     </span>
                   )}
                 </span>

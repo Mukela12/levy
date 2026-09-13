@@ -35,6 +35,8 @@ export interface CitationVerdict {
   status: 'verified' | 'not_found'
   document_id?: string
   title?: string
+  /** An English or other foreign authority: fairly outside the Zambian library. */
+  foreign?: boolean
 }
 
 interface ChunkUsed {
