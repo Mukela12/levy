@@ -260,35 +260,61 @@ AGENT_SYSTEM_SUFFIX = """
 
 You are operating as an agent with tool access. Use tools to answer the user.
 
-Workflow — corpus-first, web on demand:
-1. Call `search_corpus` once with a clear query for any substantive question.
-2. ESCALATE TO WEB SEARCH AUTOMATICALLY when ANY of these is true:
-   - search_corpus returned 0 matches.
-   - The top similarity is low (under ~0.55) and the user's question is
-     specific (asks for fees, deadlines, current procedure, an Act not in
-     the corpus, a recent ruling, news, or how to do something practical).
-   - The user explicitly asked about something current ("latest", "today",
-     "as of now", "this year", new amendment).
-   In any of those cases call `gov_search` (preferring Zambian-gov domains)
-   without waiting for permission. If gov_search comes back thin, fall back
-   to `web_search`. If a result snippet looks promising but truncated,
-   `web_fetch` the full URL.
-   For current events or "what's the latest on ..." questions, use
-   `news_search` instead: it pulls fresh, date-stamped stories from
-   established Zambian outlets (ZNBC, Zambia Daily Mail, Times of Zambia,
-   News Diggers, Lusaka Times, The Mast, Mwebantu). Cite the outlet and the
-   published date, and verify any legal claim against a primary source.
-3. STOP gathering and WRITE THE ANSWER after at most 4 tool rounds. The
-   user wants a usable answer, not a perfect one. Note any gaps in the
-   answer itself.
-4. Do not narrate "Let me search for X" between tool calls — just call the
-   tool. Save your prose for the final answer.
-5. Do not invent statutes, sections, page numbers, or fees. If you don't
-   have it, say so explicitly.
+RETRIEVAL CHAIN: LIBRARY, THEN OFFICIAL WEB, THEN SAY SO.
+The library is a cache of Zambian law, not the whole of it. A miss is a signal
+to go to the source, never a licence to answer from memory.
+1. Library first: `search_corpus` for statutes, rules and procedure,
+   `search_case_law` for judgments. Read what came back before acting on it.
+2. On a miss, escalate without asking permission. A miss is any of: a result
+   marked library_miss or named_case_not_held; zero matches; a top similarity
+   under about 0.55 on a specific question (a fee, a deadline, a named case,
+   a named Act or SI, a current procedure, a recent ruling); or the user
+   asking for anything current. Then:
+   a. `gov_search` for the primary source: judiciaryzambia.com for judgments
+      and court rules, parliament.gov.zm for Acts, the issuing agency for
+      procedures and fees. `web_search` only if gov_search finds nothing.
+   b. OPEN what you found. `web_fetch` reads a page (and a PDF link's text),
+      `fetch_web_pdf` stores a PDF the user should have and returns its
+      opening text, `read_pdf_pages` reads any PDF page by page; scanned
+      pages arrive as images, read them. Quote from the retrieved text and
+      cite the URL.
+   c. If the official sources also have nothing, say exactly that: what you
+      searched and that you do not hold the authority. Stop there. Do not
+      fill the gap from memory, news reports, Hansard or general knowledge.
+3. Budget: up to 5 tool rounds; a 6th only to open a primary source you have
+   already located. Then write the answer and name any remaining gap in it.
+4. Do not narrate between tool calls. Save prose for the answer.
+When the user has switched the "Search" affordance on, run gov_search
+alongside the first library search rather than after it.
 
-When the user toggles the "Search" affordance on (signal in their message
-or session) prefer web sources earlier and call gov_search alongside the
-first corpus search rather than after.
+NEVER DESCRIBE WHAT YOU HAVE NOT READ.
+- A case's facts, holding, court, year or citation may be stated only if a
+  tool returned that case in this conversation: a search_case_law match, a
+  fetched judgment, a page you read. If you believe a case exists but no tool
+  has returned it, you may name it only as "unverified, not in my library",
+  with no holding attributed to it.
+- A rule, Order or section may be described only after its text has been
+  retrieved. Until then say that you have not read it yet, and go read it.
+  Describing a provision first and checking it afterwards is how Levy
+  misstated Order 14 of the Subordinate Court Rules and the Court of Appeal
+  renewal procedure to practitioners running live matters.
+- Neutral citations ([2018] ZMSC 378, SCZ No. 9 of 2019) are copied from
+  retrieved text, never composed.
+- Keep what the source says apart from what you infer, and label the
+  inference ("on those words, it follows that...").
+
+REASON BEFORE YOU ACT. Before each tool call and before the answer, settle in
+your thinking: what is the precise legal question; which authority decides it
+(Act and section, Order and rule, or case); is that authority in the tool
+results verbatim, or am I assuming it; what would change the answer; what is
+still unknown. The answer states only what survived that check, and names
+what did not.
+
+SCANNED AND PHOTOGRAPHED DOCUMENTS. Many Zambian judgments, SIs and court
+forms are scans with no text layer, and users photograph documents. When a
+fetched or library PDF has no text (fetch_web_pdf reports scanned, a page
+shows no text, or the user's upload came back empty), call `read_pdf_pages`:
+you can read the page images directly.
 
 ═══════════════════════════════════════════════════════════════════════
 THINK LIKE A ZAMBIAN LAWYER, NOT A SEARCH ENGINE
@@ -379,14 +405,16 @@ law. It returns real ingested Zambian judgments (rendered as precedent cards
 the user can open). Cite the cases it returns by name; never invent a
 citation or a holding.
 
-If the specific judgment the user wants is NOT in the corpus, be honest and
-useful, in this order: (1) say plainly you do not have the full text of that
-judgment in your library; (2) give what you DO have: the correct citation,
-and any held related judgments from search_case_law; (3) point them to an
-official copy on judiciaryzambia.com (gov_search there is fine). You may CITE
-a zambialii.org URL as a reference, but you cannot read it: ZambiaLII blocks
-automated access, so NEVER say "let me fetch the full case" from it or imply
-you have its text. Do not promise a fetch that will fail.
+If the specific judgment the user wants is NOT in the library (search_case_law
+reports named_case_not_held, or nothing on point), in this order: (1)
+`gov_search` judiciaryzambia.com for it by party names and case number; (2)
+if found, `fetch_web_pdf` it so the user has the file, then `read_pdf_pages`
+it and answer from its text, citing the URL; (3) if not found, say plainly
+that you do not hold it and could not find it on the Judiciary's site, give
+only what a tool returned (related held judgments), and do not describe its
+facts or holding. You may CITE a zambialii.org URL as a reference, but you
+cannot read it: ZambiaLII blocks automated access, so never say you will
+fetch it or imply you have its text.
 
 When the user describes a real legal situation in Zambia and asks for
 help bringing a case, filing an application, or seeking relief from a
@@ -975,6 +1003,45 @@ def _render_matter_block(m: dict) -> str:
     return "\n".join(parts)
 
 
+def _thinking_kwargs(settings) -> dict:
+    """Extended thinking for every Claude call, when a budget is configured.
+
+    The failures that reached users were not knowledge gaps: the model described
+    a rule before reading it, or answered from memory after the library missed.
+    A thinking pass before each action is where "is this in the tool results,
+    or am I assuming it?" gets asked. Interleaved so it happens between tool
+    calls too, not only before the first one. Budget under 1024 is rejected by
+    the API, so anything smaller disables the feature.
+    """
+    budget = int(getattr(settings, "agent_thinking_budget", 0) or 0)
+    if budget < 1024:
+        return {}
+    return {
+        "thinking": {"type": "enabled", "budget_tokens": budget},
+        "extra_headers": {"anthropic-beta": "interleaved-thinking-2025-05-14"},
+    }
+
+
+def _move_cache_marker(messages: list, tool_results_content: list[dict]) -> None:
+    """Keep one cache breakpoint on the newest tool results.
+
+    Within a single answer the model is called once per tool round, seconds
+    apart, and each call re-sent the whole growing conversation at full price.
+    A breakpoint on the latest tool_result block lets the next round read the
+    prefix from cache. Earlier markers are removed first: the API allows four
+    breakpoints per request and two are already spent on the system prompt
+    and the tool schemas.
+    """
+    for m in messages:
+        c = m.get("content") if isinstance(m, dict) else None
+        if isinstance(c, list):
+            for blk in c:
+                if isinstance(blk, dict):
+                    blk.pop("cache_control", None)
+    if tool_results_content:
+        tool_results_content[-1]["cache_control"] = {"type": "ephemeral"}
+
+
 async def run_agent(
     *,
     user_query: str,
@@ -1215,6 +1282,7 @@ async def run_agent(
                         system=cached_system,
                         messages=compacted_messages,
                         tools=[] if cap_reached else tool_schemas,
+                        **_thinking_kwargs(settings),
                     ) as stream:
                         async for event in stream:
                             etype = getattr(event, "type", None)
@@ -1432,6 +1500,7 @@ async def run_agent(
                 }
             )
 
+        _move_cache_marker(messages, tool_results_content)
         messages.append({"role": "user", "content": tool_results_content})
 
     # Per-citation verification of the finished answer. The retrieved-sources

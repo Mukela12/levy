@@ -25,6 +25,8 @@ from typing import Any
 
 import httpx
 import markdown as md_lib
+import base64
+
 from pypdf import PdfReader, PdfWriter
 from weasyprint import HTML, CSS
 
@@ -77,6 +79,190 @@ def _download_corpus_pdf(document_id: str) -> bytes:
     if not isinstance(blob, (bytes, bytearray)):
         raise RuntimeError(f"download returned {type(blob)} for {path}")
     return bytes(blob)
+
+
+def _pdf_page_count(pdf_bytes: bytes) -> int:
+    try:
+        return len(PdfReader(io.BytesIO(pdf_bytes)).pages)
+    except Exception:  # noqa: BLE001
+        try:
+            import pymupdf
+            return pymupdf.open(stream=pdf_bytes, filetype="pdf").page_count
+        except Exception:  # noqa: BLE001
+            return 0
+
+
+def _pdf_text_pages(pdf_bytes: bytes, start: int, end: int) -> list[tuple[int, str]]:
+    """Text of pages start..end (1-indexed, inclusive). pypdf first; PyMuPDF
+    when pypdf cannot parse the file (several Judiciary scans have broken
+    xref tables that pypdf rejects outright)."""
+    out: list[tuple[int, str]] = []
+    try:
+        reader = PdfReader(io.BytesIO(pdf_bytes))
+        total = len(reader.pages)
+        for i in range(start, min(end, total) + 1):
+            try:
+                out.append((i, (reader.pages[i - 1].extract_text() or "").strip()))
+            except Exception:  # noqa: BLE001
+                out.append((i, ""))
+        if any(t for _, t in out):
+            return out
+    except Exception:  # noqa: BLE001
+        out = []
+    try:
+        import pymupdf
+        doc = pymupdf.open(stream=pdf_bytes, filetype="pdf")
+        out = []
+        for i in range(start, min(end, doc.page_count) + 1):
+            out.append((i, (doc[i - 1].get_text() or "").strip()))
+    except Exception:  # noqa: BLE001
+        pass
+    return out
+
+
+def render_pdf_pages(pdf_bytes: bytes, pages: list[int], *, max_side: int = 1400) -> list[dict]:
+    """Render pages to PNG so the model can read them with vision.
+
+    This is how a scanned judgment or a photographed court document gets read
+    without an OCR toolchain on the server: the page goes to the model as an
+    image. max_side keeps each image near Anthropic's 1568px sweet spot, about
+    1,500 input tokens a page.
+    """
+    import pymupdf
+    doc = pymupdf.open(stream=pdf_bytes, filetype="pdf")
+    out: list[dict] = []
+    for p in pages:
+        if p < 1 or p > doc.page_count:
+            continue
+        page = doc[p - 1]
+        rect = page.rect
+        scale = min(max_side / max(rect.width, rect.height, 1), 2.5)
+        pix = page.get_pixmap(matrix=pymupdf.Matrix(scale, scale), alpha=False)
+        # JPEG: a scanned page is ~120KB against ~500KB as PNG, and the model
+        # reads typewritten text off either equally well.
+        try:
+            data, media = pix.tobytes("jpeg", jpg_quality=82), "image/jpeg"
+        except Exception:  # noqa: BLE001 — older MuPDF builds without JPEG output
+            data, media = pix.tobytes("png"), "image/png"
+        out.append({
+            "page": p,
+            "media_type": media,
+            "data": base64.b64encode(data).decode("ascii"),
+        })
+    return out
+
+
+_SCANNED_PAGE_CHARS = 200   # under this much extractable text, treat the page as an image
+_READ_PAGE_TEXT_CAP = 3500  # per page; a statute page is ~3,000 chars
+
+
+async def read_pdf_pages(
+    *,
+    document_id: str | None = None,
+    artifact_id: str | None = None,
+    url: str | None = None,
+    page_start: int = 1,
+    page_end: int | None = None,
+    owner_id: str | None = None,
+    session_id: str | None = None,
+) -> dict:
+    """Read a page range of a PDF: text where the PDF has it, page images where
+    it does not. The one tool that lets the agent actually READ a source it
+    has located (a fetched judgment, a corpus Act, a scanned SI) instead of
+    describing it from memory."""
+    settings = get_settings()
+    max_pages = max(1, int(settings.agent_vision_max_pages))
+    max_images = max(0, int(settings.agent_vision_max_images))
+
+    label = ""
+    try:
+        if document_id:
+            label = f"library document {document_id}"
+            try:
+                pdf = _download_corpus_pdf(document_id)
+            except ValueError:
+                row = (get_db().table("legal_documents").select("canonical_url,title")
+                       .eq("id", document_id).limit(1).execute().data or [{}])[0]
+                return {"result": {
+                    "error": "this library document has no stored PDF",
+                    "canonical_url": row.get("canonical_url"),
+                    "hint": ("The text is already in the library (use search_corpus). "
+                             "To see the original, call read_pdf_pages with url=canonical_url."),
+                }}
+        elif artifact_id:
+            label = f"artifact {artifact_id}"
+            pdf = _download_artifact_pdf(artifact_id)
+        elif url:
+            u = url.strip()
+            if not (u.startswith("http://") or u.startswith("https://")):
+                return {"result": {"error": "url must be http(s)"}}
+            if "zambialii.org" in u.lower():
+                return {"result": {"error": "ZambiaLII blocks automated access and is not fetched. Use the Judiciary's copy (judiciaryzambia.com)."}}
+            label = u
+            async with httpx.AsyncClient(timeout=60.0, follow_redirects=True, verify=False,
+                                         headers={"User-Agent": "Mozilla/5.0 LevyFetch/1.0"}) as client:
+                r = await client.get(u)
+            if r.status_code != 200:
+                return {"result": {"error": f"download returned {r.status_code}", "url": u}}
+            pdf = r.content
+            if len(pdf) > _FETCH_MAX_BYTES:
+                return {"result": {"error": "file too large (over 30 MB)", "url": u}}
+            if not pdf[:5].startswith(b"%PDF"):
+                return {"result": {"error": "the URL did not return a PDF; use web_fetch for web pages", "url": u}}
+        else:
+            return {"result": {"error": "give one of document_id, artifact_id or url"}}
+    except Exception as e:  # noqa: BLE001
+        return {"result": {"error": f"could not load the PDF: {type(e).__name__}: {e}"}}
+
+    total = _pdf_page_count(pdf)
+    if total == 0:
+        return {"result": {"error": "the file could not be parsed as a PDF", "source": label}}
+    start = max(1, int(page_start or 1))
+    end = int(page_end) if page_end else start + max_pages - 1
+    end = min(end, total, start + max_pages - 1)
+    if start > total:
+        return {"result": {"error": f"page_start {start} exceeds the document's {total} pages"}}
+
+    texts = _pdf_text_pages(pdf, start, end)
+    scanned = [p for p, t in texts if len(t) < _SCANNED_PAGE_CHARS]
+    images: list[dict] = []
+    if scanned and max_images:
+        try:
+            images = render_pdf_pages(pdf, scanned[:max_images])
+        except Exception as e:  # noqa: BLE001
+            images = []
+            render_error = f"{type(e).__name__}: {e}"
+        else:
+            render_error = ""
+    else:
+        render_error = ""
+    imaged = {im["page"] for im in images}
+    pages_out = []
+    for p, t in texts:
+        entry: dict = {"page": p, "chars": len(t)}
+        if len(t) >= _SCANNED_PAGE_CHARS:
+            entry["text"] = t[:_READ_PAGE_TEXT_CAP] + (" ... [page text truncated]" if len(t) > _READ_PAGE_TEXT_CAP else "")
+        elif p in imaged:
+            entry["image"] = True
+            entry["note"] = "no text layer; the page image follows this result. Read it."
+        else:
+            entry["note"] = "no text layer and not rendered (image budget reached); request this page in its own call."
+        pages_out.append(entry)
+    notes = []
+    if imaged:
+        notes.append(f"{len(imaged)} scanned page(s) rendered as images: read them directly; quote what the page says.")
+    if render_error:
+        notes.append(f"page rendering failed: {render_error}")
+    if end < total:
+        notes.append(f"pages {end + 1}-{total} not read; call again with page_start={end + 1} if needed.")
+    return {
+        "result": {"source": label, "total_pages": total, "page_start": start, "page_end": end,
+                   "pages": pages_out, "note": " ".join(notes)},
+        "images": images,
+        "_model_max_chars": 24_000,
+        "db_sources": [],
+        "web_sources": ([{"title": label, "url": url, "snippet": "", "domain": _extract_domain_pt(url)}] if url else []),
+    }
 
 
 def _download_artifact_pdf(artifact_id: str) -> bytes:
@@ -845,11 +1031,29 @@ async def fetch_web_pdf(
     get_db().table("artifacts").update({"storage_path": storage_path}).eq("id", row["id"]).execute()
     row["storage_path"] = storage_path
 
+    # The model used to get only a download card here, then tell the user
+    # "read it and I will summarise". It must be able to read what it fetched:
+    # the opening pages come back as text, and a scanned file is flagged so
+    # the next call is read_pdf_pages, which returns page images.
+    first = _pdf_text_pages(content, 1, min(page_count or 8, 8))
+    excerpt = "\n\n".join(f"[page {p}]\n{t}" for p, t in first if t)
+    scanned = bool(first) and all(len(t) < _SCANNED_PAGE_CHARS for _, t in first)
+    if len(excerpt) > 7000:
+        excerpt = excerpt[:7000] + " ... [excerpt truncated]"
+
     return {
         "result": {
             "artifact_id": row["id"], "title": title.strip(), "kind": "pdf",
             "page_count": page_count, "size_bytes": len(content), "source_url": u,
+            "scanned": scanned,
+            "text_excerpt": excerpt,
+            "read_more": (
+                f"Scanned file, no text layer: call read_pdf_pages(artifact_id=\"{row['id']}\") to read its pages as images."
+                if scanned else
+                f"Call read_pdf_pages(artifact_id=\"{row['id']}\", page_start, page_end) to read further pages before describing them."
+            ),
         },
+        "_model_max_chars": 14_000,
         "artifact": row,
         "db_sources": [],
         "web_sources": [{"title": title.strip(), "url": u, "snippet": "", "domain": _extract_domain_pt(u)}],

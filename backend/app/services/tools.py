@@ -240,8 +240,21 @@ async def _search_corpus(
             }
         )
 
+    result: dict = {"matches": results, "count": len(results)}
+    top = max((r["similarity"] for r in results), default=0.0)
+    if not results or top < 0.55:
+        # The library is a cache. A miss is a signal to go to the source, not
+        # an invitation to answer from memory.
+        result["library_miss"] = True
+        result["next_step"] = (
+            "LIBRARY MISS: nothing held answers this directly (top similarity "
+            f"{top:.2f}). Do not answer from memory. Escalate: gov_search "
+            "(judiciaryzambia.com, parliament.gov.zm, the issuing body) -> open the "
+            "primary source with web_fetch / fetch_web_pdf / read_pdf_pages -> quote "
+            "it and cite the URL. If no official source is found, say so plainly."
+        )
     return {
-        "result": {"matches": results, "count": len(results)},
+        "result": result,
         "db_sources": db_sources,
         "web_sources": [],
     }
@@ -279,7 +292,12 @@ async def _search_case_law(
         if did and did not in best:
             best[did] = c
     if not best:
-        return {"result": {"matches": [], "count": 0, "note": "no matching judgments in the corpus yet"},
+        return {"result": {"matches": [], "count": 0, "library_miss": True,
+                           "note": "no matching judgments in the library",
+                           "next_step": ("Do not name or describe a case from memory. gov_search "
+                                         "judiciaryzambia.com for it; if found, fetch_web_pdf then "
+                                         "read_pdf_pages and cite from the text. Otherwise say the "
+                                         "library holds no judgment on the point.")},
                 "db_sources": [], "web_sources": []}
 
     # Enrich with document-level metadata in one batch.
@@ -337,8 +355,23 @@ async def _search_case_law(
         if len(matches) >= max_results:
             break
 
+    result: dict = {"matches": matches, "count": len(matches)}
+    # A query naming the parties ("Kasanga v Mumba") whose parties appear in no
+    # returned title means THAT case is not held, whatever else came back.
+    # Without this flag the model took the nearest neighbour as the case and
+    # described it, twice wrongly, before finding the real judgment online.
+    pm = re.search(r"([A-Z][\w'.-]+(?:\s+[A-Z][\w'.-]+){0,4})\s+v\.?\s+([A-Z][\w'.-]+)", query)
+    if pm:
+        want = {pm.group(1).split()[-1].lower(), pm.group(2).lower()}
+        titles = " ".join((m.get("case") or "") + " " + (m.get("citation") or "") for m in matches).lower()
+        if not all(w in titles for w in want):
+            result["named_case_not_held"] = f"{pm.group(1)} v {pm.group(2)}"
+            result["next_step"] = ("The named case is not in the library; the matches above are "
+                                   "neighbours, not that case. gov_search judiciaryzambia.com for it, "
+                                   "fetch_web_pdf + read_pdf_pages if found; otherwise say you do not "
+                                   "hold it and do not describe its facts or holding.")
     return {
-        "result": {"matches": matches, "count": len(matches)},
+        "result": result,
         "db_sources": db_sources,
         "web_sources": [],
         # Surfaced as a `case_law` SSE event so the UI renders precedent cards.
@@ -476,6 +509,12 @@ async def _web_fetch(url: str) -> dict:
         }
     settings = get_settings()
 
+    # A PDF is not a web page: stripping "HTML" from its bytes produced garbage
+    # the model then summarised. Read its text directly; if it has none, say
+    # so and point at read_pdf_pages, which returns page images.
+    if (url or "").lower().split("?")[0].endswith(".pdf"):
+        return await _fetch_pdf_as_text(url)
+
     tavily_error: str | None = None
     if settings.tavily_api_key:
         try:
@@ -559,6 +598,35 @@ async def _web_fetch(url: str) -> dict:
             "url": url,
         }
     }
+
+
+async def _fetch_pdf_as_text(url: str) -> dict:
+    """Direct download of a PDF URL, returned as page text (first 10 pages)."""
+    try:
+        async with httpx.AsyncClient(timeout=60.0, follow_redirects=True, verify=False,
+                                     headers={"User-Agent": "Mozilla/5.0 LevyFetch/1.0"}) as client:
+            r = await client.get(url)
+    except Exception as e:  # noqa: BLE001
+        return {"result": {"error": f"could not download: {e}", "url": url}}
+    if r.status_code != 200:
+        return {"result": {"error": f"download returned {r.status_code}", "url": url}}
+    body = r.content
+    if not body[:5].startswith(b"%PDF"):
+        return {"result": {"error": "the URL did not return a PDF", "url": url}}
+    total = pdf_tools._pdf_page_count(body)
+    pages = pdf_tools._pdf_text_pages(body, 1, min(total, 10))
+    text = "\n\n".join(f"[page {p}]\n{t}" for p, t in pages if t)
+    scanned = bool(pages) and all(len(t) < pdf_tools._SCANNED_PAGE_CHARS for _, t in pages)
+    if len(text) > 12000:
+        text = text[:12000] + " ... [truncated]"
+    result: dict = {"url": url, "kind": "pdf", "total_pages": total, "pages_read": len(pages),
+                    "content": text, "scanned": scanned}
+    if scanned:
+        result["next_step"] = "No text layer. Call read_pdf_pages(url=...) to read the pages as images."
+    elif total > len(pages):
+        result["next_step"] = f"Pages {len(pages) + 1}-{total} not read; use read_pdf_pages(url=..., page_start=...) for the rest. Use fetch_web_pdf to hand the user the file."
+    return {"result": result, "_model_max_chars": 14_000, "db_sources": [],
+            "web_sources": [{"title": url.rsplit('/', 1)[-1], "url": url, "snippet": text[:300], "domain": _extract_domain(url)}]}
 
 
 def _html_to_text(html: str) -> str:
@@ -1008,6 +1076,13 @@ def build_tool_registry(
             form_document_id=form_document_id,
             form_artifact_id=form_artifact_id,
             notes=notes,
+            owner_id=owner_id, session_id=session_id,
+        )
+
+    async def _read_pdf_pages(document_id=None, artifact_id=None, url=None, page_start=1, page_end=None):
+        return await pdf_tools.read_pdf_pages(
+            document_id=document_id, artifact_id=artifact_id, url=url,
+            page_start=int(page_start or 1), page_end=(int(page_end) if page_end else None),
             owner_id=owner_id, session_id=session_id,
         )
 
@@ -2671,6 +2746,30 @@ def build_tool_registry(
             },
             handler=_fill_form,
         ),
+        "read_pdf_pages": ToolDefinition(
+            name="read_pdf_pages",
+            description=(
+                "READ a PDF's pages: a library document (document_id from search_corpus / "
+                "search_case_law), a fetched artifact (artifact_id from fetch_web_pdf or an "
+                "upload), or a direct PDF url. Returns each page's text; pages with no text "
+                "layer (scans, photographed documents) come back as page IMAGES that you can "
+                "read directly. Use it before describing any judgment, rule or section whose "
+                "text you have not seen in this conversation, and to read scanned files the "
+                "library could not extract. Up to 6 pages per call; ask for more in a second call."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "document_id": {"type": "string", "description": "Library document UUID."},
+                    "artifact_id": {"type": "string", "description": "Artifact UUID (fetched or uploaded PDF)."},
+                    "url": {"type": "string", "description": "Direct http(s) link to a PDF (official sites only)."},
+                    "page_start": {"type": "integer", "description": "First page, 1-indexed. Default 1."},
+                    "page_end": {"type": "integer", "description": "Last page, inclusive. Default page_start+5."},
+                },
+                "required": [],
+            },
+            handler=_read_pdf_pages,
+        ),
         "fetch_web_pdf": ToolDefinition(
             name="fetch_web_pdf",
             description=(
@@ -3382,10 +3481,30 @@ async def execute_tool(
         }
 
 
-def truncate_for_model(payload: dict, max_chars: int) -> str:
-    """Serialize a tool result for the model, truncating if oversized."""
+def truncate_for_model(payload: dict, max_chars: int) -> str | list[dict]:
+    """Serialize a tool result for the model, truncating if oversized.
+
+    Returns a string, or a list of content blocks when the envelope carries
+    page images ("images": [{page, media_type, data}]) so the model can read a
+    scanned page with vision. "_model_max_chars" lets a tool that returns page
+    text ask for more room than the default cap."""
+    images = None
+    limit = max_chars
+    if isinstance(payload, dict):
+        payload = dict(payload)
+        images = payload.pop("images", None)
+        hint = payload.pop("_model_max_chars", None)
+        if hint:
+            limit = max(limit, int(hint))
     text = json.dumps(payload, ensure_ascii=False, default=str)
-    if len(text) <= max_chars:
+    if len(text) > limit:
+        text = text[: limit - 80] + f' ... [truncated, original {len(text)} chars]'
+    if not images:
         return text
-    head = text[: max_chars - 80]
-    return head + f' ... [truncated, original {len(text)} chars]'
+    blocks: list[dict] = [{"type": "text", "text": text}]
+    for im in images:
+        blocks.append({"type": "text", "text": f"[page {im.get('page')} image]"})
+        blocks.append({"type": "image", "source": {"type": "base64",
+                                                   "media_type": im.get("media_type", "image/png"),
+                                                   "data": im.get("data", "")}})
+    return blocks
