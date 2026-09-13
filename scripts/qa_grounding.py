@@ -50,9 +50,27 @@ check("images become image content blocks", isinstance(blocks, list) and blocks[
 check("image bytes are not duplicated into the text block", isinstance(blocks, list) and "QUJD" not in blocks[0]["text"])
 flat = K._messages_to_openai([{"role": "user", "content": [{"type": "tool_result", "tool_use_id": "t1", "content": blocks}]}])
 check("Kimi flattener survives image blocks", flat[0]["role"] == "tool" and "pages" in flat[0]["content"])
-stub = C._truncate_tool_results_in_place({"role": "user", "content": [{"type": "tool_result", "tool_use_id": "a", "content": blocks}]}, 50)
-check("compactor stubs image-bearing results in old turns", "truncated by compactor" in stub["content"][0]["content"])
+_long = T.truncate_for_model({"result": {"pages": [{"page": 1, "text": "z" * 3000}]}, "images": [{"page": 2, "media_type": "image/jpeg", "data": "QUJD"}]}, 8000)
+stub = C._truncate_tool_results_in_place({"role": "user", "content": [{"type": "tool_result", "tool_use_id": "a", "content": _long}]}, 500)
+_c = stub["content"][0]["content"]
+check("compactor trims text around page images but keeps the images",
+      isinstance(_c, list) and any(b.get("type") == "image" for b in _c)
+      and any("truncated by compactor" in b.get("text", "") for b in _c if b.get("type") == "text"))
 check("render_pdf_pages exists (PyMuPDF)", callable(getattr(P, "render_pdf_pages", None)))
+# The compactor must price an image as an image. Counting base64 as text made
+# four page images look like 200K tokens, tripped compaction and replaced the
+# images with a stub; the model then described pages it had not seen.
+_big = "A" * 270000
+_imgs = [{"page": i, "media_type": "image/jpeg", "data": _big} for i in range(1, 5)]
+_blocks = T.truncate_for_model({"result": {"pages": []}, "images": _imgs}, 8000)
+_msgs = [{"role": "user", "content": [{"type": "tool_result", "tool_use_id": "t", "content": _blocks}]}]
+check("estimator prices four page images under 20K tokens", C.estimate_tokens(_msgs) < 20000, str(C.estimate_tokens(_msgs)))
+_tr = C._truncate_tool_results_in_place(_msgs[0], 800)
+check("truncation keeps page images", sum(1 for b in _tr["content"][0]["content"] if b.get("type") == "image") == 4)
+_st = C._truncate_tool_results_in_place({"role": "user", "content": [{"type": "tool_result", "tool_use_id": "t", "content": "x" * 5000}]}, 800)
+check("truncation stub tells the model not to describe what it has not seen", "Do not describe content you have not seen" in _st["content"][0]["content"])
+import inspect as _insp
+check("run_agent exposes debug_tools for QA probes", "debug_tools" in _insp.signature(A.run_agent).parameters)
 import pymupdf  # noqa: F401
 check("pymupdf importable", True)
 

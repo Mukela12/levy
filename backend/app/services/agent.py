@@ -1051,6 +1051,7 @@ async def run_agent(
     owner_id: str | None = None,
     session_id: str | None = None,
     attached_doc_ids: list[str] | None = None,
+    debug_tools: bool = False,
 ) -> AsyncIterator[dict]:
     settings = get_settings()
     model_name = model or DEFAULT_MODEL
@@ -1415,7 +1416,7 @@ async def run_agent(
 
             artifact = envelope.get("artifact")
             extras = envelope.get("extra_artifacts") or []
-            yield {
+            tr_event = {
                 "type": "tool_result",
                 "id": tool_id,
                 "name": tool_name,
@@ -1425,6 +1426,14 @@ async def run_agent(
                 "artifact": artifact,
                 "ms": elapsed_ms,
             }
+            if debug_tools:
+                # QA probes only: what the model was actually shown, so a wrong
+                # answer can be traced to the tool result rather than guessed at.
+                tr_event["debug"] = {
+                    "result": json.dumps(result, default=str, ensure_ascii=False)[:1500],
+                    "images": len(envelope.get("images") or []),
+                }
+            yield tr_event
             if artifact:
                 yield {"type": "artifact", "artifact": artifact}
             for extra in extras:

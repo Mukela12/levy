@@ -451,6 +451,7 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
                 owner_id=uid,
                 session_id=safe_session_id,
                 attached_doc_ids=request.attached_doc_ids,
+                debug_tools=_is_qa_probe(http_request),
             ):
                 acc.consume(event)
                 await queue.put(event)

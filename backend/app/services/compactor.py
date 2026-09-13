@@ -39,6 +39,24 @@ from ..config import get_settings
 _CHARS_PER_TOKEN = 3.5
 
 
+# What one rendered page costs the model, whatever its byte size. Counting the
+# base64 as text made four page images look like 200K tokens, tripped the
+# compaction threshold and replaced the images with a stub before the model
+# ever saw them; it then described a scanned SI it had not read.
+_IMAGE_TOKENS = 1600
+
+
+def _block_chars(block) -> int:
+    if isinstance(block, dict):
+        if block.get("type") == "image":
+            return _IMAGE_TOKENS * _CHARS_PER_TOKEN
+        if block.get("type") == "tool_result" and isinstance(block.get("content"), list):
+            return sum(_block_chars(b) for b in block["content"]) + 40
+        # tool_use input + tool_result content are the heavy hitters
+        return len(json.dumps(block, default=str, ensure_ascii=False))
+    return len(str(block))
+
+
 def estimate_tokens(messages: list[dict]) -> int:
     """Rough token estimate for an Anthropic messages list."""
     total_chars = 0
@@ -47,12 +65,7 @@ def estimate_tokens(messages: list[dict]) -> int:
         if isinstance(content, str):
             total_chars += len(content)
         elif isinstance(content, list):
-            for block in content:
-                if isinstance(block, dict):
-                    # tool_use input + tool_result content are the heavy hitters
-                    total_chars += len(json.dumps(block, default=str, ensure_ascii=False))
-                else:
-                    total_chars += len(str(block))
+            total_chars += sum(_block_chars(block) for block in content)
         else:
             total_chars += len(str(content))
     return int(total_chars / _CHARS_PER_TOKEN)
@@ -70,16 +83,37 @@ def _truncate_tool_results_in_place(message: dict, max_chars: int) -> dict:
         return message
     new_blocks = []
     truncated_any = False
+    stub = (" ... [truncated by compactor: {n} chars not shown. Do not describe content "
+            "you have not seen; call the tool again for a narrower range if you need it]")
     for block in content:
         if isinstance(block, dict) and block.get("type") == "tool_result":
             payload = block.get("content")
+            if isinstance(payload, list):
+                # Page images stay (they only exist in the current answer's
+                # turns and cost a fixed ~1.6K tokens each); only the text
+                # blocks around them are trimmed.
+                text_blocks = [b for b in payload if isinstance(b, dict) and b.get("type") == "text"]
+                text_len = sum(len(b.get("text", "")) for b in text_blocks)
+                if text_len > max_chars:
+                    budget = max_chars
+                    trimmed = []
+                    for b in payload:
+                        if isinstance(b, dict) and b.get("type") == "text":
+                            t = b.get("text", "")
+                            keep = t[: max(0, budget - 80)]
+                            budget -= len(keep)
+                            trimmed.append({**b, "text": keep + (stub.format(n=text_len) if len(keep) < len(t) else "")})
+                        else:
+                            trimmed.append(b)
+                    new_blocks.append({**block, "content": trimmed})
+                    truncated_any = True
+                else:
+                    new_blocks.append(block)
+                continue
             payload_str = payload if isinstance(payload, str) else json.dumps(payload, default=str)
             if len(payload_str) > max_chars:
                 head = payload_str[: max_chars - 80]
-                new_blocks.append({
-                    **block,
-                    "content": head + f" ... [truncated by compactor — {len(payload_str)} chars]",
-                })
+                new_blocks.append({**block, "content": head + stub.format(n=len(payload_str))})
                 truncated_any = True
             else:
                 new_blocks.append(block)
