@@ -158,9 +158,19 @@ def main() -> int:
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--amendments", action="store_true", help="also harvest amendment Acts")
     ap.add_argument("--index", default="", help="reuse a saved index.json instead of crawling")
+    ap.add_argument("--shard", default="1/1", help="k/n: handle the nodes whose id hashes to shard k of n (run n processes)")
     args = ap.parse_args()
     WORK.mkdir(parents=True, exist_ok=True)
-    cache = json.loads(CACHE.read_text()) if CACHE.exists() else {}
+    k, n = (int(x) for x in args.shard.split("/"))
+    cache_path = CACHE if n == 1 else CACHE.with_suffix(f".{k}of{n}.json")
+    cache = json.loads(cache_path.read_text()) if cache_path.exists() else {}
+    if n > 1 and CACHE.exists():
+        # a single-process run's progress counts for every shard
+        cache = {**json.loads(CACHE.read_text()), **cache}
+    # Shards partition on the node id, not on list position, so concurrently
+    # running shards never overlap even when their held-sets differ.
+    def mine(e: dict) -> bool:
+        return n == 1 or (int(e["node"].rsplit("/", 1)[-1]) % n) == (k - 1)
     db = get_db()
     c = http()
 
@@ -172,7 +182,7 @@ def main() -> int:
     entries = [parse_entry(e) for e in index]
     held = held_keys(db)
     todo = [e for e in entries if e["node"] not in cache and norm(e["title"]) not in held
-            and (args.amendments or not e["amendment"])]
+            and (args.amendments or not e["amendment"]) and mine(e)]
     todo.sort(key=lambda e: (e["amendment"], -(e["year"] or 0)))
     print(f"index={len(entries)} held={len(held)} cached={len(cache)} to do={len(todo)}"
           f" (principal={sum(1 for e in todo if not e['amendment'])}, amendment={sum(1 for e in todo if e['amendment'])})", flush=True)
@@ -209,7 +219,8 @@ def main() -> int:
                 print(f"  scanned, queued for OCR {tag} ({npages} pages)", flush=True); scanned += 1; continue
             local = WORK / (re.sub(r"[^A-Za-z0-9]+", "_", e["title"]).strip("_")[:80] + ".pdf")
             local.write_bytes(body)
-            res = ingest_pdf(str(local))
+            res = ingest_pdf(str(local), overrides={
+                "title": e["title"], "short_name": e["short"], "act_number": e["act_number"], "year": e["year"]})
             if res.get("status") == "skipped":
                 cache[e["node"]] = {"status": "hash_held", "title": e["title"]}
                 skipped += 1; continue
@@ -220,15 +231,15 @@ def main() -> int:
                 "is_global": True, "owner_id": None, "pdf_storage_path": sp, "pdf_page_count": npages,
                 "pdf_size_bytes": len(body), "canonical_url": url, "source_url": url,
             }).eq("id", doc["id"]).execute()
-            n = patch_chunks(db, doc["id"], e["title"], e["short"])
-            cache[e["node"]] = {"status": "ingested", "title": e["title"], "doc_id": doc["id"], "chunks": n}
-            print(f"  INGESTED {tag} {e['act_number']} pages={npages} chunks={n}", flush=True)
+            nch = res.get("chunks_created") or doc.get("total_chunks") or 0
+            cache[e["node"]] = {"status": "ingested", "title": e["title"], "doc_id": doc["id"], "chunks": nch}
+            print(f"  INGESTED {tag} {e['act_number']} pages={npages} chunks={nch}", flush=True)
             done += 1
         except Exception as ex:  # noqa: BLE001
             cache[e["node"]] = {"status": f"error: {type(ex).__name__}", "title": e["title"]}
             print(f"  FAILED {tag}: {type(ex).__name__}: {str(ex)[:120]}", flush=True); failed += 1
         finally:
-            CACHE.write_text(json.dumps(cache, indent=0))
+            cache_path.write_text(json.dumps(cache, indent=0))
             time.sleep(0.4)
     print(f"\nDONE ingested={done} skipped={skipped} scanned={scanned} failed={failed}")
     return 0

@@ -15,7 +15,7 @@ from ..db.supabase import (
 )
 
 
-def ingest_pdf(pdf_path: str, force: bool = False) -> dict:
+def ingest_pdf(pdf_path: str, force: bool = False, overrides: dict | None = None) -> dict:
     """
     Full ingestion pipeline for a legal PDF.
 
@@ -43,6 +43,13 @@ def ingest_pdf(pdf_path: str, force: bool = False) -> dict:
     print("\n[1/4] Parsing PDF...")
     parsed = parse_legal_pdf(pdf_path)
     metadata = parsed["metadata"]
+    # A caller that knows the instrument (the official index's own title and
+    # number) supplies it here, so the document row AND every chunk's
+    # act_name carry it from the start. The parser's guesses are often junk
+    # ("(MISCELLANEOUS PROVISIONS) ACT"), and fixing them afterwards meant one
+    # update per chunk.
+    if overrides:
+        metadata.update({k: v for k, v in overrides.items() if v not in (None, "")})
 
     # Step 3: Insert document record
     print("\n[2/4] Creating document record...")
