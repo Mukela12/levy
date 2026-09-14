@@ -1019,3 +1019,23 @@
 [data-ui="canopy"] .cp-tour-card > .cp-tour-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-bottom: 14px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 14px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 14px), transparent); }
 /* The fade falls on empty padding when the text fits, and on the text itself
    only when there is more to scroll: a quiet "continues below" cue. */
+
+/* Every hourly headline on one line on phones, so the welcome is the same
+   height every hour instead of growing a line for two of the four scenes and
+   pushing the credit out of the card. Sized to the widest headline (measured
+   at 14.29x its font size), with a little headroom; the old 330px cap would
+   have wrapped it again on 412px phones. Tracking in em keeps proportions. */
+@media (max-width: 700px) {
+  .cp-welcome-content h1 { font-size: clamp(19px, calc((100vw - 64px) / 14.6), 25px); letter-spacing: -0.03em; max-width: none; }
+}
+
+/* The credit stays one line on every scene. The place name yields first,
+   with an ellipsis; the photographer and licence, which CC BY-SA requires,
+   are never cut. Without this "Evening on the Luangwa" wrapped the pill onto
+   a second line and pushed it out of the card on smaller phones. */
+@media (max-width: 700px) {
+  .cp-scene-location { flex-wrap: nowrap; max-width: 100%; min-width: 0; }
+  .cp-scene-caption { flex: 1 1 auto; min-width: 0; overflow: hidden; }
+  .cp-scene-caption-title { display: block; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .cp-photo-credit { flex: 0 0 auto; white-space: nowrap; }
+}
