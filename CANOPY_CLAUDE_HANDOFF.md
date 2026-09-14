@@ -154,6 +154,35 @@ Live-domain smoke checks and git push remain unfinished.
 
 ## Separate follow-ups, not proven fixed by this UI release
 
+### Third refinement: compact starter, libraries and live naming QA (14 September)
+
+- Confirmed no IRAC action in topbar. Chat heading art is now 28px and inline
+  action art 24px; the button remains a separate interactive target.
+- In focus is smaller and quieter: shorter metadata, compact padding and question
+  typography, an explicit Discuss action, hover/focus feedback and Another topic.
+  Browser checks in light/dark confirmed source-aware draft selection without sending.
+- Documents/Templates now keep the folder shelf and file list together, with real
+  all-files/folder selection and list/grid controls. This supersedes the folder-first
+  limitation above. Canopy dialogs replace the custom modal overlays in these pages.
+  Fixed duplicate mobile Template Upload, aligned Upload styling, labelled editor
+  fields, enlarged Edit/Delete targets, distinguished no search matches from an empty
+  library, and surfaced action failures instead of swallowing them.
+- `scripts/qa_chat_titles_live.py --run-live` tested real Haiku and Supabase, using
+  only a synthetic QA-owned first exchange. Generated and persisted title:
+  `Initial Client Meeting Document Organization`. Subsequent manual title was
+  preserved. Fixture session `7a94cdc6-2024-48a9-9e4c-572c797603be` is retained and
+  must be excluded from user analytics. This tests the service, not the full HTTP
+  route trigger or deployed backend. No production naming release was made.
+- The weekly source-review automation remains local; the current two-topic edition
+  expires September 21. It is not a production-autonomous current-news pipeline.
+  Do not label older Acts as new news. Additional search results were not ingested.
+
+Still not complete: whole-screen prototype acceptance for Profile/auth/onboarding
+and Matter detail/forms, hosted workflow QA and release. Existing folder artwork
+is retained, not claimed as exact prototype parity. Prior Vercel authorization
+block has not been revalidated or bypassed. This pass does not repair the separate
+backend/corpus/password-recovery issues below.
+
 1. Employment Code passage labels conflict with PDF pages. Corpus metadata audit required.
 2. Study model leaks explanations before quiz submission. Prompt/model follow-up.
 3. Documents total is limited to the first 1,000 returned rows.

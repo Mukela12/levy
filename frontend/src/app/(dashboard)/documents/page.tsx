@@ -5,6 +5,8 @@ import { useAuth } from '@/components/auth/auth-provider'
 import { usePdfViewer } from '@/components/chat/pdf-viewer-context'
 import { FolderCard } from '@/components/documents/folder-card'
 import { ChoiceSelect } from '@/components/canopy/choice-select'
+import { useUiVariant } from '@/lib/ui-variant'
+import { CanopyModal } from '@/components/canopy/modal'
 import {
   attachDocumentToSession,
   createFolder,
@@ -31,6 +33,8 @@ import {
   Trash2,
   Upload,
   X,
+  List,
+  LayoutGrid,
 } from 'lucide-react'
 
 // Sentinel ids used to address the two non-user-folder pseudo-folders.
@@ -69,6 +73,9 @@ function formatChunks(n?: number) {
 }
 
 export default function DocumentsPage() {
+  const { variant } = useUiVariant()
+  const canopy = variant === 'canopy'
+  const [layout, setLayout] = useState<'list' | 'grid'>('list')
   const { user, session } = useAuth()
   const pdf = usePdfViewer()
   const [activeFolder, setActiveFolder] = useState<FolderId | null>(null)
@@ -84,6 +91,7 @@ export default function DocumentsPage() {
   const [busyDoc, setBusyDoc] = useState<Record<string, boolean>>({})
   const [recentSessionId, setRecentSessionId] = useState<string | null>(null)
   const [query, setQuery] = useState('')
+  const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Resolve the user's most recent thread (used as the default attach target
@@ -108,6 +116,7 @@ export default function DocumentsPage() {
   }, [user?.id])
 
   async function reloadAll() {
+    setError(null)
     setLoading(true)
     try {
       const folderId =
@@ -131,6 +140,7 @@ export default function DocumentsPage() {
       setUnfiledCount(folderRes.unfiled_count)
     } catch {
       setData(null)
+      setError('Your documents could not load. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -145,6 +155,7 @@ export default function DocumentsPage() {
     const file = e.target.files?.[0]
     if (!file) return
     setUploading(true)
+    setError(null)
     try {
       const folderId =
         activeFolder &&
@@ -155,7 +166,7 @@ export default function DocumentsPage() {
       await uploadDocument(file, session?.access_token, user?.id, folderId)
       await reloadAll()
     } catch {
-      // surfaced via reload state
+      setError('Upload failed. Your file has not been added. Please try again.')
     } finally {
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
@@ -172,7 +183,7 @@ export default function DocumentsPage() {
       setCreatingFolder(false)
       await reloadAll()
     } catch {
-      // collision (unique name) - keep dialog open
+      setError('Could not create this folder. Check the name and try again.')
     }
   }
 
@@ -186,13 +197,13 @@ export default function DocumentsPage() {
       setRenameValue('')
       await reloadAll()
     } catch {
-      // ignore
+      setError('Could not rename this folder. Please try again.')
     }
   }
 
   async function handleDeleteFolder(folder: FolderRow) {
     const ok = window.confirm(
-      `Delete folder "${folder.name}"? Documents inside will become unfiled (still searchable). To delete the folder AND its documents, click Cancel and use Shift+click.`,
+      `Delete folder "${folder.name}"? Documents inside will become unfiled. The documents will not be deleted.`,
     )
     if (!ok) return
     try {
@@ -200,7 +211,7 @@ export default function DocumentsPage() {
       if (activeFolder === folder.id) setActiveFolder(null)
       await reloadAll()
     } catch {
-      // ignore
+      setError('Could not delete this folder. Please try again.')
     }
   }
 
@@ -212,6 +223,8 @@ export default function DocumentsPage() {
       if (isAttached) await detachDocumentFromSession(recentSessionId, doc.id)
       else await attachDocumentToSession(recentSessionId, doc.id)
       await reloadAll()
+    } catch {
+      setError('Could not update the chat attachment. Please try again.')
     } finally {
       setBusyDoc((b) => ({ ...b, [doc.id]: false }))
     }
@@ -222,6 +235,8 @@ export default function DocumentsPage() {
     try {
       await moveDocumentToFolder(doc.id, folderId)
       await reloadAll()
+    } catch {
+      setError('Could not move this document. Please try again.')
     } finally {
       setBusyDoc((b) => ({ ...b, [doc.id]: false }))
     }
@@ -267,7 +282,7 @@ export default function DocumentsPage() {
     <div className="flex-1 overflow-y-auto" style={{ overscrollBehavior: 'none' }}>
       <div className="px-6 py-6 max-w-5xl mx-auto w-full">
         {/* Header */}
-        <div className="flex items-start justify-between gap-3 mb-6">
+        <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
           <div>
             <h1
               className="text-2xl font-bold text-white/90 tracking-tight"
@@ -284,8 +299,9 @@ export default function DocumentsPage() {
             </p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
+            {canopy && user && <button className="cp-btn" onClick={() => setCreatingFolder(true)}><Plus size={15} />New folder</button>}
             <input ref={fileInputRef} type="file" accept=".pdf" onChange={handleUpload} className="hidden" />
-            {activeFolder && activeFolder !== FOLDER_GLOBAL && (
+            {(canopy || activeFolder) && activeFolder !== FOLDER_GLOBAL && (
               // Single refined Upload button. Subtle emerald (no glow, no
               // gradient) so it reads as a utility action rather than
               // competing with the hero CTAs ("New chat", "Sign in").
@@ -294,11 +310,11 @@ export default function DocumentsPage() {
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading || !user}
                 aria-label={uploading ? 'Uploading file' : 'Upload PDF'}
-                className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full text-[13px] font-medium
+                className={canopy ? 'cp-btn primary' : `inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full text-[13px] font-medium
                   text-emerald-300 bg-emerald-500/10 border border-emerald-500/25
                   hover:bg-emerald-500/15 hover:border-emerald-500/40 hover:text-emerald-200
                   active:translate-y-px transition-colors
-                  disabled:opacity-40 disabled:cursor-not-allowed"
+                  disabled:opacity-40 disabled:cursor-not-allowed`}
               >
                 {uploading
                   ? <Loader2 className="size-3.5 animate-spin" />
@@ -310,6 +326,7 @@ export default function DocumentsPage() {
         </div>
 
         {/* Breadcrumb when inside a folder */}
+        {error && <p role="alert" className="cp-library-error">{error}</p>}
         {activeFolder && (
           <div className="flex items-center gap-1.5 mb-5 text-[12.5px]">
             <button
@@ -350,18 +367,18 @@ export default function DocumentsPage() {
         )}
 
         {/* Folder grid */}
-        {!activeFolder && (
+        {(canopy || !activeFolder) && (
           <>
             {loading ? (
               <div className="flex items-center justify-center py-16">
                 <Loader2 className="size-5 text-emerald-400 animate-spin" />
               </div>
             ) : (
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3 mb-8">
+              <div className={canopy ? 'cp-library-shelf' : 'grid grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3 mb-8'}>
                 <FolderCard
                   kind="global"
                   name="Global library"
-                  description={`${data?.counts.global ?? 0} curated Zambian-law documents`}
+                  description={canopy ? 'Browse official sources' : `${data?.counts.global ?? 0} curated Zambian-law documents`}
                   onClick={() => setActiveFolder(FOLDER_GLOBAL)}
                 />
                 {folders.map((f) => (
@@ -377,20 +394,21 @@ export default function DocumentsPage() {
                     onClick={() => setActiveFolder(FOLDER_UNFILED)}
                   />
                 )}
-                <FolderCard
+                {!canopy && <FolderCard
                   kind="new"
                   name="New folder"
                   description="Group related uploads. Chat still searches all of them."
                   onClick={() => setCreatingFolder(true)}
-                />
+                />}
               </div>
             )}
           </>
         )}
 
         {/* Folder detail (document list) */}
-        {activeFolder && (
+        {(canopy || activeFolder) && (
           <>
+            {canopy && <div className="cp-library-toolbar"><button aria-pressed={!activeFolder} onClick={() => setActiveFolder(null)}>All uploads</button><div><button aria-label="List view" aria-pressed={layout === 'list'} onClick={() => setLayout('list')}><List size={18} /></button><button aria-label="Grid view" aria-pressed={layout === 'grid'} onClick={() => setLayout('grid')}><LayoutGrid size={18} /></button></div></div>}
             {/* Filter input */}
             <div className="relative max-w-sm mb-4">
               <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/25" />
@@ -414,7 +432,7 @@ export default function DocumentsPage() {
                 onUpload={() => fileInputRef.current?.click()}
               />
             ) : (
-              <div className="space-y-1.5">
+              <div className={canopy ? `cp-library-files is-${layout}` : 'space-y-1.5'}>
                 {filteredDocs.map((doc) => {
                   const isOwned = !!doc.owner_id && doc.owner_id === user?.id
                   return (
@@ -517,8 +535,9 @@ export default function DocumentsPage() {
 
       {/* New folder modal */}
       {creatingFolder && (
-        <Modal onClose={() => setCreatingFolder(false)} title="New folder">
+        <Modal error={error} onClose={() => setCreatingFolder(false)} title="New folder">
           <input
+            aria-label="Folder name"
             autoFocus
             type="text"
             placeholder="Folder name"
@@ -549,8 +568,9 @@ export default function DocumentsPage() {
 
       {/* Rename folder modal */}
       {renameTarget && (
-        <Modal onClose={() => setRenameTarget(null)} title="Rename folder">
+        <Modal error={error} onClose={() => setRenameTarget(null)} title="Rename folder">
           <input
+            aria-label="Folder name"
             autoFocus
             type="text"
             value={renameValue}
@@ -584,11 +604,15 @@ function Modal({
   children,
   onClose,
   title,
+  error,
 }: {
   children: React.ReactNode
   onClose: () => void
   title: string
+  error?: string | null
 }) {
+  const { variant } = useUiVariant()
+  if (variant === 'canopy') return <CanopyModal title={title} onClose={onClose}><div className="cp-library-dialog">{error && <p role="alert">{error}</p>}{children}</div></CanopyModal>
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />

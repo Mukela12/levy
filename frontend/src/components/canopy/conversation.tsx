@@ -97,7 +97,7 @@ export function CanopyConversation({ title, messages, loading, onSend, composer,
               <span>{title}</span>
               {brief.available && (
                 <button type="button" className="cp-icon-btn" aria-label="Open IRAC analysis" onClick={() => brief.setOpen(true)}>
-                  <ActionArt kind="irac" />
+                  <ActionArt kind="irac" size={28} />
                 </button>
               )}
             </div>

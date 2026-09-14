@@ -148,3 +148,23 @@ and dismiss with Escape. No backend/corpus writes were performed in this pass.
 - Confirm live domain serves Canopy and update the handoff with deployment evidence.
 
 Historical results are not evidence that the current release passed these gates.
+
+## Third refinement evidence (14 September)
+
+Real Haiku naming plus Supabase persistence and manual-rename preservation passed
+through the opt-in `scripts/qa_chat_titles_live.py` fixture. No real user's content
+was submitted in that test. This is not a deployed HTTP-route end-to-end test.
+
+Current browser checks: light/dark compact welcome, topic selection fills but does
+not send, no topbar IRAC/profile/status, Documents new-folder dialog, Templates
+list/grid switch, single Upload action, editor open/cancel and accessible field
+labels, and accurate no-matching-templates state. These latest checks used the
+native narrow preview; prior 320/390/1440 results are historical, not a fresh full
+breakpoint sweep. No new hosted or physical-device checks are claimed.
+
+The combined shelf/file layout is now implemented for Documents and Templates.
+Upload/move/edit handlers are retained and errors surfaced; every mutation path
+has not been exercised again in this pass. Production release remains gated.
+
+Final current-tree verification passed: `git diff --check`, lint, TypeScript,
+all 17 frontend tests, and the production build (931 generated pages).

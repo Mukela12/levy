@@ -17,8 +17,8 @@ export function InFocus({ onChoose, onDismiss }: { onChoose: (question: string) 
     <section className="cp-in-focus" aria-label="Suggested question">
       <div className="cp-focus-heading"><span>In focus · Zambia</span><button type="button" aria-label="Hide suggested questions" onClick={onDismiss}><X size={16} /></button></div>
       {available ? <>
-        <button type="button" className="cp-focus-question" onClick={choose}><span>{topic.question}</span><ArrowUpRight size={20} /></button>
-        <div className="cp-focus-meta"><button type="button" onClick={() => setDetails(true)}>{topic.kind} · {topic.source} · {topic.published}<Info size={14} /></button><button type="button" onClick={() => setIndex(value => (value + 1) % edition.topics.length)}>Another question<ChevronRight size={14} /></button></div>
+        <button type="button" className="cp-focus-question" onClick={choose} aria-label={`Discuss: ${topic.question}`}><span>{topic.question}</span><ArrowUpRight size={17} /></button>
+        <div className="cp-focus-meta"><button type="button" aria-label={`Source and status: ${topic.source}`} onClick={() => setDetails(true)}>{topic.kind} · {topic.published}<Info size={13} /></button><button type="button" onClick={() => setIndex(value => (value + 1) % edition.topics.length)}>Another topic<ChevronRight size={13} /></button></div>
       </> : <p>The next source review is pending. Try an example or ask your own question.</p>}
     </section>
     {details && available && <CanopyModal title="Behind this question" onClose={() => setDetails(false)}>
