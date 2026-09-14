@@ -82,7 +82,7 @@ export default function StudyPage() {
               const active = mode === key
               return (
                 <button key={key} type="button" role="radio" aria-checked={active} className={'cp-study-format' + (active ? ' is-active' : '')} onClick={() => setMode(key)}>
-                  <span className="cp-lord" aria-hidden="true"><LordIcon name={CANOPY_ICON[lord]} size={22} /></span>
+                  <span className="cp-lord" aria-hidden="true"><LordIcon name={CANOPY_ICON[lord]} size={22} trigger="loop" /></span>
                   <strong>{label}</strong>
                   <small>{desc}</small>
                 </button>
