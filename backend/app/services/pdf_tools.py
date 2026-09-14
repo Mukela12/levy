@@ -154,6 +154,75 @@ def render_pdf_pages(pdf_bytes: bytes, pages: list[int], *, max_side: int = 1400
 
 _SCANNED_PAGE_CHARS = 200   # under this much extractable text, treat the page as an image
 _READ_PAGE_TEXT_CAP = 3500  # per page; a statute page is ~3,000 chars
+_LIBRARY_TEXT_BUDGET = 20_000  # per call when a text-only document is read in parts
+
+
+def _library_text_read(document_id: str, page_start: int, page_end: int | None,
+                       max_pages: int) -> dict:
+    """The library's own extracted text of a document that has no stored PDF.
+
+    Bills, civic guides and some judgments were ingested as text only, so
+    there is no file to open. Their chunks keep page numbers where the ingest
+    knew them, and those read by page. A document ingested as one run of text
+    (every chunk on "page 1") reads in order, a budget at a time, as parts.
+    """
+    db = get_db()
+    doc = (db.table("legal_documents").select("title,canonical_url,source_url")
+           .eq("id", document_id).limit(1).execute().data or [{}])[0]
+    rows = (db.table("legal_chunks").select("chunk_index,page_start,page_end,content")
+            .eq("document_id", document_id).order("chunk_index").execute().data or [])
+    original = doc.get("canonical_url") or doc.get("source_url")
+    if not rows:
+        return {"result": {"error": "this library document has no stored PDF and no extracted text",
+                           "original_url": original}}
+
+    start = max(1, int(page_start or 1))
+    last_page = max((r.get("page_end") or r.get("page_start") or 1) for r in rows)
+    pages_out: list[dict] = []
+    notes = ["No PDF is stored for this document; this is the library's extracted text of it."]
+    if last_page > 1:
+        unit, total = "pages", last_page
+        if start > total:
+            return {"result": {"error": f"page_start {start} exceeds the document's {total} pages"}}
+        end = int(page_end) if page_end else start + max_pages - 1
+        end = min(end, total, start + max_pages - 1)
+        by_page: dict[int, list[str]] = {}
+        for r in rows:
+            by_page.setdefault(r.get("page_start") or 1, []).append(r["content"])
+        for p in range(start, end + 1):
+            t = "\n".join(by_page.get(p, [])).strip()
+            entry: dict = {"page": p, "chars": len(t)}
+            if t:
+                entry["text"] = t[:_READ_PAGE_TEXT_CAP] + (" ... [page text truncated]" if len(t) > _READ_PAGE_TEXT_CAP else "")
+            else:
+                entry["note"] = "the library holds no text for this page"
+            pages_out.append(entry)
+    else:
+        unit, total = "parts", len(rows)
+        if start > total:
+            return {"result": {"error": f"page_start {start} exceeds the document's {total} text parts"}}
+        used, end = 0, start - 1
+        for i in range(start - 1, total):
+            t = rows[i]["content"].strip()
+            if pages_out and used + len(t) > _LIBRARY_TEXT_BUDGET:
+                break
+            t = t[:_LIBRARY_TEXT_BUDGET]
+            pages_out.append({"part": i + 1, "chars": len(t), "text": t})
+            used, end = used + len(t), i + 1
+        notes.append("This text has no page numbers, so it comes in parts: cite it by section or clause, never by page.")
+    if end < total:
+        notes.append(f"{unit} {end + 1}-{total} not read; call again with page_start={end + 1} if needed.")
+    if original:
+        notes.append(f"The original is at {original}; fetch it only if this text is unreadable (government sites are slow).")
+    return {
+        "result": {"source": doc.get("title") or f"library document {document_id}",
+                   "origin": "library_text", f"total_{unit}": total,
+                   "page_start": start, "page_end": end, "pages": pages_out,
+                   "note": " ".join(notes)},
+        "_model_max_chars": 24_000,
+        "db_sources": [],
+        "web_sources": [],
+    }
 
 
 async def read_pdf_pages(
@@ -180,15 +249,8 @@ async def read_pdf_pages(
             label = f"library document {document_id}"
             try:
                 pdf = _download_corpus_pdf(document_id)
-            except ValueError:
-                row = (get_db().table("legal_documents").select("canonical_url,title")
-                       .eq("id", document_id).limit(1).execute().data or [{}])[0]
-                return {"result": {
-                    "error": "this library document has no stored PDF",
-                    "canonical_url": row.get("canonical_url"),
-                    "hint": ("The text is already in the library (use search_corpus). "
-                             "To see the original, call read_pdf_pages with url=canonical_url."),
-                }}
+            except Exception:  # noqa: BLE001 — no stored file, or storage refused it
+                return _library_text_read(document_id, page_start, page_end, max_pages)
         elif artifact_id:
             label = f"artifact {artifact_id}"
             pdf = _download_artifact_pdf(artifact_id)

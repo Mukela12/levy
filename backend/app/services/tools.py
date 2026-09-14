@@ -2753,7 +2753,9 @@ def build_tool_registry(
                 "search_case_law), a fetched artifact (artifact_id from fetch_web_pdf or an "
                 "upload), or a direct PDF url. Returns each page's text; pages with no text "
                 "layer (scans, photographed documents) come back as page IMAGES that you can "
-                "read directly. Use it before describing any judgment, rule or section whose "
+                "read directly. A library document with no stored PDF (bills, civic guides) "
+                "returns the library's extracted text instead, in parts when it has no page "
+                "numbers. Use it before describing any judgment, rule or section whose "
                 "text you have not seen in this conversation, and to read scanned files the "
                 "library could not extract. Up to 6 pages per call; ask for more in a second call."
             ),
