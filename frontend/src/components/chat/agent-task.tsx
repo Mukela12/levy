@@ -27,7 +27,8 @@ import {
   Files as FilesIcon,
   Sparkles,
   ClipboardList,
-, MessageCircleQuestion } from 'lucide-react'
+  MessageCircleQuestion,
+} from 'lucide-react'
 import { Favicon } from './favicon'
 import type { ToolCallView } from './tool-call-card'
 
