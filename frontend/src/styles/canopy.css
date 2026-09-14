@@ -24,6 +24,8 @@
 .cp-auth-art h1 { font-size:clamp(36px,4vw,52px); line-height:1.1; letter-spacing:-2px; margin:24px 0; }
 .cp-auth-art p { color:var(--cp-muted); line-height:1.6; }
 .cp-auth-art img { width:100%; max-width:320px; height:auto; margin:20px auto; }
+.cp-auth-rive { width:100%; max-width:360px; height:320px; margin:12px auto; border-radius:18px; overflow:hidden; border:1px solid var(--cp-line); box-shadow:0 14px 34px -24px #00000073; background:#fff; }
+.cp-auth-rive canvas { width:100%!important; height:100%!important; }
 .cp-auth-form { min-width:0; max-width:440px; }
 .cp-auth-form h2,.cp-account h1 { font-size:30px; font-weight:500; letter-spacing:-1px; margin:10px 0; }
 .cp-auth-form > p { margin:14px 0 24px; line-height:1.6; color:var(--cp-muted); }

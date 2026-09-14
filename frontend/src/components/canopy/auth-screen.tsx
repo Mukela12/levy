@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/components/auth/auth-provider'
@@ -10,7 +9,12 @@ import { useUiVariant } from '@/lib/ui-variant'
 import { createClient } from '@/lib/supabase'
 import { LevyLogo } from '@/components/ui/levy-logo'
 import { CanopyThemeToggle } from './theme-toggle'
-import welcome from '../../../public/canopy/onboarding/welcome.png'
+import dynamic from 'next/dynamic'
+import { BookArt } from '@/components/canopy/rive-auth-scene'
+
+// The Rive runtime is WASM: keep it out of SSR and off phones, where the
+// art panel is display:none and 84 percent of Levy's traffic lives.
+const RiveAuthScene = dynamic(() => import('@/components/canopy/rive-auth-scene'), { ssr: false, loading: () => <BookArt /> })
 
 export function CanopyAuthScreen({ mode }: { mode: 'login' | 'signup' | 'reset' }) {
   const { signIn, signUp } = useAuth()
@@ -63,7 +67,7 @@ export function CanopyAuthScreen({ mode }: { mode: 'login' | 'signup' | 'reset' 
   return <main className="cp-auth">
     <header><Link href="/chat" aria-label="Levy home"><LevyLogo size={30} /><strong>levy</strong></Link><CanopyThemeToggle dark={theme === 'dark'} onChange={dark => setTheme(dark ? 'dark' : 'light')} /></header>
     <div className="cp-auth-layout">
-      <aside className="cp-auth-art"><span>A little clarity goes a long way</span><h1>Your Levy<br />workspace.</h1><p>Your companion for researching, understanding and working with Zambian law.</p><Image src={welcome} alt="" priority sizes="(max-width: 800px) 0px, 360px" /><small>Levy · Zambia</small></aside>
+      <aside className="cp-auth-art"><span>A little clarity goes a long way</span><h1>Your Levy<br />workspace.</h1><p>Your companion for researching, understanding and working with Zambian law.</p><RiveAuthScene /><small>Levy · Zambia</small></aside>
       <section className="cp-auth-form" aria-labelledby="auth-title">
         <span className="cp-eyebrow">Your Levy workspace</span>
         <h2 id="auth-title">{recovery ? 'Let’s get you back in.' : reset ? 'Choose a new password.' : signup ? 'Create your workspace.' : 'Sign in to Levy.'}</h2>
