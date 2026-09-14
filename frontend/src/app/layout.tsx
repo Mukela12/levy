@@ -6,6 +6,7 @@ import './globals.css'
 import { AuthProvider } from '@/components/auth/auth-provider'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { UiVariantProvider, uiBootScript } from '@/lib/ui-variant'
+import { sceneBootScript } from '@/components/canopy/scene-collection'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 
@@ -81,6 +82,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-full bg-background text-foreground antialiased">
         {/* Decides the presentation variant and theme before first paint. */}
         <script dangerouslySetInnerHTML={{ __html: uiBootScript }} />
+        <script dangerouslySetInnerHTML={{ __html: sceneBootScript }} />
         <UiVariantProvider>
           <AuthProvider>
             <TooltipProvider>{children}</TooltipProvider>

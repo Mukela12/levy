@@ -12,7 +12,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactN
 import { ArrowUpRight, Check, ChevronRight, ExternalLink, type LucideIcon } from 'lucide-react'
 import { InFocus } from './in-focus'
 import { CanopyModal } from './modal'
-import { SCENES, photoSrc, photoSrcSet, type Scene } from './scene-collection'
+import { SCENES, PHOTO_SIZES, photoSrc, photoSrcSet, type Scene } from './scene-collection'
 import { nextSceneDelay, sceneAt, SCENE_INTERVAL, type ScenePreference } from './scene-clock'
 
 const PREF_KEY = 'levy-canopy-scenery'
@@ -67,7 +67,7 @@ function writePreference(next: ScenePreference) {
 }
 
 export function ScenePicture({ scene, className = '', priority = false, thumbnail = false }: { scene: Scene; className?: string; priority?: boolean; thumbnail?: boolean }) {
-  const sizes = thumbnail ? '(max-width: 600px) 140px, 320px' : '(max-width: 1100px) 100vw, calc(100vw - 300px)'
+  const sizes = thumbnail ? '(max-width: 600px) 140px, 320px' : PHOTO_SIZES
   return (
     <picture className={className} style={{ ['--photo-position' as string]: scene.focus }}>
       <img
@@ -155,7 +155,9 @@ export function WelcomeScene({ greeting, starters, onStarter, composer, below, h
   const currentIndex = sceneAt(preference, scenes.length, now)
   const current = scenes[currentIndex]
   const [previous, setPrevious] = useState<Scene | null>(null)
-  const lastScene = useRef<Scene>(current)
+  // Filled on the first hydrated render, so the photo the visitor sees first
+  // never crossfades in from the build-time scene.
+  const lastScene = useRef<Scene | null>(null)
 
   // Hourly tick, paused when the tab is hidden and resumed on return.
   useEffect(() => {
@@ -181,13 +183,15 @@ export function WelcomeScene({ greeting, starters, onStarter, composer, below, h
 
   // Crossfade: keep the outgoing photograph for 950ms.
   useEffect(() => {
+    if (!hydrated) return
+    if (!lastScene.current) { lastScene.current = current; return }
     if (lastScene.current.id === current.id) return
     const outgoing = lastScene.current
     lastScene.current = current
     setPrevious(outgoing)
     const t = setTimeout(() => setPrevious(null), 950)
     return () => clearTimeout(t)
-  }, [current])
+  }, [current, hydrated])
 
   const handleSelect = (index: number) => commitScene(index, scenes.length, preference, setNow, setPreference)
   function toggleAuto() {
@@ -204,8 +208,8 @@ export function WelcomeScene({ greeting, starters, onStarter, composer, below, h
     <section className={`cp-welcome scene-${current.id}`} aria-label="New conversation">
      <div className="cp-welcome-frame">
       <div className={'cp-scene-stage' + (previous ? ' is-changing' : '')} aria-hidden="true">
-        {previous && <ScenePicture scene={previous} className="cp-scene-image is-previous" />}
-        <ScenePicture key={current.id} scene={current} className="cp-scene-image is-current" priority />
+        {hydrated && previous && <ScenePicture scene={previous} className="cp-scene-image is-previous" />}
+        {hydrated && <ScenePicture key={current.id} scene={current} className="cp-scene-image is-current" priority />}
       </div>
 
       <div className="cp-welcome-content">

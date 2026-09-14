@@ -34,6 +34,14 @@ export function photoSrcSet(id: string) {
   return PHOTO_WIDTHS.map((w) => `${photoSrc(id, w)} ${w}w`).join(', ')
 }
 
+/**
+ * How wide the welcome photograph is drawn. Phones are capped at the 960
+ * variant: a background behind glass cards does not need retina sharpness,
+ * and on Zambian mobile data 960 is a third of the 1600's weight.
+ * The img and the preload below must use the same value.
+ */
+export const PHOTO_SIZES = '(max-width: 700px) 320px, (max-width: 1100px) 100vw, calc(100vw - 300px)'
+
 const LICENSE = 'CC BY-SA 4.0'
 const LICENSE_URL = 'https://creativecommons.org/licenses/by-sa/4.0/'
 
@@ -92,3 +100,13 @@ export const SCENES: Scene[] = [
     focus: '50% 50%',
   },
 ]
+
+/**
+ * Parse-time preload for the welcome photograph. The chat page is prerendered
+ * at build time, so a preload chosen during render names the build hour's
+ * photograph, and phones downloaded a wrong 350KB image on most visits. This
+ * runs in the browser before first paint, picks the same scene the welcome
+ * will (same stored preference, same hourly formula), and preloads exactly
+ * the size the img will request.
+ */
+export const sceneBootScript = `(function(){try{var d=document.documentElement,p=location.pathname;if(d.dataset.ui!=='canopy'||(p!=='/'&&p!=='/chat'))return;var ids=${JSON.stringify(SCENES.map((x) => x.id))},pref={index:0,anchor:0,auto:true};try{var r=JSON.parse(localStorage.getItem('levy-canopy-scenery')||'null');if(r&&typeof r.index==='number'&&typeof r.anchor==='number'){pref={index:r.index,anchor:r.anchor,auto:r.auto!==false}}}catch(e){}var n=ids.length,passed=pref.auto?Math.max(0,Math.floor((Date.now()-pref.anchor)/3600000)):0,i=(((pref.index+passed)%n)+n)%n,id=ids[i],base=${JSON.stringify(PHOTO_BASE)},set=${JSON.stringify([...PHOTO_WIDTHS])}.map(function(w){return base+'/'+id+'-'+w+'.webp '+w+'w'}).join(', '),l=document.createElement('link');l.rel='preload';l.as='image';l.setAttribute('imagesrcset',set);l.setAttribute('imagesizes',${JSON.stringify(PHOTO_SIZES)});l.setAttribute('fetchpriority','high');document.head.appendChild(l)}catch(e){}})();`
