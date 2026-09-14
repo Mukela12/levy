@@ -11,6 +11,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // NOTE: /chat is intentionally excluded — it is the live (billed) chat app,
   // not indexable content. See robots.ts.
   const entries: MetadataRoute.Sitemap = [
+    { url: `${SITE_URL}`, changeFrequency: 'weekly', priority: 1 },
     { url: `${SITE_URL}/answers`, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${SITE_URL}/acts`, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${SITE_URL}/study`, changeFrequency: 'monthly', priority: 0.7 },
