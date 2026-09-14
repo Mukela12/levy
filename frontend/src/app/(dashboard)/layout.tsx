@@ -1,5 +1,20 @@
 'use client'
 
+import { preconnect, preload } from 'react-dom'
+
+// The welcome photograph is the largest thing on the opening screen, served
+// from Supabase storage. Warming the connection and the hour's default image
+// during render shaves the slow first paint on mobile data. Visitors who
+// pinned a different scene cost one cached extra image an hour.
+const SUPA = process.env.NEXT_PUBLIC_SUPABASE_URL
+const PHOTO_IDS = ['kafue-river', 'victoria-falls', 'luangwa-sunset', 'lake-kashiba']
+function warmScenery() {
+  if (!SUPA) return
+  preconnect(SUPA)
+  const id = PHOTO_IDS[Math.floor(Date.now() / 3_600_000) % PHOTO_IDS.length]
+  preload(`${SUPA}/storage/v1/object/public/site-assets/canopy/photos/${id}-1600.webp`, { as: 'image', fetchPriority: 'high' })
+}
+
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -209,6 +224,7 @@ function DashboardPresentation({ children }: { children: React.ReactNode }) {
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  warmScenery()
   return (
     <ChatStreamProvider>
       <BriefProvider>

@@ -19,6 +19,8 @@ export interface Scene {
   dimensions: [number, number]
   /** Focal point for portrait framing on phones. */
   focus: string
+  /** The welcome line shown with this photograph. */
+  headline: string
 }
 
 const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
@@ -38,6 +40,7 @@ const LICENSE_URL = 'https://creativecommons.org/licenses/by-sa/4.0/'
 export const SCENES: Scene[] = [
   {
     id: 'kafue-river',
+    headline: 'A clearer place to begin.',
     title: 'Along the Kafue',
     caption: 'Mumbwa · Zambia',
     description: 'A wide, calm stretch of the Kafue River framed by reeds and trees under a blue sky.',
@@ -50,6 +53,7 @@ export const SCENES: Scene[] = [
   },
   {
     id: 'victoria-falls',
+    headline: 'Ask, with the sources in reach.',
     title: 'Victoria Falls',
     caption: 'Zambia–Zimbabwe',
     description: 'An aerial photograph of Victoria Falls and the Zambezi, with the full sweep of the waterfall and its gorge.',
@@ -63,6 +67,7 @@ export const SCENES: Scene[] = [
   },
   {
     id: 'luangwa-sunset',
+    headline: 'Zambian law, plainly answered.',
     title: 'Evening on the Luangwa',
     caption: 'South Luangwa · Zambia',
     description: 'Warm sunset light reflected in the still Luangwa River, with dark trees along the far bank.',
@@ -75,6 +80,7 @@ export const SCENES: Scene[] = [
   },
   {
     id: 'lake-kashiba',
+    headline: 'Begin with a question.',
     title: 'Lake Kashiba',
     caption: 'Copperbelt · Zambia',
     description: 'The forest surrounding Lake Kashiba reflected in the lake beneath a softly lit cloudy sky.',

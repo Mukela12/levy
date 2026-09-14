@@ -408,6 +408,9 @@
    the photograph covers the whole scrollable area and the footer sits at the
    bottom of the content rather than over it. */
 .cp-welcome-frame { position: relative; min-height: 100%; display: flex; flex-direction: column; }
+/* On a desktop tall enough to fit everything, the photograph is a canvas,
+   not a page: no scrolling, no rubber-band. Short windows keep the scroll. */
+@media (min-width: 1101px) and (min-height: 700px) { .cp-welcome { overflow: hidden; } }
 .dark .cp-welcome { border-color: var(--cp-line); }
 .cp-scene-stage { position: absolute; inset: 0; z-index: 0; isolation: isolate; pointer-events: none; }
 .cp-scene-stage::after { content: ""; position: absolute; inset: 0; z-index: 3; background: linear-gradient(90deg, #f7f9f5cc 0%, #f7f9f58a 30%, #f7f9f51f 60%, transparent 100%); }

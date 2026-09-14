@@ -60,6 +60,31 @@ export interface ActSummary {
   sections: number
 }
 
+/**
+ * OCR of scanned Acts leaves some section headings as garbage ("Ti is Aci miy
+ * b\u20ac cibd"). A heading that is mostly non-letters, or letter-salad with
+ * broken words, reads worse than no heading: suppress it and let the page
+ * fall back to "Section N".
+ */
+export function readableHeading(title: string): string {
+  const t = title.trim()
+  if (t.length < 4) return ''
+  if (/[\u20ac$@#^~|<>{}\\]/.test(t)) return ''
+  const tokens = t.split(/\s+/).map((w) => w.replace(/^[("'\u2018\u201c]+|[)"'\u2019\u201d.,;:!?]+$/g, ''))
+  let vowelless = 0, considered = 0
+  for (const w of tokens) {
+    if (!w) return ''
+    if (/\d/.test(w) && /[A-Za-z]/.test(w)) return ''
+    if (/\./.test(w)) return ''
+    if (w.length >= 2 && /^[A-Za-z]+$/.test(w)) {
+      considered++
+      if (!/[aeiouyAEIOUY]/.test(w)) vowelless++
+    }
+  }
+  if (considered && vowelless / considered > 0.2) return ''
+  return t
+}
+
 export interface ActSection {
   number: string
   title: string
@@ -122,7 +147,7 @@ export async function getActBySlug(slug: string): Promise<ActDetail | null> {
     if (!map.has(number)) {
       map.set(number, {
         number,
-        title: String(m.section_title ?? '').trim(),
+        title: readableHeading(String(m.section_title ?? '')),
         part: (m.part_number as string) || null,
       })
     }

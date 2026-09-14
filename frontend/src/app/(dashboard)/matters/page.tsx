@@ -13,6 +13,8 @@ export default function MattersPage() {
   const router = useRouter()
   const [matters, setMatters] = useState<Matter[]>([])
   const [loading, setLoading] = useState(true)
+  // Guests are never "loading": their state is decided by auth alone.
+  const busy = user ? loading : authLoading
   const [query, setQuery] = useState('')
   const [creating, setCreating] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -20,16 +22,12 @@ export default function MattersPage() {
   const visibleMatters = matters.filter(m => [m.title, m.matter_type, m.court, m.cause_number].filter(Boolean).join(' ').toLowerCase().includes(query.trim().toLowerCase()))
 
   useEffect(() => {
-    // Signed-out visitors are not "loading" forever: matters need an account.
-    if (!user?.id) {
-      if (!authLoading) setLoading(false)
-      return
-    }
+    if (!user?.id) return
     listMatters(user.id).then((m) => {
       setMatters(m)
       setLoading(false)
     })
-  }, [user?.id, authLoading])
+  }, [user?.id])
 
   async function handleCreate() {
     if (!user?.id || !form.title.trim() || saving) return
@@ -108,12 +106,12 @@ export default function MattersPage() {
           </div>
         )}
 
-        {!loading && matters.length > 0 && <div className="cp-matter-toolbar">
+        {!busy && matters.length > 0 && <div className="cp-matter-toolbar">
           <p>{matters.length} {matters.length === 1 ? 'matter' : 'matters'} in your workspace</p>
           <input aria-label="Find a matter" placeholder="Find a matter…" value={query} onChange={e => setQuery(e.target.value)} />
         </div>}
 
-        {loading ? (
+        {busy ? (
           <div className="flex items-center gap-2 text-white/40 text-[14px] py-12 justify-center">
             <Loader2 className="size-4 animate-spin" /> Loading your matters…
           </div>

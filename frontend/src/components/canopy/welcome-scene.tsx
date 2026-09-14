@@ -215,7 +215,7 @@ export function WelcomeScene({ greeting, starters, onStarter, composer, below, h
           <span>levy</span>
         </div>
         <p className="cp-welcome-greeting">{greeting}</p>
-        <h1>A clearer place to begin.</h1>
+        <h1>{current.headline}</h1>
 
         {composer}
         {below}
