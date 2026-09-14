@@ -1,6 +1,28 @@
 # Canopy continuation handoff, 14 September 2026
 
-**Last updated: 14 September 2026, 10:20 CAT (Africa/Lusaka, UTC+02:00).**
+**Last updated: 14 September 2026, 10:31 CAT (Africa/Lusaka, UTC+02:00).**
+
+### Latest override: preview is READY
+
+The owner could not edit the existing Production secrets because Vercel blocks
+the Secret / NEXT_PUBLIC_ combination. They instead added separate Config entries
+for `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`, scoped ONLY to
+Preview. Verified through the API: both target preview with no branch override;
+Production and Development entries are unchanged. Do not repeat the old edit
+instructions below.
+
+Pushed the two pending documentation commits through `ea91182`; GitHub triggered
+deployment `dpl_JAL3oo8mxxb1NrFi6J8bTmdsThij`, now **READY**, no build error:
+https://levy-rfdvjx4ms-mukelas-projects.vercel.app
+This proves the preview environment build blocker is resolved. App source is
+unchanged from tested `1dc64d2`. No production frontend promotion/main push done.
+
+Opening `/auth/login` in in-app browser tab 10 redirects to Vercel login because
+of preview deployment protection. This is NOT a Levy authentication failure.
+Continue hosted QA using the owner's already-authorized Vercel browser session,
+or ask them to sign in to Vercel in the in-app browser. Do not disable protection
+or manufacture access. No hosted app workflow QA is claimed yet. No build is
+still running. This 10:31 handoff update is local; earlier commits are pushed.
 
 ## Claude: resume here
 
