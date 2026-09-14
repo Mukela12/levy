@@ -67,6 +67,24 @@ function Brand() {
 
 export function CanopyShell({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth()
+  // Mark the document while an on-screen keyboard is open. Focus alone is the
+  // wrong signal: the composer autofocuses on load without any keyboard. The
+  // visual viewport shrinks only when a keyboard actually covers the screen.
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    let baseline = vv.height
+    const update = () => {
+      baseline = Math.max(baseline, vv.height)
+      document.documentElement.toggleAttribute('data-keyboard', vv.height < baseline * 0.78)
+    }
+    vv.addEventListener('resize', update)
+    return () => {
+      vv.removeEventListener('resize', update)
+      document.documentElement.removeAttribute('data-keyboard')
+    }
+  }, [])
+
   const rawPathname = usePathname()
   // The bare domain rewrites to /chat, so the browser reports "/" while the
   // chat app is what renders. Every route decision below (workspace styling,
