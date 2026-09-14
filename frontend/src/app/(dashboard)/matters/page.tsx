@@ -9,7 +9,7 @@ import { Plus, Loader2, ChevronRight, Scale } from 'lucide-react'
 import { ActionArt } from '@/components/canopy/action-art'
 
 export default function MattersPage() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const [matters, setMatters] = useState<Matter[]>([])
   const [loading, setLoading] = useState(true)
@@ -20,12 +20,16 @@ export default function MattersPage() {
   const visibleMatters = matters.filter(m => [m.title, m.matter_type, m.court, m.cause_number].filter(Boolean).join(' ').toLowerCase().includes(query.trim().toLowerCase()))
 
   useEffect(() => {
-    if (!user?.id) return
+    // Signed-out visitors are not "loading" forever: matters need an account.
+    if (!user?.id) {
+      if (!authLoading) setLoading(false)
+      return
+    }
     listMatters(user.id).then((m) => {
       setMatters(m)
       setLoading(false)
     })
-  }, [user?.id])
+  }, [user?.id, authLoading])
 
   async function handleCreate() {
     if (!user?.id || !form.title.trim() || saving) return
@@ -46,13 +50,13 @@ export default function MattersPage() {
               <p className="text-[13px] text-white/45">Your cases. Levy remembers each one across chats.</p>
             </div>
           </div>
-          <button
+          {user && <button
             type="button"
             onClick={() => setCreating((v) => !v)}
             className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-emerald-500/90 hover:bg-emerald-500 text-black text-[13px] font-medium px-3 py-2 transition-colors"
           >
             <Plus className="size-4" /> New matter
-          </button>
+          </button>}
         </div>
 
         {creating && (
@@ -112,6 +116,13 @@ export default function MattersPage() {
         {loading ? (
           <div className="flex items-center gap-2 text-white/40 text-[14px] py-12 justify-center">
             <Loader2 className="size-4 animate-spin" /> Loading your matters…
+          </div>
+        ) : !user ? (
+          <div className="text-center py-16 text-white/40">
+            <Scale className="size-8 mx-auto mb-3 opacity-40" />
+            <p className="text-[14px]">Matters live in your account.</p>
+            <p className="text-[13px] mt-1">Sign in to keep each case&apos;s conversations, documents and notes together.</p>
+            <Link href="/auth/login" className="cp-signin" style={{ marginTop: 18, display: 'inline-flex' }}>Sign in</Link>
           </div>
         ) : matters.length === 0 ? (
           <div className="text-center py-16 text-white/40">
