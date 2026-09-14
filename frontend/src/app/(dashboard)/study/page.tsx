@@ -87,6 +87,9 @@ export default function StudyPage() {
               )
             })}
           </div>
+          {/* On phones the three formats sit on one line without room for
+              their captions, so the selected one explains itself here. */}
+          <p className="cp-study-format-note" aria-live="polite">{MODES.find((m) => m.key === mode)!.desc}</p>
         </section>
 
         <section className="cp-study-step" aria-labelledby="study-step-subject">
