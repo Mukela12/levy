@@ -28,6 +28,7 @@ import { useBrief } from '@/components/chat/brief-context'
 import type { ChatMessageProps, MessageBlock } from '@/components/chat/chat-message'
 import type { ChunkUsed } from '@/lib/api'
 import { AnswerSources } from './answer-sources'
+import { QuestionCard } from './question-card'
 
 function kindLabel(toolCalls: ToolCallView[] | undefined): string {
   const names = new Set((toolCalls || []).map((c) => c.name))
@@ -112,7 +113,7 @@ export function Activity({ toolCalls, isStreaming }: { toolCalls: ToolCallView[]
 
 export function CanopyMessage(props: ChatMessageProps) {
   const {
-    messageId, role, content, blocks, citations, webSources, toolCalls, artifacts,
+    messageId, role, content, blocks, citations, webSources, toolCalls, artifacts, onAskAnswer,
     templateSuggestions, applicationPlans, entitlementBreakdowns, caseLaw, cheatSheets, quizzes,
     timing, isStreaming, compaction, onOpenCitation, onOpenArtifact, onUseTemplate, onDraftBundle, onDraftIndividual,
   } = props
@@ -182,6 +183,12 @@ export function CanopyMessage(props: ChatMessageProps) {
       if (block.kind === 'quiz') {
         const quiz = block.quiz ?? quizzes?.[block.toolCallId]
         if (quiz?.questions?.length) rendered.push(<QuizCard key={`quiz-${block.toolCallId}`} quiz={quiz} />)
+        return
+      }
+      if (block.kind === 'ask_user') {
+        rendered.push(
+          <QuestionCard key={`ask-${block.id ?? idx}`} question={block.question} options={block.options} allowFreeText={block.allow_free_text !== false} onAnswer={onAskAnswer} />,
+        )
         return
       }
       // tool / attachments / citation_audit blocks: the activity line and the

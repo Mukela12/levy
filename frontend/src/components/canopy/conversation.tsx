@@ -106,6 +106,7 @@ export function CanopyConversation({ title, messages, loading, onSend, composer,
               return (
                 <div key={msg.id ?? i} className="cp-exchange">
                   <ChatMessage
+                    onAskAnswer={i === messages.length - 1 ? onSend : undefined}
                     messageId={msg.id}
                     role={msg.role}
                     content={msg.content}

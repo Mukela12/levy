@@ -62,6 +62,7 @@
 
 [data-ui="canopy"] {
   --cp-font: 'Public Sans', var(--font-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --cp-attn: #b3801f;
   --cp-bg: #f7f9f5;
   --cp-surface: #ffffff;
   --cp-side: #f3f5ee;
@@ -228,8 +229,9 @@
 .cp-nav-label { display: block; font-size: 12px; font-weight: 500; color: var(--cp-muted); padding: 0 10px; margin: 0 0 7px; letter-spacing: 0.2px; flex-shrink: 0; }
 .cp-nav-links { display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; }
 .cp-nav-links a { position: relative; display: flex; align-items: center; gap: 10px; min-height: 42px; padding: 10px 9px; border-radius: 8px; color: var(--cp-muted); font-size: 14px; text-decoration: none; }
-.cp-nav-links a[aria-current="page"] { color: var(--cp-text); background: #ffffffaf; box-shadow: 0 1px 3px #243b2210; }
-.dark .cp-nav-links a[aria-current="page"] { background: var(--cp-soft); }
+.cp-nav-links a[aria-current="page"] { color: var(--cp-primary); font-weight: 550; background: var(--cp-tint); box-shadow: inset 3px 0 0 var(--cp-primary), 0 1px 3px #243b2210; }
+.dark .cp-nav-links a[aria-current="page"] { background: color-mix(in srgb, var(--cp-primary) 14%, var(--cp-surface)); }
+.dark { --cp-attn: #d9a441; }
 .cp-nav-active { position: absolute; right: 10px; width: 6px; height: 6px; border-radius: 50%; background: var(--cp-primary); }
 .cp-nav-history { flex: 1; min-height: 0; margin: 20px 0 0; overflow: auto; overscroll-behavior: contain; }
 .cp-nav-history-row { display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px; border-radius: 8px; color: var(--cp-muted); }
@@ -240,6 +242,10 @@
 .dark .cp-nav-history-row[aria-current="page"] { background: var(--cp-soft); }
 .cp-nav-history-row .cp-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--cp-line); margin-top: 8px; flex-shrink: 0; }
 .cp-nav-history-row[aria-current="page"] .cp-dot { background: var(--cp-primary); }
+.cp-dot.is-running { background: var(--cp-primary); animation: cp-dot-pulse 1.4s ease-in-out infinite; }
+.cp-dot.is-attn { width: 7px; height: 7px; background: var(--cp-attn); box-shadow: 0 0 0 3px color-mix(in srgb, var(--cp-attn) 22%, transparent); animation: cp-dot-pulse 2s ease-in-out infinite; }
+@keyframes cp-dot-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.45; transform: scale(0.8); } }
+@media (prefers-reduced-motion: reduce) { .cp-dot.is-running, .cp-dot.is-attn { animation: none; } }
 .cp-nav-history-row .cp-delete { opacity: 0; width: 26px; height: 26px; border-radius: 7px; display: grid; place-items: center; color: var(--cp-muted); flex-shrink: 0; }
 .cp-nav-history-row:hover .cp-delete, .cp-nav-history-row:focus-within .cp-delete { opacity: 1; }
 .cp-nav-history p { font-size: 13px; color: var(--cp-muted); line-height: 1.6; padding: 0 10px; }
@@ -848,6 +854,26 @@
 .cp-workspace .cp-study-modes > button[aria-pressed="true"] { border-color: var(--cp-primary); background: var(--cp-tint); box-shadow: inset 0 0 0 1px var(--cp-primary); }
 .cp-workspace .cp-study-modes > button > div { white-space: nowrap; font-size: 14px; }
 .cp-workspace .cp-study-description { margin-bottom: 28px; min-height: 24px; }
+/* The clarifying-question card: Levy hands the turn back with one question.
+   Amber accents mark "needs you", distinct from the green "working" family. */
+.cp-question-card { margin: 14px 0 6px; padding: 15px 17px 16px; border: 1px solid color-mix(in srgb, var(--cp-attn) 42%, var(--cp-line)); border-left: 3px solid var(--cp-attn); border-radius: 13px; background: color-mix(in srgb, var(--cp-attn) 6%, var(--cp-surface)); }
+.cp-question-card.is-settled { border-color: var(--cp-line); border-left-color: color-mix(in srgb, var(--cp-attn) 45%, var(--cp-line)); background: var(--cp-surface); opacity: 0.9; }
+.cp-question-eyebrow { display: flex; align-items: center; gap: 7px; font-size: 11.5px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; color: var(--cp-attn); }
+.cp-question-text { margin: 9px 0 0; font-size: 15px; line-height: 1.6; color: var(--cp-text); }
+.cp-question-options { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 13px; }
+.cp-question-option { display: inline-flex; align-items: center; min-height: 38px; padding: 8px 15px; border: 1px solid color-mix(in srgb, var(--cp-attn) 38%, var(--cp-line)); border-radius: 999px; background: var(--cp-surface); color: var(--cp-text); font-size: 13.5px; font-weight: 500; transition: background 130ms, border-color 130ms; }
+.cp-question-option:hover:not(:disabled) { border-color: var(--cp-attn); background: color-mix(in srgb, var(--cp-attn) 10%, var(--cp-surface)); }
+.cp-question-option:disabled { opacity: 0.55; cursor: default; }
+.cp-question-option.is-chosen { border-color: var(--cp-attn); background: color-mix(in srgb, var(--cp-attn) 16%, var(--cp-surface)); font-weight: 600; }
+.cp-question-input { display: flex; gap: 8px; margin-top: 13px; }
+.cp-question-input input { flex: 1; min-width: 0; min-height: 42px; padding: 9px 14px; border: 1px solid var(--cp-line); border-radius: 11px; background: var(--cp-bg); color: var(--cp-text); font-size: 14px; }
+.cp-question-input input:focus-visible { outline: 2px solid var(--cp-attn); outline-offset: 1px; }
+.cp-question-input button { display: inline-flex; align-items: center; justify-content: center; width: 42px; min-height: 42px; border-radius: 11px; border: 1px solid var(--cp-attn); background: var(--cp-attn); color: #fff; transition: filter 130ms; }
+.cp-question-input button:hover:not(:disabled) { filter: brightness(1.08); }
+.cp-question-input button:disabled { opacity: 0.5; }
+.cp-question-hint { margin: 10px 0 0; font-size: 12.5px; color: var(--cp-muted); }
+.dark .cp-question-input button { color: #14120b; }
+
 /* Study mode, Canopy: three numbered steps and a live preview of what the
    session will be, so a first-time student knows exactly what happens next. */
 .cp-study-page { width: 100%; max-width: 760px; margin-inline: auto; padding: 32px 24px 48px; }

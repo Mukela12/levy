@@ -24,4 +24,5 @@ export const CANOPY_ICON: Record<string, string> = {
   work: 'system-regular-178-work-hover-work',
   assessment: 'system-regular-16-assessment-hover-assessment',
   snippet: 'system-regular-120-text-snippet-hover-text',
+  quilt: 'system-regular-173-view-quilt-hover-quilt',
 }

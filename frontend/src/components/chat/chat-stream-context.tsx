@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { streamQuery } from '@/lib/api'
+import { clearAwaiting, markAwaiting } from '@/lib/session-status'
 import type { ToolCallView } from '@/components/chat/tool-call-card'
 import type { MessageBlock } from '@/components/chat/chat-message'
 import type {
@@ -227,6 +228,8 @@ export function ChatStreamProvider({ children }: { children: React.ReactNode }) 
         artifacts: [],
       }
 
+      // A new user turn answers any pending clarifying question.
+      clearAwaiting(sid)
       commit((prev) => {
         const c = prev[sid] ?? EMPTY_SESSION
         return {
@@ -419,6 +422,22 @@ export function ChatStreamProvider({ children }: { children: React.ReactNode }) 
                 },
               }
             }),
+          onAskUser: (event) => {
+            markAwaiting(sid)
+            updateLast(sid, (last) => ({
+              ...last,
+              blocks: [
+                ...(last.blocks ?? []),
+                {
+                  kind: 'ask_user',
+                  id: event.id,
+                  question: event.question,
+                  options: event.options ?? [],
+                  allow_free_text: event.allow_free_text !== false,
+                },
+              ],
+            }))
+          },
           onQuiz: (event) =>
             updateLast(sid, (last) => {
               const blocks = [...(last.blocks ?? [])]

@@ -11,7 +11,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Loader2, LogOut, PanelLeft, Trash2, X } from 'lucide-react'
+import { LogOut, PanelLeft, Trash2, X } from 'lucide-react'
 import { useAuth } from '@/components/auth/auth-provider'
 import { useBrief } from '@/components/chat/brief-context'
 import { CanopyBriefDrawer } from './brief-drawer'
@@ -19,6 +19,7 @@ import { useChatStream } from '@/components/chat/chat-stream-context'
 import { usePdfViewer } from '@/components/chat/pdf-viewer-context'
 import { PdfViewer } from '@/components/chat/pdf-viewer'
 import { useRecentSessions, timeAgo } from '@/components/chat/use-recent-sessions'
+import { useAwaitingSessions } from '@/lib/session-status'
 import { OnboardingTour } from '@/components/onboarding/onboarding-tour'
 import { DomainBanner } from '@/components/layout/domain-banner'
 import LordIcon from '@/components/ui/lord-icon'
@@ -73,6 +74,7 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
   const { streamingIds } = useChatStream()
   const { theme, setTheme } = useUiVariant()
   const { sessions, remove } = useRecentSessions(user?.id, pathname)
+  const awaiting = useAwaitingSessions()
   const [navOpen, setNavOpen] = useState(false)
   const [rail, setRail] = useState(false)
   const mainRef = useRef<HTMLElement>(null)
@@ -178,10 +180,13 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
       {sessions.map((s) => {
         const current = pathname === `/chat/${s.id}`
         const thinking = streamingIds.includes(s.id)
+        const needsAnswer = !thinking && awaiting.includes(s.id)
         return (
           <div key={s.id} className="cp-nav-history-row" aria-current={current ? 'page' : undefined}>
             {thinking ? (
-              <Loader2 size={12} className="animate-spin" style={{ marginTop: 6, color: 'var(--cp-primary)' }} aria-label="Generating response" />
+              <span className="cp-dot is-running" role="img" aria-label="Working on an answer" style={{ marginTop: 8 }} />
+            ) : needsAnswer ? (
+              <span className="cp-dot is-attn" role="img" aria-label="Waiting for your answer" style={{ marginTop: 7 }} />
             ) : (
               <span className="cp-dot" aria-hidden="true" />
             )}
