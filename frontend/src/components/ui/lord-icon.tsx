@@ -16,12 +16,16 @@
 import { useEffect, useRef, useState } from 'react'
 import Lottie, { type LottieRefCurrentProps } from 'lottie-react'
 
-type Trigger = 'hover' | 'click' | 'loop' | 'none'
+type Trigger = 'hover' | 'click' | 'loop' | 'periodic' | 'none'
 
 interface LordIconProps {
   name: string
   size?: number
   trigger?: Trigger
+  /** 'periodic' only: milliseconds between replays (default 30s). */
+  intervalMs?: number
+  /** 'periodic' only: offset before the first replay, so neighbours stagger. */
+  delayMs?: number
   className?: string
   style?: React.CSSProperties
   onClick?: () => void
@@ -31,6 +35,8 @@ export default function LordIcon({
   name,
   size = 24,
   trigger = 'hover',
+  intervalMs = 30000,
+  delayMs = 0,
   className = '',
   style,
   onClick,
@@ -49,10 +55,30 @@ export default function LordIcon({
     return () => { alive = false }
   }, [name])
 
+  // A slow heartbeat: play once soon after mount, then again every interval,
+  // staggered by delayMs so neighbouring icons take turns.
+  useEffect(() => {
+    if (!animationData || trigger !== 'periodic') return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      lottieRef.current?.goToAndStop(0, true)
+      return
+    }
+    const play = () => lottieRef.current?.goToAndPlay(0, true)
+    let timer: ReturnType<typeof setInterval> | undefined
+    const first = setTimeout(() => {
+      play()
+      timer = setInterval(play, intervalMs)
+    }, 600 + delayMs)
+    return () => {
+      clearTimeout(first)
+      if (timer) clearInterval(timer)
+    }
+  }, [animationData, trigger, intervalMs, delayMs])
+
   // Interaction playback binds to the closest button or link, so pressing
   // anywhere on the control replays the icon (touch included).
   useEffect(() => {
-    if (!animationData || trigger === 'loop' || trigger === 'none') return
+    if (!animationData || trigger === 'loop' || trigger === 'periodic' || trigger === 'none') return
     const box = boxRef.current
     if (!box) return
     const target = (box.closest('button, a') as HTMLElement | null) ?? box

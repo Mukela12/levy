@@ -78,11 +78,11 @@ export default function StudyPage() {
         <section className="cp-study-step" aria-labelledby="study-step-format">
           <h2 id="study-step-format"><span>1</span>How do you want to study?</h2>
           <div className="cp-study-formats" role="radiogroup" aria-label="Study format">
-            {MODES.map(({ key, label, desc, lord }) => {
+            {MODES.map(({ key, label, desc, lord }, i) => {
               const active = mode === key
               return (
                 <button key={key} type="button" role="radio" aria-checked={active} className={'cp-study-format' + (active ? ' is-active' : '')} onClick={() => setMode(key)}>
-                  <span className="cp-lord" aria-hidden="true"><LordIcon name={CANOPY_ICON[lord]} size={22} trigger="loop" /></span>
+                  <span className="cp-lord" aria-hidden="true"><LordIcon name={CANOPY_ICON[lord]} size={22} trigger="periodic" delayMs={i * 700} /></span>
                   <strong>{label}</strong>
                   <small>{desc}</small>
                 </button>
