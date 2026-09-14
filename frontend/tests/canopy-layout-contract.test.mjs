@@ -13,7 +13,11 @@ test('topbar contains no account avatar or jurisdiction status decoration', () =
 test('welcome defaults to focus and has no redundant attachment action', () => {
   const source = read('components/canopy/welcome-scene.tsx')
   assert.match(source, /\[focusHidden, setFocusHidden\] = useState\(false\)/)
-  assert.match(source, /!hasDraft && \(!focusHidden \? <InFocus/)
+  // The suggestion block folds while drafting instead of unmounting, so the
+  // composer never jumps; it must be inert while collapsed.
+  assert.match(source, /cp-welcome-below' \+ \(hasDraft \? ' is-collapsed'/)
+  assert.match(source, /inert=\{hasDraft \? true : undefined\}/)
+  assert.match(source, /!focusHidden \? <InFocus/)
   assert.ok(!source.includes('Add a document'))
   assert.ok(!source.includes('onAddDocument'))
 })
