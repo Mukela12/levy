@@ -12,7 +12,11 @@ export function InFocus({ onChoose, onDismiss }: { onChoose: (question: string) 
   const day = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Lusaka', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
   const available = day >= edition.reviewed && day < edition.expires
   const topic = edition.topics[index]
-  const choose = () => { onChoose(`${topic.question}\n\nStarting source: ${topic.url}\nPlease verify its current status and relevant original sources.`); setDetails(false) }
+  // Just the question. The Bill is already in the library, so retrieval finds
+  // it instantly; prefilling the parliament.gov.zm URL made the agent's first
+  // move a fetch from a server that can hang for over a minute, and dumped a
+  // 250-character URL into the composer on phones.
+  const choose = () => { onChoose(topic.question); setDetails(false) }
   return <>
     <section className="cp-in-focus" aria-label="Suggested question">
       <div className="cp-focus-heading"><span>In focus · Zambia</span><button type="button" aria-label="Hide suggested questions" onClick={onDismiss}><X size={16} /></button></div>
