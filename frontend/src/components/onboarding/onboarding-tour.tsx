@@ -21,9 +21,10 @@
  */
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCanonicalPath } from '@/lib/use-canonical-path'
 import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
-import { usePathname, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth/auth-provider'
 import { createClient } from '@/lib/supabase'
 import { ArrowRight, X } from 'lucide-react'
@@ -170,7 +171,9 @@ export function OnboardingTour({
   const { variant } = useUiVariant()
   const steps = variant === 'canopy' ? CANOPY_STEPS : STEPS
   const { user, loading } = useAuth()
-  const pathname = usePathname()
+  // "/" is the chat app via a rewrite. With the raw path the tour never
+  // opened for new visitors on the bare domain; see useCanonicalPath.
+  const pathname = useCanonicalPath()
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState(0)
@@ -382,11 +385,12 @@ function TourFrame({
   useLayoutEffect(() => {
     if (!rect || !tooltipRef.current) return
     const r = tooltipRef.current.getBoundingClientRect()
+    const natural = tooltipRef.current.scrollHeight
     if (
       Math.abs(r.width - tipSize.w) > 1 ||
-      Math.abs(r.height - tipSize.h) > 1
+      Math.abs(natural - tipSize.h) > 1
     ) {
-      setTipSize({ w: r.width, h: r.height })
+      setTipSize({ w: r.width, h: natural })
     }
   }, [step, rect, vp.w, vp.h, tipSize.h, tipSize.w])
 
@@ -411,11 +415,13 @@ function TourFrame({
           className="cp-tour-card w-full max-w-sm rounded-2xl border border-white/[0.08] bg-[#0d0d0f] p-5 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)]"
         >
           <TourHeader step={step} total={total} onSkip={onSkip} />
-          {current.image && <TourArt name={current.image} />}
-          <h2 className="text-[17px] font-semibold text-white tracking-tight mt-2">
-            {current.title}
-          </h2>
-          <p className="text-[13px] text-white/55 leading-relaxed mt-1.5">{current.body}</p>
+          <div className="cp-tour-body">
+            {current.image && <TourArt name={current.image} />}
+            <h2 className="text-[17px] font-semibold text-white tracking-tight mt-2">
+              {current.title}
+            </h2>
+            <p className="text-[13px] text-white/55 leading-relaxed mt-1.5">{current.body}</p>
+          </div>
           <TourFooter step={step} total={total} onBack={onBack} onNext={onNext} />
         </motion.div>
       </motion.div>
@@ -459,8 +465,12 @@ function TourFrame({
   }
   // On small screens, prefer bottom/top over left/right (sidebar usually
   // occupies the full width when open).
-  if (!isDesktop && (resolvedSide === 'right' || resolvedSide === 'left')) {
-    resolvedSide = spaceBottom > spaceTop ? 'bottom' : 'top'
+  if (!isDesktop) {
+    const fitsBelow = spaceBottom - gap - 12 >= tooltipH
+    const fitsAbove = spaceTop - gap - 12 >= tooltipH
+    resolvedSide = fitsBelow && !fitsAbove ? 'bottom'
+      : fitsAbove && !fitsBelow ? 'top'
+      : spaceBottom >= spaceTop ? 'bottom' : 'top'
   }
 
   let tipX = 0
@@ -482,6 +492,23 @@ function TourFrame({
   // Clamp inside viewport with 12px margin
   tipX = Math.max(12, Math.min(tipX, vp.w - tooltipW - 12))
   tipY = Math.max(12, Math.min(tipY, vp.h - tooltipH - 12))
+
+  // Small screens: that clamp used to slide a tall card straight over the
+  // row it was pointing at. Sit beside the target instead, and if the side is
+  // still too short, the card scrolls inside rather than covering it.
+  let cardW = tooltipW
+  let maxH: number | undefined
+  if (!isDesktop) {
+    cardW = vp.w - 24
+    tipX = 12
+    if (resolvedSide === 'bottom') {
+      tipY = rect.bottom + gap
+      maxH = Math.max(160, vp.h - tipY - 12)
+    } else {
+      maxH = Math.max(160, rect.top - gap - 12)
+      tipY = Math.max(12, rect.top - gap - Math.min(tooltipH, maxH))
+    }
+  }
 
   return (
     <motion.div
@@ -544,23 +571,26 @@ function TourFrame({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.18 }}
         className="cp-tour-card absolute pointer-events-auto rounded-2xl border border-white/[0.08] bg-[#0d0d0f] shadow-[0_28px_60px_-12px_rgba(0,0,0,0.7)] p-4"
-        style={{ left: tipX, top: tipY, width: tooltipW }}
+        style={{ left: tipX, top: tipY, width: cardW, maxHeight: maxH }}
       >
         <TourHeader step={step} total={total} onSkip={onSkip} />
-        {current.image && <TourArt name={current.image} />}
-        <h2 className="text-[15px] font-semibold text-white tracking-tight mt-1.5">
-          {current.title}
-        </h2>
-        <p className="text-[12.5px] text-white/55 leading-relaxed mt-1">{current.body}</p>
+        {/* Only this middle scrolls on a short screen; Skip and Next stay put. */}
+        <div className="cp-tour-body">
+          {current.image && <TourArt name={current.image} compact={!isDesktop} />}
+          <h2 className="text-[15px] font-semibold text-white tracking-tight mt-1.5">
+            {current.title}
+          </h2>
+          <p className="text-[12.5px] text-white/55 leading-relaxed mt-1">{current.body}</p>
+        </div>
         <TourFooter step={step} total={total} onBack={onBack} onNext={onNext} />
       </motion.div>
     </motion.div>
   )
 }
 
-function TourArt({ name }: { name: string }) {
+function TourArt({ name, compact = false }: { name: string; compact?: boolean }) {
   const [paused, setPaused] = useState(false)
-  return <div className="cp-tour-art" data-paused={paused}>
+  return <div className={'cp-tour-art' + (compact ? ' is-compact' : '')} data-paused={paused}>
     {/* eslint-disable-next-line @next/next/no-img-element */}
     <img src={`/canopy/onboarding/${name}.png`} alt="" width={128} height={128} />
     <button type="button" onClick={() => setPaused((value) => !value)} aria-pressed={paused}>{paused ? 'Resume illustration' : 'Pause illustration'}</button>

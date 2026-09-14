@@ -1006,3 +1006,16 @@
   .cp-welcome-content h1 { margin-bottom: 12px; }
   .cp-composer textarea { min-height: 48px; }
 }
+
+/* Tour cards beside a target on small screens: the lab's phone illustration
+   size, and no pause control (reduced motion already stills the drift). */
+.cp-tour-art.is-compact img { height: 72px; }
+.cp-tour-art.is-compact button { display: none; }
+
+/* The tour card is a column: header (Skip) and footer (Next) never scroll
+   away. On a short phone only the middle scrolls, so a first-time visitor can
+   always see how to continue. */
+[data-ui="canopy"] .cp-tour-card { display: flex; flex-direction: column; overflow: hidden; }
+[data-ui="canopy"] .cp-tour-card > .cp-tour-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-bottom: 14px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 14px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 14px), transparent); }
+/* The fade falls on empty padding when the text fits, and on the text itself
+   only when there is more to scroll: a quiet "continues below" cue. */

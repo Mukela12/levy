@@ -36,11 +36,15 @@ test('legislation keeps its canonical server route and ungated content', () => {
 })
 
 test('the rewritten root counts as the chat route, not a workspace page', () => {
-  // next.config.ts serves /chat at "/", so usePathname reports "/". If the
-  // shell does not normalise it, the welcome inherits .cp-workspace form
-  // styling (solid textarea, tinted aria-pressed chips) and loses its active
-  // dock tab. This shipped once; the guard keeps it from shipping twice.
-  const shell = read('components/canopy/shell.tsx')
-  assert.match(shell, /rawPathname === '\/' \? '\/chat' : rawPathname/)
-  assert.ok(!/const pathname = usePathname\(\)/.test(shell))
+  // next.config.ts serves /chat at "/", so usePathname reports "/". Branching
+  // on the raw path shipped twice: workspace styling on the welcome, then an
+  // onboarding tour that never opened for new visitors. Both components must
+  // route through the one hook that normalises it.
+  const hook = read('lib/use-canonical-path.ts')
+  assert.match(hook, /path === '\/' \? '\/chat' : path/)
+  for (const f of ['components/canopy/shell.tsx', 'components/onboarding/onboarding-tour.tsx']) {
+    const src = read(f)
+    assert.match(src, /useCanonicalPath\(\)/, f)
+    assert.ok(!/usePathname\(\)/.test(src), f + ' must not branch on the raw path')
+  }
 })

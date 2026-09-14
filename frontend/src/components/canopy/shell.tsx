@@ -10,7 +10,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { LogOut, PanelLeft, Trash2, X } from 'lucide-react'
 import { useAuth } from '@/components/auth/auth-provider'
 import { useBrief } from '@/components/chat/brief-context'
@@ -19,6 +19,7 @@ import { useChatStream } from '@/components/chat/chat-stream-context'
 import { usePdfViewer } from '@/components/chat/pdf-viewer-context'
 import { PdfViewer } from '@/components/chat/pdf-viewer'
 import { useRecentSessions, timeAgo } from '@/components/chat/use-recent-sessions'
+import { useCanonicalPath } from '@/lib/use-canonical-path'
 import { useAwaitingSessions } from '@/lib/session-status'
 import { OnboardingTour } from '@/components/onboarding/onboarding-tour'
 import { DomainBanner } from '@/components/layout/domain-banner'
@@ -85,12 +86,8 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const rawPathname = usePathname()
-  // The bare domain rewrites to /chat, so the browser reports "/" while the
-  // chat app is what renders. Every route decision below (workspace styling,
-  // section title, dock and nav highlighting) must treat them as the same
-  // place, or the homepage gets the workspace's form styling and no active tab.
-  const pathname = rawPathname === '/' ? '/chat' : rawPathname
+  // "/" is the chat app via a rewrite; see useCanonicalPath.
+  const pathname = useCanonicalPath()
   const router = useRouter()
   const brief = useBrief()
   const pdf = usePdfViewer()
