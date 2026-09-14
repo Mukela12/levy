@@ -15,6 +15,51 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ── Tokens ─────────────────────────────────────────────────────────────── */
+.cp-auth { min-height: 100svh; background: var(--cp-bg); color: var(--cp-text); font-family: var(--cp-font); padding: 24px clamp(20px,4vw,64px); }
+.cp-auth > header { display:flex; align-items:center; justify-content:space-between; gap:24px; max-width:1200px; margin:auto; }
+.cp-auth > header a { display:flex; gap:10px; align-items:center; font-size:28px; letter-spacing:-1px; }
+.cp-auth-layout { max-width:1100px; margin:40px auto; display:grid; grid-template-columns:1fr 1fr; gap:clamp(40px,8vw,120px); align-items:center; }
+.cp-auth-art { border-radius:24px; padding:40px; background:var(--cp-soft); }
+.cp-auth-art > span,.cp-eyebrow { font-size:11px; text-transform:uppercase; letter-spacing:.12em; color:var(--cp-muted); }
+.cp-auth-art h1 { font-size:clamp(36px,4vw,52px); line-height:1.1; letter-spacing:-2px; margin:24px 0; }
+.cp-auth-art p { color:var(--cp-muted); line-height:1.6; }
+.cp-auth-art img { width:100%; max-width:320px; height:auto; margin:20px auto; }
+.cp-auth-form { min-width:0; max-width:440px; }
+.cp-auth-form h2,.cp-account h1 { font-size:30px; font-weight:500; letter-spacing:-1px; margin:10px 0; }
+.cp-auth-form > p { margin:14px 0 24px; line-height:1.6; color:var(--cp-muted); }
+.cp-auth form,.cp-account form { display:grid; gap:20px; }
+.cp-account form > button { justify-self:start; }
+.cp-auth label,.cp-account label { display:grid; gap:8px; font-size:13px; font-weight:500; }
+.cp-auth input,.cp-account input { width:100%; min-width:0; min-height:48px; padding:12px; border:1px solid var(--cp-line); border-radius:10px; background:var(--cp-surface); color:var(--cp-text); font:400 16px var(--cp-font); }
+.cp-auth input:focus-visible,.cp-account input:focus-visible { outline:2px solid var(--cp-control-focus); outline-offset:2px; }
+.cp-auth small,.cp-account small { font-size:12px; font-weight:400; color:var(--cp-muted); }
+.cp-password { display:flex; border:1px solid var(--cp-line); border-radius:10px; background:var(--cp-surface); }
+.cp-password input { border:0; background:transparent; }
+.cp-password button { min-width:48px; display:grid; place-items:center; }
+.cp-auth-text { display:flex; align-items:center; gap:8px; min-height:44px; font-size:13px; margin-top:12px; }
+.cp-auth-form a { text-decoration:underline; text-underline-offset:4px; }
+.cp-auth-form .cp-auth-error { color:var(--cp-danger); }
+.cp-auth-notice { padding:14px; border:1px solid var(--cp-line); border-radius:12px; }
+.cp-account { width:min(100%,780px); margin:0 auto; padding:32px 24px 48px; color:var(--cp-text); }
+.cp-account header > p,.cp-account p { color:var(--cp-muted); line-height:1.5; font-size:14px; }
+.cp-account-banner { display:flex; gap:20px; align-items:center; margin:28px 0; }
+.cp-account-banner > span { width:64px; height:64px; flex-shrink:0; display:grid; place-items:center; border-radius:50%; background:var(--cp-soft); font-size:24px; }
+.cp-account-banner > div { min-width:0; overflow-wrap:anywhere; }
+.cp-account section { padding:24px; margin-bottom:20px; border:1px solid var(--cp-line); border-radius:16px; background:var(--cp-surface); }
+.cp-account h2 { font-size:18px; font-weight:500; margin-bottom:16px; }
+.cp-preference { display:flex; justify-content:space-between; align-items:center; gap:20px; padding:20px 0; border-top:1px solid var(--cp-line); }
+.cp-preference > button { flex-shrink:0; }
+[data-ui="canopy"] .cp-matter-detail input,[data-ui="canopy"] .cp-matter-detail textarea { min-width:0; min-height:44px; font-size:16px; }
+[data-ui="canopy"] .cp-matter-detail button { min-height:44px; min-width:44px; }
+[data-ui="canopy"] .cp-matter-detail .cp-matter-add { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px; gap:8px; }
+[data-ui="canopy"] .cp-matter-detail .cp-matter-add input { width:100%; }
+[data-ui="canopy"] .cp-matter-detail .cp-matter-chats-heading { flex-wrap:wrap; gap:12px; }
+[data-ui="canopy"] .cp-matter-detail button[aria-label="Unlink"] { opacity:1; }
+[data-ui="canopy"] .cp-tour-card button { min-height:44px; }
+[data-ui="canopy"] .cp-tour-card button.group\/cta { background:var(--cp-action-fill)!important; color:var(--cp-action-ink); box-shadow:var(--cp-control-shadow)!important; }
+@media(max-width:800px) { .cp-auth-art { display:none; } .cp-auth-layout { grid-template-columns:1fr; margin:48px auto; max-width:440px; } }
+@media(max-width:480px) { .cp-account { padding:24px 16px; } .cp-account section { padding:18px; } .cp-preference { flex-wrap:wrap; } .cp-auth-form h2 { font-size:28px; } [data-ui="canopy"] .cp-matter-detail .cp-matter-add { grid-template-columns:minmax(0,1fr) 44px; } [data-ui="canopy"] .cp-matter-detail .cp-matter-add input:first-child { grid-column:1/-1; } }
+
 [data-ui="canopy"] {
   --cp-font: 'Public Sans', var(--font-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --cp-bg: #f7f9f5;

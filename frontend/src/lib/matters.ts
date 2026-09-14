@@ -43,7 +43,8 @@ export async function listMatters(userId: string): Promise<Matter[]> {
 
 export async function getMatter(id: string): Promise<Matter | null> {
   const supabase = createClient()
-  const { data } = await supabase.from('matters').select('*').eq('id', id).maybeSingle()
+  const { data, error } = await supabase.from('matters').select('*').eq('id', id).maybeSingle()
+  if (error) throw error
   return (data as Matter) || null
 }
 
@@ -68,10 +69,13 @@ export async function createMatter(userId: string, m: Partial<Matter>): Promise<
 
 export async function updateMatter(id: string, patch: Partial<Matter>): Promise<void> {
   const supabase = createClient()
-  await supabase
+  const { data, error } = await supabase
     .from('matters')
     .update({ ...patch, updated_at: new Date().toISOString() })
     .eq('id', id)
+    .select('id').maybeSingle()
+  if (error) throw error
+  if (!data) throw new Error('Matter could not be saved.')
 }
 
 export async function deleteMatter(id: string): Promise<void> {

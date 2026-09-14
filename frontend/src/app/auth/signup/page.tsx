@@ -10,8 +10,11 @@ import { EtherealShadow } from '@/components/ui/ethereal-shadow'
 import { TextShimmer } from '@/components/ui/text-shimmer'
 import { Loader2, CheckCircle } from 'lucide-react'
 import { LevyLogo } from '@/components/ui/levy-logo'
+import { useUiVariant } from '@/lib/ui-variant'
+import { CanopyAuthScreen } from '@/components/canopy/auth-screen'
 
 export default function SignUpPage() {
+  const { variant } = useUiVariant()
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -63,6 +66,7 @@ export default function SignUpPage() {
     setLoading(false)
   }
 
+  if (variant === 'canopy') return <CanopyAuthScreen mode="signup" />
   return (
     <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden bg-[#060608]">
       <EtherealShadow color="rgba(22, 163, 74, 0.4)" scale={30} speed={25} />

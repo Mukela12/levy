@@ -2,6 +2,41 @@
 
 ## Outcome
 
+### Fourth pass, 14 September: remaining account screens
+
+Compared the prototype's actual Profile/Auth implementations before porting.
+Canopy auth now uses the split artwork/form layout, mobile single column,
+labelled autofill fields, password reveal and real Supabase login/signup. Email
+confirmation required by Supabase no longer produces a false signed-in screen.
+The legacy login/signup presentation remains available through the UI boundary.
+Added `/auth/reset-password` and recovery entry; authenticated password update
+is wired, but email delivery, redirect allowlisting and a real recovery-link
+round trip have NOT been verified. No password was changed in QA.
+
+Profile now has the account banner, editable name (real metadata persistence),
+read-only email, appearance, password recovery and tour replay. No fabricated
+role/plan or unsupported email editor was copied from the prototype.
+Matter detail forms now wrap on narrow screens, have 44px actions, accessible
+add/remove controls and a save retry button. Updates check Supabase errors and
+zero-row writes; party/date changes are reflected only after successful saves.
+This is a functional refinement, not a claim that the prototype's every tab was
+replicated. Onboarding retains all five approved assets and fixes button contrast.
+
+Browser evidence: QA sign-in succeeds; profile save returns confirmation; all
+five tour steps and Done work; fictional party `Fictional QA Party` / `QA fixture`
+in matter `82bfe06c-9783-4256-9924-bb69e5afb28e` survives reload. Auth checked on
+desktop and narrow preview, signup in light/dark; recovery entry and reset route
+render. No new signup, recovery email or password mutation performed. The retained
+fictional party is a QA fixture, not a real user record.
+
+Vercel API recheck still reports BLOCKED / TEAM_ACCESS_REQUIRED for candidate
+`dpl_7msfLL6771MVt4GBuJ1bVFuQUiJb`. Asked owner to fix commit identity association.
+Railway login was corrected by the user and integration/backend explicitly linked
+to the real levy-api project, production, service `10e39a27-a7a1-4c94-8360-7f7fd935ec31`.
+Verified previous backend deployment uses main `54c748f` and rootDirectory backend.
+Uploaded naming-only backend diff from REPO ROOT, deployment
+`cdb9236d-10fb-4ef5-a4f3-846f2f198770`; see latest QA evidence for final status.
+
 The Canopy frontend port has a locally tested implementation. It is **not live**
 and full visual parity has not been accepted by the user. The user requested a
 further fidelity pass after the original implementation; see the refinement

@@ -6,11 +6,15 @@ import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { useUiVariant } from '@/lib/ui-variant'
 import { ChevronRight, User, Lock, LogOut, Mail, Loader2 } from 'lucide-react'
+import { CanopyThemeToggle } from '@/components/canopy/theme-toggle'
 
 export default function ProfilePage() {
   const { user, signOut, loading: authLoading } = useAuth()
   const router = useRouter()
-  const { variant } = useUiVariant()
+  const { variant, theme, setTheme } = useUiVariant()
+  const [nameDraft, setNameDraft] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [profileStatus, setProfileStatus] = useState('')
 
   // Anonymous users have no profile to view - send them to login.
   useEffect(() => {
@@ -43,8 +47,19 @@ export default function ProfilePage() {
   }
 
   async function handleSignOut() {
-    await signOut()
-    router.push('/auth/login')
+    try { await signOut(); router.push('/auth/login') }
+    catch { setPasswordError('Could not sign out. Please try again.') }
+  }
+
+  async function saveProfile(event: React.FormEvent) {
+    event.preventDefault()
+    setSaving(true); setPasswordError(null); setProfileStatus('')
+    try {
+      const { error } = await createClient().auth.updateUser({ data: { full_name: (nameDraft ?? fullName).trim() } })
+      if (error) throw error
+      setProfileStatus('Your details have been saved.')
+    } catch { setPasswordError('Could not save your details. Please try again.') }
+    finally { setSaving(false) }
   }
 
   const infoCards = [
@@ -52,6 +67,16 @@ export default function ProfilePage() {
     { icon: User, label: 'Full Name', value: fullName },
   ]
 
+  if (authLoading || !user) return <p role="status" className="p-8">Loading your account…</p>
+  if (variant === 'canopy') return <div className="cp-account">
+    <header><span className="cp-eyebrow">Make yourself at home</span><h1>Your account</h1><p>Manage your details and reading preferences.</p></header>
+    <div className="cp-account-banner"><span aria-hidden="true">{initials}</span><div><h2>{fullName}</h2><p>{email}</p></div></div>
+    {passwordError && <p role="alert">{passwordError}</p>}
+    {profileStatus && <p role="status">{profileStatus}</p>}
+    <section><h2>Personal details</h2><form onSubmit={saveProfile}><label>Name<input autoComplete="name" required maxLength={100} value={nameDraft ?? fullName} onChange={e => setNameDraft(e.target.value)} /></label><label>Email<input type="email" value={email} readOnly /><small>Your account email is shown here for reference.</small></label><button type="submit" className="cp-btn primary" disabled={saving || !(nameDraft ?? fullName).trim()}>{saving ? 'Saving…' : 'Save details'}</button></form></section>
+    <section><h2>Reading preferences</h2><div className="cp-preference"><div><strong>Dark appearance</strong><p>A quieter canvas for evening research.</p></div><CanopyThemeToggle dark={theme === 'dark'} onChange={dark => setTheme(dark ? 'dark' : 'light')} /></div><div className="cp-preference"><div><strong>Password and access</strong><p>{passwordSent ? 'Check your inbox for a recovery link.' : 'Send a recovery link to your account email.'}</p></div><button className="cp-btn" onClick={handleChangePassword} disabled={changingPassword || passwordSent}>{changingPassword ? 'Sending…' : passwordSent ? 'Link sent' : 'Reset password'}</button></div><div className="cp-preference"><div><strong>Workspace tour</strong><p>A short introduction to Levy’s tools.</p></div><button className="cp-btn" onClick={() => { window.dispatchEvent(new Event('levy-replay-tour')); router.push('/chat') }}>Replay tour</button></div></section>
+    <button className="cp-btn" onClick={handleSignOut}><LogOut size={16} />Sign out</button>
+  </div>
   return (
     <div className="flex-1 overflow-y-auto px-6 py-8" style={{ overscrollBehavior: 'none' }}>
       <div className="max-w-md mx-auto">
@@ -99,10 +124,6 @@ export default function ProfilePage() {
         {/* Actions */}
         <div className="mt-8 space-y-3">
           {passwordError && <p role="alert" className="text-sm text-red-400">{passwordError}</p>}
-          {variant === 'canopy' && <button type="button" className="cp-btn w-full" onClick={() => {
-            window.dispatchEvent(new Event('levy-replay-tour'))
-            router.push('/chat')
-          }}>Replay the workspace tour</button>}
           <button
             onClick={handleChangePassword}
             disabled={changingPassword || passwordSent}
