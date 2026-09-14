@@ -34,3 +34,13 @@ test('legislation keeps its canonical server route and ungated content', () => {
   assert.ok(!shell.includes('if (!user)'))
   assert.match(shell, /<CanopyShell>\{children\}<\/CanopyShell>/)
 })
+
+test('the rewritten root counts as the chat route, not a workspace page', () => {
+  // next.config.ts serves /chat at "/", so usePathname reports "/". If the
+  // shell does not normalise it, the welcome inherits .cp-workspace form
+  // styling (solid textarea, tinted aria-pressed chips) and loses its active
+  // dock tab. This shipped once; the guard keeps it from shipping twice.
+  const shell = read('components/canopy/shell.tsx')
+  assert.match(shell, /rawPathname === '\/' \? '\/chat' : rawPathname/)
+  assert.ok(!/const pathname = usePathname\(\)/.test(shell))
+})
