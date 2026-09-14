@@ -342,8 +342,8 @@
    bottom of the content rather than over it. */
 .cp-welcome-frame { position: relative; min-height: 100%; display: flex; flex-direction: column; }
 .dark .cp-welcome { border-color: var(--cp-line); }
-.cp-scene-stage { position: absolute; inset: 0; pointer-events: none; }
-.cp-scene-stage::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, #f7f9f5cc 0%, #f7f9f58a 30%, #f7f9f51f 60%, transparent 100%); }
+.cp-scene-stage { position: absolute; inset: 0; z-index: 0; isolation: isolate; pointer-events: none; }
+.cp-scene-stage::after { content: ""; position: absolute; inset: 0; z-index: 3; background: linear-gradient(90deg, #f7f9f5cc 0%, #f7f9f58a 30%, #f7f9f51f 60%, transparent 100%); }
 .dark .cp-scene-stage::after { background: linear-gradient(90deg, #0a0a0be6 0%, #0a0a0ba6 32%, #0a0a0b40 62%, #0a0a0b14 100%); }
 .cp-scene-image { position: absolute; inset: 0; display: block; }
 .cp-scene-image img { width: 100%; height: 100%; object-fit: cover; object-position: var(--photo-position, 50% 50%); display: block; }
