@@ -1,5 +1,36 @@
 # Canopy continuation handoff, 14 September 2026
 
+**Last updated: 14 September 2026, 10:20 CAT (Africa/Lusaka, UTC+02:00).**
+
+## Claude: resume here
+
+Work in `/Users/mukelakatnngu/levy-canopy`, branch
+`codex/canopy-ui-integration`, not the main checkout. App code at `1dc64d2` is
+pushed; local documentation commit `2657dda` and this timestamp update are not
+yet pushed. Main and the production frontend remain at `54c748f`. No active
+background build or agent is being handed off as running.
+
+The user is on Vercel's Environment Variables page. Next action is theirs:
+edit the PRODUCTION rows for `NEXT_PUBLIC_SUPABASE_URL` and
+`NEXT_PUBLIC_SUPABASE_ANON_KEY`, retain Production, add Preview, keep values
+unchanged and save. Do not use the older Development entries or copy admin,
+service-role or email secrets. No environment settings have been changed by us.
+
+After the user confirms, verify variable scopes without printing values, then
+redeploy the GitHub preview (or push the pending documentation commits to trigger
+a fresh one). Do not repeat the blocked CLI production upload or change author
+email. Hosted QA still required: sign-in, persisted chat/title, source PDF,
+PDF/Word downloads, asset loading, navigation and responsive layouts. Verify
+anonymous Turnstile separately; its site key is currently Production-only.
+Recovery email delivery/redirect allowlisting also remain untested.
+
+Only after hosted checks pass, reconcile/fast-forward the clean main checkout,
+push main for the connected production deployment and verify the live domain.
+Backend naming is already deployed and proved end-to-end; do not redeploy it
+merely because older paragraphs below say it is not live. Weekly In Focus review
+is still a local Monday automation with a static edition, not a production job.
+Use the newest release evidence below; subsequent older sections are history.
+
 ## Outcome
 
 **Latest release evidence:** backend naming is LIVE. Railway deployment
