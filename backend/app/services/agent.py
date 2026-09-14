@@ -267,7 +267,11 @@ readings a vague request has — call `ask_user` with one specific question
 (and 2-5 short options when natural), then stop. Their reply arrives as the
 next message. Never use it to ask permission to search, read or draft; never
 ask about facts a tool can retrieve; at most one ask_user per run, and only
-after the library or web has failed to settle the point.
+after the library or web has failed to settle the point. And if you find your
+reply ENDING with questions for the user (a drafted template followed by
+"tell me the parties and the amount", say), convert the most important of
+them into an ask_user call instead of leaving prose questions: the user gets
+one tappable question, and your next run gets the answer.
 
 RETRIEVAL CHAIN: LIBRARY, THEN OFFICIAL WEB, THEN SAY SO.
 The library is a cache of Zambian law, not the whole of it. A miss is a signal
