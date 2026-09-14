@@ -31,6 +31,10 @@ import {
 } from 'lucide-react'
 import { LevyLogo } from '@/components/ui/levy-logo'
 import { useTurnstile } from '@/lib/use-turnstile'
+import { useUiVariant } from '@/lib/ui-variant'
+import { WelcomeScene } from '@/components/canopy/welcome-scene'
+import { CanopyComposer } from '@/components/canopy/composer'
+import { CanopyConversation } from '@/components/canopy/conversation'
 
 function getGreeting(): string {
   const h = new Date().getHours()
@@ -145,6 +149,7 @@ export default function NewChatPage() {
   const turnstile = useTurnstile(!authLoading && !user && trialLeft !== 0)
   const { send } = useChatStream()
   const seededRef = useRef(false)
+  const canopy = useUiVariant().variant === 'canopy'
 
   // Expose the raw messages state (stable reference) to the layout-level
   // Brief button + bottom sheet. Do NOT map here - that creates a new array
@@ -631,7 +636,87 @@ export default function NewChatPage() {
       )}
       {/* Main chat area */}
       <div className="flex-1 flex flex-col min-w-0 relative">
-        {!hasMessages ? (
+        {!hasMessages && canopy ? (
+          <WelcomeScene
+            greeting={user ? `${getGreeting()}, ${displayName}` : getGreeting()}
+            isAnonymous={isAnonymous}
+            starters={quickActions}
+            onStarter={handleSend}
+            reviewArmed={reviewArmed}
+            onToggleReview={() => {
+              setReviewArmed((v) => !v)
+              setInputSeed((s) => ({ text: '', nonce: s.nonce + 1 }))
+            }}
+            onAddDocument={user ? () => setAttachmentsOpen(true) : undefined}
+            composer={
+              <CanopyComposer
+                onSend={handleSend}
+                disabled={loading}
+                webSearch={webSearch}
+                onWebSearchChange={setWebSearch}
+                onAttachClick={user ? () => setAttachmentsOpen(true) : undefined}
+                onUploadFile={user ? handleUploadFile : undefined}
+                attachmentCount={stagedAttachments.length}
+                seed={inputSeed}
+                mode={reviewArmed ? 'review' : 'research'}
+                onModeChange={(m) => setReviewArmed(m === 'review')}
+                strip={
+                  stagedAttachments.length > 0 ? (
+                    <div className="cp-chips" aria-label="Attached documents">
+                      {stagedAttachments.map((d) => {
+                        const isPromoting = promoting.has(d.id)
+                        const isPromoted = promoted.has(d.id)
+                        const suggested = promotionSuggested.has(d.id)
+                        return (
+                          <span key={d.id} className="cp-chip">
+                            <Paperclip size={11} />
+                            <span className="cp-chip-title">{d.title}</span>
+                            {!isPromoted && (
+                              <button
+                                type="button"
+                                onClick={() => handlePromote(d.id)}
+                                disabled={isPromoting}
+                                title={suggested ? "You've used this file before. Save it to your library for cross-chat search" : 'Save to library for cross-chat search'}
+                                aria-label="Save to library"
+                              >
+                                {isPromoting ? <Loader2 size={11} className="animate-spin" /> : <ArrowUpToLine size={11} />}
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              aria-label={`Remove ${d.title}`}
+                              onClick={() => setStagedAttachments((prev) => prev.filter((x) => x.id !== d.id))}
+                            >
+                              <X size={11} />
+                            </button>
+                          </span>
+                        )
+                      })}
+                    </div>
+                  ) : null
+                }
+              />
+            }
+            below={trialNudge}
+          />
+        ) : hasMessages && canopy ? (
+          <CanopyConversation
+            title={messages.find((m) => m.role === 'user')?.content.slice(0, 90) || 'New conversation'}
+            messages={messages}
+            loading={loading}
+            onSend={handleSend}
+            token={session?.access_token}
+            composer={{
+              disabled: loading,
+              webSearch,
+              onWebSearchChange: setWebSearch,
+              onAttachClick: user ? () => setAttachmentsOpen(true) : undefined,
+              onUploadFile: user ? handleUploadFile : undefined,
+              attachmentCount: stagedAttachments.length,
+            }}
+            footNote={trialNudge ?? undefined}
+          />
+        ) : !hasMessages ? (
           /* ── Welcome State ── */
           <div
             className="flex-1 flex flex-col items-center px-4 relative overflow-y-auto overscroll-none"

@@ -16,6 +16,8 @@ import { AttachmentsSheet } from '@/components/chat/attachments-sheet'
 import type { ToolCallView } from '@/components/chat/tool-call-card'
 import type { MessageBlock } from '@/components/chat/chat-message'
 import { Loader2, Paperclip, X, ArrowUpToLine } from 'lucide-react'
+import { useUiVariant } from '@/lib/ui-variant'
+import { CanopyConversation } from '@/components/canopy/conversation'
 
 const EMPTY_MESSAGES: Message[] = []
 
@@ -36,6 +38,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
   const [promoted, setPromoted] = useState<Set<string>>(new Set())
   const [promotionSuggested, setPromotionSuggested] = useState<Set<string>>(new Set())
 
+  const canopy = useUiVariant().variant === 'canopy'
   const sess = sessions[id]
   const messages = sess?.messages ?? EMPTY_MESSAGES
   const loading = sess?.status === 'streaming'
@@ -130,6 +133,63 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
   }
 
   const hasMessages = messages.length > 0
+
+  if (canopy) {
+    const chips =
+      attachments.attached.length > 0 ? (
+        <div className="cp-chips" aria-label="Attached documents">
+          {attachments.attached.map((d) => {
+            const isPromoting = promoting.has(d.id)
+            const isPromoted = promoted.has(d.id)
+            const suggested = promotionSuggested.has(d.id)
+            return (
+              <span key={d.id} className="cp-chip">
+                <Paperclip size={11} />
+                <span className="cp-chip-title">{d.title}</span>
+                {!isPromoted && (
+                  <button type="button" onClick={() => handlePromote(d.id)} disabled={isPromoting} title={suggested ? "You've used this file before. Save it to your library for cross-chat search" : 'Save to library for cross-chat search'} aria-label="Save to library">
+                    {isPromoting ? <Loader2 size={11} className="animate-spin" /> : <ArrowUpToLine size={11} />}
+                  </button>
+                )}
+                <button type="button" onClick={() => attachments.detach(d.id)} aria-label={`Detach ${d.title}`}><X size={11} /></button>
+              </span>
+            )
+          })}
+        </div>
+      ) : null
+    return (
+      <>
+        <CanopyConversation
+          title={messages.find((m) => m.role === 'user')?.content.slice(0, 90) || 'Conversation'}
+          messages={messages}
+          loading={loading}
+          onSend={handleSend}
+          token={session?.access_token}
+          composer={{
+            disabled: loading,
+            webSearch,
+            onWebSearchChange: setWebSearch,
+            onAttachClick: user ? () => setAttachmentsOpen(true) : undefined,
+            onUploadFile: user ? handleUploadFile : undefined,
+            attachmentCount: attachments.attached.length,
+            strip: chips,
+          }}
+        />
+        <AttachmentsSheet
+          open={attachmentsOpen}
+          onClose={() => setAttachmentsOpen(false)}
+          userId={user?.id}
+          sessionId={id}
+          attachedIds={new Set(attachments.attachedIds)}
+          onToggle={async (doc) => {
+            const isAttached = attachments.attached.some((d) => d.id === doc.id)
+            if (isAttached) await attachments.detach(doc.id)
+            else await attachments.attach(doc.id)
+          }}
+        />
+      </>
+    )
+  }
 
   return (
     <div className="flex flex-1 overflow-hidden" style={{ overscrollBehavior: 'none' }}>

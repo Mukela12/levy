@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth/auth-provider'
 import { useChatStream } from '@/components/chat/chat-stream-context'
-import { createClient } from '@/lib/supabase'
+import { useRecentSessions, timeAgo } from '@/components/chat/use-recent-sessions'
 import {
   FolderOpen,
   Files,
@@ -20,12 +20,6 @@ import {
 } from 'lucide-react'
 import { LevyLogo } from '@/components/ui/levy-logo'
 
-interface ChatSession {
-  id: string
-  title: string
-  created_at: string
-}
-
 interface AppSidebarProps {
   mobileSidebarOpen: boolean
   onCloseMobile: () => void
@@ -36,57 +30,16 @@ export default function AppSidebar({ mobileSidebarOpen, onCloseMobile }: AppSide
   const pathname = usePathname()
   const router = useRouter()
   const { streamingIds } = useChatStream()
-  const [sessions, setSessions] = useState<ChatSession[]>([])
+  const { sessions, remove: deleteSession } = useRecentSessions(user?.id, pathname)
   const [casesExpanded, setCasesExpanded] = useState(true)
-
-  useEffect(() => {
-    if (user?.id) loadSessions()
-    else setSessions([])
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id])
 
   // Close mobile menu on route change
   useEffect(() => {
     onCloseMobile()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
 
-  // Pull in a freshly created chat so it appears (and can show its loader)
-  // the moment the user lands on its route, without waiting for a refresh.
-  useEffect(() => {
-    const match = pathname.match(/^\/chat\/([^/]+)$/)
-    if (match && user?.id && !sessions.some((s) => s.id === match[1])) {
-      loadSessions()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname, user?.id])
-
-  async function loadSessions() {
-    const supabase = createClient()
-    const { data } = await supabase
-      .from('chat_sessions')
-      .select('id, title, created_at')
-      .eq('user_id', user?.id)
-      .order('created_at', { ascending: false })
-      .limit(20)
-    if (data) setSessions(data)
-  }
-
-  async function deleteSession(id: string) {
-    const supabase = createClient()
-    await supabase.from('chat_messages').delete().eq('session_id', id)
-    await supabase.from('chat_sessions').delete().eq('id', id)
-    setSessions((prev) => prev.filter((s) => s.id !== id))
-  }
-
-  function getTimeAgo(dateStr: string): string {
-    const diff = Date.now() - new Date(dateStr).getTime()
-    const mins = Math.floor(diff / 60000)
-    if (mins < 60) return `${mins}m ago`
-    const hours = Math.floor(mins / 60)
-    if (hours < 24) return `${hours}h ago`
-    const days = Math.floor(hours / 24)
-    return `${days}d ago`
-  }
+  const getTimeAgo = timeAgo
 
   const userInitial = (user?.user_metadata?.full_name || user?.email || 'U')[0].toUpperCase()
   const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'

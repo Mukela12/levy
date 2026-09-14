@@ -5,6 +5,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next'
 import './globals.css'
 import { AuthProvider } from '@/components/auth/auth-provider'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { UiVariantProvider, uiBootScript } from '@/lib/ui-variant'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 
@@ -74,11 +75,17 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} h-full dark`}>
+    // suppressHydrationWarning: the boot script may switch the variant/theme
+    // attributes before React hydrates, and that difference is deliberate.
+    <html lang="en" className={`${inter.variable} h-full dark`} suppressHydrationWarning>
       <body className="min-h-full bg-background text-foreground antialiased">
-        <AuthProvider>
-          <TooltipProvider>{children}</TooltipProvider>
-        </AuthProvider>
+        {/* Decides the presentation variant and theme before first paint. */}
+        <script dangerouslySetInnerHTML={{ __html: uiBootScript }} />
+        <UiVariantProvider>
+          <AuthProvider>
+            <TooltipProvider>{children}</TooltipProvider>
+          </AuthProvider>
+        </UiVariantProvider>
         <Analytics />
         <SpeedInsights />
       </body>

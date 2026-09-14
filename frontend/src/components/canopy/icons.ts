@@ -1,0 +1,23 @@
+/** Lordicon animations already shipped in public/icons/lordicon, by the short names Canopy uses. */
+export const CANOPY_ICON: Record<string, string> = {
+  chat: 'system-regular-186-chat-empty-hover-chat',
+  search: 'system-regular-42-search-hover-pinch',
+  book: 'system-regular-19-book-hover-book',
+  folder: 'system-regular-44-folder-hover-pinch',
+  document: 'system-regular-49-upload-file-hover-upload-1',
+  scan: 'system-regular-69-document-scan-hover-scan',
+  checklist: 'system-regular-78-check-list-hover-check-list',
+  settings: 'system-regular-109-slider-toggle-settings-hover-slider',
+  plus: 'system-regular-314-plus-hover-pinch',
+  upload: 'system-regular-80-upload-hover-upload',
+  check: 'system-regular-31-check-hover-pinch',
+  globe: 'system-regular-73-world-globe-wikis-hover-world',
+  clock: 'system-regular-67-clock-hover-clock',
+  lock: 'system-regular-90-lock-closed-hover-pinch',
+  home: 'system-regular-41-home-hover-home',
+  launch: 'system-regular-122-launch-hover-launch',
+  trash: 'system-regular-39-trash-hover-trash-empty',
+  signin: 'system-regular-113-log-sign-in-hover-sign-in',
+  signout: 'system-regular-112-log-sign-out-hover-log-out',
+  arrow: 'system-regular-161-arrow-long-right-hover-pinch',
+}

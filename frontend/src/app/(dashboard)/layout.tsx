@@ -16,6 +16,8 @@ import { Scale, Loader2, X } from 'lucide-react'
 import { CTA } from '@/components/ui/cta'
 import { LevyLogo } from '@/components/ui/levy-logo'
 import { OnboardingTour } from '@/components/onboarding/onboarding-tour'
+import { useUiVariant } from '@/lib/ui-variant'
+import { CanopyShell } from '@/components/canopy/shell'
 
 function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -188,12 +190,30 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   )
 }
 
+// The presentation variant is chosen beneath the providers, so flipping it
+// (a reload) never tears down an active stream, brief or viewer mid-render.
+function DashboardPresentation({ children }: { children: React.ReactNode }) {
+  const { variant } = useUiVariant()
+  const { loading } = useAuth()
+  if (variant === 'canopy') {
+    if (loading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--cp-bg, #0a0a0b)' }}>
+          <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--cp-primary, #22c55e)' }} />
+        </div>
+      )
+    }
+    return <CanopyShell>{children}</CanopyShell>
+  }
+  return <DashboardLayoutInner>{children}</DashboardLayoutInner>
+}
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <ChatStreamProvider>
       <BriefProvider>
         <PdfViewerProvider>
-          <DashboardLayoutInner>{children}</DashboardLayoutInner>
+          <DashboardPresentation>{children}</DashboardPresentation>
         </PdfViewerProvider>
       </BriefProvider>
     </ChatStreamProvider>

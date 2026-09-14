@@ -17,6 +17,8 @@ import { PrecedentCard } from './precedent-card'
 import { CheatSheetCard } from './cheat-sheet-card'
 import { QuizCard } from './quiz-card'
 import { AnswerFeedback } from './answer-feedback'
+import { useUiVariant } from '@/lib/ui-variant'
+import { CanopyMessage } from '@/components/canopy/message'
 import type {
   CitationVerdict,
   ApplicationPlan,
@@ -54,7 +56,7 @@ export type MessageBlock =
   // document library. Rendered as the authorities panel under the answer.
   | { kind: 'citation_audit'; citations: CitationVerdict[] }
 
-interface ChatMessageProps {
+export interface ChatMessageProps {
   /** Row id of the saved message; enables the feedback control. */
   messageId?: string
   role: 'user' | 'assistant'
@@ -80,7 +82,13 @@ interface ChatMessageProps {
   onDraftIndividual?: (plan: ApplicationPlan, kind: 'summons' | 'affidavit' | 'skeletal' | 'order') => void
 }
 
-export function ChatMessage({
+/** Chooses the presentation; both variants take the same props and callbacks. */
+export function ChatMessage(props: ChatMessageProps) {
+  const canopy = useUiVariant().variant === 'canopy'
+  return canopy ? <CanopyMessage {...props} /> : <LegacyChatMessage {...props} />
+}
+
+function LegacyChatMessage({
   messageId,
   role,
   content,

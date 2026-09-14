@@ -31,7 +31,7 @@ import {
 import { Favicon } from './favicon'
 import type { ToolCallView } from './tool-call-card'
 
-const TOOL_META: Record<
+export const TOOL_META: Record<
   string,
   { label: string; verb: string; Icon: typeof Search }
 > = {
