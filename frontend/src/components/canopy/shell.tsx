@@ -67,7 +67,12 @@ function Brand() {
 
 export function CanopyShell({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth()
-  const pathname = usePathname()
+  const rawPathname = usePathname()
+  // The bare domain rewrites to /chat, so the browser reports "/" while the
+  // chat app is what renders. Every route decision below (workspace styling,
+  // section title, dock and nav highlighting) must treat them as the same
+  // place, or the homepage gets the workspace's form styling and no active tab.
+  const pathname = rawPathname === '/' ? '/chat' : rawPathname
   const router = useRouter()
   const brief = useBrief()
   const pdf = usePdfViewer()
