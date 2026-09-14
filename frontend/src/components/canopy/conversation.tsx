@@ -9,7 +9,8 @@
  */
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { ArrowDown, PanelRight } from 'lucide-react'
+import { ArrowDown } from 'lucide-react'
+import { ActionArt } from './action-art'
 import { ChatMessage } from '@/components/chat/chat-message'
 import type { Message } from '@/components/chat/chat-stream-context'
 import { useBrief } from '@/components/chat/brief-context'
@@ -96,7 +97,7 @@ export function CanopyConversation({ title, messages, loading, onSend, composer,
               <span>{title}</span>
               {brief.available && (
                 <button type="button" className="cp-icon-btn" aria-label="Open IRAC analysis" onClick={() => brief.setOpen(true)}>
-                  <PanelRight size={18} />
+                  <ActionArt kind="irac" />
                 </button>
               )}
             </div>

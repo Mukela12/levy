@@ -93,9 +93,41 @@ The initial candidate `dpl_FGHQksGV6CyxSqSPxzLoQ8uz3ga5` was also blocked.
 Neither candidate was promoted. The CLI's "Building" output did not mean a build
 was running: the read-only deployment API exposed the actual blocked state.
 
+## Refinement pass following design feedback
+
+The user did not accept the earlier port as visually complete. The new local
+pass is documented in `CANOPY_CLAUDE_HANDOFF.md`; do not call full parity done.
+
+Confirmed during this pass:
+
+- Research menu selected state and keyboard interaction; borderless Web states.
+- Full-width neutral banner at 1440px; readable wrapping at 320px.
+- Example modal selection and sourced-question detail/selection without sending.
+- Source question disappears while typing; selected question receives input focus.
+- Study format and subject selection; existing Study flow remains in place.
+- Document folder dropdown, selected check and Escape at 320px.
+- Fixed document title/actions collision and Upload contrast found in browser QA.
+- Brief opens from the new scales action; scales and case optimized images render.
+- Five mocked backend naming tests pass: validation, first exchange, manual title
+  protection, later-turn exclusion and provider-failure fallback.
+- Thirteen frontend tests pass, including source/date validation and RGBA assets.
+- Lint and typecheck pass. Production build generated 931 pages.
+
+Test command is `node --test tests/*.test.mjs`, not `npm test` (no script exists).
+The attempted npm-test command failed before running tests, then the actual test
+runner was invoked successfully. Naming tests do not prove live provider or
+production integration. Source-date tests are structural, not legal verification.
+
+New assets are inside `frontend/public/assets/canopy-actions/`; no developer-cache
+URLs are referenced. Missing static imports fail the build. Hosted optimized image
+requests must still be checked after Vercel authorization is resolved.
+
 ## Remaining release gates
 
 - Owner resolves Vercel commit identity/team authorization; redeploy candidate.
+- Finish screen-by-screen prototype acceptance, especially supporting-screen
+  structure beyond the shared typography/control pass.
+- Deploy and smoke-test backend chat naming separately; it is not a frontend feature alone.
 - Verify hosted sign-in, saved QA chat, citation viewer and actual PDF/Word downloads.
 - Finish hosted search, legislation, anonymous path and responsive smoke checks.
 - Promote only a ready, verified candidate; fast-forward clean main and push the verified release.

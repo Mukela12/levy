@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Download, RefreshCw, Loader2, Scale, FileText } from 'lucide-react'
 import { generateBrief, exportBrief, type BriefResponse } from '@/lib/api'
+import { ActionArt } from '@/components/canopy/action-art'
+import { useUiVariant } from '@/lib/ui-variant'
 
 interface BriefPanelProps {
   messages: Array<{ role: string; content: string }>
@@ -18,6 +20,7 @@ const typeLabels: Record<string, { letter: string; title: string }> = {
 }
 
 export function BriefPanel({ messages, token }: BriefPanelProps) {
+  const { variant } = useUiVariant()
   const [brief, setBrief] = useState<BriefResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -54,7 +57,7 @@ export function BriefPanel({ messages, token }: BriefPanelProps) {
   }
 
   return (
-    <div className="flex flex-col h-full" style={{ overscrollBehavior: 'contain' }}>
+    <div className={`flex flex-col h-full ${variant === 'canopy' ? 'cp-brief-panel' : ''}`} style={{ overscrollBehavior: 'contain' }}>
       {/* Header */}
       <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between flex-shrink-0">
         <div>
@@ -82,9 +85,9 @@ export function BriefPanel({ messages, token }: BriefPanelProps) {
       <div className="flex-1 overflow-y-auto px-5 py-4" style={{ overscrollBehavior: 'contain' }}>
         {!brief && !loading && (
           <div className="flex flex-col items-center justify-center h-full text-center px-4">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4">
+            {variant === 'canopy' ? <div className="mb-4"><ActionArt kind="irac" size={64} /></div> : <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4">
               <Scale size={20} className="text-emerald-400" />
-            </div>
+            </div>}
             <p className="text-[13px] text-white/50 mb-1">
               IRAC Legal Analysis
             </p>
@@ -96,7 +99,7 @@ export function BriefPanel({ messages, token }: BriefPanelProps) {
             <button
               onClick={handleGenerate}
               disabled={!hasMessages || loading}
-              className={`px-4 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all ${
+              className={variant === 'canopy' ? 'cp-btn primary' : `px-4 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all ${
                 hasMessages
                   ? 'bg-emerald-600 text-white hover:bg-emerald-500 active:scale-[0.98]'
                   : 'bg-white/[0.04] text-white/20 cursor-not-allowed'

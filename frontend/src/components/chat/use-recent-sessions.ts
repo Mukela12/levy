@@ -9,6 +9,22 @@ export interface RecentSession {
   created_at: string
 }
 
+export function useChatTitle(userId: string | undefined, sessionId: string) {
+  const [named, setNamed] = useState<{ sessionId: string; title: string } | null>(null)
+  useEffect(() => {
+    if (!userId) return
+    let active = true
+    const load = async () => {
+      const { data } = await createClient().from('chat_sessions').select('title').eq('id', sessionId).eq('user_id', userId).maybeSingle()
+      if (active && data?.title) setNamed({ sessionId, title: data.title })
+    }
+    void load()
+    const timer = window.setInterval(() => { if (document.visibilityState === 'visible') void load() }, 30000)
+    return () => { active = false; window.clearInterval(timer) }
+  }, [userId, sessionId])
+  return userId && named?.sessionId === sessionId ? named.title : 'Conversation'
+}
+
 /**
  * The signed-in user's recent chats, shared by both presentations of the
  * sidebar so the query and the delete path live in one place.
@@ -31,6 +47,16 @@ export function useRecentSessions(userId: string | undefined, pathname: string) 
   useEffect(() => {
     if (userId) void load()
     else setSessions([])
+  }, [userId, load])
+
+  // The server names the first exchange after saving it. Refresh quietly so a
+  // generated title arrives without a full reload or an enabled realtime feed.
+  useEffect(() => {
+    if (!userId) return
+    const refresh = () => { if (document.visibilityState === 'visible') void load() }
+    const timer = window.setInterval(refresh, 30000)
+    window.addEventListener('focus', refresh)
+    return () => { window.clearInterval(timer); window.removeEventListener('focus', refresh) }
   }, [userId, load])
 
   // Pull in a freshly created chat so it appears the moment the user lands on

@@ -40,7 +40,7 @@ export function DomainBanner() {
 
   return (
     <div
-      className="relative flex-shrink-0 flex items-center justify-center gap-2 px-9 py-1.5 text-[12px] text-emerald-50 border-b border-emerald-500/25"
+      className="levy-domain-banner relative flex-shrink-0 flex items-center justify-center gap-2 px-9 py-1.5 text-[12px] text-emerald-50 border-b border-emerald-500/25"
       style={{
         background:
           'linear-gradient(180deg, rgba(5,150,105,0.22) 0%, rgba(5,150,105,0.12) 100%)',

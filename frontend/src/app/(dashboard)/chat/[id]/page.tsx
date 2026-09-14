@@ -18,6 +18,7 @@ import type { MessageBlock } from '@/components/chat/chat-message'
 import { Loader2, Paperclip, X, ArrowUpToLine } from 'lucide-react'
 import { useUiVariant } from '@/lib/ui-variant'
 import { CanopyConversation } from '@/components/canopy/conversation'
+import { useChatTitle } from '@/components/chat/use-recent-sessions'
 
 const EMPTY_MESSAGES: Message[] = []
 
@@ -30,6 +31,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
   const pdf = usePdfViewer()
   const attachments = useSessionAttachments(id)
   const { sessions, ensureLoaded, send } = useChatStream()
+  const chatTitle = useChatTitle(user?.id, id)
 
   const [webSearch, setWebSearch] = useState(false)
   const [attachmentsOpen, setAttachmentsOpen] = useState(false)
@@ -160,7 +162,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
     return (
       <>
         <CanopyConversation
-          title={messages.find((m) => m.role === 'user')?.content.slice(0, 90) || 'Conversation'}
+          title={chatTitle}
           messages={messages}
           loading={loading}
           onSend={handleSend}

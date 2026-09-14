@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '@/components/auth/auth-provider'
 import { FolderCard } from '@/components/documents/folder-card'
+import { ChoiceSelect } from '@/components/canopy/choice-select'
 import {
   createTemplateFolder,
   deleteTemplate,
@@ -562,7 +563,7 @@ function TemplateCard({
 
       <div className="mt-3 flex items-center justify-between gap-2">
         {folders.length > 0 ? (
-          <select
+          <ChoiceSelect aria-label={`Folder for ${template.name}`}
             value={template.folder_id ?? ''}
             onChange={(e) => onMove(e.target.value === '' ? null : e.target.value)}
             disabled={busy}
@@ -574,7 +575,7 @@ function TemplateCard({
                 {f.name}
               </option>
             ))}
-          </select>
+          </ChoiceSelect>
         ) : <span />}
         <div className="flex items-center gap-1">
           <button

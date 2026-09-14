@@ -128,6 +128,7 @@ export default function NewChatPage() {
   // pasting anything. Now the box stays empty, so there is nothing to send by
   // accident, and the primer is attached at send time instead.
   const [reviewArmed, setReviewArmed] = useState(false)
+  const [hasWelcomeDraft, setHasWelcomeDraft] = useState(false)
   // Staged attachments for the very first message: persisted into the
   // chat_session_documents join table once the session is created.
   const [stagedAttachments, setStagedAttachments] = useState<LibraryDocument[]>([])
@@ -639,6 +640,7 @@ export default function NewChatPage() {
           <WelcomeScene
             greeting={user ? `${getGreeting()}, ${displayName}` : getGreeting()}
             isAnonymous={isAnonymous}
+            hasDraft={hasWelcomeDraft}
             starters={quickActions}
             onStarter={(question) => {
               setReviewArmed(false)
@@ -647,6 +649,7 @@ export default function NewChatPage() {
             onAddDocument={user ? () => setAttachmentsOpen(true) : undefined}
             composer={
               <CanopyComposer
+                onDraftPresenceChange={setHasWelcomeDraft}
                 onSend={handleSend}
                 disabled={loading}
                 webSearch={webSearch}

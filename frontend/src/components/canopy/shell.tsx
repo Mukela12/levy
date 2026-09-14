@@ -11,7 +11,8 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { ChevronRight, Loader2, LogOut, PanelLeft, Scale, Trash2, X } from 'lucide-react'
+import { ChevronRight, Loader2, LogOut, PanelLeft, Trash2, X } from 'lucide-react'
+import { ActionArt } from './action-art'
 import { useAuth } from '@/components/auth/auth-provider'
 import { useBrief } from '@/components/chat/brief-context'
 import { CanopyBriefDrawer } from './brief-drawer'
@@ -257,6 +258,7 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="cp-app" data-rail={rail ? 'true' : 'false'}>
+      <DomainBanner />
       <a className="cp-skip" href="#cp-main">
         Skip to content
       </a>
@@ -298,7 +300,6 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="cp-body">
-        <DomainBanner />
         <header className="cp-topbar">
           <div className="cp-topbar-left">
             <button
@@ -324,7 +325,7 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
             </span>
             {brief.available && (
               <button type="button" className="cp-brief-btn" onClick={() => brief.setOpen(true)} aria-label="Open the Brief">
-                <Scale size={17} />
+                <ActionArt kind="irac" />
               </button>
             )}
             <CanopyThemeToggle dark={theme === 'dark'} onChange={(d) => setTheme(d ? 'dark' : 'light')} />
@@ -339,7 +340,7 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
             )}
           </div>
         </header>
-        <main ref={mainRef} id="cp-main" tabIndex={-1} className="cp-main" data-chat-route={pathname.startsWith('/chat')} data-brief-open={brief.open && brief.available}>
+        <main ref={mainRef} id="cp-main" tabIndex={-1} className={'cp-main' + (!pathname.startsWith('/chat') ? ' cp-workspace' : '')} data-chat-route={pathname.startsWith('/chat')} data-brief-open={brief.open && brief.available}>
           {children}
           <CanopyBriefDrawer key={pathname} container={mainRef} />
         </main>

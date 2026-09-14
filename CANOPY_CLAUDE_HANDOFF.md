@@ -2,7 +2,10 @@
 
 ## Outcome
 
-The Canopy frontend port is locally implemented and tested. It is **not live**.
+The Canopy frontend port has a locally tested implementation. It is **not live**
+and full visual parity has not been accepted by the user. The user requested a
+further fidelity pass after the original implementation; see the refinement
+section below before treating the earlier QA as completion.
 Production publication stopped at Vercel's commit-author authorization control,
 not at a source-code build error. See `CANOPY_RELEASE_QA.md` for test evidence,
 known defects and the exact deployment blocker. Do not report this release deployed.
@@ -52,6 +55,41 @@ QA chats to reopen after normal login:
 
 Keep credentials out of this file and git. Exclude the synthetic QA account from
 analytics. Retained QA records are deliberate regression fixtures, not real clients.
+
+## Fidelity refinement after user review
+
+Re-read the named design task `Design Levy UI concepts` and the recovered
+digest, plus the lab's v13 buttons, v15 controls and In Focus implementation.
+The following is a new local refinement pass, not proof of complete visual parity:
+
+- Shared Base UI dropdowns for Research and folder selectors, with selected checks,
+  bounded menus, keyboard support and a legacy native-select fallback.
+- Borderless Web control in every state; retain explicit Web on/off words on phones.
+- Theme-aware Lordicon primary fills and visible Add Document icon.
+- Try an example opens a question-preview dialog rather than shifting the welcome
+  layout. Selection prefills, never auto-sends. In Focus hides while drafting.
+- Full-width neutral old-domain banner above sidebar and content.
+- Transparent scales and case artwork bundled as static Next Image imports;
+  scales also replace the Brief empty-state green tile. See asset README.
+- Shared workspace typography and controls, Study format segmentation, Source
+  search error feedback, and narrow-screen Matters/document-row fixes.
+- Bounded post-save Haiku 4.5 title service: first exchange only, 40 output tokens,
+  eight-second provider timeout, no legal tools/system/history, compare-and-set
+  update to preserve renamed titles. Failure retains the provisional title.
+  Frontend refreshes titles quietly. Backend is NOT deployed; tests use mocks.
+- Public-source question edition with explicit dates, status caveats, source
+  links and expiry. Seed edition has two topics, not a complete news service.
+
+Automation `levy-weekly-in-focus-review` is an ACTIVE local Codex heartbeat for
+Monday 07:00. It reviews original public sources, updates the edition and validates
+it, without publishing while release gates remain unresolved. It is NOT a Railway
+background job; a changed static edition still needs a verified deployment.
+
+Browser checks in this pass cover light/dark welcome, Research/Web controls,
+example and source-detail dialogs, editable sourced prompts, 320px Documents and
+Study, the Matters header and artwork, and opening the redesigned IRAC Brief.
+Two mobile/contrast defects found during checks were corrected. Full page-by-page
+prototype acceptance, hosted image loading and live title integration remain gates.
 
 ## Resume deployment
 

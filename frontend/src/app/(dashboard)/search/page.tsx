@@ -14,6 +14,7 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false)
   const [timing, setTiming] = useState<{ total_ms: number } | null>(null)
   const [searched, setSearched] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const { session } = useAuth()
 
   async function handleSearch(e?: React.FormEvent) {
@@ -22,23 +23,26 @@ export default function SearchPage() {
 
     setLoading(true)
     setSearched(true)
+    setError(null)
+    setTiming(null)
     try {
       const res = await searchCorpus(query, { top_k: 10, token: session?.access_token })
       setResults(res.results)
       setTiming(res.timing)
     } catch {
       setResults([])
+      setError('Search could not finish. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto">
+    <div className="cp-source-search flex flex-col h-full overflow-y-auto">
       <div className="px-6 py-4 border-b border-white/[0.06]">
-        <h1 className="text-xl font-bold text-white">Search Legal Corpus</h1>
+        <h1 className="text-xl font-bold text-white">Source search</h1>
         <p className="text-sm text-[#6a6a6f] mt-1">
-          Search directly through ingested Zambian legislation
+          Find passages in Levy’s Zambian legal library.
         </p>
       </div>
 
@@ -53,7 +57,7 @@ export default function SearchPage() {
               className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-[#5a5a5f]"
             />
           </div>
-          <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Button type="submit" disabled={loading || !query.trim()} className="cp-btn primary">
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Search'}
           </Button>
         </form>
@@ -67,6 +71,7 @@ export default function SearchPage() {
       </div>
 
       <div className="flex-1 px-6 pb-6">
+        {error && <p role="alert" className="text-sm text-destructive mb-4">{error}</p>}
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />

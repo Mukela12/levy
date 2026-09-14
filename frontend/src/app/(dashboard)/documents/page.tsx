@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '@/components/auth/auth-provider'
 import { usePdfViewer } from '@/components/chat/pdf-viewer-context'
 import { FolderCard } from '@/components/documents/folder-card'
+import { ChoiceSelect } from '@/components/canopy/choice-select'
 import {
   attachDocumentToSession,
   createFolder,
@@ -419,7 +420,7 @@ export default function DocumentsPage() {
                   return (
                     <div
                       key={doc.id}
-                      className="group flex items-center gap-3 px-3.5 py-3 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:border-emerald-500/15 hover:bg-emerald-500/[0.02] transition-colors"
+                      className="cp-document-row group flex items-center gap-3 px-3.5 py-3 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:border-emerald-500/15 hover:bg-emerald-500/[0.02] transition-colors"
                     >
                       <button
                         type="button"
@@ -457,7 +458,7 @@ export default function DocumentsPage() {
                       </button>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         {isOwned && folders.length > 0 && (
-                          <select
+                          <ChoiceSelect aria-label={`Folder for ${doc.title}`}
                             value={doc.folder_id ?? ''}
                             onChange={(e) =>
                               handleMoveToFolder(doc, e.target.value === '' ? null : e.target.value)
@@ -471,7 +472,7 @@ export default function DocumentsPage() {
                                 {f.name}
                               </option>
                             ))}
-                          </select>
+                          </ChoiceSelect>
                         )}
                         {recentSessionId && (
                           <button

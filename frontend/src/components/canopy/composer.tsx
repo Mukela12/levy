@@ -8,7 +8,8 @@
  */
 
 import { useEffect, useRef, useState } from 'react'
-import { ArrowUp, ChevronDown, Globe, Library, Loader2, Upload } from 'lucide-react'
+import { ArrowUp, Globe, Library, Loader2, Upload } from 'lucide-react'
+import { ChoiceSelect } from './choice-select'
 import LordIcon from '@/components/ui/lord-icon'
 import { CANOPY_ICON } from './icons'
 
@@ -30,6 +31,7 @@ export interface CanopyComposerProps {
   compact?: boolean
   /** Rendered above the textarea (attached-document chips). */
   strip?: React.ReactNode
+  onDraftPresenceChange?: (hasDraft: boolean) => void
 }
 
 export function CanopyComposer({
@@ -46,6 +48,7 @@ export function CanopyComposer({
   onModeChange,
   compact = false,
   strip,
+  onDraftPresenceChange,
 }: CanopyComposerProps) {
   const [message, setMessage] = useState('')
   const [webSearchInternal, setWebSearchInternal] = useState(false)
@@ -60,6 +63,7 @@ export function CanopyComposer({
   const [attachMenuOpen, setAttachMenuOpen] = useState(false)
   const [uploadingFile, setUploadingFile] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  useEffect(() => { onDraftPresenceChange?.(Boolean(message.trim())) }, [message, onDraftPresenceChange])
 
   useEffect(() => {
     if (!attachMenuOpen) return
@@ -211,14 +215,12 @@ export function CanopyComposer({
             </div>
           )}
           {onModeChange && (
-            <label className="cp-mode">
-              <span className="sr-only">Question mode</span>
-              <select aria-label="Question mode" value={mode ?? 'research'} onChange={(e) => onModeChange(e.target.value as ComposerMode)}>
+            <div className="cp-mode">
+              <ChoiceSelect aria-label="Question mode" value={mode ?? 'research'} onChange={(e) => onModeChange(e.target.value as ComposerMode)}>
                 <option value="research">Research</option>
                 <option value="review">Review draft</option>
-              </select>
-              <ChevronDown size={14} aria-hidden="true" />
-            </label>
+              </ChoiceSelect>
+            </div>
           )}
           <button
             type="button"

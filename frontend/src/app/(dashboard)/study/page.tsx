@@ -50,7 +50,7 @@ export default function StudyPage() {
   }
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto w-full max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    <div className="cp-study flex-1 min-h-0 overflow-y-auto w-full max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
       <div className="flex items-center gap-3 mb-1.5">
         <span className="flex items-center justify-center size-9 rounded-xl bg-emerald-500/12 border border-emerald-500/20">
           <GraduationCap size={18} className="text-emerald-400" />
@@ -63,14 +63,15 @@ export default function StudyPage() {
       </p>
 
       {/* Mode */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-7">
-        {MODES.map(({ key, label, desc, Icon }) => {
+      <div className="cp-study-modes grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-7" aria-label="Study format">
+        {MODES.map(({ key, label, Icon }) => {
           const active = mode === key
           return (
             <button
               key={key}
               type="button"
               onClick={() => setMode(key)}
+              aria-pressed={active}
               className={`text-left rounded-xl border p-3.5 transition-colors ${
                 active
                   ? 'border-emerald-500/40 bg-emerald-500/10'
@@ -81,11 +82,11 @@ export default function StudyPage() {
               <div className={`text-[13.5px] font-medium mt-2 ${active ? 'text-emerald-100' : 'text-white/80'}`}>
                 {label}
               </div>
-              <div className="text-[11.5px] text-white/40 mt-0.5 leading-snug">{desc}</div>
             </button>
           )
         })}
       </div>
+      <p className="cp-study-description">{MODES.find(item => item.key === mode)?.desc}</p>
 
       {/* Area */}
       <div className="text-[12px] uppercase tracking-wider text-white/40 mb-2.5">Choose a subject</div>
@@ -97,6 +98,7 @@ export default function StudyPage() {
               key={a}
               type="button"
               onClick={() => setArea(a)}
+              aria-pressed={active}
               className={`px-3 py-1.5 rounded-lg text-[12.5px] font-medium border transition-colors ${
                 active
                   ? 'border-emerald-500/40 bg-emerald-500/12 text-emerald-200'

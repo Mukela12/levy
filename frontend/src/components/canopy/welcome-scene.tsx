@@ -8,11 +8,10 @@
  * passed in, so this component owns presentation only.
  */
 
-import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
-import { ArrowUpRight, Check, ChevronLeft, ChevronRight, ExternalLink, MessageSquare, Image as ImageIcon, Pause, Play, type LucideIcon } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
+import { ArrowUpRight, Check, ChevronLeft, ChevronRight, ExternalLink, FolderPlus, Image as ImageIcon, Pause, Play, type LucideIcon } from 'lucide-react'
+import { InFocus } from './in-focus'
 import { CanopyModal } from './modal'
-import LordIcon from '@/components/ui/lord-icon'
-import { CANOPY_ICON } from './icons'
 import { SCENES, photoSrc, photoSrcSet, type Scene } from './scene-collection'
 import { nextSceneDelay, sceneAt, SCENE_INTERVAL, type ScenePreference } from './scene-clock'
 
@@ -126,15 +125,15 @@ export interface WelcomeSceneProps {
   onAddDocument?: () => void
   composer: ReactNode
   below?: ReactNode
+  hasDraft?: boolean
 }
 
-export function WelcomeScene({ greeting, isAnonymous, starters, onStarter, onAddDocument, composer, below }: WelcomeSceneProps) {
+export function WelcomeScene({ greeting, isAnonymous, starters, onStarter, onAddDocument, composer, below, hasDraft }: WelcomeSceneProps) {
   const preference = useSyncExternalStore(subscribePreference, readPreference, () => SERVER_PREFERENCE)
   const hydrated = useSyncExternalStore(subscribePreference, () => true, () => false)
   const [now, setNow] = useState(() => Date.now())
   const [showExamples, setShowExamples] = useState(false)
   const [gallery, setGallery] = useState(false)
-  const examplesId = useId()
   const setPreference = (next: ScenePreference) => writePreference(next)
 
   const scenes = SCENES
@@ -211,17 +210,14 @@ export function WelcomeScene({ greeting, isAnonymous, starters, onStarter, onAdd
         {below}
 
         <div className="cp-welcome-secondary">
-          <button type="button" onClick={() => starters[0] && onStarter(starters[0].description)} disabled={!starters.length}>
-            <MessageSquare size={15} />
-            Show a question
-          </button>
-          <button type="button" onClick={() => setShowExamples((v) => !v)} aria-expanded={showExamples} aria-controls={examplesId}>
+          {!hasDraft && <InFocus onChoose={onStarter} />}
+          <button type="button" onClick={() => setShowExamples(true)} aria-haspopup="dialog" aria-expanded={showExamples}>
             Try an example
             <ChevronRight size={15} className={showExamples ? 'is-open' : ''} />
           </button>
           {onAddDocument ? (
             <button type="button" onClick={onAddDocument}>
-              <span className="cp-lord"><LordIcon name={CANOPY_ICON.folder} size={18} /></span>
+              <FolderPlus size={18} aria-hidden="true" />
               Add a document
             </button>
           ) : null}
@@ -233,15 +229,18 @@ export function WelcomeScene({ greeting, isAnonymous, starters, onStarter, onAdd
         )}
 
         {showExamples && (
-          <div className="cp-welcome-examples" id={examplesId} role="group" aria-label="Example questions">
+          <CanopyModal title="Try an example" onClose={() => setShowExamples(false)}>
+          <p>Choose a starting point. You can edit it before sending.</p>
+          <div className="cp-example-list">
             {starters.map((s) => (
-              <button key={s.label} type="button" title={s.description} onClick={() => onStarter(s.description)}>
+              <button key={s.label} type="button" onClick={() => { setShowExamples(false); onStarter(s.description) }}>
                 <s.icon size={18} />
-                <span>{s.label}</span>
+                <span><strong>{s.label}</strong><small>{s.description}</small></span>
                 <ArrowUpRight size={15} />
               </button>
             ))}
           </div>
+          </CanopyModal>
         )}
       </div>
 

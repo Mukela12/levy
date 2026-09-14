@@ -12,6 +12,7 @@ import { useState, type ReactNode } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { AlertCircle, Check, CheckCircle2, ChevronDown, Clock, Copy, Loader2, Paperclip, Scale } from 'lucide-react'
+import { ActionArt } from './action-art'
 import { TextShimmer } from '@/components/ui/text-shimmer'
 import { AgentTask, TOOL_META } from '@/components/chat/agent-task'
 import type { ToolCallView } from '@/components/chat/tool-call-card'
@@ -245,7 +246,7 @@ export function CanopyMessage(props: ChatMessageProps) {
         {!isStreaming && (content || rendered.length > 0) && (
           <div className="cp-result-actions">
             {brief.available && (
-              <button type="button" onClick={() => brief.setOpen(true)} className="cp-brief-action"><Scale size={15} /> IRAC analysis</button>
+              <button type="button" onClick={() => brief.setOpen(true)} className="cp-brief-action"><ActionArt kind="irac" size={28} /> IRAC analysis</button>
             )}
             <button type="button" onClick={copyAnswer} aria-label={copied ? 'Answer copied' : 'Copy answer'}>{copied ? <Check size={15} /> : <Copy size={15} />} {copied ? 'Copied' : 'Copy answer'}</button>
             {timing && <span className="cp-timing"><Clock size={12} />{(timing.total_ms / 1000).toFixed(1)}s</span>}

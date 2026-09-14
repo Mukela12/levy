@@ -2,6 +2,7 @@
 
 import { use, useEffect, useState } from 'react'
 import Link from 'next/link'
+import { ActionArt } from '@/components/canopy/action-art'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth/auth-provider'
 import { createClient } from '@/lib/supabase'
@@ -11,7 +12,7 @@ import {
   type Matter, type MatterParty, type MatterDate, type MatterThread, type MatterDraft,
 } from '@/lib/matters'
 import {
-  Briefcase, ArrowLeft, Loader2, Plus, X, MessageSquare, FileText,
+  ArrowLeft, Loader2, Plus, X, MessageSquare, FileText,
   Calendar, Users, Trash2, Check, Link2,
 } from 'lucide-react'
 
@@ -167,9 +168,7 @@ export default function MatterDetailPage({ params }: { params: Promise<{ id: str
         {/* Details */}
         <div className={card + ' mb-4'}>
           <div className="flex items-center gap-2.5 mb-3.5">
-            <span className="flex items-center justify-center size-8 rounded-lg bg-emerald-500/15 border border-emerald-500/25 text-emerald-400">
-              <Briefcase className="size-4" />
-            </span>
+            <ActionArt kind="matter" />
             <input
               value={fields.title}
               onChange={(e) => setFields({ ...fields, title: e.target.value })}
