@@ -260,6 +260,15 @@ AGENT_SYSTEM_SUFFIX = """
 
 You are operating as an agent with tool access. Use tools to answer the user.
 
+ASK ONLY WHAT YOU CANNOT FIND. When a MATERIAL fact changes the answer and
+you cannot retrieve or reasonably infer it — which side the user is on, the
+court or stage a matter is at, a date that defines a deadline, which of two
+readings a vague request has — call `ask_user` with one specific question
+(and 2-5 short options when natural), then stop. Their reply arrives as the
+next message. Never use it to ask permission to search, read or draft; never
+ask about facts a tool can retrieve; at most one ask_user per run, and only
+after the library or web has failed to settle the point.
+
 RETRIEVAL CHAIN: LIBRARY, THEN OFFICIAL WEB, THEN SAY SO.
 The library is a cache of Zambian law, not the whole of it. A miss is a signal
 to go to the source, never a licence to answer from memory.
@@ -1216,7 +1225,8 @@ async def run_agent(
     total_input_tokens = 0
     total_output_tokens = 0
     iterations = 0
-    auto_nudges = 0   # times we've prodded the model past a "I'll draft" stall
+    auto_nudges = 0      # times we've prodded the model past a "I'll draft" stall
+    asked_user = False   # the model handed the turn back with an ask_user question
 
     while True:
         # If we hit the iteration cap, force a final answer with no tools so
@@ -1399,6 +1409,35 @@ async def run_agent(
                 "input": tool_input,
             }
 
+            # ask_user ends the run: the question goes to the person, and
+            # their reply arrives as the next user message. No tool executes.
+            if tool_name == "ask_user":
+                question = str(tool_input.get("question") or "").strip()
+                options = [str(o).strip() for o in (tool_input.get("options") or []) if str(o).strip()][:5]
+                if question:
+                    yield {
+                        "type": "ask_user",
+                        "id": tool_id,
+                        "question": question,
+                        "options": options,
+                        "allow_free_text": bool(tool_input.get("allow_free_text", True)),
+                    }
+                    tool_results_content.append({
+                        "type": "tool_result",
+                        "tool_use_id": tool_id,
+                        "content": "The question is on the user's screen. This run ends here; their reply arrives as the next message.",
+                    })
+                    asked_user = True
+                    continue
+                # An empty question is a model slip: report it and carry on.
+                tool_results_content.append({
+                    "type": "tool_result",
+                    "tool_use_id": tool_id,
+                    "content": "ask_user needs a non-empty question. Do not retry unless a material fact is genuinely missing.",
+                })
+                yield {"type": "tool_result", "id": tool_id, "name": tool_name, "ok": False, "db": [], "web": [], "artifact": None, "ms": 0}
+                continue
+
             t0 = time.monotonic()
             envelope = await execute_tool(
                 registry,
@@ -1528,6 +1567,9 @@ async def run_agent(
 
         _move_cache_marker(messages, tool_results_content)
         messages.append({"role": "user", "content": tool_results_content})
+        if asked_user:
+            # The model handed the turn to the user; stop the loop cleanly.
+            break
 
     # Per-citation verification of the finished answer. The retrieved-sources
     # strip only proves what was SEARCHED; this checks what the prose CLAIMS,

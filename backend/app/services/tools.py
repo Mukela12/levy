@@ -3333,6 +3333,45 @@ def build_tool_registry(
         ),
     }
 
+    # The clarifying question. The agent loop intercepts this name and ends
+    # the run after surfacing it, so the handler below never actually runs.
+    async def _ask_user_never_runs(question, options=None, allow_free_text=True):
+        return {"error": "ask_user is handled by the agent loop"}
+
+    tools["ask_user"] = ToolDefinition(
+        name="ask_user",
+        description=(
+            "Ask the user ONE clarifying question and end this run; their "
+            "answer arrives as the next message. Use it only when a material "
+            "fact you cannot retrieve or infer changes the answer: which "
+            "party the user is, the court or stage a matter is at, a "
+            "deadline-defining date, or which of two meanings a vague "
+            "request has. Never ask permission to search, read or draft; "
+            "never ask more than one question per run; give 2 to 5 short "
+            "options when natural choices exist."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {
+                "question": {
+                    "type": "string",
+                    "description": "The single, specific question, in plain language.",
+                },
+                "options": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "2-5 short answer choices, when natural. The user can always type instead.",
+                },
+                "allow_free_text": {
+                    "type": "boolean",
+                    "description": "Whether a free-text reply box is shown (default true).",
+                },
+            },
+            "required": ["question"],
+        },
+        handler=_ask_user_never_runs,
+    )
+
     # Web tools — always registered. The agent decides when to use them.
     _ = web_enabled  # kept for backwards compat with the kwarg
     if True:

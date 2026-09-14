@@ -110,6 +110,14 @@ class RunAccumulator:
                     c["durationMs"] = e.get("ms")
                     c["db"] = e.get("db", [])
                     c["web"] = e.get("web", [])
+        elif t == "ask_user":
+            self.blocks.append({
+                "kind": "ask_user",
+                "id": e.get("id"),
+                "question": e.get("question", ""),
+                "options": e.get("options") or [],
+                "allow_free_text": bool(e.get("allow_free_text", True)),
+            })
         elif t == "citation_audit":
             # Persisted as a block so history reloads render the same verdicts
             # the live stream showed.
@@ -162,7 +170,7 @@ class RunAccumulator:
 
     def has_content(self) -> bool:
         special = {"entitlement", "case_law", "application_plan", "templates",
-                   "cheat_sheet", "quiz"}
+                   "cheat_sheet", "quiz", "ask_user"}
         return bool(
             self.content.strip()
             or self.artifacts
