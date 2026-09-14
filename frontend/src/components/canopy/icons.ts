@@ -22,4 +22,6 @@ export const CANOPY_ICON: Record<string, string> = {
   arrow: 'system-regular-161-arrow-long-right-hover-pinch',
   school: 'system-regular-167-school-hover-school',
   work: 'system-regular-178-work-hover-work',
+  assessment: 'system-regular-16-assessment-hover-assessment',
+  snippet: 'system-regular-120-text-snippet-hover-text',
 }

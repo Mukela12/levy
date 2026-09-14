@@ -11,15 +11,17 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { GraduationCap, BookOpen, ScrollText, ListChecks, ArrowRight } from 'lucide-react'
 import { ChoiceSelect } from '@/components/canopy/choice-select'
+import LordIcon from '@/components/ui/lord-icon'
+import { CANOPY_ICON } from '@/components/canopy/icons'
 import Image from 'next/image'
 import { useUiVariant } from '@/lib/ui-variant'
 
 type Mode = 'learn' | 'cheat' | 'quiz'
 
-const MODES: { key: Mode; label: string; desc: string; Icon: typeof BookOpen }[] = [
-  { key: 'learn', label: 'Learn', desc: 'A grounded lesson with statute and case law', Icon: BookOpen },
-  { key: 'cheat', label: 'Cheat sheet', desc: 'A condensed revision sheet to download', Icon: ScrollText },
-  { key: 'quiz', label: 'Quiz', desc: 'An interactive, graded mock exam', Icon: ListChecks },
+const MODES: { key: Mode; label: string; desc: string; Icon: typeof BookOpen; lord: string }[] = [
+  { key: 'learn', label: 'Learn', desc: 'A grounded lesson with statute and case law', Icon: BookOpen, lord: 'book' },
+  { key: 'cheat', label: 'Cheat sheet', desc: 'A condensed revision sheet to download', Icon: ScrollText, lord: 'snippet' },
+  { key: 'quiz', label: 'Quiz', desc: 'An interactive, graded mock exam', Icon: ListChecks, lord: 'assessment' },
 ]
 
 const AREAS = [
@@ -76,11 +78,11 @@ export default function StudyPage() {
         <section className="cp-study-step" aria-labelledby="study-step-format">
           <h2 id="study-step-format"><span>1</span>How do you want to study?</h2>
           <div className="cp-study-formats" role="radiogroup" aria-label="Study format">
-            {MODES.map(({ key, label, desc, Icon }) => {
+            {MODES.map(({ key, label, desc, lord }) => {
               const active = mode === key
               return (
                 <button key={key} type="button" role="radio" aria-checked={active} className={'cp-study-format' + (active ? ' is-active' : '')} onClick={() => setMode(key)}>
-                  <Icon size={19} aria-hidden="true" />
+                  <span className="cp-lord" aria-hidden="true"><LordIcon name={CANOPY_ICON[lord]} size={22} /></span>
                   <strong>{label}</strong>
                   <small>{desc}</small>
                 </button>

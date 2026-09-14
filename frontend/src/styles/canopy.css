@@ -861,8 +861,8 @@
 .cp-study-format { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; min-height: 112px; padding: 16px; border: 1px solid var(--cp-line); border-radius: 14px; background: var(--cp-surface); color: var(--cp-text); text-align: left; transition: border-color 140ms, background 140ms, box-shadow 140ms; }
 .cp-study-format:hover { border-color: color-mix(in srgb, var(--cp-primary) 45%, var(--cp-line)); }
 .cp-study-format.is-active { border-color: var(--cp-primary); background: var(--cp-tint); box-shadow: inset 0 0 0 1px var(--cp-primary); }
-.cp-study-format > svg { color: var(--cp-muted); }
-.cp-study-format.is-active > svg { color: var(--cp-primary); }
+.cp-study-format .cp-lord { opacity: 0.82; }
+.cp-study-format.is-active .cp-lord { opacity: 1; }
 .cp-study-format strong { font-size: 14.5px; font-weight: 550; }
 .cp-study-format small { font-size: 12.5px; line-height: 1.55; color: var(--cp-muted); }
 .cp-study-fields { display: grid; grid-template-columns: minmax(0, 240px) minmax(0, 1fr); gap: 12px; }
