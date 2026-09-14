@@ -220,13 +220,19 @@ export function WelcomeScene({ greeting, starters, onStarter, composer, below, h
         {composer}
         {below}
 
-        {!hasDraft && (!focusHidden ? <InFocus onChoose={onStarter} onDismiss={() => { setFocusHidden(true); requestAnimationFrame(() => restoreFocusRef.current?.focus({ preventScroll: true })) }} /> : <div className="cp-welcome-secondary">
-          <button ref={restoreFocusRef} type="button" onClick={() => setFocusHidden(false)}>Show a question<ChevronRight size={15} /></button>
-          <button type="button" onClick={() => setShowExamples(true)} aria-haspopup="dialog" aria-expanded={showExamples}>
-            Try an example
-            <ChevronRight size={15} className={showExamples ? 'is-open' : ''} />
-          </button>
-        </div>)}
+        {/* Stays mounted and folds away while a draft is typed, so the
+            composer and footer never jump when it leaves or returns. */}
+        <div className={'cp-welcome-below' + (hasDraft ? ' is-collapsed' : '')} inert={hasDraft ? true : undefined}>
+          <div className="cp-welcome-below-clip">
+            {!focusHidden ? <InFocus onChoose={onStarter} onDismiss={() => { setFocusHidden(true); requestAnimationFrame(() => restoreFocusRef.current?.focus({ preventScroll: true })) }} /> : <div className="cp-welcome-secondary">
+              <button ref={restoreFocusRef} type="button" onClick={() => setFocusHidden(false)}>Show a question<ChevronRight size={15} /></button>
+              <button type="button" onClick={() => setShowExamples(true)} aria-haspopup="dialog" aria-expanded={showExamples}>
+                Try an example
+                <ChevronRight size={15} className={showExamples ? 'is-open' : ''} />
+              </button>
+            </div>}
+          </div>
+        </div>
 
         {showExamples && (
           <CanopyModal title="Try an example" onClose={() => setShowExamples(false)}>

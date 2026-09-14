@@ -422,6 +422,13 @@
 /* v17 capsules: dense tints keep the labels readable over any photograph. */
 .cp-welcome { --welcome-action-ink: #293e33; --welcome-action-base: #f0f3ed; --welcome-action-glass: linear-gradient(165deg, rgba(252,253,249,.94), rgba(235,240,231,.86)); --welcome-action-hover: linear-gradient(165deg, rgba(255,255,252,.98), rgba(244,248,240,.94)); --welcome-action-edge: rgba(255,255,255,.66); --welcome-action-shadow: inset 0 1px 0 rgba(255,255,255,.8), inset 0 -1px 0 rgba(45,65,48,.06), 0 3px 10px rgba(20,35,25,.1); }
 .dark .cp-welcome { --welcome-action-ink: #f3f4f0; --welcome-action-base: #292b2a; --welcome-action-glass: linear-gradient(165deg, rgba(49,52,49,.94), rgba(30,33,31,.9)); --welcome-action-hover: linear-gradient(165deg, rgba(61,64,60,.98), rgba(39,43,39,.94)); --welcome-action-edge: rgba(255,255,255,.12); --welcome-action-shadow: inset 0 1px 0 rgba(255,255,255,.09), inset 0 -1px 0 rgba(0,0,0,.12), 0 3px 10px rgba(0,0,0,.16); }
+/* The below-composer suggestions fold instead of unmounting: the row track
+   animates to zero so nothing above or below ever jumps. */
+.cp-welcome-below { display: grid; grid-template-rows: 1fr; opacity: 1; transition: grid-template-rows 260ms cubic-bezier(.2, .7, .3, 1), opacity 180ms ease; }
+.cp-welcome-below-clip { overflow: hidden; min-height: 0; }
+.cp-welcome-below.is-collapsed { grid-template-rows: 0fr; opacity: 0; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .cp-welcome-below { transition: none; } }
+
 .cp-welcome-secondary { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
 .cp-welcome-secondary button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; max-width: 100%; padding: 10px 16px; border-radius: 999px; border: 1px solid var(--welcome-action-edge); background: var(--welcome-action-base); color: var(--welcome-action-ink); box-shadow: var(--welcome-action-shadow); font-size: 13px; font-weight: 550; line-height: 1.4; letter-spacing: -0.1px; white-space: normal; text-align: center; transition: background 160ms ease, box-shadow 160ms ease, transform 160ms ease; }
 .cp-welcome-secondary button svg { flex-shrink: 0; transition: transform 160ms; }
