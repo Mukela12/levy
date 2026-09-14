@@ -123,6 +123,9 @@ cases = [
  ("R v Gullefer [1990] 3 All ER 882 (Lord Lane CJ)", "R v Gullefer", True),
  ("The Court of Appeal in Loretta Kunda v Cynthia Kunda Court of Appeal Case No. 142 of 2019 held", "Loretta Kunda v Cynthia Kunda (142 of 2019)", False),
  ("Zambia Sugar (Z) Ltd v Fellow Nanzaluka (SCZ Appeal No. 82 of 2001)", "Zambia Sugar", False),
+ ("2. **The Section 3 Value vs. the Current Operative Value: An Important Distinction**", None, None),
+ ("### Written Text vs. Practical Reality", None, None),
+ ("In Standard Chartered Bank Zambia Plc v Celine Meena Nair (SCZ Appeal No. 34 of 2010) the court held", "Standard Chartered Bank Zambia Plc v Celine Meena Nair (SCZ Appeal No. 34 of 2010)", False),
 ]
 for text, want, foreign in cases:
     got = [c for c in ex(text) if c["kind"] == "case"]
