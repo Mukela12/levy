@@ -102,6 +102,20 @@ _HEADING_WORDS = {
     "versus", "standard", "burden", "proof", "approach", "difference", "between",
     "comparison", "preliminary", "introduction", "background", "discussion",
     "assessment", "evaluation", "what", "why", "how", "when", "where", "which",
+    # The third live week: "The Section 3 Value vs. the Current Operative
+    # Value: An Important Distinction", a comparison heading shown to readers
+    # as a judgment "not in the library". Words that name a provision or a
+    # comparison never begin, or make up, a litigant's name.
+    "section", "sections", "article", "order", "clause", "provision", "provisions",
+    "regulation", "schedule", "definition", "meaning", "effect", "scope",
+    "interpretation", "formula", "amount", "rate", "value", "current", "operative",
+    "important", "actual", "practical", "practice", "written", "text", "wording",
+    "reading", "literal", "purposive", "strict", "statute", "statutes", "default",
+    "base", "former", "latter", "previous", "existing", "proposed", "amended",
+    "original", "revised", "correct", "incorrect", "myth", "reality", "fact",
+    "fiction", "theory", "option", "options", "scenario", "route", "remedy",
+    "remedies", "liability", "damages", "consequence", "consequences", "outcome",
+    "process", "before", "after",
 }
 _COURT_WORDS = {"court", "supreme", "appeal", "high", "constitutional", "subordinate",
                 "industrial", "relations", "division", "of"}
@@ -158,6 +172,15 @@ def _clean(text: str) -> str:
 _QUOTES = "\"'\u201c\u201d\u2018\u2019"
 
 
+# Heading words that open a real, frequently cited litigant's name. Without
+# this "Standard Chartered Bank Zambia Plc" was shown as "Chartered Bank".
+_LITIGANT_OPENERS = {("standard", "chartered"), ("standard", "bank"), ("key", "stone")}
+
+
+def _litigant_opener(tokens: list[str]) -> bool:
+    return len(tokens) > 1 and (tokens[0].lower(), tokens[1].lower().strip(".,")) in _LITIGANT_OPENERS
+
+
 def _all_heading(tokens: list[str]) -> bool:
     return bool(tokens) and all(
         t.lower() in _HEADING_WORDS or t.lower() in _CONNECTORS or t.lower() in _COURT_WORDS
@@ -190,9 +213,10 @@ def _party_left(text: str, end: int) -> str:
         changed = False
         if re.fullmatch(r"\d+[.)]?", tokens[0]):
             tokens.pop(0); changed = True; continue
-        if tokens[0].lower() in _HEADING_WORDS:
+        if tokens[0].lower() in _HEADING_WORDS and not _litigant_opener(tokens):
             tokens.pop(0); changed = True; continue
-        if tokens[0] == "The" and len(tokens) > 1 and tokens[1].lower() in _HEADING_WORDS:
+        if tokens[0] == "The" and len(tokens) > 1 and tokens[1].lower() in _HEADING_WORDS \
+                and not _litigant_opener(tokens[1:]):
             tokens.pop(0); tokens.pop(0); changed = True; continue
     # "Supreme Court and <Party>": court prose ahead of the litigant
     for i in range(1, min(5, len(tokens))):
@@ -237,6 +261,14 @@ def _party_right(text: str, start: int) -> tuple[str, int]:
     return " ".join(tokens), pos
 
 
+def _stray_number(party: str) -> bool:
+    toks = party.split()
+    for i, t in enumerate(toks):
+        if t.isdigit() and not (i + 1 < len(toks) and toks[i + 1].lower() in ("others", "other", "another", "ors")):
+            return True
+    return False
+
+
 def extract_citations(text: str) -> list[dict]:
     """Pull the auditable legal citations out of an answer."""
     text = _clean(text)
@@ -247,6 +279,11 @@ def extract_citations(text: str) -> list[dict]:
         a = _party_left(text, pm.start())
         b, after = _party_right(text, pm.end())
         if not a or not b:
+            continue
+        # A bare number inside a party ("Section 3 Value", "Rule 14 Test") is
+        # a provision reference, not a litigant; "and 29 Others" is the one
+        # numeric form real case names take.
+        if _stray_number(a) or _stray_number(b):
             continue
         # "R" (the Crown) is a real party in the English cases Zambian courts cite
         if _norm(a).split()[:1] == ["v"] or (len(_norm(a)) < 3 and a != "R") or len(_norm(b)) < 3:

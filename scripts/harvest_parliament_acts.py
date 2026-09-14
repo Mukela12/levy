@@ -48,7 +48,8 @@ NEEDS_OCR = REPO / "scripts" / "needs_ocr.txt"
 WORK = Path.home() / "levy-test-fixtures" / "parliament-acts"
 UA = {"User-Agent": "Mozilla/5.0 LevyHarvest/1.0"}
 ROW = re.compile(r'<a href="(/node/\d+)">([^<]+?)\s*<div class=\'act-number-appended\'>\(\s*([^)]*)\)</div></a>')
-PDF = re.compile(r'href="(https://www\.parliament\.gov\.zm/sites/default/files/documents/acts/[^"]+\.pdf)"')
+# The library mixes ".pdf" and ".PDF"; 37 Acts were skipped as "no PDF link" for the capital letters.
+PDF = re.compile(r'href="(https://www\.parliament\.gov\.zm/sites/default/files/documents/acts/[^"]+\.pdf)"', re.I)
 MAX_PAGES = 450
 
 
