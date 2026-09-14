@@ -12,9 +12,9 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { ArrowDown, PanelRight } from 'lucide-react'
 import { ChatMessage } from '@/components/chat/chat-message'
 import type { Message } from '@/components/chat/chat-stream-context'
-import { BriefPanel } from '@/components/chat/brief-panel'
 import { useBrief } from '@/components/chat/brief-context'
 import { usePdfViewer } from '@/components/chat/pdf-viewer-context'
+import { useReducedMotion } from 'framer-motion'
 import { CanopyComposer, type CanopyComposerProps } from './composer'
 
 export interface CanopyConversationProps {
@@ -27,13 +27,31 @@ export interface CanopyConversationProps {
   footNote?: ReactNode
 }
 
-export function CanopyConversation({ title, messages, loading, onSend, composer, token, footNote }: CanopyConversationProps) {
+export function CanopyConversation({ title, messages, loading, onSend, composer, footNote }: CanopyConversationProps) {
   const pdf = usePdfViewer()
   const brief = useBrief()
+  const reducedMotion = useReducedMotion()
   const scrollRef = useRef<HTMLDivElement>(null)
   const endRef = useRef<HTMLDivElement>(null)
+  const composerRef = useRef<HTMLDivElement>(null)
   const [showLatest, setShowLatest] = useState(false)
   const nearBottomRef = useRef(true)
+
+  useEffect(() => {
+    const floating = composerRef.current
+    const scroll = scrollRef.current
+    if (!floating || !scroll) return
+    const measure = () => {
+      const bottom = Number.parseFloat(getComputedStyle(floating).bottom) || 0
+      scroll.style.paddingBottom = `${Math.ceil(floating.getBoundingClientRect().height + bottom + 24)}px`
+    }
+    const observer = new ResizeObserver(measure)
+    observer.observe(floating)
+    window.addEventListener('resize', measure)
+    window.visualViewport?.addEventListener('resize', measure)
+    measure()
+    return () => { observer.disconnect(); window.removeEventListener('resize', measure); window.visualViewport?.removeEventListener('resize', measure) }
+  }, [])
 
   // Follow the stream only while the reader is already near the bottom.
   useEffect(() => {
@@ -49,7 +67,8 @@ export function CanopyConversation({ title, messages, loading, onSend, composer,
     return () => el.removeEventListener('scroll', check)
   }, [])
   useEffect(() => {
-    if (nearBottomRef.current) endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+    // Stream updates follow immediately; repeated smooth scrolls fight the reader.
+    if (nearBottomRef.current) endRef.current?.scrollIntoView({ behavior: 'instant', block: 'end' })
   }, [messages])
 
   const drafts = {
@@ -115,23 +134,18 @@ export function CanopyConversation({ title, messages, loading, onSend, composer,
             <div ref={endRef} />
           </div>
         </div>
-        <div className="cp-harness-composer">
+        <div ref={composerRef} className="cp-harness-composer">
           <div style={{ position: 'relative' }}>
             {showLatest && (
-              <button type="button" className="cp-jump-latest" onClick={() => endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })}>
+              <button type="button" className="cp-jump-latest" onClick={() => endRef.current?.scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'end' })}>
                 <ArrowDown size={15} /> Latest response
               </button>
             )}
             <CanopyComposer {...composer} onSend={onSend} compact />
-            <p className="cp-harness-foot">{footNote ?? 'Levy provides legal information, not legal advice.'}</p>
+            <div className="cp-harness-foot">{footNote ?? 'Levy can make mistakes. Review sources and drafts.'}</div>
           </div>
         </div>
       </div>
-      {messages.length > 0 && (
-        <aside className="cp-brief-aside">
-          <BriefPanel messages={messages.map((m) => ({ role: m.role, content: m.content }))} token={token} />
-        </aside>
-      )}
     </div>
   )
 }

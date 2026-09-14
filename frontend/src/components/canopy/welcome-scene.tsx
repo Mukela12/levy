@@ -9,7 +9,8 @@
  */
 
 import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
-import { ArrowUpRight, Check, ChevronLeft, ChevronRight, ExternalLink, FileSearch, Image as ImageIcon, Pause, Play, X, type LucideIcon } from 'lucide-react'
+import { ArrowUpRight, Check, ChevronLeft, ChevronRight, ExternalLink, MessageSquare, Image as ImageIcon, Pause, Play, type LucideIcon } from 'lucide-react'
+import { CanopyModal } from './modal'
 import LordIcon from '@/components/ui/lord-icon'
 import { CANOPY_ICON } from './icons'
 import { SCENES, photoSrc, photoSrcSet, type Scene } from './scene-collection'
@@ -29,7 +30,7 @@ function readPreference(): ScenePreference {
   try {
     raw = window.localStorage.getItem(PREF_KEY)
   } catch {
-    raw = null
+    return cachedPreference
   }
   if (raw === cachedRaw) return cachedPreference
   cachedRaw = raw
@@ -37,7 +38,7 @@ function readPreference(): ScenePreference {
   if (raw) {
     try {
       const p = JSON.parse(raw) as Partial<ScenePreference>
-      if (typeof p.index === 'number' && typeof p.anchor === 'number') {
+      if (typeof p.index === 'number' && Number.isFinite(p.index) && Number.isInteger(p.index) && typeof p.anchor === 'number' && Number.isFinite(p.anchor) && p.anchor >= 0) {
         next = { index: p.index, anchor: p.anchor, auto: p.auto !== false }
       }
     } catch {
@@ -121,22 +122,19 @@ export interface WelcomeSceneProps {
   isAnonymous: boolean
   starters: WelcomeStarter[]
   onStarter: (question: string) => void
-  reviewArmed: boolean
-  onToggleReview: () => void
   /** Opens the attach flow. Absent for signed-out visitors, who see a sign-in hint instead. */
   onAddDocument?: () => void
   composer: ReactNode
   below?: ReactNode
 }
 
-export function WelcomeScene({ greeting, isAnonymous, starters, onStarter, reviewArmed, onToggleReview, onAddDocument, composer, below }: WelcomeSceneProps) {
+export function WelcomeScene({ greeting, isAnonymous, starters, onStarter, onAddDocument, composer, below }: WelcomeSceneProps) {
   const preference = useSyncExternalStore(subscribePreference, readPreference, () => SERVER_PREFERENCE)
   const hydrated = useSyncExternalStore(subscribePreference, () => true, () => false)
   const [now, setNow] = useState(() => Date.now())
   const [showExamples, setShowExamples] = useState(false)
   const [gallery, setGallery] = useState(false)
   const examplesId = useId()
-  const galleryTitleId = useId()
   const setPreference = (next: ScenePreference) => writePreference(next)
 
   const scenes = SCENES
@@ -177,15 +175,6 @@ export function WelcomeScene({ greeting, isAnonymous, starters, onStarter, revie
     return () => clearTimeout(t)
   }, [current])
 
-  useEffect(() => {
-    if (!gallery) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setGallery(false)
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [gallery])
-
   function select(index: number) {
     const t = Date.now()
     setNow(t)
@@ -222,9 +211,9 @@ export function WelcomeScene({ greeting, isAnonymous, starters, onStarter, revie
         {below}
 
         <div className="cp-welcome-secondary">
-          <button type="button" onClick={onToggleReview} aria-pressed={reviewArmed} data-tour="review-draft">
-            <FileSearch size={15} />
-            {reviewArmed ? 'Review on · paste your draft' : 'Review my draft'}
+          <button type="button" onClick={() => starters[0] && onStarter(starters[0].description)} disabled={!starters.length}>
+            <MessageSquare size={15} />
+            Show a question
           </button>
           <button type="button" onClick={() => setShowExamples((v) => !v)} aria-expanded={showExamples} aria-controls={examplesId}>
             Try an example
@@ -281,14 +270,7 @@ export function WelcomeScene({ greeting, isAnonymous, starters, onStarter, revie
      </div>
 
       {gallery && (
-        <div className="cp-modal" role="dialog" aria-modal="true" aria-labelledby={galleryTitleId}>
-          <div className="cp-modal-backdrop" onClick={() => setGallery(false)} />
-          <div className="cp-modal-panel is-wide">
-            <div className="cp-modal-head">
-              <h2 id={galleryTitleId}>A view of Zambia</h2>
-              <button type="button" className="cp-icon-btn" aria-label="Close dialog" onClick={() => setGallery(false)} autoFocus><X size={20} /></button>
-            </div>
-            <div className="cp-modal-body">
+        <CanopyModal title="A view of Zambia" onClose={() => setGallery(false)} wide>
               <p className="cp-muted">Choose a view, or let the collection change quietly once an hour.</p>
               <div className="cp-scenery-grid">
                 {scenes.map((scene, i) => (
@@ -320,9 +302,7 @@ export function WelcomeScene({ greeting, isAnonymous, starters, onStarter, revie
                 <button type="button" className="cp-btn primary" onClick={() => setGallery(false)}>Done <Check size={16} /></button>
               </div>
               <p className="cp-scenery-note">Real photographs, framed for your screen. Credits and the untouched originals are linked above.</p>
-            </div>
-          </div>
-        </div>
+        </CanopyModal>
       )}
     </section>
   )

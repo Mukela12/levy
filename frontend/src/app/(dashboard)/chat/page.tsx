@@ -182,7 +182,6 @@ export default function NewChatPage() {
     seededRef.current = true
     window.history.replaceState(null, '', '/chat')
     setInputSeed({ text: q, nonce: Date.now() })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Upload-from-chat on the new-chat page: ingest the file into the user's
@@ -641,11 +640,9 @@ export default function NewChatPage() {
             greeting={user ? `${getGreeting()}, ${displayName}` : getGreeting()}
             isAnonymous={isAnonymous}
             starters={quickActions}
-            onStarter={handleSend}
-            reviewArmed={reviewArmed}
-            onToggleReview={() => {
-              setReviewArmed((v) => !v)
-              setInputSeed((s) => ({ text: '', nonce: s.nonce + 1 }))
+            onStarter={(question) => {
+              setReviewArmed(false)
+              setInputSeed((s) => ({ text: question, nonce: s.nonce + 1 }))
             }}
             onAddDocument={user ? () => setAttachmentsOpen(true) : undefined}
             composer={
@@ -1037,7 +1034,7 @@ export default function NewChatPage() {
       </div>
 
       {/* Brief Panel - desktop only, when conversation active */}
-      {hasMessages && (
+      {hasMessages && !canopy && (
         <aside className="hidden lg:flex flex-col w-[280px] shrink-0 border-l border-white/[0.06] bg-[#0d0d0f]">
           <BriefPanel messages={messages.map(m => ({ role: m.role, content: m.content }))} token={session?.access_token} />
         </aside>

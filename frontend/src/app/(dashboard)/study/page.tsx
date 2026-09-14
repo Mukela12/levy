@@ -50,7 +50,7 @@ export default function StudyPage() {
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    <div className="flex-1 min-h-0 overflow-y-auto w-full max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
       <div className="flex items-center gap-3 mb-1.5">
         <span className="flex items-center justify-center size-9 rounded-xl bg-emerald-500/12 border border-emerald-500/20">
           <GraduationCap size={18} className="text-emerald-400" />

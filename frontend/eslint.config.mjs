@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Upstream PDF.js distribution, not application source.
+    "public/pdf.worker.min.mjs",
   ]),
 ]);
 

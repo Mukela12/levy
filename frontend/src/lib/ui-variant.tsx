@@ -22,11 +22,11 @@ export type UiTheme = 'dark' | 'light'
 export const UI_STORAGE_KEY = 'levy-ui'
 export const THEME_STORAGE_KEY = 'levy-theme'
 export const BUILD_DEFAULT_VARIANT: UiVariant =
-  process.env.NEXT_PUBLIC_UI_VARIANT === 'canopy' ? 'canopy' : 'legacy'
+  process.env.NEXT_PUBLIC_UI_VARIANT === 'legacy' ? 'legacy' : 'canopy'
 const CHANGE_EVENT = 'levy-ui-change'
 
 /** Inlined by the root layout so the first paint already carries the choice. */
-export const uiBootScript = `(function(){try{var d=document.documentElement;var p=new URLSearchParams(location.search);var q=p.get('ui');if(q==='canopy'||q==='legacy'){localStorage.setItem('${UI_STORAGE_KEY}',q)}var v=localStorage.getItem('${UI_STORAGE_KEY}')||'${BUILD_DEFAULT_VARIANT}';if(v!=='canopy'&&v!=='legacy'){v='${BUILD_DEFAULT_VARIANT}'}d.dataset.ui=v;var t=localStorage.getItem('${THEME_STORAGE_KEY}');if(v==='canopy'&&t==='light'){d.classList.remove('dark');d.style.colorScheme='light'}else{d.classList.add('dark');d.style.colorScheme='dark'}}catch(e){}})();`
+export const uiBootScript = `(function(){var d=document.documentElement;var q=new URLSearchParams(location.search).get('ui');var v='${BUILD_DEFAULT_VARIANT}';var t='dark';try{v=localStorage.getItem('${UI_STORAGE_KEY}')||v;t=localStorage.getItem('${THEME_STORAGE_KEY}')||t}catch(e){}if(q==='canopy'||q==='legacy'){v=q;try{localStorage.setItem('${UI_STORAGE_KEY}',q)}catch(e){}}if(v!=='canopy'&&v!=='legacy'){v='${BUILD_DEFAULT_VARIANT}'}d.dataset.ui=v;d.dataset.uiTheme=t==='light'?'light':'dark';var light=v==='canopy'&&t==='light';d.classList.toggle('dark',!light);d.style.colorScheme=light?'light':'dark'})();`
 
 interface UiVariantValue {
   variant: UiVariant
@@ -46,10 +46,16 @@ const UiVariantContext = createContext<UiVariantValue>({
 })
 
 function subscribe(cb: () => void) {
-  window.addEventListener('storage', cb)
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === THEME_STORAGE_KEY || event.key === null) {
+      applyTheme(readVariant(), event.newValue === 'light' ? 'light' : 'dark')
+      cb()
+    }
+  }
+  window.addEventListener('storage', onStorage)
   window.addEventListener(CHANGE_EVENT, cb)
   return () => {
-    window.removeEventListener('storage', cb)
+    window.removeEventListener('storage', onStorage)
     window.removeEventListener(CHANGE_EVENT, cb)
   }
 }
@@ -58,14 +64,11 @@ function readVariant(): UiVariant {
   return v === 'canopy' ? 'canopy' : v === 'legacy' ? 'legacy' : BUILD_DEFAULT_VARIANT
 }
 function readTheme(): UiTheme {
-  try {
-    return window.localStorage.getItem(THEME_STORAGE_KEY) === 'light' ? 'light' : 'dark'
-  } catch {
-    return 'dark'
-  }
+  return document.documentElement.dataset.uiTheme === 'light' ? 'light' : 'dark'
 }
 function applyTheme(variant: UiVariant, theme: UiTheme) {
   const d = document.documentElement
+  d.dataset.uiTheme = theme
   const light = variant === 'canopy' && theme === 'light'
   d.classList.toggle('dark', !light)
   d.style.colorScheme = light ? 'light' : 'dark'
@@ -100,7 +103,9 @@ export function UiVariantProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // ignore
     }
-    window.location.reload()
+    const url = new URL(window.location.href)
+    url.searchParams.set('ui', next)
+    window.location.assign(url.href)
   }, [])
 
   const value = useMemo(

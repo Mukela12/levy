@@ -11,7 +11,8 @@
  */
 
 import { useId, useState } from 'react'
-import { ArrowRight, ArrowUpRight, BookOpen, ChevronDown, ChevronUp, FileText, Globe, Info, Scale, X } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, BookOpen, ChevronDown, ChevronUp, FileText, Globe, Info, Scale } from 'lucide-react'
+import { CanopyModal as Dialog } from './modal'
 import type { ChunkUsed, CitationVerdict, WebSource } from '@/lib/api'
 import type { MessageBlock } from '@/components/chat/chat-message'
 import { passageLabel, sourceModel, type SourceRow } from '@/lib/source-model'
@@ -234,21 +235,5 @@ export function AnswerSources({ citations, webSources, blocks, onOpenPassage, on
         </Dialog>
       )}
     </section>
-  )
-}
-
-function Dialog({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
-  const id = useId()
-  return (
-    <div className="cp-modal" role="dialog" aria-modal="true" aria-labelledby={id} onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}>
-      <div className="cp-modal-backdrop" onClick={onClose} />
-      <div className="cp-modal-panel">
-        <div className="cp-modal-head">
-          <h2 id={id}>{title}</h2>
-          <button type="button" className="cp-icon-btn" aria-label="Close dialog" onClick={onClose} autoFocus><X size={20} /></button>
-        </div>
-        <div className="cp-modal-body">{children}</div>
-      </div>
-    </div>
   )
 }

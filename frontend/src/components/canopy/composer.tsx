@@ -59,14 +59,16 @@ export function CanopyComposer({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [attachMenuOpen, setAttachMenuOpen] = useState(false)
   const [uploadingFile, setUploadingFile] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!attachMenuOpen) return
+    const frame = requestAnimationFrame(() => attachWrapRef.current?.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus())
     const handler = (e: MouseEvent) => {
       if (!attachWrapRef.current?.contains(e.target as Node)) setAttachMenuOpen(false)
     }
     document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
+    return () => { cancelAnimationFrame(frame); document.removeEventListener('mousedown', handler) }
   }, [attachMenuOpen])
 
   useEffect(() => {
@@ -98,17 +100,18 @@ export function CanopyComposer({
     if (!file || !onUploadFile) return
     setAttachMenuOpen(false)
     setUploadingFile(true)
+    setUploadError(null)
     try {
       await onUploadFile(file)
-    } catch (err) {
-      console.error('chat upload failed', err)
+    } catch {
+      setUploadError('Your file could not be attached. Please try again before sending your question.')
     } finally {
       setUploadingFile(false)
     }
   }
 
   const submit = () => {
-    if (message.trim() && !disabled) {
+    if (message.trim() && !disabled && !uploadingFile) {
       onSend(message.trim(), { webSearch })
       setMessage('')
       if (textareaRef.current) textareaRef.current.style.height = 'auto'
@@ -129,6 +132,8 @@ export function CanopyComposer({
       }}
     >
       {strip}
+      {uploadError && <p role="alert" className="px-4 pt-3 text-sm text-destructive">{uploadError}</p>}
+      {uploadingFile && <p role="status" className="px-4 pt-3 text-sm text-muted-foreground">Attaching your file…</p>}
       <label className="sr-only" htmlFor="cp-question">Your question about Zambian law</label>
       <textarea
         ref={textareaRef}
@@ -151,7 +156,21 @@ export function CanopyComposer({
         <div className="cp-composer-tools">
           <input ref={fileInputRef} type="file" accept=".pdf" className="hidden" onChange={handleFileSelected} />
           {showAttach && (
-            <div ref={attachWrapRef} className="cp-attach">
+            <div ref={attachWrapRef} className="cp-attach" onKeyDown={(event) => {
+              if (!attachMenuOpen) return
+              if (event.key === 'Escape') {
+                event.preventDefault()
+                event.stopPropagation()
+                setAttachMenuOpen(false)
+                attachWrapRef.current?.querySelector<HTMLButtonElement>('[aria-haspopup="menu"]')?.focus()
+              } else if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
+                event.preventDefault()
+                const items = Array.from(attachWrapRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]') ?? [])
+                const current = items.indexOf(document.activeElement as HTMLButtonElement)
+                const next = event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1 : (current + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length
+                items[next]?.focus()
+              } else if (event.key === 'Tab') setAttachMenuOpen(false)
+            }}>
               <button
                 type="button"
                 className={'cp-icon-btn' + (attachmentCount > 0 || attachMenuOpen ? ' is-active' : '')}
@@ -214,7 +233,7 @@ export function CanopyComposer({
             <span>Web {webSearch ? 'on' : 'off'}</span>
           </button>
         </div>
-        <button type="submit" className="cp-send" aria-label="Send question" disabled={!hasContent || disabled}>
+        <button type="submit" className="cp-send" aria-label="Send question" disabled={!hasContent || disabled || uploadingFile}>
           {disabled ? <Loader2 size={18} className="animate-spin" /> : <ArrowUp size={20} />}
         </button>
       </div>

@@ -1,10 +1,19 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import { X, ArrowRight } from 'lucide-react'
 
 const DISMISS_KEY = 'levy_domain_banner_v1'
 const OFFICIAL_HOST = 'levylegal.ai'
+const subscribe = (notify: () => void) => {
+  window.addEventListener('storage', notify)
+  return () => window.removeEventListener('storage', notify)
+}
+function shouldShow() {
+  const host = window.location.hostname
+  if (host === OFFICIAL_HOST || host.endsWith(`.${OFFICIAL_HOST}`)) return false
+  try { return window.localStorage.getItem(DISMISS_KEY) !== '1' } catch { return true }
+}
 
 /**
  * Slim announcement bar pointing existing users to the new official domain.
@@ -16,16 +25,9 @@ const OFFICIAL_HOST = 'levylegal.ai'
  *     to someone who's already there).
  */
 export function DomainBanner() {
-  const [show, setShow] = useState(false)
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const onOfficial = window.location.hostname.endsWith(OFFICIAL_HOST)
-    const dismissed = window.localStorage.getItem(DISMISS_KEY) === '1'
-    if (!onOfficial && !dismissed) setShow(true)
-  }, [])
-
-  if (!show) return null
+  const [dismissed, setDismissed] = useState(false)
+  const show = useSyncExternalStore(subscribe, shouldShow, () => false)
+  if (!show || dismissed) return null
 
   function dismiss() {
     try {
@@ -33,7 +35,7 @@ export function DomainBanner() {
     } catch {
       // ignore storage failures; banner just reappears next load
     }
-    setShow(false)
+    setDismissed(true)
   }
 
   return (

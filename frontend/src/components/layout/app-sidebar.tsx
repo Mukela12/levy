@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useAuth } from '@/components/auth/auth-provider'
 import { useChatStream } from '@/components/chat/chat-stream-context'
 import { useRecentSessions, timeAgo } from '@/components/chat/use-recent-sessions'
@@ -28,7 +28,6 @@ interface AppSidebarProps {
 export default function AppSidebar({ mobileSidebarOpen, onCloseMobile }: AppSidebarProps) {
   const { user, signOut } = useAuth()
   const pathname = usePathname()
-  const router = useRouter()
   const { streamingIds } = useChatStream()
   const { sessions, remove: deleteSession } = useRecentSessions(user?.id, pathname)
   const [casesExpanded, setCasesExpanded] = useState(true)

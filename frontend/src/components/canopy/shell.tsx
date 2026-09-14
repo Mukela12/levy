@@ -8,13 +8,13 @@
  * stream, brief or viewer.
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { ChevronRight, Loader2, LogOut, PanelLeft, Scale, Trash2, X } from 'lucide-react'
 import { useAuth } from '@/components/auth/auth-provider'
 import { useBrief } from '@/components/chat/brief-context'
-import { BriefPanel } from '@/components/chat/brief-panel'
+import { CanopyBriefDrawer } from './brief-drawer'
 import { useChatStream } from '@/components/chat/chat-stream-context'
 import { usePdfViewer } from '@/components/chat/pdf-viewer-context'
 import { PdfViewer } from '@/components/chat/pdf-viewer'
@@ -75,6 +75,13 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
   const { sessions, remove } = useRecentSessions(user?.id, pathname)
   const [navOpen, setNavOpen] = useState(false)
   const [rail, setRail] = useState(false)
+  const mainRef = useRef<HTMLElement>(null)
+  const [replayTour, setReplayTour] = useState(false)
+  useEffect(() => {
+    const replay = () => setReplayTour(true)
+    window.addEventListener('levy-replay-tour', replay)
+    return () => window.removeEventListener('levy-replay-tour', replay)
+  }, [])
 
   useEffect(() => {
     try {
@@ -104,14 +111,14 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
 
   // Lock body scroll behind the sheet and the mobile brief (iOS lifts the bar otherwise).
   useEffect(() => {
-    const lock = navOpen || brief.open
+    const lock = navOpen
     if (!lock) return
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => {
       document.body.style.overflow = prev
     }
-  }, [navOpen, brief.open])
+  }, [navOpen])
 
   useEffect(() => {
     if (!navOpen) return
@@ -332,8 +339,9 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
             )}
           </div>
         </header>
-        <main id="cp-main" tabIndex={-1} className="cp-main">
+        <main ref={mainRef} id="cp-main" tabIndex={-1} className="cp-main" data-chat-route={pathname.startsWith('/chat')} data-brief-open={brief.open && brief.available}>
           {children}
+          <CanopyBriefDrawer key={pathname} container={mainRef} />
         </main>
       </div>
 
@@ -370,26 +378,8 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
 
       <PdfViewer citation={pdf.active} onClose={pdf.close} />
 
-      <OnboardingTour mobileMenuOpen={navOpen} setMobileMenuOpen={setNavOpen} />
+      <OnboardingTour forceOpen={replayTour} onClose={() => setReplayTour(false)} mobileMenuOpen={navOpen} setMobileMenuOpen={setNavOpen} />
 
-      {brief.open && (
-        <div className="lg:hidden fixed inset-0 z-50 flex flex-col">
-          <div className="flex-1 bg-black/60 backdrop-blur-sm" onClick={() => brief.setOpen(false)} />
-          <div className="border-t rounded-t-2xl max-h-[70vh] flex flex-col" style={{ background: 'var(--cp-surface)', borderColor: 'var(--cp-line)' }}>
-            <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: 'var(--cp-line)' }}>
-              <span className="text-xs font-semibold tracking-[0.18em] uppercase" style={{ color: 'var(--cp-primary)' }}>
-                The Brief
-              </span>
-              <button onClick={() => brief.setOpen(false)} className="cp-icon-btn" aria-label="Close the Brief">
-                <X size={16} />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto" style={{ overscrollBehavior: 'contain' }}>
-              <BriefPanel messages={brief.messages} token={brief.token} />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

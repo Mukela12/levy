@@ -44,7 +44,7 @@ export function safeSourceUrl(value?: string | null): string | null {
   if (!value) return null
   try {
     const u = new URL(value)
-    return ['https:', 'http:'].includes(u.protocol) ? u.href : null
+    return ['https:', 'http:'].includes(u.protocol) && !u.username && !u.password ? u.href : null
   } catch {
     return null
   }
@@ -63,15 +63,16 @@ export function citationConflict(c: CitationVerdict): boolean {
   return Boolean((yt && yd && yt !== yd) || (nt && nd && nt !== nd))
 }
 
-export function sourceModel({
-  citations = [],
-  webSources = [],
-  blocks = [],
-}: {
-  citations?: ChunkUsed[]
-  webSources?: WebSource[]
-  blocks?: MessageBlock[]
+export function sourceModel(input: {
+  citations?: ChunkUsed[] | null
+  webSources?: WebSource[] | null
+  blocks?: MessageBlock[] | null
 }): SourceModel {
+  // Persisted messages can carry explicit nulls for any of these columns, and
+  // a default parameter only covers undefined, so normalise here.
+  const citations = Array.isArray(input.citations) ? input.citations : []
+  const webSources = Array.isArray(input.webSources) ? input.webSources : []
+  const blocks = Array.isArray(input.blocks) ? input.blocks : []
   const audits = blocks.filter((b): b is Extract<MessageBlock, { kind: 'citation_audit' }> => b.kind === 'citation_audit')
   const state: SourceModel['state'] = audits.length ? 'complete' : 'unavailable'
   const verdicts = audits.length ? audits[audits.length - 1].citations || [] : []
@@ -96,6 +97,8 @@ export function sourceModel({
       docs.set(key, row)
       rows.push(row)
     }
+    // Different passages can share page/section labels. Only deduplicate a
+    // known identical chunk, never discard a distinct source on its label.
     if (!row.passages.some((p) => p.id && p.id === c.id)) row.passages.push(c)
   })
 

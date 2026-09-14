@@ -248,7 +248,7 @@ export default function MatterDetailPage({ params }: { params: Promise<{ id: str
               <button onClick={startChat} className="text-[12px] text-emerald-400 hover:text-emerald-300 flex items-center gap-1"><Plus className="size-3.5" /> New chat</button>
             </div>
           </div>
-          {threads.length === 0 && <p className="text-[13px] text-white/30">No chats yet. Start one, Levy will use this matter's details.</p>}
+          {threads.length === 0 && <p className="text-[13px] text-white/30">No chats yet. Start one, Levy will use this matter&apos;s details.</p>}
           <div className="flex flex-col gap-1">
             {threads.map((t) => (
               <div key={t.id} className="flex items-center gap-2 group">

@@ -506,7 +506,7 @@ export function ChatStreamProvider({ children }: { children: React.ReactNode }) 
         if (opts.token) recoverSaved(sid, knownIds)
       })
     },
-    [commit, updateLast],
+    [commit, updateLast, recoverSaved],
   )
 
   const streamingIds = useMemo(

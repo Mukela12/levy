@@ -4,11 +4,13 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@/components/auth/auth-provider'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
-import { ChevronRight, User, Lock, LogOut, Mail, Briefcase, CreditCard, Loader2 } from 'lucide-react'
+import { useUiVariant } from '@/lib/ui-variant'
+import { ChevronRight, User, Lock, LogOut, Mail, Loader2 } from 'lucide-react'
 
 export default function ProfilePage() {
   const { user, signOut, loading: authLoading } = useAuth()
   const router = useRouter()
+  const { variant } = useUiVariant()
 
   // Anonymous users have no profile to view - send them to login.
   useEffect(() => {
@@ -16,6 +18,7 @@ export default function ProfilePage() {
   }, [user, authLoading, router])
   const [changingPassword, setChangingPassword] = useState(false)
   const [passwordSent, setPasswordSent] = useState(false)
+  const [passwordError, setPasswordError] = useState<string | null>(null)
 
   const fullName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'
   const email = user?.email || ''
@@ -24,14 +27,16 @@ export default function ProfilePage() {
   async function handleChangePassword() {
     if (!email) return
     setChangingPassword(true)
+    setPasswordError(null)
     try {
       const supabase = createClient()
-      await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth/reset-password`,
       })
+      if (error) throw error
       setPasswordSent(true)
     } catch {
-      // failed silently
+      setPasswordError('The reset email could not be sent. Please try again.')
     } finally {
       setChangingPassword(false)
     }
@@ -45,8 +50,6 @@ export default function ProfilePage() {
   const infoCards = [
     { icon: Mail, label: 'Email', value: email },
     { icon: User, label: 'Full Name', value: fullName },
-    { icon: Briefcase, label: 'Role', value: 'Legal Counsel' },
-    { icon: CreditCard, label: 'Plan', value: 'Professional' },
   ]
 
   return (
@@ -72,7 +75,7 @@ export default function ProfilePage() {
           >
             {fullName}
           </h2>
-          <p className="text-sm text-white/40">Legal Professional</p>
+          <p className="text-sm text-white/40">Your Levy workspace</p>
         </div>
 
         {/* Info cards */}
@@ -95,6 +98,11 @@ export default function ProfilePage() {
 
         {/* Actions */}
         <div className="mt-8 space-y-3">
+          {passwordError && <p role="alert" className="text-sm text-red-400">{passwordError}</p>}
+          {variant === 'canopy' && <button type="button" className="cp-btn w-full" onClick={() => {
+            window.dispatchEvent(new Event('levy-replay-tour'))
+            router.push('/chat')
+          }}>Replay the workspace tour</button>}
           <button
             onClick={handleChangePassword}
             disabled={changingPassword || passwordSent}
