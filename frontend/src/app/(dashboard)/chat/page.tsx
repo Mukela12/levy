@@ -646,7 +646,6 @@ export default function NewChatPage() {
               setReviewArmed(false)
               setInputSeed((s) => ({ text: question, nonce: s.nonce + 1 }))
             }}
-            onAddDocument={user ? () => setAttachmentsOpen(true) : undefined}
             composer={
               <CanopyComposer
                 onDraftPresenceChange={setHasWelcomeDraft}

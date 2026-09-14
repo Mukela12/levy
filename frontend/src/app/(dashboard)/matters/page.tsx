@@ -13,9 +13,11 @@ export default function MattersPage() {
   const router = useRouter()
   const [matters, setMatters] = useState<Matter[]>([])
   const [loading, setLoading] = useState(true)
+  const [query, setQuery] = useState('')
   const [creating, setCreating] = useState(false)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({ title: '', matter_type: '', court: '', cause_number: '' })
+  const visibleMatters = matters.filter(m => [m.title, m.matter_type, m.court, m.cause_number].filter(Boolean).join(' ').toLowerCase().includes(query.trim().toLowerCase()))
 
   useEffect(() => {
     if (!user?.id) return
@@ -102,6 +104,11 @@ export default function MattersPage() {
           </div>
         )}
 
+        {!loading && matters.length > 0 && <div className="cp-matter-toolbar">
+          <p>{matters.length} {matters.length === 1 ? 'matter' : 'matters'} in your workspace</p>
+          <input aria-label="Find a matter" placeholder="Find a matter…" value={query} onChange={e => setQuery(e.target.value)} />
+        </div>}
+
         {loading ? (
           <div className="flex items-center gap-2 text-white/40 text-[14px] py-12 justify-center">
             <Loader2 className="size-4 animate-spin" /> Loading your matters…
@@ -114,16 +121,17 @@ export default function MattersPage() {
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            {matters.map((m) => (
+            {visibleMatters.length === 0 && <p role="status">No matters match that search.</p>}
+            {visibleMatters.map((m) => (
               <Link
                 key={m.id}
                 href={`/matters/${m.id}`}
-                className="group flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] hover:border-emerald-500/20 px-4 py-3.5 transition-colors"
+                className="cp-matter-row group flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] hover:border-emerald-500/20 px-4 py-3.5 transition-colors"
               >
                 <ActionArt kind="matter" size={40} />
                 <div className="flex-1 min-w-0">
-                  <div className="text-[14px] font-medium text-white/85 truncate">{m.title}</div>
-                  <div className="text-[12px] text-white/40 truncate">
+                  <div className="text-[14px] font-medium text-white/85 break-words">{m.title}</div>
+                  <div className="text-[12px] text-white/40 break-words">
                     {[m.matter_type, m.court, m.cause_number].filter(Boolean).join(' · ') || 'No details yet'}
                   </div>
                 </div>

@@ -1,5 +1,5 @@
-import { PublicShell } from '@/components/layout/public-shell'
+import { ActsShell } from '@/components/canopy/acts-shell'
 
 export default function ActsLayout({ children }: { children: React.ReactNode }) {
-  return <PublicShell>{children}</PublicShell>
+  return <ActsShell>{children}</ActsShell>
 }

@@ -10,6 +10,9 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { GraduationCap, BookOpen, ScrollText, ListChecks, ArrowRight } from 'lucide-react'
+import { ChoiceSelect } from '@/components/canopy/choice-select'
+import Image from 'next/image'
+import { useUiVariant } from '@/lib/ui-variant'
 
 type Mode = 'learn' | 'cheat' | 'quiz'
 
@@ -38,6 +41,7 @@ function buildPrompt(mode: Mode, area: string, topic: string): string {
 }
 
 export default function StudyPage() {
+  const { variant } = useUiVariant()
   const router = useRouter()
   const [mode, setMode] = useState<Mode>('learn')
   const [area, setArea] = useState<string>('')
@@ -52,17 +56,20 @@ export default function StudyPage() {
   return (
     <div className="cp-study flex-1 min-h-0 overflow-y-auto w-full max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
       <div className="flex items-center gap-3 mb-1.5">
-        <span className="flex items-center justify-center size-9 rounded-xl bg-emerald-500/12 border border-emerald-500/20">
+        {variant !== 'canopy' && <span className="flex items-center justify-center size-9 rounded-xl bg-emerald-500/12 border border-emerald-500/20">
           <GraduationCap size={18} className="text-emerald-400" />
-        </span>
+        </span>}
         <h1 className="text-[22px] font-semibold text-white/90">Study mode</h1>
       </div>
       <p className="text-[13.5px] text-white/45 mb-7 leading-relaxed">
-        Learn Zambian law grounded in the Acts and real judgments. Pick a subject, choose how you
-        want to study, and start. It is free to use.
+        Explore a topic, build revision notes or test your understanding.
       </p>
 
       {/* Mode */}
+      {variant === 'canopy' && <>
+        <div className="cp-study-banner"><h2>Your next study session</h2><Image src="/canopy/onboarding/welcome.png" alt="" width={80} height={80} /></div>
+        <h2 className="cp-study-section-title">How would you like to study?</h2>
+      </>}
       <div className="cp-study-modes grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-7" aria-label="Study format">
         {MODES.map(({ key, label, Icon }) => {
           const active = mode === key
@@ -89,33 +96,20 @@ export default function StudyPage() {
       <p className="cp-study-description">{MODES.find(item => item.key === mode)?.desc}</p>
 
       {/* Area */}
-      <div className="text-[12px] uppercase tracking-wider text-white/40 mb-2.5">Choose a subject</div>
-      <div className="flex flex-wrap gap-2 mb-7">
-        {AREAS.map((a) => {
-          const active = area === a
-          return (
-            <button
-              key={a}
-              type="button"
-              onClick={() => setArea(a)}
-              aria-pressed={active}
-              className={`px-3 py-1.5 rounded-lg text-[12.5px] font-medium border transition-colors ${
-                active
-                  ? 'border-emerald-500/40 bg-emerald-500/12 text-emerald-200'
-                  : 'border-white/[0.08] bg-white/[0.02] text-white/60 hover:text-white/85 hover:bg-white/[0.04]'
-              }`}
-            >
-              {a}
-            </button>
-          )
-        })}
+      <label htmlFor="study-subject" className="block text-sm text-white/60 mb-2.5">Subject</label>
+      <div className="mb-7">
+        <ChoiceSelect id="study-subject" aria-label="Study subject" value={area} onChange={e => setArea(e.target.value)} className="w-full">
+          <option value="" disabled>Choose a subject</option>
+          {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
+        </ChoiceSelect>
       </div>
 
       {/* Topic */}
-      <div className="text-[12px] uppercase tracking-wider text-white/40 mb-2.5">
+      <label htmlFor="study-topic" className="block text-sm text-white/60 mb-2.5">
         Narrow it down <span className="text-white/25 normal-case tracking-normal">(optional)</span>
-      </div>
+      </label>
       <input
+        id="study-topic"
         type="text"
         value={topic}
         onChange={(e) => setTopic(e.target.value)}

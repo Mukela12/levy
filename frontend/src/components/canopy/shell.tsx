@@ -11,8 +11,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { ChevronRight, Loader2, LogOut, PanelLeft, Trash2, X } from 'lucide-react'
-import { ActionArt } from './action-art'
+import { Loader2, LogOut, PanelLeft, Trash2, X } from 'lucide-react'
 import { useAuth } from '@/components/auth/auth-provider'
 import { useBrief } from '@/components/chat/brief-context'
 import { CanopyBriefDrawer } from './brief-drawer'
@@ -42,6 +41,7 @@ const WORKSPACE = [
 const SECTION_TITLES: Array<[RegExp, string]> = [
   [/^\/chat\/.+/, 'Conversation'],
   [/^\/chat/, 'Ask Levy'],
+  [/^\/acts/, 'Legislation'],
   [/^\/documents/, 'Documents'],
   [/^\/templates/, 'Templates'],
   [/^\/matters\/.+/, 'Matter'],
@@ -313,27 +313,12 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
               <CanopyMenuToggle open={navOpen} />
             </button>
             <span className="cp-breadcrumb">
-              <span className="cp-breadcrumb-root">Workspace</span>
-              <ChevronRight size={13} />
               <strong>{section}</strong>
             </span>
           </div>
           <div className="cp-topbar-actions">
-            <span className="cp-jurisdiction">
-              <span className="cp-status-dot" aria-hidden="true" />
-              Zambian law
-            </span>
-            {brief.available && (
-              <button type="button" className="cp-brief-btn" onClick={() => brief.setOpen(true)} aria-label="Open the Brief">
-                <ActionArt kind="irac" />
-              </button>
-            )}
             <CanopyThemeToggle dark={theme === 'dark'} onChange={(d) => setTheme(d ? 'dark' : 'light')} />
-            {user ? (
-              <Link href="/profile" className="cp-small-avatar" aria-label="Open your account">
-                {initial}
-              </Link>
-            ) : (
+            {!user && (
               <Link href="/auth/login" className="cp-btn primary" style={{ minHeight: 36, padding: '6px 14px' }}>
                 Sign in
               </Link>

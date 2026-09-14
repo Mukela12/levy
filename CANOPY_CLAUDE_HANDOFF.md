@@ -93,6 +93,55 @@ prototype acceptance, hosted image loading and live title integration remain gat
 
 ## Resume deployment
 
+### Second screenshot-led refinement, 14 September
+
+User supplied three screenshots at 08:47, 08:51 and 09:01 and corrected the
+welcome interaction explicitly. Their newest directions override old prototype
+choices: no topbar avatar, jurisdiction/live dot, or Add Document welcome pill.
+
+- Topbar is now a quiet section label/theme control in the same inset content
+  column as the welcome surface. Desktop no longer shows a duplicate menu button.
+  Sidebar account access remains. Removed duplicate mobile IRAC topbar action;
+  the conversation heading still opens the Brief.
+- In Focus appears by default. Its close action reveals only Show a question and
+  Try an example. They are mutually exclusive with the card. Both disappear while
+  drafting. The card no longer inherits capsule backdrops, eliminating dark text
+  patches. Closing returns keyboard focus to the restore action.
+- Removed redundant attachment prop/pill; composer attachment flow stays intact.
+- Mobile disclaimer hidden, composer sits lower, latest-response button anchored
+  at `bottom: calc(100% + 10px)` rather than an overlapping negative top offset.
+- Mobile scene footer now uses normal flow instead of a 200px spacer.
+- Replaced the hand-drawn menu SVG with Lucide Menu/X. No new generated SVGs.
+- Study uses the existing approved book asset, distinct format cards, one subject
+  selector and an optional topic. Cards stack only at 360px and below. Existing
+  lesson/quiz/cheat-sheet prompts are unchanged.
+- Matters gained real client-side search and honest workspace count, wrapping
+  card titles. No simulated archive, draft or linked-chat counts were copied.
+- Legislation now uses Canopy shell without an auth gate, preserving `/acts` and
+  detail URLs, metadata and server-rendered Act links. New searchable directory
+  uses real names/numbers/years, without invented categories or legal-status badges.
+- Supporting-screen muted copy contrast and source-search input sizing improved.
+
+Started the original prototype with its normal Vite command at
+`http://127.0.0.1:4317/canopy/#/study`. Compared running Study, Documents, Templates,
+Matters, source-search and legislation screens, plus the named design task.
+Main app checked at 1440x900, 390x844 and 320x740, with focused light/dark checks.
+At 390px, measured latest button bottom 616, composer top 626/bottom 754 and dock
+top 766: 10px above and 12px below. Disclaimer computed display is none. These
+are emulated browser measurements, not a real iOS keyboard test.
+
+Remaining parity: Documents/Templates still use folder-first pages rather than
+the prototype's combined shelf/file list and view switch. Source search uses real
+semantic-search results, not the prototype's sample browse/filter dataset. Matter
+detail/forms, Profile, auth and onboarding need a final whole-screen parity pass.
+Do not copy sample data/features merely to match screenshots. Employment Code
+directory and detail counts disagreed (200 vs 133), and extracted headings contain
+OCR artifacts; new directory omits section counts, but corpus repair is NOT done.
+
+Four structural regression guards supplement the thirteen earlier tests. They
+do not replace browser checks. Backend behavior and deployment are unchanged in
+this second refinement. Vercel authorization gate remains unresolved.
+
 Vercel project is `mukelas-projects/levy`, root `frontend`, project ID
 `prj_Nn5TSsBSBpTLfYgDkATSHm2Sw6vZ`. Worktree root is explicitly linked. Deploy
 from that root using `vercel deploy --prod --skip-domain --yes --scope mukelas-projects`.

@@ -124,6 +124,20 @@ requests must still be checked after Vercel authorization is resolved.
 
 ## Remaining release gates
 
+Second screenshot-led pass: topbar account/status removal, default mutually
+exclusive In Focus/actions, mobile disclaimer removal, 10px latest-response
+clearance, Study selector layout, Matter search, and Canopy legislation shell.
+See handoff for exact viewport measurements and remaining screen differences.
+Legislation filtering returns one Employment Code result and its detail link
+opens in the same shell. An unauthenticated HTTP check confirms server-rendered
+Act names/links and canonical URL still appear in HTML. Profile remains reachable
+through navigation. No real-device keyboard or production-hosted test is claimed.
+Final lint, typecheck, all 17 frontend tests and the 931-page production build pass.
+The empty Matter-filter state and clearing it were checked with synthetic QA data.
+At 320px, In Focus button backgrounds/backdrop filters are none and the page has
+no horizontal overflow. Closing the card focuses Show a question; examples open
+and dismiss with Escape. No backend/corpus writes were performed in this pass.
+
 - Owner resolves Vercel commit identity/team authorization; redeploy candidate.
 - Finish screen-by-screen prototype acceptance, especially supporting-screen
   structure beyond the shared typography/control pass.

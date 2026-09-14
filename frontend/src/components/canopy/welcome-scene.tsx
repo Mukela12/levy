@@ -9,7 +9,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
-import { ArrowUpRight, Check, ChevronLeft, ChevronRight, ExternalLink, FolderPlus, Image as ImageIcon, Pause, Play, type LucideIcon } from 'lucide-react'
+import { ArrowUpRight, Check, ChevronLeft, ChevronRight, ExternalLink, Image as ImageIcon, Pause, Play, type LucideIcon } from 'lucide-react'
 import { InFocus } from './in-focus'
 import { CanopyModal } from './modal'
 import { SCENES, photoSrc, photoSrcSet, type Scene } from './scene-collection'
@@ -121,18 +121,18 @@ export interface WelcomeSceneProps {
   isAnonymous: boolean
   starters: WelcomeStarter[]
   onStarter: (question: string) => void
-  /** Opens the attach flow. Absent for signed-out visitors, who see a sign-in hint instead. */
-  onAddDocument?: () => void
   composer: ReactNode
   below?: ReactNode
   hasDraft?: boolean
 }
 
-export function WelcomeScene({ greeting, isAnonymous, starters, onStarter, onAddDocument, composer, below, hasDraft }: WelcomeSceneProps) {
+export function WelcomeScene({ greeting, isAnonymous, starters, onStarter, composer, below, hasDraft }: WelcomeSceneProps) {
   const preference = useSyncExternalStore(subscribePreference, readPreference, () => SERVER_PREFERENCE)
   const hydrated = useSyncExternalStore(subscribePreference, () => true, () => false)
   const [now, setNow] = useState(() => Date.now())
   const [showExamples, setShowExamples] = useState(false)
+  const [focusHidden, setFocusHidden] = useState(false)
+  const restoreFocusRef = useRef<HTMLButtonElement>(null)
   const [gallery, setGallery] = useState(false)
   const setPreference = (next: ScenePreference) => writePreference(next)
 
@@ -209,19 +209,13 @@ export function WelcomeScene({ greeting, isAnonymous, starters, onStarter, onAdd
         {composer}
         {below}
 
-        <div className="cp-welcome-secondary">
-          {!hasDraft && <InFocus onChoose={onStarter} />}
+        {!hasDraft && (!focusHidden ? <InFocus onChoose={onStarter} onDismiss={() => { setFocusHidden(true); requestAnimationFrame(() => restoreFocusRef.current?.focus({ preventScroll: true })) }} /> : <div className="cp-welcome-secondary">
+          <button ref={restoreFocusRef} type="button" onClick={() => setFocusHidden(false)}>Show a question<ChevronRight size={15} /></button>
           <button type="button" onClick={() => setShowExamples(true)} aria-haspopup="dialog" aria-expanded={showExamples}>
             Try an example
             <ChevronRight size={15} className={showExamples ? 'is-open' : ''} />
           </button>
-          {onAddDocument ? (
-            <button type="button" onClick={onAddDocument}>
-              <FolderPlus size={18} aria-hidden="true" />
-              Add a document
-            </button>
-          ) : null}
-        </div>
+        </div>)}
         {isAnonymous && (
           <p className="cp-welcome-anon">
             Try a question. No account needed. <a href="/auth/login">Sign in to save your chats</a>.

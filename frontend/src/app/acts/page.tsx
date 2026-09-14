@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { listActs, SITE_URL } from '@/lib/server/corpus'
+import { ActsDirectory } from '@/components/canopy/acts-directory'
 
 export const revalidate = 86400 // refresh daily
 
@@ -28,6 +29,7 @@ export default async function ActsIndex() {
   const letters = [...groups.keys()].sort()
 
   return (
+    <ActsDirectory acts={acts}>
     <div className="max-w-3xl mx-auto px-4 py-10">
       <h1 className="text-[26px] font-semibold text-white/90 tracking-tight">
         Acts of Parliament of Zambia
@@ -79,5 +81,6 @@ export default async function ActsIndex() {
         ))}
       </div>
     </div>
+    </ActsDirectory>
   )
 }
