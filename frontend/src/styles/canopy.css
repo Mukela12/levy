@@ -294,6 +294,14 @@
 .cp-btn:hover:not(:disabled) { background: var(--cp-soft); border-color: color-mix(in srgb, var(--cp-text) 24%, transparent); }
 .cp-btn.primary { color: var(--cp-action-ink); border-color: var(--cp-action-fill); background: linear-gradient(180deg, color-mix(in srgb, var(--cp-action-fill) 92%, white), var(--cp-action-fill)); box-shadow: inset 0 1px #ffffff22, 0 1px 2px #00000012; }
 .cp-btn.primary:hover:not(:disabled) { background: var(--cp-action-hover); border-color: var(--cp-action-hover); }
+
+.cp-signin { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 7px 18px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--cp-action-fill) 82%, #ffffff30); background: linear-gradient(180deg, color-mix(in srgb, var(--cp-action-fill) 90%, white), var(--cp-action-fill)); color: var(--cp-action-ink); font: 550 13px/1.35 var(--cp-font); letter-spacing: 0.1px; text-decoration: none; box-shadow: inset 0 1px #ffffff2e, 0 3px 10px -6px color-mix(in srgb, var(--cp-action-fill) 65%, transparent); transition: background 140ms, box-shadow 140ms, transform 140ms; }
+.cp-signin:hover { background: var(--cp-action-hover); }
+.cp-signin:active { transform: translateY(1px); }
+.cp-signin:focus-visible { outline: 2px solid var(--cp-focus); outline-offset: 2px; }
+.dark .cp-signin { border-color: color-mix(in srgb, var(--cp-action-fill) 70%, #ffffff24); box-shadow: inset 0 1px #ffffff1c, 0 3px 12px -6px #00000080; }
+@media (max-width: 700px) { .cp-signin { min-height: 38px; padding: 7px 15px; font-size: 12.5px; } }
+@media (prefers-reduced-motion: reduce) { .cp-signin { transition: none; } .cp-signin:active { transform: none; } }
 .cp-btn.ghost { background: transparent; border-color: transparent; box-shadow: none; color: var(--cp-muted); }
 .cp-btn:disabled { color: color-mix(in srgb, var(--cp-muted) 78%, var(--cp-surface)); background: var(--cp-soft); border-color: var(--cp-line); box-shadow: none; cursor: not-allowed; }
 .cp-btn:active:not(:disabled) { transform: translateY(1px); box-shadow: inset 0 1px 3px #0002; }
@@ -411,9 +419,6 @@
 .dark .cp-welcome-greeting { color: var(--cp-glass-muted); }
 .cp-welcome-content h1 { font-size: clamp(26px, 2.4vw, 35px); font-weight: 500; letter-spacing: -1.05px; line-height: 1.25; color: #344d3b; margin: 0 0 24px; max-width: 610px; }
 .dark .cp-welcome-content h1 { color: var(--cp-text); }
-.cp-welcome-anon { margin: 12px 2px 0; font-size: 12.5px; color: #4f654d; }
-.cp-welcome-anon a { color: var(--cp-primary); text-decoration: underline; text-underline-offset: 2px; }
-.dark .cp-welcome-anon { color: var(--cp-glass-muted); }
 /* v17 capsules: dense tints keep the labels readable over any photograph. */
 .cp-welcome { --welcome-action-ink: #293e33; --welcome-action-base: #f0f3ed; --welcome-action-glass: linear-gradient(165deg, rgba(252,253,249,.94), rgba(235,240,231,.86)); --welcome-action-hover: linear-gradient(165deg, rgba(255,255,252,.98), rgba(244,248,240,.94)); --welcome-action-edge: rgba(255,255,255,.66); --welcome-action-shadow: inset 0 1px 0 rgba(255,255,255,.8), inset 0 -1px 0 rgba(45,65,48,.06), 0 3px 10px rgba(20,35,25,.1); }
 .dark .cp-welcome { --welcome-action-ink: #f3f4f0; --welcome-action-base: #292b2a; --welcome-action-glass: linear-gradient(165deg, rgba(49,52,49,.94), rgba(30,33,31,.9)); --welcome-action-hover: linear-gradient(165deg, rgba(61,64,60,.98), rgba(39,43,39,.94)); --welcome-action-edge: rgba(255,255,255,.12); --welcome-action-shadow: inset 0 1px 0 rgba(255,255,255,.09), inset 0 -1px 0 rgba(0,0,0,.12), 0 3px 10px rgba(0,0,0,.16); }
@@ -442,14 +447,7 @@
 .cp-photo-credit.is-full { opacity: 1; }
 .cp-photo-credit p { margin: 10px 0 8px; font-size: 13px; line-height: 1.6; color: var(--cp-muted); }
 .cp-photo-original { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; font-size: 13px; color: var(--cp-primary); }
-.cp-scene-controls { display: flex; align-items: center; gap: 1px; padding: 4px; border-radius: 14px; background: #f9fbf0db; border: 1px solid #ffffffe0; -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 3px 15px -9px #24342430; color: #4e6247; }
-.cp-scene-controls button { display: inline-flex; gap: 7px; align-items: center; justify-content: center; height: 34px; min-width: 30px; padding: 5px 7px; border-radius: 9px; font-size: 12px; color: inherit; }
-.cp-scene-controls button:hover { background: #ffffff9e; }
-.cp-scene-count { font-variant-numeric: tabular-nums; }
-.cp-scene-auto { padding-inline: 9px !important; }
-.cp-scene-divider { width: 1px; height: 18px; margin: 0 4px; background: currentColor; opacity: 0.25; }
-.dark .cp-scene-location, .dark .cp-scene-controls { background: var(--cp-glass-fill); border-color: var(--cp-glass-edge); color: var(--cp-glass-ink); }
-.dark .cp-scene-controls button:hover { background: var(--cp-soft); }
+.dark .cp-scene-location { background: var(--cp-glass-fill); border-color: var(--cp-glass-edge); color: var(--cp-glass-ink); }
 @media (max-width: 1200px) and (min-width: 1101px) { .cp-welcome-content { width: 64%; margin-left: 28px; } }
 @media (max-width: 1100px) {
   .cp-welcome { margin: 0 14px calc(var(--cp-dock-h) + 8px); border-radius: 22px; }
@@ -471,11 +469,9 @@
   .cp-scene-footer { left: 14px; right: 14px; bottom: 16px; gap: 10px; flex-wrap: wrap; }
   .cp-scene-location { max-width: 100%; padding: 7px 10px; border-radius: 10px; }
   .cp-scene-caption-title { font-size: 12px; }
-  .cp-scene-controls { margin-left: auto; border-radius: 13px; padding: 3px; gap: 0; }
-  .cp-scene-controls button { height: 34px; min-width: 29px; padding: 5px 6px; font-size: 12px; }
 }
 @media (max-width: 370px) { .cp-welcome-secondary button { padding-inline: 12px; font-size: 12px; } }
-@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) { .cp-welcome-secondary button { background: var(--welcome-action-base) !important; border-color: var(--welcome-action-ink); backdrop-filter: none; -webkit-backdrop-filter: none; } .cp-scene-location, .cp-scene-controls { background: var(--cp-surface); backdrop-filter: none; -webkit-backdrop-filter: none; } }
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) { .cp-welcome-secondary button { background: var(--welcome-action-base) !important; border-color: var(--welcome-action-ink); backdrop-filter: none; -webkit-backdrop-filter: none; } .cp-scene-location { background: var(--cp-surface); backdrop-filter: none; -webkit-backdrop-filter: none; } }
 @media (prefers-reduced-motion: reduce) { .cp-welcome-secondary button { transition: none; transform: none !important; } .cp-scene-image.is-current { animation: none; } }
 @media (forced-colors: active) { .cp-welcome-secondary button { background: ButtonFace !important; color: ButtonText !important; border: 1px solid ButtonText; box-shadow: none; } }
 
@@ -855,5 +851,5 @@
 @media (max-width: 1100px) {
   [data-ui="canopy"]:not(.dark) .cp-scene-stage::after { background: linear-gradient(180deg, #f7f9f5f7 0%, #f7f9f5d9 30%, #f7f9f57a 62%, #f7f9f54d 100%); }
   [data-ui="canopy"]:not(.dark) .cp-welcome-signature { color: #2f4a38; }
-  [data-ui="canopy"]:not(.dark) .cp-welcome-greeting, [data-ui="canopy"]:not(.dark) .cp-welcome-anon { color: #3e5645; }
+  [data-ui="canopy"]:not(.dark) .cp-welcome-greeting { color: #3e5645; }
 }

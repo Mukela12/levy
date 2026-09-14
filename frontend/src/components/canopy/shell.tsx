@@ -31,11 +31,10 @@ import { CanopyThemeToggle } from './theme-toggle'
 const WORKSPACE = [
   { href: '/chat', label: 'Conversations', icon: 'chat', tour: 'new-chat-nav', match: /^\/chat/ },
   { href: '/acts', label: 'Legislation', icon: 'book', match: /^\/acts/ },
-  { href: '/search', label: 'Source search', icon: 'search', match: /^\/search/ },
   { href: '/documents', label: 'Documents', icon: 'folder', tour: 'nav-documents', match: /^\/documents/ },
   { href: '/templates', label: 'Templates', icon: 'document', tour: 'nav-templates', match: /^\/templates/ },
-  { href: '/matters', label: 'Matters', icon: 'checklist', tour: 'nav-matters', match: /^\/matters/ },
-  { href: '/study', label: 'Study', icon: 'scan', tour: 'nav-study', match: /^\/study/ },
+  { href: '/matters', label: 'Matters', icon: 'work', tour: 'nav-matters', match: /^\/matters/ },
+  { href: '/study', label: 'Study', icon: 'school', tour: 'nav-study', match: /^\/study/ },
 ] as const
 
 const SECTION_TITLES: Array<[RegExp, string]> = [
@@ -138,7 +137,7 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
   const dockDestinations: DockDestination[] = [
     { id: 'chat', label: 'Chat', icon: 'chat', href: activeChat ? `/chat/${activeChat}` : '/chat' },
     { id: 'documents', label: 'Files', icon: 'folder', href: '/documents' },
-    { id: 'matters', label: 'Matters', icon: 'checklist', href: '/matters' },
+    { id: 'matters', label: 'Matters', icon: 'work', href: '/matters' },
   ]
   const dockActive = pathname.startsWith('/chat')
     ? 'chat'
@@ -319,7 +318,7 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
           <div className="cp-topbar-actions">
             <CanopyThemeToggle dark={theme === 'dark'} onChange={(d) => setTheme(d ? 'dark' : 'light')} />
             {!user && (
-              <Link href="/auth/login" className="cp-btn primary" style={{ minHeight: 36, padding: '6px 14px' }}>
+              <Link href="/auth/login" className="cp-signin">
                 Sign in
               </Link>
             )}

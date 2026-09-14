@@ -20,4 +20,6 @@ export const CANOPY_ICON: Record<string, string> = {
   signin: 'system-regular-113-log-sign-in-hover-sign-in',
   signout: 'system-regular-112-log-sign-out-hover-log-out',
   arrow: 'system-regular-161-arrow-long-right-hover-pinch',
+  school: 'system-regular-167-school-hover-school',
+  work: 'system-regular-178-work-hover-work',
 }

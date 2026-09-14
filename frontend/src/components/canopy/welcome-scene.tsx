@@ -9,7 +9,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
-import { ArrowUpRight, Check, ChevronLeft, ChevronRight, ExternalLink, Image as ImageIcon, Pause, Play, type LucideIcon } from 'lucide-react'
+import { ArrowUpRight, Check, ChevronRight, ExternalLink, type LucideIcon } from 'lucide-react'
 import { InFocus } from './in-focus'
 import { CanopyModal } from './modal'
 import { SCENES, photoSrc, photoSrcSet, type Scene } from './scene-collection'
@@ -118,7 +118,8 @@ export interface WelcomeStarter {
 
 export interface WelcomeSceneProps {
   greeting: string
-  isAnonymous: boolean
+  /** Accepted for the caller's convenience; the welcome no longer renders an anonymous nudge. */
+  isAnonymous?: boolean
   starters: WelcomeStarter[]
   onStarter: (question: string) => void
   composer: ReactNode
@@ -126,7 +127,21 @@ export interface WelcomeSceneProps {
   hasDraft?: boolean
 }
 
-export function WelcomeScene({ greeting, isAnonymous, starters, onStarter, composer, below, hasDraft }: WelcomeSceneProps) {
+/** Re-anchor the rotation on a manual pick; lives at module scope so the
+ * clock read stays out of render. */
+function commitScene(
+  index: number,
+  len: number,
+  preference: ScenePreference,
+  setNow: (n: number) => void,
+  setPreference: (p: ScenePreference) => void,
+) {
+  const t = Date.now()
+  setNow(t)
+  setPreference({ ...preference, index: ((index % len) + len) % len, anchor: t })
+}
+
+export function WelcomeScene({ greeting, starters, onStarter, composer, below, hasDraft }: WelcomeSceneProps) {
   const preference = useSyncExternalStore(subscribePreference, readPreference, () => SERVER_PREFERENCE)
   const hydrated = useSyncExternalStore(subscribePreference, () => true, () => false)
   const [now, setNow] = useState(() => Date.now())
@@ -174,11 +189,7 @@ export function WelcomeScene({ greeting, isAnonymous, starters, onStarter, compo
     return () => clearTimeout(t)
   }, [current])
 
-  function select(index: number) {
-    const t = Date.now()
-    setNow(t)
-    setPreference({ ...preference, index: ((index % scenes.length) + scenes.length) % scenes.length, anchor: t })
-  }
+  const handleSelect = (index: number) => commitScene(index, scenes.length, preference, setNow, setPreference)
   function toggleAuto() {
     const t = Date.now()
     setNow(t)
@@ -216,11 +227,6 @@ export function WelcomeScene({ greeting, isAnonymous, starters, onStarter, compo
             <ChevronRight size={15} className={showExamples ? 'is-open' : ''} />
           </button>
         </div>)}
-        {isAnonymous && (
-          <p className="cp-welcome-anon">
-            Try a question. No account needed. <a href="/auth/login">Sign in to save your chats</a>.
-          </p>
-        )}
 
         {showExamples && (
           <CanopyModal title="Try an example" onClose={() => setShowExamples(false)}>
@@ -246,19 +252,6 @@ export function WelcomeScene({ greeting, isAnonymous, starters, onStarter, compo
           </button>
           <PhotoCredit scene={current} />
         </div>
-        <div className="cp-scene-controls">
-          <button type="button" aria-label="Previous background" onClick={() => select(currentIndex - 1)}><ChevronLeft size={17} /></button>
-          <button type="button" className="cp-scene-count" aria-label="Choose background" onClick={() => setGallery(true)}>
-            <ImageIcon size={16} />
-            <span>{String(currentIndex + 1).padStart(2, '0')} / {String(scenes.length).padStart(2, '0')}</span>
-          </button>
-          <button type="button" aria-label="Next background" onClick={() => select(currentIndex + 1)}><ChevronRight size={17} /></button>
-          <span className="cp-scene-divider" aria-hidden="true" />
-          <button type="button" className="cp-scene-auto" aria-pressed={preference.auto} aria-label={preference.auto ? 'Pause hourly backgrounds' : 'Resume hourly backgrounds'} title={preference.auto ? 'Changes once per hour' : 'Keep this background'} onClick={toggleAuto}>
-            {preference.auto ? <Pause size={14} /> : <Play size={14} />}
-            <span>{preference.auto ? 'Hourly' : 'Paused'}</span>
-          </button>
-        </div>
       </footer>
      </div>
 
@@ -268,7 +261,7 @@ export function WelcomeScene({ greeting, isAnonymous, starters, onStarter, compo
               <div className="cp-scenery-grid">
                 {scenes.map((scene, i) => (
                   <article className="cp-scenery-item" key={scene.id}>
-                    <button type="button" className={'cp-scenery-choice' + (scene.id === current.id ? ' is-selected' : '')} aria-pressed={scene.id === current.id} aria-label={`Use ${scene.title}`} onClick={() => select(i)}>
+                    <button type="button" className={'cp-scenery-choice' + (scene.id === current.id ? ' is-selected' : '')} aria-pressed={scene.id === current.id} aria-label={`Use ${scene.title}`} onClick={() => handleSelect(i)}>
                       <ScenePicture scene={scene} thumbnail />
                       <div>
                         <strong>{scene.title}</strong>
