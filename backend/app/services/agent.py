@@ -1182,10 +1182,27 @@ async def run_agent(
             matter_block = ""
 
     system_prompt = SYSTEM_PROMPT + AGENT_SYSTEM_SUFFIX + attachments_block + matter_block
+    # The web toggle is a preference signal, never a gate: the tools are
+    # always registered. Rendered as its own small block so the big static
+    # prefix above keeps one cache entry for both toggle states.
+    web_line = (
+        "WEB TOGGLE: the user turned Web ON for this question. They expect "
+        "current information. Verify against the official web sources even "
+        "when the library seems to answer, and prefer the freshest authority."
+        if web_enabled
+        else
+        "WEB TOGGLE: the user left Web off. That is a preference for library "
+        "answers, not a prohibition. Every web tool remains available; follow "
+        "the retrieval chain and go to the official web whenever the library "
+        "cannot fully support the answer, and say when you did."
+    )
     # Send the (large, static) system prompt as a cached block so it is billed
     # once per 5-minute window instead of on every one of the up-to-12 model
     # calls per message. This is the single biggest cost lever for the chat.
-    cached_system = [{"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}}]
+    cached_system = [
+        {"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}},
+        {"type": "text", "text": web_line},
+    ]
 
     messages: list[dict] = list(history or [])
     messages.append({"role": "user", "content": user_query})
