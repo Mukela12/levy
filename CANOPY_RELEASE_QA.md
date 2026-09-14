@@ -168,3 +168,27 @@ has not been exercised again in this pass. Production release remains gated.
 
 Final current-tree verification passed: `git diff --check`, lint, TypeScript,
 all 17 frontend tests, and the production build (931 generated pages).
+
+## Fourth pass and deployment evidence
+
+Account/auth/Matter changes at `1dc64d2`: lint, typecheck, all 20 frontend tests,
+5 backend naming unit tests and production build (932 pages) passed. New tests
+are structural guards, not substitutes for browser interaction.
+Browser: real QA login; profile metadata save; all five onboarding steps/Done;
+fictional Matter party persists after reload; mobile forms, light/dark signup,
+desktop sign-in artwork, recovery entry and reset page. Recovery email delivery,
+new account creation and password mutation were deliberately not exercised.
+
+Railway deployment `cdb9236d-10fb-4ef5-a4f3-846f2f198770` SUCCESS. Live backend
+HTTP chat fixture `12ca1518-d409-4d51-805a-c66411267446` generated its answer and
+automatically persisted `Meeting notes organization guidance`; browser title
+updated without reload. Exclude this synthetic fixture from usage analytics.
+
+GitHub push succeeded with the existing author unchanged. GitHub-triggered Vercel
+preview `dpl_8q9QVkwNegcs6greih9rtyrfq5j1` has no identity/seat block. Compilation
+and TypeScript passed, but page generation failed: `supabaseUrl is required`.
+Vercel environment inventory confirms the public Supabase URL/anon key are only
+in Production/Development, not Preview. Asked owner to configure Preview using
+the same public values. No secret was copied, no empty corpus workaround added,
+no main push or production-frontend promotion made. The earlier CLI identity
+block is not evidence that the Git email must be changed.

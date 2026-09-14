@@ -2,6 +2,28 @@
 
 ## Outcome
 
+**Latest release evidence:** backend naming is LIVE. Railway deployment
+`cdb9236d-10fb-4ef5-a4f3-846f2f198770` is SUCCESS and `/health` returns ok.
+Synthetic HTTP chat `12ca1518-d409-4d51-805a-c66411267446` answered in 5.3s,
+then became `Meeting notes organization guidance` in Supabase and refreshed
+in the client without reloading. This supersedes earlier service-only QA.
+
+**Correction on Vercel identity:** existing global Git email is
+`mukela.j.katungu@gmail.com`. The live main deployment already uses that same
+email, attributed by GitHub to `mukelajkatungu-star`, and was accepted. Do not
+change author identity. The GitHub integration, not CLI deploy, is the working
+path. Branch `codex/canopy-ui-integration` is pushed at `1dc64d2`.
+GitHub-triggered preview `dpl_8q9QVkwNegcs6greih9rtyrfq5j1` passed compilation
+and TypeScript; failed page generation because Preview lacks
+NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY. Production has them.
+Owner was asked to add those existing public values to Preview, keeping service,
+admin and email secrets out. Afterward redeploy the GitHub candidate and perform
+hosted QA before main promotion. The production frontend is still the old main.
+
+Final local checks: lint, TypeScript, 20 frontend structural/regression tests,
+5 mocked backend naming tests, diff check, and build (932 generated pages) pass.
+Password recovery email round trip and hosted auth/assets/downloads remain gates.
+
 ### Fourth pass, 14 September: remaining account screens
 
 Compared the prototype's actual Profile/Auth implementations before porting.
