@@ -5,24 +5,31 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth/auth-provider'
 import { listMatters, createMatter, type Matter } from '@/lib/matters'
-import { Briefcase, Plus, Loader2, ChevronRight, Scale } from 'lucide-react'
+import { Plus, Loader2, ChevronRight, Scale } from 'lucide-react'
+import { ActionArt } from '@/components/canopy/action-art'
 
 export default function MattersPage() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const [matters, setMatters] = useState<Matter[]>([])
   const [loading, setLoading] = useState(true)
+  const [query, setQuery] = useState('')
   const [creating, setCreating] = useState(false)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({ title: '', matter_type: '', court: '', cause_number: '' })
+  const visibleMatters = matters.filter(m => [m.title, m.matter_type, m.court, m.cause_number].filter(Boolean).join(' ').toLowerCase().includes(query.trim().toLowerCase()))
 
   useEffect(() => {
-    if (!user?.id) return
+    // Signed-out visitors are not "loading" forever: matters need an account.
+    if (!user?.id) {
+      if (!authLoading) setLoading(false)
+      return
+    }
     listMatters(user.id).then((m) => {
       setMatters(m)
       setLoading(false)
     })
-  }, [user?.id])
+  }, [user?.id, authLoading])
 
   async function handleCreate() {
     if (!user?.id || !form.title.trim() || saving) return
@@ -35,23 +42,21 @@ export default function MattersPage() {
   return (
     <div className="min-h-screen text-white/90">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
-        <div className="flex items-center justify-between gap-3 mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-2.5">
-            <span className="flex items-center justify-center size-9 rounded-lg bg-emerald-500/15 border border-emerald-500/25 text-emerald-400">
-              <Briefcase className="size-5" />
-            </span>
+            <ActionArt kind="matter" size={48} />
             <div>
               <h1 className="text-xl font-semibold">Matters</h1>
               <p className="text-[13px] text-white/45">Your cases. Levy remembers each one across chats.</p>
             </div>
           </div>
-          <button
+          {user && <button
             type="button"
             onClick={() => setCreating((v) => !v)}
-            className="flex items-center gap-1.5 rounded-lg bg-emerald-500/90 hover:bg-emerald-500 text-black text-[13px] font-medium px-3 py-2 transition-colors"
+            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-emerald-500/90 hover:bg-emerald-500 text-black text-[13px] font-medium px-3 py-2 transition-colors"
           >
             <Plus className="size-4" /> New matter
-          </button>
+          </button>}
         </div>
 
         {creating && (
@@ -103,9 +108,21 @@ export default function MattersPage() {
           </div>
         )}
 
+        {!loading && matters.length > 0 && <div className="cp-matter-toolbar">
+          <p>{matters.length} {matters.length === 1 ? 'matter' : 'matters'} in your workspace</p>
+          <input aria-label="Find a matter" placeholder="Find a matter…" value={query} onChange={e => setQuery(e.target.value)} />
+        </div>}
+
         {loading ? (
           <div className="flex items-center gap-2 text-white/40 text-[14px] py-12 justify-center">
             <Loader2 className="size-4 animate-spin" /> Loading your matters…
+          </div>
+        ) : !user ? (
+          <div className="text-center py-16 text-white/40">
+            <Scale className="size-8 mx-auto mb-3 opacity-40" />
+            <p className="text-[14px]">Matters live in your account.</p>
+            <p className="text-[13px] mt-1">Sign in to keep each case&apos;s conversations, documents and notes together.</p>
+            <Link href="/auth/login" className="cp-signin" style={{ marginTop: 18, display: 'inline-flex' }}>Sign in</Link>
           </div>
         ) : matters.length === 0 ? (
           <div className="text-center py-16 text-white/40">
@@ -115,18 +132,17 @@ export default function MattersPage() {
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            {matters.map((m) => (
+            {visibleMatters.length === 0 && <p role="status">No matters match that search.</p>}
+            {visibleMatters.map((m) => (
               <Link
                 key={m.id}
                 href={`/matters/${m.id}`}
-                className="group flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] hover:border-emerald-500/20 px-4 py-3.5 transition-colors"
+                className="cp-matter-row group flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] hover:border-emerald-500/20 px-4 py-3.5 transition-colors"
               >
-                <span className="flex items-center justify-center size-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400/80 flex-shrink-0">
-                  <Briefcase className="size-4" />
-                </span>
+                <ActionArt kind="matter" size={40} />
                 <div className="flex-1 min-w-0">
-                  <div className="text-[14px] font-medium text-white/85 truncate">{m.title}</div>
-                  <div className="text-[12px] text-white/40 truncate">
+                  <div className="text-[14px] font-medium text-white/85 break-words">{m.title}</div>
+                  <div className="text-[12px] text-white/40 break-words">
                     {[m.matter_type, m.court, m.cause_number].filter(Boolean).join(' · ') || 'No details yet'}
                   </div>
                 </div>

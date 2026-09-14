@@ -497,6 +497,11 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
                     # of them. Older clients ignore unknown event types.
                     if saved_id:
                         await queue.put({"type": "saved", "message_id": saved_id})
+                        # Naming is deliberately outside the answer's critical path.
+                        from ..services.chat_titles import name_first_exchange
+                        naming_task = asyncio.create_task(name_first_exchange(safe_session_id, uid))
+                        _INFLIGHT_RUNS.add(naming_task)
+                        naming_task.add_done_callback(_INFLIGHT_RUNS.discard)
                 except Exception:
                     logger.exception("durable save failed")
             await queue.put(None)  # stream sentinel — must be last

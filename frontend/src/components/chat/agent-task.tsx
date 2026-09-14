@@ -27,14 +27,16 @@ import {
   Files as FilesIcon,
   Sparkles,
   ClipboardList,
+  MessageCircleQuestion,
 } from 'lucide-react'
 import { Favicon } from './favicon'
 import type { ToolCallView } from './tool-call-card'
 
-const TOOL_META: Record<
+export const TOOL_META: Record<
   string,
   { label: string; verb: string; Icon: typeof Search }
 > = {
+  ask_user: { label: 'Question for you', verb: 'Asking you', Icon: MessageCircleQuestion },
   search_corpus: { label: 'Corpus search', verb: 'Searching the corpus', Icon: Database },
   gov_search: { label: 'Gov search', verb: 'Searching government sources', Icon: Search },
   web_search: { label: 'Web search', verb: 'Searching the web', Icon: GlobeIcon },

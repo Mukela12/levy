@@ -588,6 +588,13 @@ export interface QuizEvent {
   quiz: Quiz
 }
 
+export interface AskUserEvent {
+  id?: string
+  question: string
+  options?: string[]
+  allow_free_text?: boolean
+}
+
 export interface StreamHandlers {
   /** Free-trial budget for signed-out visitors, sent once at stream start. */
   onTrial?: (info: { remaining: number; limit: number; pass?: string }) => void
@@ -609,6 +616,7 @@ export interface StreamHandlers {
   onCaseLaw?: (event: CaseLawEvent) => void
   onCheatSheet?: (event: CheatSheetEvent) => void
   onQuiz?: (event: QuizEvent) => void
+  onAskUser?: (event: AskUserEvent) => void
   onCitationAudit?: (citations: CitationVerdict[]) => void
   onDone?: (metadata: AgentDoneMetadata) => void
   onError?: (message: string) => void
@@ -755,6 +763,9 @@ export async function streamQuery(
           break
         case 'quiz':
           handlers?.onQuiz?.(parsed as unknown as QuizEvent)
+          break
+        case 'ask_user':
+          handlers?.onAskUser?.(parsed as unknown as AskUserEvent)
           break
         case 'application_plan':
           handlers?.onApplicationPlan?.(parsed as unknown as ApplicationPlanEvent)

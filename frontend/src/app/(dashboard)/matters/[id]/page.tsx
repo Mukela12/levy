@@ -2,6 +2,7 @@
 
 import { use, useEffect, useState } from 'react'
 import Link from 'next/link'
+import { ActionArt } from '@/components/canopy/action-art'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth/auth-provider'
 import { createClient } from '@/lib/supabase'
@@ -11,19 +12,21 @@ import {
   type Matter, type MatterParty, type MatterDate, type MatterThread, type MatterDraft,
 } from '@/lib/matters'
 import {
-  Briefcase, ArrowLeft, Loader2, Plus, X, MessageSquare, FileText,
+  ArrowLeft, Loader2, Plus, X, MessageSquare, FileText,
   Calendar, Users, Trash2, Check, Link2,
 } from 'lucide-react'
 
 export default function MatterDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const [matter, setMatter] = useState<Matter | null>(null)
   const [threads, setThreads] = useState<MatterThread[]>([])
   const [drafts, setDrafts] = useState<MatterDraft[]>([])
   const [loading, setLoading] = useState(true)
   const [savedFlash, setSavedFlash] = useState(false)
+  const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
 
   // editable local copies
   const [fields, setFields] = useState({ title: '', matter_type: '', court: '', cause_number: '', facts: '' })
@@ -48,14 +51,18 @@ export default function MatterDetailPage({ params }: { params: Promise<{ id: str
       }
       setThreads(t)
       setDrafts(d)
-      setLoading(false)
-    })
+    }).catch(() => setError('Could not load this matter. Please reload to try again.')).finally(() => setLoading(false))
   }, [id, user?.id])
 
   async function persist(patch: Partial<Matter>) {
-    await updateMatter(id, patch)
-    setSavedFlash(true)
-    setTimeout(() => setSavedFlash(false), 1500)
+    setSaving(true); setError(''); setSavedFlash(false)
+    try {
+      await updateMatter(id, patch)
+      setSavedFlash(true)
+      setTimeout(() => setSavedFlash(false), 1500)
+      return true
+    } catch { setError('Your changes were not saved. Please try again.'); return false }
+    finally { setSaving(false) }
   }
 
   async function saveDetails() {
@@ -71,23 +78,21 @@ export default function MatterDetailPage({ params }: { params: Promise<{ id: str
   async function addParty() {
     if (!newParty.name.trim()) return
     const next = [...parties, { role: newParty.role.trim() || 'Party', name: newParty.name.trim() }]
-    setParties(next); setNewParty({ role: '', name: '' })
-    await persist({ parties: next })
+    if (await persist({ parties: next })) { setParties(next); setNewParty({ role: '', name: '' }) }
   }
   async function removeParty(i: number) {
     const next = parties.filter((_, x) => x !== i)
-    setParties(next); await persist({ parties: next })
+    if (await persist({ parties: next })) setParties(next)
   }
 
   async function addDate() {
     if (!newDate.date.trim()) return
     const next = [...dates, { label: newDate.label.trim() || 'Date', date: newDate.date, note: newDate.note.trim() }]
-    setDates(next); setNewDate({ label: '', date: '', note: '' })
-    await persist({ key_dates: next })
+    if (await persist({ key_dates: next })) { setDates(next); setNewDate({ label: '', date: '', note: '' }) }
   }
   async function removeDate(i: number) {
     const next = dates.filter((_, x) => x !== i)
-    setDates(next); await persist({ key_dates: next })
+    if (await persist({ key_dates: next })) setDates(next)
   }
 
   async function startChat() {
@@ -129,6 +134,7 @@ export default function MatterDetailPage({ params }: { params: Promise<{ id: str
     router.push('/matters')
   }
 
+  if (!authLoading && !user) return <div className="p-8"><p>Sign in to open your matters.</p><Link href="/auth/login">Sign in</Link></div>
   if (loading) {
     return (
       <div className="flex items-center gap-2 text-white/40 text-[14px] py-16 justify-center">
@@ -139,7 +145,7 @@ export default function MatterDetailPage({ params }: { params: Promise<{ id: str
   if (!matter) {
     return (
       <div className="text-center py-16 text-white/40">
-        <p>Matter not found.</p>
+        <p role={error ? 'alert' : 'status'}>{error || 'Matter not found.'}</p>
         <Link href="/matters" className="text-emerald-400 text-[13px] mt-2 inline-block">Back to matters</Link>
       </div>
     )
@@ -150,7 +156,7 @@ export default function MatterDetailPage({ params }: { params: Promise<{ id: str
   const label = "text-[11px] font-medium tracking-[0.14em] uppercase text-white/40 flex items-center gap-1.5 mb-2.5"
 
   return (
-    <div className="min-h-screen text-white/90">
+    <div className="cp-matter-detail text-white/90">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6">
         <div className="flex items-center justify-between gap-3 mb-5">
           <Link href="/matters" className="flex items-center gap-1.5 text-[13px] text-white/45 hover:text-white/80">
@@ -164,13 +170,14 @@ export default function MatterDetailPage({ params }: { params: Promise<{ id: str
           </div>
         </div>
 
+        <h1 className="text-2xl mb-4">Matter workspace</h1>
+        {error && <p role="alert" className="mb-4 text-sm">{error}</p>}
         {/* Details */}
         <div className={card + ' mb-4'}>
           <div className="flex items-center gap-2.5 mb-3.5">
-            <span className="flex items-center justify-center size-8 rounded-lg bg-emerald-500/15 border border-emerald-500/25 text-emerald-400">
-              <Briefcase className="size-4" />
-            </span>
+            <ActionArt kind="matter" />
             <input
+              aria-label="Matter title"
               value={fields.title}
               onChange={(e) => setFields({ ...fields, title: e.target.value })}
               onBlur={saveDetails}
@@ -194,14 +201,14 @@ export default function MatterDetailPage({ params }: { params: Promise<{ id: str
               <div key={i} className="flex items-center gap-2 text-[14px]">
                 <span className="text-white/85">{p.name}</span>
                 <span className="text-[11px] text-emerald-400/70 bg-emerald-500/10 rounded px-1.5 py-0.5">{p.role}</span>
-                <button onClick={() => removeParty(i)} className="ml-auto text-white/25 hover:text-red-400"><X className="size-3.5" /></button>
+                <button aria-label={`Remove party ${p.name}`} disabled={saving} onClick={() => removeParty(i)} className="ml-auto text-white/25 hover:text-red-400"><X className="size-3.5" /></button>
               </div>
             ))}
           </div>
-          <div className="flex gap-2">
+          <div className="cp-matter-add flex gap-2">
             <input value={newParty.name} onChange={(e) => setNewParty({ ...newParty, name: e.target.value })} placeholder="Name" className={input + ' flex-1'} />
             <input value={newParty.role} onChange={(e) => setNewParty({ ...newParty, role: e.target.value })} placeholder="Role" className={input + ' w-32'} />
-            <button onClick={addParty} disabled={!newParty.name.trim()} className="flex items-center rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 px-2.5 disabled:opacity-40"><Plus className="size-4" /></button>
+            <button aria-label="Add party" onClick={addParty} disabled={saving || !newParty.name.trim()} className="flex items-center rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 px-2.5 disabled:opacity-40"><Plus className="size-4" /></button>
           </div>
         </div>
 
@@ -214,15 +221,15 @@ export default function MatterDetailPage({ params }: { params: Promise<{ id: str
               <div key={i} className="flex items-center gap-2 text-[14px]">
                 <span className="text-emerald-400/80 font-mono text-[13px] tabular-nums">{d.date}</span>
                 <span className="text-white/80">{d.label}</span>
-                {d.note && <span className="text-white/35 text-[12px]">— {d.note}</span>}
-                <button onClick={() => removeDate(i)} className="ml-auto text-white/25 hover:text-red-400"><X className="size-3.5" /></button>
+                {d.note && <span className="text-white/35 text-[12px]">· {d.note}</span>}
+                <button aria-label={`Remove date ${d.label}`} disabled={saving} onClick={() => removeDate(i)} className="ml-auto text-white/25 hover:text-red-400"><X className="size-3.5" /></button>
               </div>
             ))}
           </div>
-          <div className="flex gap-2">
-            <input type="date" value={newDate.date} onChange={(e) => setNewDate({ ...newDate, date: e.target.value })} className={input + ' w-40'} />
+          <div className="cp-matter-add flex gap-2">
+            <input aria-label="Key date" type="date" value={newDate.date} onChange={(e) => setNewDate({ ...newDate, date: e.target.value })} className={input + ' w-40'} />
             <input value={newDate.label} onChange={(e) => setNewDate({ ...newDate, label: e.target.value })} placeholder="e.g. Hearing" className={input + ' flex-1'} />
-            <button onClick={addDate} disabled={!newDate.date} className="flex items-center rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 px-2.5 disabled:opacity-40"><Plus className="size-4" /></button>
+            <button aria-label="Add key date" onClick={addDate} disabled={saving || !newDate.date} className="flex items-center rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 px-2.5 disabled:opacity-40"><Plus className="size-4" /></button>
           </div>
         </div>
 
@@ -230,6 +237,7 @@ export default function MatterDetailPage({ params }: { params: Promise<{ id: str
         <div className={card + ' mb-4'}>
           <div className={label}>Case facts</div>
           <textarea
+            aria-label="Case facts"
             value={fields.facts}
             onChange={(e) => setFields({ ...fields, facts: e.target.value })}
             onBlur={saveDetails}
@@ -237,18 +245,19 @@ export default function MatterDetailPage({ params }: { params: Promise<{ id: str
             rows={5}
             className={input + ' w-full resize-y leading-relaxed'}
           />
+          <button className="cp-btn mt-3" onClick={saveDetails} disabled={saving}>{saving ? 'Saving…' : 'Save details'}</button>
         </div>
 
         {/* Chats in this matter */}
         <div className={card + ' mb-4'}>
-          <div className="flex items-center justify-between mb-2.5">
+          <div className="cp-matter-chats-heading flex items-center justify-between mb-2.5">
             <div className={label + ' mb-0'}><MessageSquare className="size-3.5" /> Chats in this matter</div>
             <div className="flex gap-2">
               <button onClick={openLink} className="text-[12px] text-white/50 hover:text-white/80 flex items-center gap-1"><Link2 className="size-3.5" /> Link a chat</button>
               <button onClick={startChat} className="text-[12px] text-emerald-400 hover:text-emerald-300 flex items-center gap-1"><Plus className="size-3.5" /> New chat</button>
             </div>
           </div>
-          {threads.length === 0 && <p className="text-[13px] text-white/30">No chats yet. Start one, Levy will use this matter's details.</p>}
+          {threads.length === 0 && <p className="text-[13px] text-white/30">No chats yet. Start one, Levy will use this matter&apos;s details.</p>}
           <div className="flex flex-col gap-1">
             {threads.map((t) => (
               <div key={t.id} className="flex items-center gap-2 group">

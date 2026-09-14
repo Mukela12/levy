@@ -1,0 +1,28 @@
+{
+  "reviewed": "2026-09-14",
+  "expires": "2026-09-21",
+  "topics": [
+    {
+      "id": "public-gathering-bill-2026",
+      "question": "What does the Public Gathering Bill propose, and has its status changed?",
+      "kind": "Bill",
+      "published": "2026",
+      "source": "National Assembly",
+      "sourceTitle": "Public Gathering Bill, N.A.B. No. 71 of 2026",
+      "url": "https://www.parliament.gov.zm/sites/default/files/documents/bills/N.%20A.%20B.%2071%20of%202026%2C%20The%20Public%20Gathering%20Bill.pdf",
+      "context": "Explore the published bill alongside Parliament's committee report. A bill is a proposal, not proof of the law currently in force.",
+      "status": "Passage, assent and commencement have not been verified. Check the current status before relying on any proposal."
+    },
+    {
+      "id": "personal-data-sharing",
+      "question": "When can a business share my personal data without asking me?",
+      "kind": "Act",
+      "published": "2021",
+      "source": "National Assembly",
+      "sourceTitle": "The Data Protection Act, 2021",
+      "url": "https://www.parliament.gov.zm/node/8853",
+      "context": "Start with the published Data Protection Act and investigate the lawful basis for sharing personal data.",
+      "status": "Check applicable exceptions and current amendments. Do not assume consent is the only lawful basis or that sharing automatically establishes a breach."
+    }
+  ]
+}

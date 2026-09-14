@@ -10,13 +10,18 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { GraduationCap, BookOpen, ScrollText, ListChecks, ArrowRight } from 'lucide-react'
+import { ChoiceSelect } from '@/components/canopy/choice-select'
+import LordIcon from '@/components/ui/lord-icon'
+import { CANOPY_ICON } from '@/components/canopy/icons'
+import Image from 'next/image'
+import { useUiVariant } from '@/lib/ui-variant'
 
 type Mode = 'learn' | 'cheat' | 'quiz'
 
-const MODES: { key: Mode; label: string; desc: string; Icon: typeof BookOpen }[] = [
-  { key: 'learn', label: 'Learn', desc: 'A grounded lesson with statute and case law', Icon: BookOpen },
-  { key: 'cheat', label: 'Cheat sheet', desc: 'A condensed revision sheet to download', Icon: ScrollText },
-  { key: 'quiz', label: 'Quiz', desc: 'An interactive, graded mock exam', Icon: ListChecks },
+const MODES: { key: Mode; label: string; desc: string; Icon: typeof BookOpen; lord: string }[] = [
+  { key: 'learn', label: 'Learn', desc: 'A grounded lesson with statute and case law', Icon: BookOpen, lord: 'book' },
+  { key: 'cheat', label: 'Cheat sheet', desc: 'A condensed revision sheet to download', Icon: ScrollText, lord: 'snippet' },
+  { key: 'quiz', label: 'Quiz', desc: 'An interactive, graded mock exam', Icon: ListChecks, lord: 'assessment' },
 ]
 
 const AREAS = [
@@ -38,6 +43,7 @@ function buildPrompt(mode: Mode, area: string, topic: string): string {
 }
 
 export default function StudyPage() {
+  const { variant } = useUiVariant()
   const router = useRouter()
   const [mode, setMode] = useState<Mode>('learn')
   const [area, setArea] = useState<string>('')
@@ -49,8 +55,76 @@ export default function StudyPage() {
     router.push(`/chat?q=${encodeURIComponent(q)}`)
   }
 
+  const startLabel = mode === 'learn' ? 'Start lesson' : mode === 'cheat' ? 'Make my cheat sheet' : 'Start quiz'
+  const preview = !area
+    ? 'Pick a subject and Levy will build it from the Acts and judgments in the library.'
+    : mode === 'learn'
+      ? `A grounded ${area} law lesson${topic.trim() ? ` on ${topic.trim()}` : ''}: the governing sections, the leading Zambian cases, and a worked example.`
+      : mode === 'cheat'
+        ? `A condensed ${area} law revision sheet${topic.trim() ? ` on ${topic.trim()}` : ''}: sections, cases and the common exam traps, ready to download.`
+        : `A graded ${area} law mock exam${topic.trim() ? ` on ${topic.trim()}` : ''}: multiple choice with explanations and citations.`
+
+  if (variant === 'canopy') {
+    return (
+      <div className="cp-study-page">
+        <header className="cp-study-hero">
+          <div>
+            <h1>Study mode</h1>
+            <p>Lessons, revision sheets and mock exams, built from the Acts and judgments in Levy&rsquo;s library. Free to use.</p>
+          </div>
+          <Image src="/canopy/onboarding/welcome.png" alt="" width={110} height={110} priority />
+        </header>
+
+        <section className="cp-study-step" aria-labelledby="study-step-format">
+          <h2 id="study-step-format"><span>1</span>How do you want to study?</h2>
+          <div className="cp-study-formats" role="radiogroup" aria-label="Study format">
+            {MODES.map(({ key, label, desc, lord }) => {
+              const active = mode === key
+              return (
+                <button key={key} type="button" role="radio" aria-checked={active} className={'cp-study-format' + (active ? ' is-active' : '')} onClick={() => setMode(key)}>
+                  <span className="cp-lord" aria-hidden="true"><LordIcon name={CANOPY_ICON[lord]} size={22} trigger="loop" /></span>
+                  <strong>{label}</strong>
+                  <small>{desc}</small>
+                </button>
+              )
+            })}
+          </div>
+          {/* On phones the three formats sit on one line without room for
+              their captions, so the selected one explains itself here. */}
+          <p className="cp-study-format-note" aria-live="polite">{MODES.find((m) => m.key === mode)!.desc}</p>
+        </section>
+
+        <section className="cp-study-step" aria-labelledby="study-step-subject">
+          <h2 id="study-step-subject"><span>2</span>Pick your subject</h2>
+          <div className="cp-study-fields">
+            <ChoiceSelect id="study-subject" aria-label="Study subject" value={area} onChange={(e) => setArea(e.target.value)}>
+              <option value="" disabled>Choose a subject…</option>
+              {AREAS.map((a) => <option key={a} value={a}>{a}</option>)}
+            </ChoiceSelect>
+            <input
+              id="study-topic"
+              type="text"
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') start() }}
+              aria-label="Narrow it down (optional)"
+              placeholder="Narrow it down (optional): constructive dismissal, bail…"
+            />
+          </div>
+        </section>
+
+        <footer className="cp-study-launch">
+          <p aria-live="polite">{preview}</p>
+          <button type="button" className="cp-btn primary" onClick={start} disabled={!area}>
+            {startLabel} <ArrowRight size={15} />
+          </button>
+        </footer>
+      </div>
+    )
+  }
+
   return (
-    <div className="w-full max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    <div className="cp-study flex-1 min-h-0 overflow-y-auto w-full max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
       <div className="flex items-center gap-3 mb-1.5">
         <span className="flex items-center justify-center size-9 rounded-xl bg-emerald-500/12 border border-emerald-500/20">
           <GraduationCap size={18} className="text-emerald-400" />
@@ -58,19 +132,19 @@ export default function StudyPage() {
         <h1 className="text-[22px] font-semibold text-white/90">Study mode</h1>
       </div>
       <p className="text-[13.5px] text-white/45 mb-7 leading-relaxed">
-        Learn Zambian law grounded in the Acts and real judgments. Pick a subject, choose how you
-        want to study, and start. It is free to use.
+        Explore a topic, build revision notes or test your understanding.
       </p>
 
       {/* Mode */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-7">
-        {MODES.map(({ key, label, desc, Icon }) => {
+      <div className="cp-study-modes grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-7" aria-label="Study format">
+        {MODES.map(({ key, label, Icon }) => {
           const active = mode === key
           return (
             <button
               key={key}
               type="button"
               onClick={() => setMode(key)}
+              aria-pressed={active}
               className={`text-left rounded-xl border p-3.5 transition-colors ${
                 active
                   ? 'border-emerald-500/40 bg-emerald-500/10'
@@ -81,39 +155,27 @@ export default function StudyPage() {
               <div className={`text-[13.5px] font-medium mt-2 ${active ? 'text-emerald-100' : 'text-white/80'}`}>
                 {label}
               </div>
-              <div className="text-[11.5px] text-white/40 mt-0.5 leading-snug">{desc}</div>
             </button>
           )
         })}
       </div>
+      <p className="cp-study-description">{MODES.find(item => item.key === mode)?.desc}</p>
 
       {/* Area */}
-      <div className="text-[12px] uppercase tracking-wider text-white/40 mb-2.5">Choose a subject</div>
-      <div className="flex flex-wrap gap-2 mb-7">
-        {AREAS.map((a) => {
-          const active = area === a
-          return (
-            <button
-              key={a}
-              type="button"
-              onClick={() => setArea(a)}
-              className={`px-3 py-1.5 rounded-lg text-[12.5px] font-medium border transition-colors ${
-                active
-                  ? 'border-emerald-500/40 bg-emerald-500/12 text-emerald-200'
-                  : 'border-white/[0.08] bg-white/[0.02] text-white/60 hover:text-white/85 hover:bg-white/[0.04]'
-              }`}
-            >
-              {a}
-            </button>
-          )
-        })}
+      <label htmlFor="study-subject" className="block text-sm text-white/60 mb-2.5">Subject</label>
+      <div className="mb-7">
+        <ChoiceSelect id="study-subject" aria-label="Study subject" value={area} onChange={e => setArea(e.target.value)} className="w-full">
+          <option value="" disabled>Choose a subject</option>
+          {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
+        </ChoiceSelect>
       </div>
 
       {/* Topic */}
-      <div className="text-[12px] uppercase tracking-wider text-white/40 mb-2.5">
+      <label htmlFor="study-topic" className="block text-sm text-white/60 mb-2.5">
         Narrow it down <span className="text-white/25 normal-case tracking-normal">(optional)</span>
-      </div>
+      </label>
       <input
+        id="study-topic"
         type="text"
         value={topic}
         onChange={(e) => setTopic(e.target.value)}

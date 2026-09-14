@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
+import { QuestionCard } from '@/components/canopy/question-card'
 import remarkGfm from 'remark-gfm'
 import { ChevronDown, ChevronUp, FileText, Clock, Scale, Globe, ExternalLink, Paperclip } from 'lucide-react'
 import { MatchBadge } from '@/components/ui/match-badge'
@@ -17,6 +18,8 @@ import { PrecedentCard } from './precedent-card'
 import { CheatSheetCard } from './cheat-sheet-card'
 import { QuizCard } from './quiz-card'
 import { AnswerFeedback } from './answer-feedback'
+import { useUiVariant } from '@/lib/ui-variant'
+import { CanopyMessage } from '@/components/canopy/message'
 import type {
   CitationVerdict,
   ApplicationPlan,
@@ -53,8 +56,9 @@ export type MessageBlock =
   // server-side by matching every authority named in the prose against the
   // document library. Rendered as the authorities panel under the answer.
   | { kind: 'citation_audit'; citations: CitationVerdict[] }
+  | { kind: 'ask_user'; id?: string; question: string; options?: string[]; allow_free_text?: boolean }
 
-interface ChatMessageProps {
+export interface ChatMessageProps {
   /** Row id of the saved message; enables the feedback control. */
   messageId?: string
   role: 'user' | 'assistant'
@@ -78,9 +82,17 @@ interface ChatMessageProps {
   onUseTemplate?: (template: TemplateSuggestion) => void
   onDraftBundle?: (plan: ApplicationPlan) => void
   onDraftIndividual?: (plan: ApplicationPlan, kind: 'summons' | 'affidavit' | 'skeletal' | 'order') => void
+  /** Present only on the latest message: submits the ask_user answer. */
+  onAskAnswer?: (text: string) => void
 }
 
-export function ChatMessage({
+/** Chooses the presentation; both variants take the same props and callbacks. */
+export function ChatMessage(props: ChatMessageProps) {
+  const canopy = useUiVariant().variant === 'canopy'
+  return canopy ? <CanopyMessage {...props} /> : <LegacyChatMessage {...props} />
+}
+
+function LegacyChatMessage({
   messageId,
   role,
   content,
@@ -103,6 +115,7 @@ export function ChatMessage({
   onUseTemplate,
   onDraftBundle,
   onDraftIndividual,
+  onAskAnswer,
 }: ChatMessageProps) {
   const [showCitations, setShowCitations] = useState(false)
   const [showWebSources, setShowWebSources] = useState(false)
@@ -272,6 +285,13 @@ export function ChatMessage({
                 // (it's the chip listing what the user attached for that
                 // turn). Skip it in the assistant render path.
                 if (block.kind === 'attachments') return null
+                if (block.kind === 'ask_user') {
+                  return (
+                    <div key={`ask-${block.id ?? 'q'}`} className="my-2.5 -mx-1">
+                      <QuestionCard question={block.question} options={block.options} allowFreeText={block.allow_free_text !== false} onAnswer={onAskAnswer} />
+                    </div>
+                  )
+                }
                 const call = (toolCalls || []).find((c) => c.id === block.toolCallId)
                 if (!call) {
                   // Older saved messages may have block refs without the

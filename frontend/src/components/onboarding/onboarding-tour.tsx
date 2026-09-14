@@ -28,6 +28,7 @@ import { useAuth } from '@/components/auth/auth-provider'
 import { createClient } from '@/lib/supabase'
 import { ArrowRight, X } from 'lucide-react'
 import { LevyLogo } from '@/components/ui/levy-logo'
+import { useUiVariant } from '@/lib/ui-variant'
 
 /**
  * Completion is tracked in TWO places so it survives the right things:
@@ -44,6 +45,7 @@ const STORAGE_KEY = 'levy_onboarding_v3'
 const METADATA_FIELD = 'onboarded_at'
 
 interface Step {
+  image?: string
   /** Element selector to spotlight. If omitted (or none is currently visible)
    *  the card renders centered. */
   selector?: string
@@ -141,6 +143,14 @@ const STEPS: Step[] = [
   },
 ]
 
+const CANOPY_STEPS: Step[] = [
+  { title: 'Make yourself at home.', body: 'A place for your questions, source documents and working notes. Take a short look around.', image: 'welcome' },
+  { title: 'Start with what you know.', body: 'Ask in plain language, attach a PDF, or choose Review draft for text you want checked. You can follow each tool’s progress as Levy works.', image: 'ask-attach', selector: '[data-tour="chat-input"]', route: '/chat' },
+  { title: 'Give your sources a home.', body: 'Group documents into folders. Open a file, ask about it, or keep it with the matter it belongs to.', image: 'documents', selector: '[data-tour="nav-documents"]', requiresMenu: true },
+  { title: 'Keep the work together.', body: 'Matters collect your conversations, documents and drafts. Create a matter when you want to keep a case together.', image: 'matters', selector: '[data-tour="nav-matters"]', requiresMenu: true },
+  { title: 'Check the work as you go.', body: 'Open the page behind a citation, inspect a calculation’s inputs, and review the IRAC analysis. Library matching does not guarantee correct legal advice.', image: 'verify-analyse', selector: '[data-tour="chat-input"]', route: '/chat' },
+]
+
 interface OnboardingTourProps {
   /** Force the tour to open even if previously dismissed. */
   forceOpen?: boolean
@@ -157,6 +167,8 @@ export function OnboardingTour({
   setMobileMenuOpen,
   onClose,
 }: OnboardingTourProps) {
+  const { variant } = useUiVariant()
+  const steps = variant === 'canopy' ? CANOPY_STEPS : STEPS
   const { user, loading } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
@@ -166,6 +178,8 @@ export function OnboardingTour({
 
   // Auto-open once per (browser AND account) after auth resolves.
   useEffect(() => {
+    // Wait for route layout and its tour anchors before displaying a spotlight.
+    const frame = requestAnimationFrame(() => {
     setMounted(true)
     if (loading) return
     if (forceOpen) {
@@ -174,7 +188,8 @@ export function OnboardingTour({
       return
     }
     if (typeof window === 'undefined') return
-    const localSeen = !!window.localStorage.getItem(STORAGE_KEY)
+    let localSeen = false
+    try { localSeen = !!window.localStorage.getItem(STORAGE_KEY) } catch { /* account state still works */ }
 
     // Signed-in: user_metadata is the source of truth so the tour follows
     // them across browsers and devices.
@@ -183,7 +198,7 @@ export function OnboardingTour({
       if (accountSeen) {
         // Make sure local also reflects this — saves a redundant DB read
         // on every reload.
-        if (!localSeen) window.localStorage.setItem(STORAGE_KEY, 'done')
+        try { if (!localSeen) window.localStorage.setItem(STORAGE_KEY, 'done') } catch { /* unavailable */ }
         return
       }
       // The user finished the tour in this browser (e.g. while anonymous)
@@ -208,11 +223,13 @@ export function OnboardingTour({
       setOpen(true)
       setStep(0)
     }
+    })
+    return () => cancelAnimationFrame(frame)
   }, [loading, pathname, forceOpen, user])
 
   function finish() {
     if (typeof window !== 'undefined') {
-      window.localStorage.setItem(STORAGE_KEY, 'done')
+      try { window.localStorage.setItem(STORAGE_KEY, 'done') } catch { /* account state remains available */ }
     }
     if (user) {
       // Best-effort. If it fails (network blip) we still have the local
@@ -229,8 +246,8 @@ export function OnboardingTour({
   }
 
   function next() {
-    if (step >= STEPS.length - 1) return finish()
-    const upcoming = STEPS[step + 1]
+    if (step >= steps.length - 1) return finish()
+    const upcoming = steps[step + 1]
     if (upcoming?.route && pathname !== upcoming.route) router.push(upcoming.route)
     setStep((s) => s + 1)
   }
@@ -243,8 +260,8 @@ export function OnboardingTour({
   return createPortal(
     <TourFrame
       step={step}
-      total={STEPS.length}
-      current={STEPS[step]}
+      total={steps.length}
+      current={steps[step]}
       mobileMenuOpen={!!mobileMenuOpen}
       setMobileMenuOpen={setMobileMenuOpen}
       onNext={next}
@@ -291,16 +308,39 @@ function TourFrame({
   const tooltipRef = useRef<HTMLDivElement>(null)
   const [tipSize, setTipSize] = useState({ w: 320, h: 160 })
 
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null
+    const frame = requestAnimationFrame(() => tooltipRef.current?.querySelector<HTMLButtonElement>('button')?.focus())
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { event.preventDefault(); onSkip(); return }
+      if (event.key !== 'Tab') return
+      const controls = Array.from(tooltipRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), a[href], input:not(:disabled)') ?? [])
+      const first = controls[0], last = controls.at(-1)
+      if (!first || !last) return
+      if (event.shiftKey && (document.activeElement === first || !tooltipRef.current?.contains(document.activeElement))) {
+        event.preventDefault(); last.focus()
+      } else if (!event.shiftKey && (document.activeElement === last || !tooltipRef.current?.contains(document.activeElement))) {
+        event.preventDefault(); first.focus()
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => {
+      cancelAnimationFrame(frame)
+      document.removeEventListener('keydown', onKey)
+      if (previous?.isConnected) previous.focus()
+    }
+  }, [step, onSkip])
+
   // Viewport breakpoint + dimensions
   useLayoutEffect(() => {
     const measure = () => {
-      setIsDesktop(window.innerWidth >= 768)
+      setIsDesktop(window.innerWidth >= (current.image ? 1101 : 768))
       setVp({ w: window.innerWidth, h: window.innerHeight })
     }
     measure()
     window.addEventListener('resize', measure)
     return () => window.removeEventListener('resize', measure)
-  }, [])
+  }, [current.image])
 
   // Make sure the mobile sidebar is in the right state BEFORE we try to find
   // anchors that live inside it. The effect re-runs every step change.
@@ -314,8 +354,8 @@ function TourFrame({
   // exist (route just changed, mobile sidebar still animating in, etc.).
   useLayoutEffect(() => {
     if (!current.selector) {
-      setRect(null)
-      return
+      const frame = requestAnimationFrame(() => setRect(null))
+      return () => cancelAnimationFrame(frame)
     }
     let stopped = false
     let attempts = 0
@@ -361,12 +401,17 @@ function TourFrame({
         className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/72 backdrop-blur-sm px-4 pb-[max(16px,env(safe-area-inset-bottom))]"
       >
         <motion.div
+          ref={tooltipRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={current.title}
           initial={{ y: 24, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 360, damping: 32 }}
-          className="w-full max-w-sm rounded-2xl border border-white/[0.08] bg-[#0d0d0f] p-5 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)]"
+          className="cp-tour-card w-full max-w-sm rounded-2xl border border-white/[0.08] bg-[#0d0d0f] p-5 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)]"
         >
           <TourHeader step={step} total={total} onSkip={onSkip} />
+          {current.image && <TourArt name={current.image} />}
           <h2 className="text-[17px] font-semibold text-white tracking-tight mt-2">
             {current.title}
           </h2>
@@ -492,13 +537,17 @@ function TourFrame({
       {/* Tooltip — rendered with measured size for accurate placement */}
       <motion.div
         ref={tooltipRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={current.title}
         initial={{ opacity: 0, y: 4 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.18 }}
-        className="absolute pointer-events-auto rounded-2xl border border-white/[0.08] bg-[#0d0d0f] shadow-[0_28px_60px_-12px_rgba(0,0,0,0.7)] p-4"
+        className="cp-tour-card absolute pointer-events-auto rounded-2xl border border-white/[0.08] bg-[#0d0d0f] shadow-[0_28px_60px_-12px_rgba(0,0,0,0.7)] p-4"
         style={{ left: tipX, top: tipY, width: tooltipW }}
       >
         <TourHeader step={step} total={total} onSkip={onSkip} />
+        {current.image && <TourArt name={current.image} />}
         <h2 className="text-[15px] font-semibold text-white tracking-tight mt-1.5">
           {current.title}
         </h2>
@@ -507,6 +556,15 @@ function TourFrame({
       </motion.div>
     </motion.div>
   )
+}
+
+function TourArt({ name }: { name: string }) {
+  const [paused, setPaused] = useState(false)
+  return <div className="cp-tour-art" data-paused={paused}>
+    {/* eslint-disable-next-line @next/next/no-img-element */}
+    <img src={`/canopy/onboarding/${name}.png`} alt="" width={128} height={128} />
+    <button type="button" onClick={() => setPaused((value) => !value)} aria-pressed={paused}>{paused ? 'Resume illustration' : 'Pause illustration'}</button>
+  </div>
 }
 
 function TourHeader({
@@ -529,10 +587,10 @@ function TourHeader({
       <button
         type="button"
         onClick={onSkip}
-        className="p-1 rounded text-white/30 hover:text-white/70 hover:bg-white/[0.04] transition-colors"
+        className="min-h-11 px-3 rounded-full border border-current text-white/70 hover:text-white transition-colors text-xs flex items-center gap-1"
         aria-label="Skip tour"
       >
-        <X size={13} />
+        Skip tour <X size={13} />
       </button>
     </div>
   )

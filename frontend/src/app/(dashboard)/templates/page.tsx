@@ -3,6 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '@/components/auth/auth-provider'
 import { FolderCard } from '@/components/documents/folder-card'
+import { ChoiceSelect } from '@/components/canopy/choice-select'
+import { useUiVariant } from '@/lib/ui-variant'
+import { CanopyModal } from '@/components/canopy/modal'
 import {
   createTemplateFolder,
   deleteTemplate,
@@ -29,6 +32,8 @@ import {
   Trash2,
   Upload,
   X,
+  List,
+  LayoutGrid,
 } from 'lucide-react'
 import { CTA } from '@/components/ui/cta'
 
@@ -37,6 +42,9 @@ const FOLDER_UNFILED = '__unfiled__'
 type FolderId = string
 
 export default function TemplatesPage() {
+  const { variant } = useUiVariant()
+  const canopy = variant === 'canopy'
+  const [layout, setLayout] = useState<'list' | 'grid'>('list')
   const { user } = useAuth()
   const [activeFolder, setActiveFolder] = useState<FolderId | null>(null)
   const [templates, setTemplates] = useState<TemplateRow[]>([])
@@ -45,6 +53,7 @@ export default function TemplatesPage() {
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [query, setQuery] = useState('')
+  const [error, setError] = useState<string | null>(null)
 
   // Folder modals
   const [creatingFolder, setCreatingFolder] = useState(false)
@@ -61,6 +70,7 @@ export default function TemplatesPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   async function reload() {
+    setError(null)
     if (!user?.id) {
       setTemplates([])
       setFolders([])
@@ -81,6 +91,7 @@ export default function TemplatesPage() {
       setUnfiledCount(folderRes.unfiled_count)
     } catch {
       setTemplates([])
+      setError('Your templates could not load. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -102,7 +113,7 @@ export default function TemplatesPage() {
       await reload()
     } catch (err) {
       console.error(err)
-      alert('Upload failed. Templates must be .docx, .pdf, .txt or .md.')
+      setError('Upload failed. Templates must be .docx, .pdf, .txt or .md. Please try again.')
     } finally {
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
@@ -119,7 +130,7 @@ export default function TemplatesPage() {
       setCreatingFolder(false)
       await reload()
     } catch {
-      // collision: keep dialog open
+      setError('Could not create this folder. Check the name and try again.')
     }
   }
 
@@ -133,7 +144,7 @@ export default function TemplatesPage() {
       setRenameValue('')
       await reload()
     } catch {
-      // ignore
+      setError('Could not rename this folder. Please try again.')
     }
   }
 
@@ -160,7 +171,7 @@ export default function TemplatesPage() {
       setEditing(null)
       await reload()
     } catch {
-      // noop
+      setError('Could not save this template. Please try again.')
     }
   }
 
@@ -171,7 +182,7 @@ export default function TemplatesPage() {
       await deleteTemplate(template.id)
       await reload()
     } catch {
-      // noop
+      setError('Could not delete this template. Please try again.')
     }
   }
 
@@ -180,7 +191,7 @@ export default function TemplatesPage() {
       const { signed_url } = await getTemplateSignedUrl(template.id)
       if (signed_url) window.open(signed_url, '_blank', 'noopener,noreferrer')
     } catch {
-      // noop
+      setError('Could not open this template. Please try again.')
     }
   }
 
@@ -189,6 +200,8 @@ export default function TemplatesPage() {
     try {
       await moveTemplateToFolder(template.id, folderId)
       await reload()
+    } catch {
+      setError('Could not move this template. Please try again.')
     } finally {
       setBusyTemplate((b) => ({ ...b, [template.id]: false }))
     }
@@ -214,12 +227,10 @@ export default function TemplatesPage() {
       ? 'Unfiled'
       : activeFolderRow?.name ?? ''
 
-  const isUserFolder = !!activeFolder && activeFolder !== FOLDER_UNFILED
-
   return (
     <div className="flex-1 overflow-y-auto" style={{ overscrollBehavior: 'none' }}>
       <div className="px-4 sm:px-6 py-6 max-w-5xl mx-auto w-full">
-        <div className="flex items-start justify-between gap-3 mb-6">
+        <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
           <div className="min-w-0">
             <h1
               className="text-3xl font-normal text-white/95 tracking-tight"
@@ -234,6 +245,7 @@ export default function TemplatesPage() {
             </p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
+            {canopy && user && <button className="cp-btn" onClick={() => setCreatingFolder(true)}><Plus size={15} />New folder</button>}
             <input
               ref={fileInputRef}
               type="file"
@@ -241,8 +253,8 @@ export default function TemplatesPage() {
               onChange={handleUpload}
               className="hidden"
             />
-            {activeFolder && (
-              <>
+            {(canopy || activeFolder) && (
+              canopy ? <button type="button" className="cp-btn primary" onClick={() => fileInputRef.current?.click()} disabled={uploading || !user} aria-label={uploading ? 'Uploading template' : 'Upload template'}>{uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}{uploading ? 'Uploading' : 'Upload'}</button> : <>
                 <CTA
                   size="md"
                   tone="primary"
@@ -308,11 +320,13 @@ export default function TemplatesPage() {
           </div>
         )}
 
+        {error && <p role="alert" className="cp-library-error">{error}</p>}
         {!user ? (
           <div className="py-16 text-center text-[13px] text-white/45">
             Sign in to save your templates.
           </div>
-        ) : !activeFolder ? (
+        ) : <>
+        {(canopy || !activeFolder) && (
           /* Folder grid */
           <>
             {loading ? (
@@ -320,7 +334,7 @@ export default function TemplatesPage() {
                 <Loader2 className="size-5 text-emerald-400 animate-spin" />
               </div>
             ) : (
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3 mb-8">
+              <div className={canopy ? 'cp-library-shelf' : 'grid grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3 mb-8'}>
                 {folders.map((f) => (
                   <FolderCard
                     key={f.id}
@@ -338,21 +352,23 @@ export default function TemplatesPage() {
                     onClick={() => setActiveFolder(FOLDER_UNFILED)}
                   />
                 )}
-                <FolderCard
+                {!canopy && <FolderCard
                   kind="new"
                   name="New folder"
                   description="Group similar templates."
                   onClick={() => setCreatingFolder(true)}
-                />
+                />}
               </div>
             )}
-            {folders.length === 0 && unfiledCount === 0 && !loading && (
+            {!canopy && folders.length === 0 && unfiledCount === 0 && !loading && (
               <EmptyState onUpload={() => fileInputRef.current?.click()} />
             )}
           </>
-        ) : (
+        )}
+        {(canopy || activeFolder) && (
           /* Folder detail */
           <>
+            {canopy && <div className="cp-library-toolbar"><button aria-pressed={!activeFolder} onClick={() => setActiveFolder(null)}>All templates</button><div><button aria-label="List view" aria-pressed={layout === 'list'} onClick={() => setLayout('list')}><List size={18} /></button><button aria-label="Grid view" aria-pressed={layout === 'grid'} onClick={() => setLayout('grid')}><LayoutGrid size={18} /></button></div></div>}
             <div className="relative max-w-sm mb-4">
               <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/25" />
               <input
@@ -369,9 +385,9 @@ export default function TemplatesPage() {
                 <Loader2 className="size-5 text-emerald-400 animate-spin" />
               </div>
             ) : filtered.length === 0 ? (
-              <EmptyState onUpload={() => fileInputRef.current?.click()} />
+              query.trim() ? <p role="status" className="py-10 text-sm">No templates match your search. Try another name or clear the filter.</p> : <EmptyState onUpload={() => fileInputRef.current?.click()} />
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
+              <div className={canopy ? `cp-library-files is-${layout}` : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3'}>
                 {filtered.map((t) => (
                   <TemplateCard
                     key={t.id}
@@ -391,13 +407,14 @@ export default function TemplatesPage() {
               </div>
             )}
           </>
-        )}
+        )}</>}
       </div>
 
       {/* New folder modal */}
       {creatingFolder && (
-        <Modal onClose={() => setCreatingFolder(false)} title="New folder">
+        <Modal error={error} onClose={() => setCreatingFolder(false)} title="New folder">
           <input
+            aria-label="Folder name"
             autoFocus
             type="text"
             placeholder="Folder name"
@@ -428,8 +445,9 @@ export default function TemplatesPage() {
 
       {/* Rename folder modal */}
       {renameTarget && (
-        <Modal onClose={() => setRenameTarget(null)} title="Rename folder">
+        <Modal error={error} onClose={() => setRenameTarget(null)} title="Rename folder">
           <input
+            aria-label="Folder name"
             autoFocus
             type="text"
             value={renameValue}
@@ -458,17 +476,19 @@ export default function TemplatesPage() {
 
       {/* Edit template modal */}
       {editing && (
-        <Modal onClose={() => setEditing(null)} title="Edit template">
-          <label className="block text-[11px] uppercase tracking-wider text-white/35 mb-1">Name</label>
+        <Modal error={error} onClose={() => setEditing(null)} title="Edit template">
+          <label htmlFor="template-name" className="block text-[11px] uppercase tracking-wider text-white/35 mb-1">Name</label>
           <input
+            id="template-name"
             autoFocus
             type="text"
             value={editName}
             onChange={(e) => setEditName(e.target.value)}
             className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.08] text-[13px] text-white/85 focus:outline-none focus:border-emerald-500/40 mb-3"
           />
-          <label className="block text-[11px] uppercase tracking-wider text-white/35 mb-1">Description</label>
+          <label htmlFor="template-description" className="block text-[11px] uppercase tracking-wider text-white/35 mb-1">Description</label>
           <textarea
+            id="template-description"
             rows={3}
             value={editDescription}
             onChange={(e) => setEditDescription(e.target.value)}
@@ -564,7 +584,7 @@ function TemplateCard({
 
       <div className="mt-3 flex items-center justify-between gap-2">
         {folders.length > 0 ? (
-          <select
+          <ChoiceSelect aria-label={`Folder for ${template.name}`}
             value={template.folder_id ?? ''}
             onChange={(e) => onMove(e.target.value === '' ? null : e.target.value)}
             disabled={busy}
@@ -576,7 +596,7 @@ function TemplateCard({
                 {f.name}
               </option>
             ))}
-          </select>
+          </ChoiceSelect>
         ) : <span />}
         <div className="flex items-center gap-1">
           <button
@@ -621,11 +641,15 @@ function Modal({
   children,
   onClose,
   title,
+  error,
 }: {
   children: React.ReactNode
   onClose: () => void
   title: string
+  error?: string | null
 }) {
+  const { variant } = useUiVariant()
+  if (variant === 'canopy') return <CanopyModal title={title} onClose={onClose}><div className="cp-library-dialog">{error && <p role="alert">{error}</p>}{children}</div></CanopyModal>
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />

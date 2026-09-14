@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useMemo, type JSX } from 'react'
-import { motion } from 'framer-motion'
+import React, { useMemo } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 interface TextShimmerProps {
@@ -19,14 +19,15 @@ export function TextShimmer({
   duration = 2,
   spread = 2,
 }: TextShimmerProps) {
-  const MotionComponent = motion(Component as keyof JSX.IntrinsicElements)
+  const reducedMotion = useReducedMotion()
 
   const dynamicSpread = useMemo(() => {
     return children.length * spread
   }, [children, spread])
 
   return (
-    <MotionComponent
+    <Component>
+    <motion.span
       className={cn(
         'relative inline-block bg-[length:250%_100%,auto] bg-clip-text',
         'text-transparent [--base-color:#71717a] [--base-gradient-color:#ffffff]',
@@ -34,9 +35,9 @@ export function TextShimmer({
         className
       )}
       initial={{ backgroundPosition: '100% center' }}
-      animate={{ backgroundPosition: '0% center' }}
+      animate={{ backgroundPosition: reducedMotion ? '50% center' : '0% center' }}
       transition={{
-        repeat: Infinity,
+        repeat: reducedMotion ? 0 : Infinity,
         duration,
         ease: 'linear',
       }}
@@ -48,6 +49,7 @@ export function TextShimmer({
       }
     >
       {children}
-    </MotionComponent>
+    </motion.span>
+    </Component>
   )
 }

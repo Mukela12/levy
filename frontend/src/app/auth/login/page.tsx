@@ -10,8 +10,11 @@ import { EtherealShadow } from '@/components/ui/ethereal-shadow'
 import { TextShimmer } from '@/components/ui/text-shimmer'
 import { Loader2 } from 'lucide-react'
 import { LevyLogo } from '@/components/ui/levy-logo'
+import { useUiVariant } from '@/lib/ui-variant'
+import { CanopyAuthScreen } from '@/components/canopy/auth-screen'
 
 export default function LoginPage() {
+  const { variant } = useUiVariant()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -32,6 +35,7 @@ export default function LoginPage() {
     }
   }
 
+  if (variant === 'canopy') return <CanopyAuthScreen mode="login" />
   return (
     <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden bg-[#060608]">
       {/* Animated ethereal background */}

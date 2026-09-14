@@ -1,0 +1,86 @@
+'use client'
+
+import { useState } from 'react'
+import Link from 'next/link'
+import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+import { ArrowRight, Eye, EyeOff } from 'lucide-react'
+import { useAuth } from '@/components/auth/auth-provider'
+import { useUiVariant } from '@/lib/ui-variant'
+import { createClient } from '@/lib/supabase'
+import { LevyLogo } from '@/components/ui/levy-logo'
+import { CanopyThemeToggle } from './theme-toggle'
+import welcome from '../../../public/canopy/onboarding/welcome.png'
+
+export function CanopyAuthScreen({ mode }: { mode: 'login' | 'signup' | 'reset' }) {
+  const { signIn, signUp } = useAuth()
+  const { theme, setTheme } = useUiVariant()
+  const router = useRouter()
+  const [recovery, setRecovery] = useState(false)
+  const [email, setEmail] = useState('')
+  const [name, setName] = useState('')
+  const [password, setPassword] = useState('')
+  const [show, setShow] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+  const signup = mode === 'signup'
+  const reset = mode === 'reset'
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault()
+    if (busy) return
+    setBusy(true); setError(''); setNotice('')
+    try {
+      const client = createClient()
+      if (recovery) {
+        const result = await client.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/auth/reset-password` })
+        if (result.error) throw result.error
+        setNotice('If an account exists for this address, check your inbox for a recovery link.')
+      } else if (reset) {
+        const { data } = await client.auth.getSession()
+        if (!data.session) throw new Error('This recovery link has expired or is invalid. Request a new link from sign in.')
+        const result = await client.auth.updateUser({ password })
+        if (result.error) throw result.error
+        setPassword(''); setNotice('Your password has been updated. You can return to your workspace.')
+      } else if (signup) {
+        const result = await signUp(email.trim(), password, name.trim())
+        if (result.error) throw result.error
+        if (result.session?.access_token) {
+          void fetch('/api/email/welcome', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${result.session.access_token}` }, body: JSON.stringify({ fullName: name.trim() }) }).catch(() => {})
+          router.push('/chat')
+        } else setNotice('Check your email to confirm your account before signing in.')
+      } else {
+        const result = await signIn(email.trim(), password)
+        if (result.error) throw result.error
+        router.push('/chat')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to complete this request. Please try again.')
+    } finally { setBusy(false) }
+  }
+
+  return <main className="cp-auth">
+    <header><Link href="/chat" aria-label="Levy home"><LevyLogo size={30} /><strong>levy</strong></Link><CanopyThemeToggle dark={theme === 'dark'} onChange={dark => setTheme(dark ? 'dark' : 'light')} /></header>
+    <div className="cp-auth-layout">
+      <aside className="cp-auth-art"><span>A little clarity goes a long way</span><h1>Your Levy<br />workspace.</h1><p>Your companion for researching, understanding and working with Zambian law.</p><Image src={welcome} alt="" priority sizes="(max-width: 800px) 0px, 360px" /><small>Levy · Zambia</small></aside>
+      <section className="cp-auth-form" aria-labelledby="auth-title">
+        <span className="cp-eyebrow">Your Levy workspace</span>
+        <h2 id="auth-title">{recovery ? 'Let’s get you back in.' : reset ? 'Choose a new password.' : signup ? 'Create your workspace.' : 'Sign in to Levy.'}</h2>
+        <p>{recovery ? 'Enter the email address linked to your account.' : reset ? 'Use a password you do not use elsewhere.' : signup ? 'Your questions, sources and legal work, together.' : 'Pick up your conversations and legal research.'}</p>
+        {error && <p role="alert" className="cp-auth-error">{error}</p>}
+        {notice && <p role="status" className="cp-auth-notice">{notice}</p>}
+        {!(notice && (reset || signup)) && <form onSubmit={submit}>
+          {signup && !recovery && <label>Your name<input autoComplete="name" required maxLength={100} value={name} onChange={e => setName(e.target.value)} /></label>}
+          {!reset && <label>Email address<input type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} /></label>}
+          {!recovery && <label>Password<div className="cp-password"><input type={show ? 'text' : 'password'} autoComplete={signup || reset ? 'new-password' : 'current-password'} minLength={signup || reset ? 8 : undefined} required value={password} onChange={e => setPassword(e.target.value)} /><button type="button" aria-label={show ? 'Hide password' : 'Show password'} onClick={() => setShow(!show)}>{show ? <EyeOff size={18} /> : <Eye size={18} />}</button></div>{(signup || reset) && <small>At least 8 characters.</small>}</label>}
+          <button className="cp-btn primary" disabled={busy} type="submit">{busy ? 'Please wait…' : recovery ? 'Send recovery link' : reset ? 'Update password' : signup ? 'Create account' : 'Sign in'}<ArrowRight size={16} /></button>
+        </form>}
+        {mode === 'login' && <button className="cp-auth-text" type="button" onClick={() => { setRecovery(!recovery); setError(''); setNotice('') }}>{recovery ? 'Back to sign in' : 'Forgot password?'}</button>}
+        {!reset && <p>{signup ? 'Already have an account?' : 'New to Levy?'} <Link href={signup ? '/auth/login' : '/auth/signup'}>{signup ? 'Sign in' : 'Create an account'}</Link></p>}
+        {reset && <Link href="/auth/login">Back to sign in</Link>}
+        <Link className="cp-auth-text" href="/chat">{reset ? 'Open your workspace' : 'Continue exploring without an account'}<ArrowRight size={15} /></Link>
+      </section>
+    </div>
+  </main>
+}

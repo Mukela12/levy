@@ -26,6 +26,8 @@ export function Favicon({
   }
 
   return (
+    // Tiny remote favicon: use native loading/error fallback without an image proxy.
+    // eslint-disable-next-line @next/next/no-img-element
     <img
       src={`https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=64`}
       alt=""
