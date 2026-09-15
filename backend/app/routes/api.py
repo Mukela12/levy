@@ -534,7 +534,15 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
                 "pass": anon_pass,
             })
         while True:
-            event = await queue.get()
+            try:
+                event = await asyncio.wait_for(queue.get(), timeout=10)
+            except asyncio.TimeoutError:
+                # Thinking, or a whole document being written into a drafting
+                # tool's input, sends no tokens for a minute or more; proxies
+                # and mobile networks reap a stream that silent. An SSE comment
+                # keeps it open and every reader skips it.
+                yield ": keepalive\n\n"
+                continue
             if event is None:
                 break
             yield _sse(event)
