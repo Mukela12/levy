@@ -15,6 +15,7 @@ Two source channels are surfaced:
 from __future__ import annotations
 
 import asyncio
+import inspect
 import json
 import os
 import re
@@ -3503,6 +3504,12 @@ async def execute_tool(
     if name not in registry:
         return {"result": {"error": f"unknown tool: {name}"}}
     handler = registry[name].handler
+    # The model sometimes borrows a parameter from a neighbouring tool (top_k,
+    # which search_corpus takes, sent to search_case_law). An unknown keyword
+    # would raise before the tool ran, so it is dropped instead.
+    params = inspect.signature(handler).parameters
+    if not any(p.kind is inspect.Parameter.VAR_KEYWORD for p in params.values()):
+        args = {k: v for k, v in (args or {}).items() if k in params}
     try:
         result = await asyncio.wait_for(handler(**args), timeout=timeout_seconds)
         if isinstance(result, dict) and "result" in result:

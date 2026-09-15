@@ -718,18 +718,28 @@ _REGISTRY_INFO: dict[str, tuple[str, str, str, str]] = {
 }
 
 
+# Where a template's letterhead stops and its letter skeleton begins: a
+# placeholder, a salutation, a reference or date line, or a sign-off.
+_LETTERHEAD_END = re.compile(
+    r"\[[^\]]*\]|\{\{|<<|_{4,}"
+    r"|^(dear|to|re|ref|our ref|your ref|date|attention|attn|subject|yours|sincerely|regards)\b",
+    re.I,
+)
+
+
 def render_template_letterhead(template: dict | None) -> str:
     """Render a chambers letterhead block from a user's template, if any.
 
     The user uploads a Word/PDF/TXT template (their firm's letterhead, with
     address + contact info + boilerplate). At upload time we extract a
-    preview_text (~2000 chars). We render the first ~12 non-empty lines of
-    that preview as a centered block above the court caption — that's the
-    visible "branding" the user wants on their drafts. Line breaks are
-    preserved so addresses + contact info still read correctly.
+    preview_text (~2000 chars). Only the header lines are rendered, as a
+    centred block above the court caption: most templates are whole letter
+    skeletons, and copying their "[DATE] / Dear Sir / [BODY]" lines put an
+    empty letter on top of every draft. Line breaks are preserved so
+    addresses and contact details still read correctly.
 
     Returns the empty string when no template is supplied or it has no
-    usable preview content.
+    usable header lines.
     """
     if not template:
         return ""
@@ -737,26 +747,22 @@ def render_template_letterhead(template: dict | None) -> str:
     if not preview:
         return ""
 
-    lines = [ln.strip() for ln in preview.splitlines() if ln.strip()]
-    head_lines = lines[:12]
+    head_lines: list[str] = []
+    for ln in (ln.strip() for ln in preview.splitlines()):
+        if not ln:
+            continue
+        if _LETTERHEAD_END.search(ln) or len(ln) > 90 or len(head_lines) == 8:
+            break
+        head_lines.append(ln)
     if not head_lines:
         return ""
 
-    name = (template.get("name") or "").strip()
-    e = _html_escape
-    inner = "<br/>".join(e(ln) for ln in head_lines)
-    badge = (
-        f'<div style="text-align:right;font-size:9pt;color:#666;font-style:italic;margin-top:-4pt;margin-bottom:8pt;">'
-        f'Drafted using your &ldquo;{e(name)}&rdquo; template'
-        f'</div>'
-    ) if name else ""
-
+    inner = "<br/>".join(_html_escape(ln) for ln in head_lines)
     return (
         '<div style="text-align:center;font-size:10.5pt;line-height:1.4;'
         'margin-bottom:14pt;padding-bottom:10pt;border-bottom:1px solid #000;">'
         f'{inner}'
         '</div>'
-        f'{badge}'
     )
 
 
