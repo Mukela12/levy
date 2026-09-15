@@ -339,6 +339,7 @@
   .cp-dock-item:focus-visible, .cp-dock-more:focus-visible { outline: 2px solid var(--cp-control-focus); outline-offset: 2px; }
   .dark .cp-dock-surface, .dark .cp-dock-more { box-shadow: 0 4px 18px #0004, inset 0 1px #ecf6dc26; }
   [data-chat-keyboard="true"] .cp-dock { display: none; }
+  [data-ui="canopy"]:not([data-keyboard]) .cp-turnstile { bottom: calc(var(--cp-dock-h) + env(safe-area-inset-bottom)); }
 }
 @media (max-width: 370px) { .cp-dock { gap: 7px; } .cp-dock-surface { gap: 0; padding: 4px; } .cp-dock-more { width: 52px; } }
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) { .cp-dock-surface, .cp-dock-more, .cp-nav { background: var(--cp-surface); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; border-color: var(--cp-line); } .cp-dock-selection { border: 2px solid currentColor; } }

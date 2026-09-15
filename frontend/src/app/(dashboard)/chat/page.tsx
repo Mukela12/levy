@@ -635,7 +635,7 @@ export default function NewChatPage() {
       {turnstile.enabled && (
         <div
           ref={turnstile.holderRef}
-          className={`fixed bottom-3 left-1/2 -translate-x-1/2 z-50 ${turnstile.showing ? '' : 'hidden'}`}
+          className={`cp-turnstile fixed bottom-3 left-1/2 -translate-x-1/2 z-50 ${turnstile.showing ? '' : 'hidden'}`}
         />
       )}
       {/* Main chat area */}
