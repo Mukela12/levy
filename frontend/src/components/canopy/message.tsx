@@ -47,9 +47,14 @@ function describeInput(call: ToolCallView): string {
 }
 
 /** One line for what the tools did, expandable to the real per-tool cards. */
-export function Activity({ toolCalls, isStreaming }: { toolCalls: ToolCallView[]; isStreaming?: boolean }) {
+export function Activity({ toolCalls: rawCalls, isStreaming }: { toolCalls: ToolCallView[]; isStreaming?: boolean }) {
   const [open, setOpen] = useState(false)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  // Nothing is still working once the stream is over: ask_user ends a run
+  // without a result by design, and a run cut off mid-tool never records one.
+  const toolCalls: ToolCallView[] = isStreaming
+    ? rawCalls
+    : rawCalls.map((c) => (c.status === 'running' ? { ...c, status: c.name === 'ask_user' ? 'ok' : 'error' } : c))
   if (!toolCalls.length) return null
   const running = toolCalls.find((c) => c.status === 'running')
   const failed = toolCalls.filter((c) => c.status === 'error').length
