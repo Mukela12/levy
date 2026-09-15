@@ -148,6 +148,10 @@ export default function NewChatPage() {
   // No challenge once the free questions are gone: verifying for a question
   // you are not allowed to ask is the worst version of this.
   const turnstile = useTurnstile(!authLoading && !user && trialLeft !== 0)
+  const primeTurnstile = turnstile.prime
+  useEffect(() => {
+    if (hasWelcomeDraft || inputSeed.text) primeTurnstile()
+  }, [hasWelcomeDraft, inputSeed.text, primeTurnstile])
   const { send } = useChatStream()
   const seededRef = useRef(false)
   const canopy = useUiVariant().variant === 'canopy'

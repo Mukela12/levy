@@ -592,7 +592,7 @@ function TourArt({ name, compact = false }: { name: string; compact?: boolean })
   const [paused, setPaused] = useState(false)
   return <div className={'cp-tour-art' + (compact ? ' is-compact' : '')} data-paused={paused}>
     {/* eslint-disable-next-line @next/next/no-img-element */}
-    <img src={`/canopy/onboarding/${name}.png`} alt="" width={128} height={128} />
+    <img src={`/canopy/onboarding/${name}.webp`} alt="" width={128} height={128} decoding="async" />
     <button type="button" onClick={() => setPaused((value) => !value)} aria-pressed={paused}>{paused ? 'Resume illustration' : 'Pause illustration'}</button>
   </div>
 }

@@ -13,6 +13,12 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 // after the last free question. It now only asks Cloudflare for a token when a
 // caller actually needs one.
 //
+// Nor does it load on arrival: Cloudflare's script and challenge are ~600KB, a
+// quarter of a first visit on mobile data, spent before anyone has typed. The
+// page calls prime() when a question starts (typing, a suggestion, In Focus),
+// which leaves the typing time for the solve; getToken() loads it on demand
+// for anyone who sends first.
+//
 // The site key is public by design. If it is unset the hook reports
 // `enabled: false`, the UI keeps asking people to sign in, and the backend
 // independently refuses anonymous chat — both ends fail closed.
@@ -40,8 +46,10 @@ export function useTurnstile(active: boolean) {
   // Whether the widget may draw. Hidden once a token is in hand, so a solved
   // widget does not sit over the composer; shown again only for a new ask.
   const [showing, setShowing] = useState(true)
+  const [wanted, setWanted] = useState(false)
 
   const enabled = active && !!SITE_KEY
+  const prime = useCallback(() => setWanted(true), [])
 
   // Deliver a token to whoever is waiting, or bank it for the next getToken().
   const deliver = useCallback((t: string | null) => {
@@ -56,7 +64,7 @@ export function useTurnstile(active: boolean) {
   }, [])
 
   useEffect(() => {
-    if (!enabled) return
+    if (!enabled || !wanted) return
     let cancelled = false
 
     const render = () => {
@@ -112,7 +120,7 @@ export function useTurnstile(active: boolean) {
         }
       }
     }
-  }, [enabled, deliver])
+  }, [enabled, wanted, deliver])
 
   /**
    * Resolve a single-use token: the one banked by the initial solve if there
@@ -149,13 +157,20 @@ export function useTurnstile(active: boolean) {
     }
 
     return new Promise<string | null>((resolve) => {
+      // Longer than a solve alone: a send before prime() also waits for
+      // Cloudflare's script to download.
       const timer = setTimeout(() => {
         waiterRef.current = null
         resolve(null)
-      }, 15000)
+      }, 20000)
       waiterRef.current = (t) => {
         clearTimeout(timer)
         resolve(t)
+      }
+      // Not loaded yet: load it now, and its first solve resolves this wait.
+      if (!widgetId.current) {
+        setWanted(true)
+        return
       }
       // Nothing banked: ask the widget for a new one. If there is no live
       // widget, fail fast instead of waiting out the timeout.
@@ -167,5 +182,5 @@ export function useTurnstile(active: boolean) {
     })
   }, [enabled])
 
-  return { holderRef, ready, enabled, showing, getToken }
+  return { holderRef, ready, enabled, showing, prime, getToken }
 }
