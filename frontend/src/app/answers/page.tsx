@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { answers, answersByCategory } from '@/lib/server/answers'
-import { SITE_URL } from '@/lib/server/corpus'
+import { SITE_URL, SHARE_IMAGE } from '@/lib/server/corpus'
 
 export const metadata: Metadata = {
   title: 'Common Zambian Law Questions, Answered',
@@ -12,6 +12,7 @@ export const metadata: Metadata = {
     title: 'Common Zambian Law Questions, Answered',
     description: 'Clear, cited answers to common Zambian legal questions. Free, and you can keep asking Levy.',
     url: `${SITE_URL}/answers`,
+    images: [SHARE_IMAGE],
   },
 }
 

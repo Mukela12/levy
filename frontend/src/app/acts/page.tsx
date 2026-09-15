@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { listActs, SITE_URL } from '@/lib/server/corpus'
+import { listActs, SITE_URL, SHARE_IMAGE } from '@/lib/server/corpus'
 import { ActsDirectory } from '@/components/canopy/acts-directory'
 
 export const revalidate = 86400 // refresh daily
@@ -11,9 +11,10 @@ export const metadata: Metadata = {
     'Browse the Acts of Parliament of Zambia. Read what each Act covers, jump to any section, and ask Levy questions answered with citations to the legislation.',
   alternates: { canonical: `${SITE_URL}/acts` },
   openGraph: {
-    title: 'Zambian Acts of Parliament — Full List',
+    title: 'Zambian Acts of Parliament: Full List',
     description: 'Browse and search the Acts of Parliament of Zambia, with AI answers grounded in the legislation.',
     url: `${SITE_URL}/acts`,
+    images: [SHARE_IMAGE],
   },
 }
 

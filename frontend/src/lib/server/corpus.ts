@@ -9,6 +9,15 @@ import { createClient } from '@supabase/supabase-js'
 
 export const SITE_URL = 'https://www.levylegal.ai'
 
+// A page that sets its own openGraph replaces the root one, image included,
+// so each of those pages passes the share image back in explicitly.
+export const SHARE_IMAGE = {
+  url: '/opengraph-image.png',
+  width: 1200,
+  height: 630,
+  alt: 'Levy: Zambian law, plainly answered.',
+}
+
 function db() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

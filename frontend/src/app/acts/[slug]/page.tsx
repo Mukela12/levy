@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { listActs, getActBySlug, SITE_URL } from '@/lib/server/corpus'
+import { listActs, getActBySlug, SITE_URL, SHARE_IMAGE } from '@/lib/server/corpus'
 
 export const revalidate = 86400
 export const dynamicParams = true
@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     title: `${act.name}${act.year ? ` (${act.year})` : ''} | Zambian Law`,
     description: desc.slice(0, 300),
     alternates: { canonical: `${SITE_URL}/acts/${act.slug}` },
-    openGraph: { title: `${act.name} — Zambian Law`, description: desc.slice(0, 300), url: `${SITE_URL}/acts/${act.slug}` },
+    openGraph: { title: `${act.name} | Zambian Law`, description: desc.slice(0, 300), url: `${SITE_URL}/acts/${act.slug}`, images: [SHARE_IMAGE] },
   }
 }
 

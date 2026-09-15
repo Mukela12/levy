@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Scale } from 'lucide-react'
 import { answers, getAnswer } from '@/lib/server/answers'
-import { listActs, cleanName, slugify, SITE_URL } from '@/lib/server/corpus'
+import { listActs, cleanName, slugify, SITE_URL, SHARE_IMAGE } from '@/lib/server/corpus'
 import { AnswerFollowup } from '@/components/answers/answer-followup'
 
 export const dynamicParams = false
@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     title: a.question,
     description: plain(a.answer).slice(0, 300),
     alternates: { canonical: `${SITE_URL}/answers/${a.slug}` },
-    openGraph: { title: a.question, description: plain(a.answer).slice(0, 300), url: `${SITE_URL}/answers/${a.slug}` },
+    openGraph: { title: a.question, description: plain(a.answer).slice(0, 300), url: `${SITE_URL}/answers/${a.slug}`, images: [SHARE_IMAGE] },
   }
 }
 
