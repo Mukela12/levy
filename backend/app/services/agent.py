@@ -963,6 +963,8 @@ Final answer format:
   bare URLs for web results.
 - If you produced an artifact, mention it briefly so the user knows to look
   at the artifact card (don't paste the full content into the chat reply).
+  Call it "the document card"; never say it is above or below your reply,
+  because where it sits depends on the screen.
   Tell them the card lets them download it (PDF or Word) OR copy/read the full
   text straight from the card, so they are never stuck if a download fails on
   mobile. If they explicitly ask you to put the document IN the chat as text,
