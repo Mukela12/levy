@@ -152,6 +152,17 @@ def render_pdf_pages(pdf_bytes: bytes, pages: list[int], *, max_side: int = 1400
     return out
 
 
+_UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.I)
+
+
+def _id_error(field: str, value) -> dict | None:
+    """A readable refusal for an id the model made up, instead of Postgres 22P02."""
+    if _UUID_RE.match(str(value or "").strip()):
+        return None
+    return {"result": {"error": f"{field} {value!r} is not a real id. Use an id from an earlier "
+                                "tool result or from the conversation's document list."}}
+
+
 _SCANNED_PAGE_CHARS = 200   # under this much extractable text, treat the page as an image
 _READ_PAGE_TEXT_CAP = 3500  # per page; a statute page is ~3,000 chars
 _LIBRARY_TEXT_BUDGET = 20_000  # per call when a text-only document is read in parts
@@ -427,6 +438,8 @@ async def pdf_extract_pages(
     """Slice a 1-indexed inclusive page range from a corpus PDF into a new artifact."""
     if page_start < 1 or page_end < page_start:
         return {"result": {"error": f"invalid page range {page_start}..{page_end}"}}
+    if bad := _id_error("document_id", document_id):
+        return bad
 
     src_pdf = _download_corpus_pdf(document_id)
     reader = PdfReader(io.BytesIO(src_pdf))
@@ -1160,6 +1173,9 @@ async def pdf_merge(
     sources_used: list[dict] = []
 
     for i, part in enumerate(parts):
+        field = "artifact_id" if part.get("artifact_id") else "document_id" if part.get("document_id") else None
+        if field and (bad := _id_error(f"part {i} {field}", part[field])):
+            return bad
         try:
             if part.get("artifact_id"):
                 pdf_bytes = _download_artifact_pdf(part["artifact_id"])
@@ -1239,6 +1255,8 @@ async def pdf_split(
     """
     if (artifact_id is None) == (document_id is None):
         return {"result": {"error": "specify exactly one of artifact_id or document_id"}}
+    if bad := _id_error("artifact_id" if artifact_id else "document_id", artifact_id or document_id):
+        return bad
     if not ranges:
         return {"result": {"error": "ranges must be a non-empty list"}}
 

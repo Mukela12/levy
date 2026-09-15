@@ -1196,6 +1196,26 @@ async def run_agent(
         except Exception:
             matter_block = ""
 
+    # Documents already made in this conversation. The history the client sends
+    # is text only, so "merge that PDF with..." had no id to name and the model
+    # invented one. Kept out of the cached prefix: it changes every turn.
+    documents_line = ""
+    if session_id:
+        try:
+            from ..db.supabase import get_db
+            arows = (get_db().table("artifacts").select("id,title,source,page_count")
+                     .eq("session_id", session_id).order("created_at", desc=True)
+                     .limit(12).execute().data or [])
+            if arows:
+                documents_line = (
+                    "DOCUMENTS ALREADY IN THIS CONVERSATION, oldest first. When the user "
+                    "refers to one, pass its artifact_id; never invent an id.\n" + "\n".join(
+                        f"- {a.get('title')} (artifact_id {a['id']}, {a.get('source') or 'generated'}, "
+                        f"{a.get('page_count') or '?'} pages)" for a in reversed(arows))
+                )
+        except Exception:
+            documents_line = ""
+
     system_prompt = SYSTEM_PROMPT + AGENT_SYSTEM_SUFFIX + attachments_block + matter_block
     # The web toggle is a preference signal, never a gate: the tools are
     # always registered. Rendered as its own small block so the big static
@@ -1218,6 +1238,8 @@ async def run_agent(
         {"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}},
         {"type": "text", "text": web_line},
     ]
+    if documents_line:
+        cached_system.append({"type": "text", "text": documents_line})
 
     messages: list[dict] = list(history or [])
     messages.append({"role": "user", "content": user_query})
