@@ -26,6 +26,7 @@ import json
 import os
 import re
 import sys
+import tempfile
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -260,7 +261,11 @@ def main() -> int:
         # title annotations
         m = RE_TITLE_REPEALED_BY.search(d["title"])
         if m:
-            for tid in resolve(m.group("name")) or [None]:
+            # "Roads and Road Traffic Act [repealed by the Road Traffic Act,
+            # 2002 and ...]" fuzzy-matches its own title, and an Act never
+            # repeals itself. With the repealer absent from the library the
+            # note keeps the annotation's own wording.
+            for tid in [t for t in resolve(m.group("name")) if t != d["id"]] or [None]:
                 repeals.append({"by": tid, "target": d["id"], "name": m.group("name").strip(),
                                 "evidence": "title annotation"})
         m = RE_REPEAL_ACT_TITLE.match(re.sub(r"\[[^\]]*\]", "", d["title"]))
@@ -348,11 +353,23 @@ def main() -> int:
 
     if args.write:
         OUT.parent.mkdir(parents=True, exist_ok=True)
-        OUT.write_text(json.dumps({
+        payload = json.dumps({
             "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "documents": entry,
             "unresolved": unresolved[:200],
-        }, indent=1))
+        }, indent=1)
+        # A failed or interrupted write must never leave production with a
+        # truncated map.  Build beside the destination, then replace it in one
+        # filesystem operation; this does not alter any map-building logic.
+        fd, temporary = tempfile.mkstemp(prefix=f".{OUT.name}.", dir=OUT.parent)
+        try:
+            with os.fdopen(fd, "w") as handle:
+                handle.write(payload)
+            os.chmod(temporary, OUT.stat().st_mode if OUT.exists() else 0o644)
+            os.replace(temporary, OUT)
+        except BaseException:
+            Path(temporary).unlink(missing_ok=True)
+            raise
         print(f"\nwrote {OUT} ({OUT.stat().st_size // 1024} KB, {len(entry)} documents)")
     else:
         print("\n(report only; pass --write to save the map)")

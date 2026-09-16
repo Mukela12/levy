@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-16T08:28:25+00:00",
+ "generated_at": "2026-09-16T14:47:03+00:00",
  "documents": {
   "7a1d2b14-a289-49a0-bf35-0479ebb7c72f": {
    "status": "repealed",
@@ -164,7 +164,7 @@
    "status": "repealed",
    "repealed_by": [
     {
-     "title": "Children\u2019s Code",
+     "title": "The Children\u2019s Code Act, 2022",
      "id": "1b187a0f-565b-4be7-8850-533548ceb6b9",
      "evidence": "The Legitimacy Act, 1929, the Juveniles Act, 1956, the Adopti on Act, 1956, and the Affiliati on and Maintenance of Acts Children Act, 1995 are repealed"
     }
@@ -184,29 +184,14 @@
      "id": "6ecb9c16-7c06-4ba2-95f7-fb04eda49cde"
     },
     {
-     "title": "The Juveniles Act [repealed by the Children's Code Act, 2022]",
-     "id": "8b85e459-6d3b-4b47-bc46-985ab10ce0e4"
-    },
-    {
      "title": "REPUBLIC OF ZAMBIA THE ADOPTION ACT",
      "id": "c99b9a63-a9a4-4804-b275-50e19caea03f"
-    }
-   ],
-   "partially_repealed_by": [],
-   "amended_by": [],
-   "amends": [],
-   "enacted_as": []
-  },
-  "8b85e459-6d3b-4b47-bc46-985ab10ce0e4": {
-   "status": "repealed",
-   "repealed_by": [
+    },
     {
-     "title": "Children\u2019s Code",
-     "id": "1b187a0f-565b-4be7-8850-533548ceb6b9",
-     "evidence": "The Legitimacy Act, 1929, the Juveniles Act, 1956, the Adopti on Act, 1956, and the Affiliati on and Maintenance of Acts Children Act, 1995 are repealed"
+     "title": "The Juveniles Act [repealed by the Children's Code Act, 2022]",
+     "id": "8b85e459-6d3b-4b47-bc46-985ab10ce0e4"
     }
    ],
-   "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
    "amends": [],
@@ -216,7 +201,7 @@
    "status": "repealed",
    "repealed_by": [
     {
-     "title": "Children\u2019s Code",
+     "title": "The Children\u2019s Code Act, 2022",
      "id": "1b187a0f-565b-4be7-8850-533548ceb6b9",
      "evidence": "The Legitimacy Act, 1929, the Juveniles Act, 1956, the Adopti on Act, 1956, and the Affiliati on and Maintenance of Acts Children Act, 1995 are repealed"
     }
@@ -565,6 +550,84 @@
    "amends": [],
    "enacted_as": []
   },
+  "529e69cb-ac05-4d1d-b917-08a3ed4fe122": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "THE TEACHING PROFESSION ACT, 2026",
+     "id": "91d81eba-5f80-40c7-bc1a-9cea585fe24a",
+     "evidence": "The Teaching Professi on Act, is repealed"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Teaching Profession (Amendment) Act, 2023",
+     "id": "4bd60032-3182-4ba0-974f-4d42131839c4"
+    }
+   ],
+   "amends": [],
+   "enacted_as": []
+  },
+  "91d81eba-5f80-40c7-bc1a-9cea585fe24a": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "Teaching Profession Act, 2013",
+     "id": "529e69cb-ac05-4d1d-b917-08a3ed4fe122"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Teaching Profession (Amendment) Act, 2023",
+     "id": "4bd60032-3182-4ba0-974f-4d42131839c4"
+    }
+   ],
+   "amends": [],
+   "enacted_as": []
+  },
+  "d813873d-dd25-48e4-b076-173ac4ab61cd": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "The Mobile Money Transaction Levy Act, 2024",
+     "id": "2aeef595-56e1-495f-b902-931d710a1349",
+     "evidence": "repeal and replace the Mobile Money Transacti on Levy Act"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Mobile Money Transaction Levy(Amendment) Act,2025",
+     "id": "cf5dff5c-3e63-49af-ba16-704feec8e6f4"
+    }
+   ],
+   "amends": [],
+   "enacted_as": []
+  },
+  "2aeef595-56e1-495f-b902-931d710a1349": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "The Mobile Money Transaction Levy Act, 2023",
+     "id": "d813873d-dd25-48e4-b076-173ac4ab61cd"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Mobile Money Transaction Levy(Amendment) Act,2025",
+     "id": "cf5dff5c-3e63-49af-ba16-704feec8e6f4"
+    }
+   ],
+   "amends": [],
+   "enacted_as": []
+  },
   "fa63a56b-bf16-40dc-8980-4910c2488972": {
    "status": "repealed",
    "repealed_by": [
@@ -832,8 +895,14 @@
    "enacted_as": []
   },
   "452919e4-d5b8-4b4c-b4ac-2036391a518d": {
-   "status": "in force",
-   "repealed_by": [],
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "Anti-Corruption Act, 2012",
+     "id": "2ab68f05-d99f-4e94-ae16-3f03123beac2",
+     "evidence": "repeal and replace the Anti- Corrupti on Act"
+    }
+   ],
    "repeals": [
     {
      "title": "THE ANTI-CORRUPTION COMMISSION ACT",
@@ -1574,6 +1643,21 @@
    "amends": [],
    "enacted_as": []
   },
+  "8b85e459-6d3b-4b47-bc46-985ab10ce0e4": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "The Children\u2019s Code Act, 2022",
+     "id": "1b187a0f-565b-4be7-8850-533548ceb6b9",
+     "evidence": "title annotation"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
   "9c7a7161-853f-4230-bac8-801ada7c8409": {
    "status": "in force",
    "repealed_by": [],
@@ -1779,6 +1863,11 @@
      "title": "The Agricultural Credits and Warehouse Receipts Act, 2026",
      "id": "5e438c4c-52ae-45a0-9770-db96b93916c2",
      "evidence": "The Agricultural Cred its Act is repealed"
+    },
+    {
+     "title": "Agricultural Credits Act, 2010",
+     "id": "049e502c-2946-4237-acb6-0985e3ad36dc",
+     "evidence": "repeal and replace the Agricultural Cred its Act"
     }
    ],
    "repeals": [],
@@ -1790,6 +1879,30 @@
   "5e438c4c-52ae-45a0-9770-db96b93916c2": {
    "status": "in force",
    "repealed_by": [],
+   "repeals": [
+    {
+     "title": "REPUBLIC OF ZAMBIA THE AGRICULTURAL CREDITS ACT",
+     "id": "73277430-185e-4fe6-8036-5e0ab71b978b"
+    },
+    {
+     "title": "Agricultural Credits Act, 2010",
+     "id": "049e502c-2946-4237-acb6-0985e3ad36dc"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "049e502c-2946-4237-acb6-0985e3ad36dc": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "The Agricultural Credits and Warehouse Receipts Act, 2026",
+     "id": "5e438c4c-52ae-45a0-9770-db96b93916c2",
+     "evidence": "The Agricultural Cred its Act is repealed"
+    }
+   ],
    "repeals": [
     {
      "title": "REPUBLIC OF ZAMBIA THE AGRICULTURAL CREDITS ACT",
@@ -1911,6 +2024,50 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "3ac41e1f-304c-4312-ba2b-27a6b5a6ec51": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "The Public Procurement Act, 2020",
+     "id": "fb279a19-d572-4f18-b2fc-63a965bbb0cb",
+     "evidence": "The Public Procurement Act,2008 is repealed"
+    }
+   ],
+   "repeals": [
+    {
+     "title": "The Zambia National Tender Board Act",
+     "id": "4f6677b8-6779-4802-8f37-8cea4260957c"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Public Procurement (Amendment) Act, 2023",
+     "id": "97f996fc-595d-488d-adcd-fa74cb440974"
+    }
+   ],
+   "amends": [],
+   "enacted_as": []
+  },
+  "fb279a19-d572-4f18-b2fc-63a965bbb0cb": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "Public Procurement Act, 2008",
+     "id": "3ac41e1f-304c-4312-ba2b-27a6b5a6ec51"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Public Procurement (Amendment) Act, 2023",
+     "id": "97f996fc-595d-488d-adcd-fa74cb440974"
+    }
+   ],
    "amends": [],
    "enacted_as": []
   },
@@ -2699,6 +2856,113 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "03bdedc8-5d54-45c2-a25a-e743763789b4": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "Local Government Elections (Repeal) Act, 2016",
+     "id": "f3935360-b7cf-452d-aad9-ee16ab46e1d9",
+     "evidence": "The Local Government Elections Act, 1991, is repealed"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "f3935360-b7cf-452d-aad9-ee16ab46e1d9": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "The Local Government Elections Act",
+     "id": "03bdedc8-5d54-45c2-a25a-e743763789b4"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "2ab68f05-d99f-4e94-ae16-3f03123beac2": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "THE ANTI-CORRUPTION ACT, 2010",
+     "id": "452919e4-d5b8-4b4c-b4ac-2036391a518d"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "6d336185-66a7-4570-a330-e395df8c8472": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "Veterinary and Veterinary Para-Professions Act, 2010",
+     "id": "5a679e63-bd9e-4bab-9950-2dbf61aa3b05",
+     "evidence": "repeal and replace the Veterinary Surgeons Act"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "5a679e63-bd9e-4bab-9950-2dbf61aa3b05": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "The Veterinary Surgeons Act",
+     "id": "6d336185-66a7-4570-a330-e395df8c8472"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "4f6677b8-6779-4802-8f37-8cea4260957c": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "Public Procurement Act, 2008",
+     "id": "3ac41e1f-304c-4312-ba2b-27a6b5a6ec51",
+     "evidence": "repeal and replace the Zambia National Tender Board Act"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "f82ff18e-6c36-4635-be6c-f3508aabefc0": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "the Road Traffic Act, 2002 and the Public Roads Act, 2002",
+     "id": null,
+     "evidence": "title annotation"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Roads and Road Traffic (Amendment)",
+     "id": "9cb42882-00b9-47b9-b423-528b89872970"
+    }
+   ],
    "amends": [],
    "enacted_as": []
   },
@@ -3562,7 +3826,7 @@
    "amended_by": [],
    "amends": [
     {
-     "title": "The Persons with Disabilities Act",
+     "title": "Persons with Disabilities Act, 2012",
      "id": "59e972a1-2dd7-4d0f-b911-106b3a599a2e"
     }
    ],
@@ -4128,7 +4392,7 @@
    "amended_by": [],
    "amends": [
     {
-     "title": "The Business Regulatory Act ( 2014)",
+     "title": "Business Regulatory Act, 2014",
      "id": "5ce39d75-e8b8-4c90-b00a-c6390cc8909e"
     }
    ],
@@ -4346,6 +4610,38 @@
    ],
    "enacted_as": []
   },
+  "f05be12c-5188-4388-b9ef-81777db74f5d": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Civil Aviation Authority (Amendment) Act,2026",
+     "id": "0d2fecb8-9f05-4f83-a38f-5ab760f9df46"
+    },
+    {
+     "title": "The Civil Aviation Authority (Amendment) Act, 2024",
+     "id": "a4a448c4-c7ae-48f0-86ae-d88b588c8e63"
+    }
+   ],
+   "amends": [],
+   "enacted_as": []
+  },
+  "0d2fecb8-9f05-4f83-a38f-5ab760f9df46": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "Civil Aviation Authority Act, 2012",
+     "id": "f05be12c-5188-4388-b9ef-81777db74f5d"
+    }
+   ],
+   "enacted_as": []
+  },
   "28db84ee-89bd-49ff-8238-eb0b8dc1e5b0": {
    "status": "amending Act",
    "repealed_by": [],
@@ -4364,20 +4660,6 @@
    ],
    "enacted_as": []
   },
-  "2aeef595-56e1-495f-b902-931d710a1349": {
-   "status": "in force",
-   "repealed_by": [],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [
-    {
-     "title": "The Mobile Money Transaction Levy(Amendment) Act,2025",
-     "id": "cf5dff5c-3e63-49af-ba16-704feec8e6f4"
-    }
-   ],
-   "amends": [],
-   "enacted_as": []
-  },
   "cf5dff5c-3e63-49af-ba16-704feec8e6f4": {
    "status": "amending Act",
    "repealed_by": [],
@@ -4386,7 +4668,7 @@
    "amended_by": [],
    "amends": [
     {
-     "title": "THE MOBILE MONEY TRANSACTION LEVY ACT, 2024",
+     "title": "The Mobile Money Transaction Levy Act, 2024",
      "id": "2aeef595-56e1-495f-b902-931d710a1349"
     },
     {
@@ -4394,20 +4676,6 @@
      "id": "d813873d-dd25-48e4-b076-173ac4ab61cd"
     }
    ],
-   "enacted_as": []
-  },
-  "d813873d-dd25-48e4-b076-173ac4ab61cd": {
-   "status": "in force",
-   "repealed_by": [],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [
-    {
-     "title": "The Mobile Money Transaction Levy(Amendment) Act,2025",
-     "id": "cf5dff5c-3e63-49af-ba16-704feec8e6f4"
-    }
-   ],
-   "amends": [],
    "enacted_as": []
   },
   "eefa1cc8-e109-4fd3-b45e-349d6abc8bd9": {
@@ -4452,20 +4720,6 @@
    ],
    "enacted_as": []
   },
-  "fb279a19-d572-4f18-b2fc-63a965bbb0cb": {
-   "status": "in force",
-   "repealed_by": [],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [
-    {
-     "title": "The Public Procurement (Amendment) Act, 2023",
-     "id": "97f996fc-595d-488d-adcd-fa74cb440974"
-    }
-   ],
-   "amends": [],
-   "enacted_as": []
-  },
   "97f996fc-595d-488d-adcd-fa74cb440974": {
    "status": "amending Act",
    "repealed_by": [],
@@ -4476,6 +4730,10 @@
     {
      "title": "The Public Procurement Act, 2020",
      "id": "fb279a19-d572-4f18-b2fc-63a965bbb0cb"
+    },
+    {
+     "title": "Public Procurement Act, 2008",
+     "id": "3ac41e1f-304c-4312-ba2b-27a6b5a6ec51"
     }
    ],
    "enacted_as": []
@@ -4732,6 +4990,20 @@
     {
      "title": "The Zambia Revenue Authority Act",
      "id": "cffd554d-8e4d-4344-a728-3d6447f75400"
+    }
+   ],
+   "enacted_as": []
+  },
+  "a4a448c4-c7ae-48f0-86ae-d88b588c8e63": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "Civil Aviation Authority Act, 2012",
+     "id": "f05be12c-5188-4388-b9ef-81777db74f5d"
     }
    ],
    "enacted_as": []
@@ -4994,6 +5266,34 @@
    ],
    "enacted_as": []
   },
+  "39b82bac-85da-45fe-bcff-dd53ca14597b": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Lands Tribunal (Amendment) Act, 2024",
+     "id": "06c32214-614d-449e-aae8-737c4ec8fcc7"
+    }
+   ],
+   "amends": [],
+   "enacted_as": []
+  },
+  "06c32214-614d-449e-aae8-737c4ec8fcc7": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "Lands Tribunal Act, 2010",
+     "id": "39b82bac-85da-45fe-bcff-dd53ca14597b"
+    }
+   ],
+   "enacted_as": []
+  },
   "855d0634-2af3-4117-b242-c4e6efd00f2c": {
    "status": "amending Act",
    "repealed_by": [],
@@ -5188,20 +5488,6 @@
    ],
    "enacted_as": []
   },
-  "91d81eba-5f80-40c7-bc1a-9cea585fe24a": {
-   "status": "in force",
-   "repealed_by": [],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [
-    {
-     "title": "The Teaching Profession (Amendment) Act, 2023",
-     "id": "4bd60032-3182-4ba0-974f-4d42131839c4"
-    }
-   ],
-   "amends": [],
-   "enacted_as": []
-  },
   "4bd60032-3182-4ba0-974f-4d42131839c4": {
    "status": "amending Act",
    "repealed_by": [],
@@ -5212,6 +5498,10 @@
     {
      "title": "THE TEACHING PROFESSION ACT, 2026",
      "id": "91d81eba-5f80-40c7-bc1a-9cea585fe24a"
+    },
+    {
+     "title": "Teaching Profession Act, 2013",
+     "id": "529e69cb-ac05-4d1d-b917-08a3ed4fe122"
     }
    ],
    "enacted_as": []
@@ -6264,7 +6554,7 @@
    "amended_by": [],
    "amends": [
     {
-     "title": "The Business Regulatory Act ( 2014)",
+     "title": "Business Regulatory Act, 2014",
      "id": "5ce39d75-e8b8-4c90-b00a-c6390cc8909e"
     }
    ],
@@ -6520,6 +6810,20 @@
     {
      "title": "THE HIGH COURT ACT",
      "id": "efe3190a-2b90-49c1-8c2e-5749a6f0a5a5"
+    }
+   ],
+   "enacted_as": []
+  },
+  "9cb42882-00b9-47b9-b423-528b89872970": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "Roads and Road Traffic Act [repealed by the Road Traffic Act, 2002 and the Public Roads Act, 2002]",
+     "id": "f82ff18e-6c36-4635-be6c-f3508aabefc0"
     }
    ],
    "enacted_as": []
@@ -7449,6 +7753,11 @@
   },
   {
    "by": "1b187a0f-565b-4be7-8850-533548ceb6b9",
+   "name": "Juveniles Act",
+   "evidence": "The Legitimacy Act, 1929, the Juveniles Act, 1956, the Adopti on Act, 1956, and the Affiliati on and Maintenance of Acts Children Act, 1995 are repealed"
+  },
+  {
+   "by": "1b187a0f-565b-4be7-8850-533548ceb6b9",
    "name": "Maintenance of Acts Children Act",
    "evidence": "The Legitimacy Act, 1929, the Juveniles Act, 1956, the Adopti on Act, 1956, and the Affiliati on and Maintenance of Acts Children Act, 1995 are repealed"
   },
@@ -7513,29 +7822,9 @@
    "evidence": "repeal and replace the Public-Private Partnership Act"
   },
   {
-   "by": "91d81eba-5f80-40c7-bc1a-9cea585fe24a",
-   "name": "Teaching Professi on Act",
-   "evidence": "The Teaching Professi on Act, is repealed"
-  },
-  {
-   "by": "91d81eba-5f80-40c7-bc1a-9cea585fe24a",
-   "name": "Teaching Professi on Act",
-   "evidence": "The Teaching Professi on Act, is repealed"
-  },
-  {
-   "by": "91d81eba-5f80-40c7-bc1a-9cea585fe24a",
-   "name": "Teaching Professi on Act",
-   "evidence": "repeal and replace the Teaching Professi on Act"
-  },
-  {
    "by": "252c40e6-783c-4341-9cd4-43186ad5e60c",
    "name": "Legal Aid Act",
    "evidence": "The Legal Aid Act,1967is repealed"
-  },
-  {
-   "by": "2aeef595-56e1-495f-b902-931d710a1349",
-   "name": "Mobile Money Transacti on Levy Act",
-   "evidence": "repeal and replace the Mobile Money Transacti on Levy Act"
   },
   {
    "by": "6bff760f-03d4-45d6-989d-5c4786f0535e",
@@ -7788,16 +8077,6 @@
    "evidence": "repeal and replace the Sm all Industries Development Act"
   },
   {
-   "by": "fb279a19-d572-4f18-b2fc-63a965bbb0cb",
-   "name": "Public Procurement Act",
-   "evidence": "The Public Procurement Act,2008 is repealed"
-  },
-  {
-   "by": "fb279a19-d572-4f18-b2fc-63a965bbb0cb",
-   "name": "Public Procurement Act",
-   "evidence": "repeal and replace the Public Procurement Act"
-  },
-  {
    "by": "49ef6221-27c0-416a-a5f9-e29e3c883f21",
    "name": "Companies Registrati on Act",
    "evidence": "The Patents and Companies Registrati on Act, is repealed"
@@ -7893,6 +8172,11 @@
    "evidence": "repeal and replace the Law Development Commissi on and Institute f or Legislative Drafting Act and to provide f or matters connected w"
   },
   {
+   "by": "59e972a1-2dd7-4d0f-b911-106b3a599a2e",
+   "name": "Persons with Disabilities Act",
+   "evidence": "repeal and replace the Persons with Disabilities Act"
+  },
+  {
    "by": "5229c970-390e-4b88-9828-fb3ea877e6a2",
    "name": "Natural and Historical Monuments and Relics Act",
    "evidence": "repeal and replace the Natural and Historical Monuments and Relics Act"
@@ -7971,6 +8255,21 @@
    "by": "8c1b9512-821e-419a-a409-d268efe84ebc",
    "name": "Zambia National Broadcasting Corporati on Act",
    "evidence": "repeal and replace the Zambia National Broadcasting Corporati on Act"
+  },
+  {
+   "by": "f82ff18e-6c36-4635-be6c-f3508aabefc0",
+   "name": "Mot or Traffic Act",
+   "evidence": "The Mot or Traffic Act and the Roads and Vehicles Act, Chapter 172 and 174 Repeals and savings of the 1957 Editi on of the Laws, and the Width of Tyres Act, Chapter 173 of the 1948 Editi on of the Law"
+  },
+  {
+   "by": "f82ff18e-6c36-4635-be6c-f3508aabefc0",
+   "name": "Vehicles Act",
+   "evidence": "The Mot or Traffic Act and the Roads and Vehicles Act, Chapter 172 and 174 Repeals and savings of the 1957 Editi on of the Laws, and the Width of Tyres Act, Chapter 173 of the 1948 Editi on of the Law"
+  },
+  {
+   "by": "f82ff18e-6c36-4635-be6c-f3508aabefc0",
+   "name": "Width of Tyres Act",
+   "evidence": "The Mot or Traffic Act and the Roads and Vehicles Act, Chapter 172 and 174 Repeals and savings of the 1957 Editi on of the Laws, and the Width of Tyres Act, Chapter 173 of the 1948 Editi on of the Law"
   }
  ]
 }
