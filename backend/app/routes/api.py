@@ -555,6 +555,31 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
     )
 
 
+@router.get("/law-map")
+def get_law_map():
+    """Which Acts are repealed, by what, and which have amendments.
+
+    The public Legislation pages badge repealed Acts with this, so a reader
+    browsing the library sees the same thing the model is told. Only documents
+    with something to say are returned; everything else is simply in force.
+    """
+    from ..services.law_map import _entries
+
+    out = {}
+    for doc_id, e in _entries().items():
+        status = e.get("status")
+        amended = e.get("amended_by") or []
+        if status == "in force" and not amended:
+            continue
+        out[doc_id] = {
+            "status": status,
+            "repealedBy": [x.get("title") for x in (e.get("repealed_by") or []) if x.get("title")],
+            "repealedById": next((x.get("id") for x in (e.get("repealed_by") or []) if x.get("id")), None),
+            "amendments": len(amended),
+        }
+    return {"documents": out, "count": len(out)}
+
+
 @router.get("/documents/{document_id}/pdf")
 def get_document_pdf_url(document_id: str, expires_in: int = 3600, uid: str | None = Depends(optional_user)):
     """
