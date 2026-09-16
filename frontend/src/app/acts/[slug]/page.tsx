@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { AlertTriangle } from 'lucide-react'
 import { listActs, getActBySlug, SITE_URL, SHARE_IMAGE } from '@/lib/server/corpus'
 
 export const revalidate = 86400
@@ -21,7 +22,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const act = await getActBySlug(slug)
   if (!act) return { title: 'Act not found | Levy' }
-  const desc = `${act.name}${act.year ? ` (${act.year})` : ''}: a Zambian Act of Parliament. Browse its sections and ask Levy questions answered with citations to the legislation.`
+  // Someone landing here from a search should learn it is repealed in the
+  // result itself, not after reading the Act.
+  const repealed = act.status?.status === 'repealed'
+  const desc = repealed
+    ? `${act.name}: a REPEALED Zambian Act${act.status?.repealedBy.length ? `, replaced by ${act.status.repealedBy[0]}` : ''}. Read its sections for the law as it stood, and ask Levy what applies now.`
+    : `${act.name}${act.year ? ` (${act.year})` : ''}: a Zambian Act of Parliament. Browse its sections and ask Levy questions answered with citations to the legislation.`
   return {
     title: `${act.name}${act.year ? ` (${act.year})` : ''} | Zambian Law`,
     description: desc.slice(0, 300),
@@ -34,6 +40,11 @@ export default async function ActPage({ params }: { params: Promise<{ slug: stri
   const { slug } = await params
   const act = await getActBySlug(slug)
   if (!act) notFound()
+  // The Act that repealed this one, so the reader can go straight to the law
+  // that replaced it instead of reading a dead Act.
+  const replacement = act.status?.repealedById
+    ? (await listActs()).find((a) => a.id === act.status!.repealedById)
+    : undefined
 
   const url = `${SITE_URL}/acts/${act.slug}`
   const jsonLd = {
@@ -79,6 +90,28 @@ export default async function ActPage({ params }: { params: Promise<{ slug: stri
         {act.year ? <span className="px-2 py-0.5 rounded text-[11px] bg-white/[0.05] border border-white/[0.08] text-white/55">{act.year}</span> : null}
         {act.actNumber ? <span className="px-2 py-0.5 rounded text-[11px] bg-white/[0.05] border border-white/[0.08] text-white/55">No. {act.actNumber}</span> : null}
       </div>
+
+      {act.status?.status === 'repealed' && (
+        <div className="cp-act-notice" role="note">
+          <AlertTriangle size={16} aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} />
+          <div>
+            <strong>This Act has been repealed.</strong>
+            {replacement ? (
+              <>It was replaced by <Link href={`/acts/${replacement.slug}`}>{replacement.name}</Link>. Read this one for the law as it stood, not as it is now.</>
+            ) : act.status.repealedBy.length ? (
+              <>It was replaced by {act.status.repealedBy.join(', ')}. Read this one for the law as it stood, not as it is now.</>
+            ) : (
+              <>It is no longer in force. Read it for the law as it stood, not as it is now.</>
+            )}
+          </div>
+        </div>
+      )}
+      {act.status?.status !== 'repealed' && (act.status?.amendments ?? 0) > 0 && (
+        <p className="cp-act-amended">
+          In force, and amended by {act.status!.amendments} amendment Act{act.status!.amendments === 1 ? '' : 's'}.
+          Check the amendments before relying on the wording of a section.
+        </p>
+      )}
 
       <p className="text-[14.5px] text-white/65 mt-4 leading-relaxed">
         {lead(act.name, act.year, act.sectionList.length || act.sections)}

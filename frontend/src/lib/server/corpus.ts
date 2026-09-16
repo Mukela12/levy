@@ -67,6 +67,39 @@ export interface ActSummary {
   year: number | null
   actNumber: string | null
   sections: number
+  /** Present only when the Act is not simply in force. */
+  status?: LawStatus
+}
+
+export interface LawStatus {
+  status: string
+  repealedBy: string[]
+  repealedById: string | null
+  amendments: number
+}
+
+/**
+ * Repealed / amended status for library Acts, from the backend's law map.
+ * A reader browsing the Acts should see what the model is told: the library
+ * keeps repealed Acts beside the Acts that replaced them. Failure is silent,
+ * because a missing badge is better than a legislation page that will not
+ * render.
+ */
+let _statusMemo: { at: number; map: Record<string, LawStatus> } | null = null
+
+export async function lawStatuses(): Promise<Record<string, LawStatus>> {
+  if (_statusMemo && Date.now() - _statusMemo.at < TTL_MS) return _statusMemo.map
+  try {
+    const api = process.env.NEXT_PUBLIC_API_URL
+    if (!api) return {}
+    const res = await fetch(`${api}/api/law-map`, { signal: AbortSignal.timeout(10000), next: { revalidate: 86400 } })
+    if (!res.ok) return _statusMemo?.map ?? {}
+    const map = ((await res.json()) as { documents?: Record<string, LawStatus> }).documents ?? {}
+    _statusMemo = { at: Date.now(), map }
+    return map
+  } catch {
+    return _statusMemo?.map ?? {}
+  }
 }
 
 /**
@@ -133,6 +166,11 @@ export async function listActs(): Promise<ActSummary[]> {
       actNumber: r.act_number ?? null,
       sections: r.total_sections || 0,
     })
+  }
+  const statuses = await lawStatuses()
+  for (const a of acts) {
+    const s = statuses[a.id]
+    if (s) a.status = s
   }
   acts.sort((a, b) => a.name.localeCompare(b.name))
   _memo = { at: Date.now(), acts }

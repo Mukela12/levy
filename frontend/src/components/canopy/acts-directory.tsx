@@ -73,7 +73,11 @@ export function ActsDirectory({ acts, children }: { acts: ActSummary[]; children
           <div className="cp-acts-grid">
             {groups.byLetter.get(l)!.map((act) => (
               <Link href={`/acts/${act.slug}`} className="cp-act-row" key={act.id}>
-                <span className="cp-act-name">{act.name}</span>
+                <span className="cp-act-name">
+                  {act.name}
+                  {act.status?.status === 'repealed' && <span className="cp-act-flag is-repealed">Repealed</span>}
+                  {act.status?.status === 'bill, not yet law' && <span className="cp-act-flag">Bill</span>}
+                </span>
                 <span className="cp-act-meta">
                   {[act.actNumber, act.year && !act.actNumber?.includes(String(act.year)) ? act.year : null].filter(Boolean).join(' · ') || 'Library text'}
                 </span>
