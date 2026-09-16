@@ -571,10 +571,12 @@ def get_law_map():
         amended = e.get("amended_by") or []
         if status == "in force" and not amended:
             continue
+        # A pending repeal names the Act that will do it, in the same fields.
+        by = e.get("repealed_by") or [] if status != "repeal pending" else e.get("repeal_pending_by") or []
         out[doc_id] = {
             "status": status,
-            "repealedBy": [x.get("title") for x in (e.get("repealed_by") or []) if x.get("title")],
-            "repealedById": next((x.get("id") for x in (e.get("repealed_by") or []) if x.get("id")), None),
+            "repealedBy": [x.get("title") for x in by if x.get("title")],
+            "repealedById": next((x.get("id") for x in by if x.get("id")), None),
             "amendments": len(amended),
         }
     return {"documents": out, "count": len(out)}

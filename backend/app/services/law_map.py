@@ -44,6 +44,12 @@ def status_note(document_id: str | None) -> str | None:
         by = _titles(e.get("repealed_by") or []) or "a later Act"
         return (f"REPEALED, replaced by {by}. Do not present this as current law. Answer from the "
                 f"replacing Act, and only cite this one for what the law was at the time.")
+    if status == "repeal pending":
+        by = _titles(e.get("repeal_pending_by") or []) or "a later Act"
+        return (f"STILL IN FORCE FOR NOW: {by} will repeal this Act, but it starts only on a date the "
+                f"Minister appoints by statutory instrument, and no commencement order is recorded. Say "
+                f"that the new Act has been passed and may not be in force yet, and check the official "
+                f"source before relying on either.")
     if status == "bill, not yet law":
         return "BILL before Parliament, not yet law."
     if status == "enacted":

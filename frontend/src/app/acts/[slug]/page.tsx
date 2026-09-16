@@ -109,6 +109,19 @@ export default async function ActPage({ params }: { params: Promise<{ slug: stri
           </div>
         </div>
       )}
+      {act.status?.status === 'repeal pending' && (
+        <div className="cp-act-notice is-pending" role="note">
+          <AlertTriangle size={16} aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} />
+          <div>
+            <strong>Still in force, for now.</strong>
+            {replacement ? (
+              <><Link href={`/acts/${replacement.slug}`}>{replacement.name}</Link> has been passed to replace it</>
+            ) : (
+              <>{act.status.repealedBy.join(', ') || 'A newer Act'} has been passed to replace it</>
+            )}, but it only starts on a date the Minister sets by statutory instrument. Check whether that has happened before relying on either.
+          </div>
+        </div>
+      )}
       {act.status?.status !== 'repealed' && (act.status?.amendments ?? 0) > 0 && (
         <p className="cp-act-amended">
           In force, and amended by {act.status!.amendments} amendment Act{act.status!.amendments === 1 ? '' : 's'}.

@@ -50,6 +50,8 @@ const TYPE_LABEL: Record<string, string> = {
   guide: 'Guide',
   fee_schedule: 'Fees',
   court_rule: 'Court rule',
+  statutory_instrument: 'Statutory instrument',
+  reference: 'Guidance',
   checklist: 'Checklist',
   circular: 'Circular',
 }
@@ -59,6 +61,8 @@ const TYPE_BADGE: Record<string, string> = {
   guide: 'bg-amber-500/10 border border-amber-500/25 text-amber-300',
   fee_schedule: 'bg-fuchsia-500/10 border border-fuchsia-500/25 text-fuchsia-300',
   court_rule: 'bg-indigo-500/10 border border-indigo-500/25 text-indigo-300',
+  statutory_instrument: 'bg-violet-500/10 border border-violet-500/25 text-violet-300',
+  reference: 'bg-slate-500/10 border border-slate-500/25 text-slate-300',
   checklist: 'bg-teal-500/10 border border-teal-500/25 text-teal-300',
   circular: 'bg-orange-500/10 border border-orange-500/25 text-orange-300',
 }

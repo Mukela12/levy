@@ -441,7 +441,7 @@ def _match_statute(c: dict, index: list[dict]) -> dict | None:
     if name in ("constitution", "constitution of zambia"):
         name = "constitution of zambia"
     cands = [r for r in index
-             if r.get("document_type") in ("act", "bill", "court_rule")
+             if r.get("document_type") in ("act", "bill", "court_rule", "statutory_instrument")
              and ((name and name in r["_ntitle"]) or (r["_nshort"] and name == r["_nshort"]))]
     if cands:
         # the shortest title is the principal instrument; amendments and
@@ -451,7 +451,7 @@ def _match_statute(c: dict, index: list[dict]) -> dict | None:
     toks = [t for t in name.split() if t not in ("the", "of", "zambia")]
     if len(toks) >= 2:
         for r in index:
-            if r.get("document_type") in ("act", "bill", "court_rule") and all(t in r["_ntitle"] for t in toks):
+            if r.get("document_type") in ("act", "bill", "court_rule", "statutory_instrument") and all(t in r["_ntitle"] for t in toks):
                 return r
     return None
 

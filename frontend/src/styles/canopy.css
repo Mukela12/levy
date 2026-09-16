@@ -845,7 +845,9 @@
 .cp-act-notice { display: flex; gap: 10px; align-items: flex-start; margin: 0 0 18px; padding: 12px 14px; border-radius: 12px; background: #fdecec; border: 1px solid #f3c9c7; color: #7d1f1c; font-size: 13.5px; line-height: 1.5; }
 .cp-act-notice strong { display: block; font-size: 14px; margin-bottom: 2px; }
 .cp-act-notice a { color: inherit; font-weight: 600; }
+.cp-act-flag.is-pending { background: var(--cp-warn-bg); color: var(--cp-warn); border-color: color-mix(in srgb, var(--cp-warn) 30%, transparent); }
 .dark .cp-act-notice { background: #3a1b1a; border-color: #5d2a28; color: #f3cbc8; }
+.cp-act-notice.is-pending, .dark .cp-act-notice.is-pending { background: var(--cp-warn-bg); border-color: color-mix(in srgb, var(--cp-warn) 30%, transparent); color: var(--cp-warn); }
 .cp-act-amended { margin: 0 0 18px; padding: 10px 14px; border-radius: 12px; background: var(--cp-soft); border: 1px solid var(--cp-line); color: var(--cp-muted); font-size: 13px; line-height: 1.5; }
 .cp-act-row > svg { flex-shrink: 0; align-self: center; color: var(--cp-muted); opacity: 0; transition: opacity 120ms; }
 .cp-act-row:hover > svg, .cp-act-row:focus-visible > svg { opacity: 1; }
