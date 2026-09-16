@@ -46,6 +46,10 @@ def status_note(document_id: str | None) -> str | None:
                 f"replacing Act, and only cite this one for what the law was at the time.")
     if status == "bill, not yet law":
         return "BILL before Parliament, not yet law."
+    if status == "enacted":
+        act = _titles(e.get("enacted_as") or [])
+        return (f"This BILL has since been enacted as {act}. Answer from the Act, which is in the "
+                f"library, and do not describe this as a proposal.") if act else None
     if status == "amending Act":
         amends = _titles(e.get("amends") or [])
         return f"Amending Act: it amends {amends}. Read it together with that principal Act." if amends else None
@@ -53,10 +57,11 @@ def status_note(document_id: str | None) -> str | None:
     partial = e.get("partially_repealed_by") or []
     bits = []
     if amended:
-        bits.append(f"in force, amended by {len(amended)} amendment Act(s): {_titles(amended, 3)}")
+        bits.append(f"amended by {len(amended)} amendment Act(s): {_titles(amended, 3)}")
     if partial:
         bits.append(f"parts repealed by {_titles(partial)}")
-    return ("In force. " + "; ".join(bits) + ".") if bits else None
+    return ("In force, " + "; ".join(bits)
+            + ". Check the amendments before quoting a section as it stands.") if bits else None
 
 
 def annotate(rows: list[dict], key: str = "document_id") -> list[dict]:

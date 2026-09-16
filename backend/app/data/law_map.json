@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-16T07:34:37+00:00",
+ "generated_at": "2026-09-16T08:15:56+00:00",
  "documents": {
   "992415ed-3547-4f91-bb46-3b88bc7480b0": {
    "status": "repealed",
@@ -18,7 +18,8 @@
      "id": "f4f819eb-baa1-42a2-9b7a-c151fa53bc61"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "fe976ae2-a240-43e3-bdb0-36448febe68f": {
    "status": "in force",
@@ -35,7 +36,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "e343be68-3f46-4c0e-a229-8bf73d84bac7": {
    "status": "repealed",
@@ -49,7 +51,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "df62b18f-459c-41c6-a3fc-b31dd7d4f3cd": {
    "status": "repealed",
@@ -63,7 +66,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "718fa78f-8a12-4f1c-a1ff-147d2f57406e": {
    "status": "in force",
@@ -81,7 +85,8 @@
      "id": "17e1032f-9a60-4f8c-942d-84679c32a13d"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "6ecb9c16-7c06-4ba2-95f7-fb04eda49cde": {
    "status": "repealed",
@@ -95,7 +100,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "1b187a0f-565b-4be7-8850-533548ceb6b9": {
    "status": "in force",
@@ -112,7 +118,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "8b85e459-6d3b-4b47-bc46-985ab10ce0e4": {
    "status": "repealed",
@@ -126,7 +133,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "849e0b06-3b0d-4ce1-a7df-6b2d34a6b055": {
    "status": "repealed",
@@ -140,7 +148,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "7ebed942-58eb-4308-9640-0d99156b3c7b": {
    "status": "in force",
@@ -153,7 +162,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "44722517-3681-4446-b795-64a08a1d64a2": {
    "status": "repealed",
@@ -167,7 +177,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "c5cde55f-c200-42a7-8a51-a25a601613f4": {
    "status": "in force",
@@ -180,7 +191,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "54ac5f15-1ec4-4a29-ba86-9fab9839ac59": {
    "status": "repealed",
@@ -194,7 +206,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "4e88d5fe-08c6-47ad-897d-a3ed2a190e28": {
    "status": "in force",
@@ -207,7 +220,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "df054459-34cd-471d-bcfe-cd16fd8cf6c5": {
    "status": "repealed",
@@ -226,7 +240,8 @@
      "id": "1b46629b-17dc-4e25-b63d-95375aadd2cc"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "2e57c1bf-432e-4449-ad81-0fd19f17c045": {
    "status": "in force",
@@ -244,75 +259,8 @@
      "id": "29e9329d-2665-4a17-9f0b-d5aca0d8fc5e"
     }
    ],
-   "amends": []
-  },
-  "55110824-aa1f-4baf-93a2-c8e08f50858d": {
-   "status": "repealed",
-   "repealed_by": [
-    {
-     "title": "THE INSURANCE ACT, 2021",
-     "id": "5f1ad571-1b2c-4d92-a0cd-40cfd724cfec",
-     "evidence": "The Insurance Act, 1997, is repealed"
-    }
-   ],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [],
-   "amends": []
-  },
-  "5f1ad571-1b2c-4d92-a0cd-40cfd724cfec": {
-   "status": "in force",
-   "repealed_by": [],
-   "repeals": [
-    {
-     "title": "REPUBLIC OF ZAMBIA THE INSURANCE ACT",
-     "id": "55110824-aa1f-4baf-93a2-c8e08f50858d"
-    }
-   ],
-   "partially_repealed_by": [],
-   "amended_by": [],
-   "amends": []
-  },
-  "0bf4d0d9-43e3-4ad9-82c4-98421349bb5c": {
-   "status": "repealed",
-   "repealed_by": [
-    {
-     "title": "THE INDEPENDENT BROADCASTING AUTHORITY ACT, 2025",
-     "id": "4846ccc1-5639-47ed-bd70-d23335ecb3c9",
-     "evidence": "The Independent Broadcasting Authority Act, is repealed"
-    }
-   ],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [
-    {
-     "title": "The Independent Broadcasting Authority (Amendment)",
-     "id": "3837d756-8c76-42c0-ad0f-cb8fcca67a95"
-    }
-   ],
-   "amends": []
-  },
-  "4846ccc1-5639-47ed-bd70-d23335ecb3c9": {
-   "status": "in force",
-   "repealed_by": [],
-   "repeals": [
-    {
-     "title": "THE INDEPENDENT BROADCASTING AUTHORITY ACT, 2002",
-     "id": "0bf4d0d9-43e3-4ad9-82c4-98421349bb5c"
-    },
-    {
-     "title": "THE INDEPENDENT BROADCASTING AUTHORITY ACT, 2002",
-     "id": "cfd36843-4a07-44b0-a8ec-2633cc56168d"
-    }
-   ],
-   "partially_repealed_by": [],
-   "amended_by": [
-    {
-     "title": "The Independent Broadcasting Authority (Amendment)",
-     "id": "3837d756-8c76-42c0-ad0f-cb8fcca67a95"
-    }
-   ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "cfd36843-4a07-44b0-a8ec-2633cc56168d": {
    "status": "repealed",
@@ -331,7 +279,51 @@
      "id": "3837d756-8c76-42c0-ad0f-cb8fcca67a95"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
+  },
+  "4846ccc1-5639-47ed-bd70-d23335ecb3c9": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "THE INDEPENDENT BROADCASTING AUTHORITY ACT, 2002",
+     "id": "cfd36843-4a07-44b0-a8ec-2633cc56168d"
+    },
+    {
+     "title": "THE INDEPENDENT BROADCASTING AUTHORITY ACT, 2002",
+     "id": "0bf4d0d9-43e3-4ad9-82c4-98421349bb5c"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Independent Broadcasting Authority (Amendment)",
+     "id": "3837d756-8c76-42c0-ad0f-cb8fcca67a95"
+    }
+   ],
+   "amends": [],
+   "enacted_as": []
+  },
+  "0bf4d0d9-43e3-4ad9-82c4-98421349bb5c": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "THE INDEPENDENT BROADCASTING AUTHORITY ACT, 2025",
+     "id": "4846ccc1-5639-47ed-bd70-d23335ecb3c9",
+     "evidence": "The Independent Broadcasting Authority Act, is repealed"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Independent Broadcasting Authority (Amendment)",
+     "id": "3837d756-8c76-42c0-ad0f-cb8fcca67a95"
+    }
+   ],
+   "amends": [],
+   "enacted_as": []
   },
   "e6f604bd-fc46-4b46-a106-f9eca4e5f393": {
    "status": "repealed",
@@ -354,7 +346,8 @@
      "id": "13b04f9a-a18b-49dc-b2b1-bbe6e1bcb8c6"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "781ec6b8-5607-4e52-aca0-0afe0cb0ed81": {
    "status": "in force",
@@ -372,7 +365,8 @@
      "id": "ffba71fe-2855-4ff9-ad4b-fcf79ac3d1b2"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "fa63a56b-bf16-40dc-8980-4910c2488972": {
    "status": "repealed",
@@ -386,7 +380,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "a812d033-836d-462c-b98c-255c92a03a0d": {
    "status": "in force",
@@ -399,7 +394,37 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
+  },
+  "55110824-aa1f-4baf-93a2-c8e08f50858d": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "THE INSURANCE ACT, 2021",
+     "id": "5f1ad571-1b2c-4d92-a0cd-40cfd724cfec",
+     "evidence": "The Insurance Act, 1997, is repealed"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "5f1ad571-1b2c-4d92-a0cd-40cfd724cfec": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "REPUBLIC OF ZAMBIA THE INSURANCE ACT",
+     "id": "55110824-aa1f-4baf-93a2-c8e08f50858d"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
   },
   "63012e41-c3ea-4bad-ac6e-bc564c12b8b8": {
    "status": "repealed",
@@ -413,7 +438,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "05368655-51a7-43be-b2f2-abca2f4fc1c3": {
    "status": "in force",
@@ -435,34 +461,8 @@
      "id": "46fe3638-1031-48a9-b7b6-5de796307a77"
     }
    ],
-   "amends": []
-  },
-  "0879f7b3-0a45-4ee8-9ad5-34514240e6b7": {
-   "status": "repealed",
-   "repealed_by": [
-    {
-     "title": "THE BANK OF ZAMBIA ACT, 2022",
-     "id": "d2c1fe29-8d05-4739-ad7a-505c39eb9bbc",
-     "evidence": "The Bank of Zambia Act, 1996, is repealed"
-    }
-   ],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [],
-   "amends": []
-  },
-  "d2c1fe29-8d05-4739-ad7a-505c39eb9bbc": {
-   "status": "in force",
-   "repealed_by": [],
-   "repeals": [
-    {
-     "title": "REPUBLIC OF ZAMBIA THE BANK OF ZAMBIA ACT",
-     "id": "0879f7b3-0a45-4ee8-9ad5-34514240e6b7"
-    }
-   ],
-   "partially_repealed_by": [],
-   "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "c4e50985-736f-477f-982d-7307b6f5f687": {
    "status": "repealed",
@@ -476,7 +476,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "6ecf5265-b107-4c72-947f-88cfa8ff797f": {
    "status": "in force",
@@ -489,7 +490,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "59a2cf54-6e80-486b-897f-13e733da7f53": {
    "status": "repealed",
@@ -508,7 +510,8 @@
      "id": "31a9fe4c-c9db-4b63-907a-ffb67e6325da"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "31abb2b8-7a72-483a-b31a-8e99b4636640": {
    "status": "in force",
@@ -530,7 +533,8 @@
      "id": "ab5bcd83-9fcd-4b2c-9a3b-16e4e900265f"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "5a4ede22-4193-4783-aa9a-7558a1a6ed7e": {
    "status": "repealed",
@@ -549,7 +553,8 @@
      "id": "ab5bcd83-9fcd-4b2c-9a3b-16e4e900265f"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "9ee6076d-f668-4fa3-8f7d-d94f4227d532": {
    "status": "repealed",
@@ -563,7 +568,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "b83ae57a-9693-48e2-b6a9-8c302063121d": {
    "status": "in force",
@@ -581,7 +587,8 @@
      "id": "a2908154-5ab8-492d-8dff-1bef1e81ba53"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "1313c22f-a2e3-4c12-a771-b65188826f82": {
    "status": "repealed",
@@ -604,7 +611,8 @@
      "id": "1467bfe2-d80b-4dfb-8b05-1051e2583392"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "7279308e-8514-4c90-b9bd-bc9ba6880ac0": {
    "status": "in force",
@@ -630,7 +638,8 @@
      "id": "1467bfe2-d80b-4dfb-8b05-1051e2583392"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "77ea947e-ae4f-4361-8e39-6f786fd9dabc": {
    "status": "repealed",
@@ -653,39 +662,8 @@
      "id": "1467bfe2-d80b-4dfb-8b05-1051e2583392"
     }
    ],
-   "amends": []
-  },
-  "f17d2ed0-6299-4f9d-bf9a-02c3242ef834": {
-   "status": "repealed",
-   "repealed_by": [
-    {
-     "title": "THE FOOD RESERVE ACT, 2026",
-     "id": "32fe866d-4e87-43e7-a57b-0fe9496b4881",
-     "evidence": "The Food Reserve Act, 2020 is repealed"
-    },
-    {
-     "title": "The Food Reserve Act, 2020",
-     "id": "89f8d435-2ba4-4e0f-9cdf-ee7f509c117d",
-     "evidence": "The Food Reserve Act, is repealed"
-    }
-   ],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [],
-   "amends": []
-  },
-  "32fe866d-4e87-43e7-a57b-0fe9496b4881": {
-   "status": "in force",
-   "repealed_by": [],
-   "repeals": [
-    {
-     "title": "REPUBLIC OF ZAMBIA THE FOOD RESERVE ACT",
-     "id": "f17d2ed0-6299-4f9d-bf9a-02c3242ef834"
-    }
-   ],
-   "partially_repealed_by": [],
-   "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "98cf2bed-c40f-4848-b68e-da133e825529": {
    "status": "repealed",
@@ -704,7 +682,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "b8ff09bb-8864-43da-8aba-3447412f1850": {
    "status": "in force",
@@ -717,7 +696,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "541b29ab-fa52-40e6-af76-ef32ed285271": {
    "status": "repealed",
@@ -736,7 +716,8 @@
      "id": "d88828a6-508e-4758-834c-7c5cc600c8b0"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "4371e331-676c-408f-8a19-9928bb9f6859": {
    "status": "in force",
@@ -758,7 +739,8 @@
      "id": "d88828a6-508e-4758-834c-7c5cc600c8b0"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "033bd197-1559-49c2-81b6-5976b4e6ab58": {
    "status": "repealed",
@@ -772,7 +754,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "83354fd3-de76-4d24-91fc-4ab91d4d3222": {
    "status": "repealed",
@@ -786,7 +769,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "1fe228a9-3238-4c91-a8fc-9cb806491cd5": {
    "status": "in force",
@@ -799,7 +783,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "44fbe500-92c0-4465-952e-d79890035354": {
    "status": "repealed",
@@ -813,7 +798,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "4f4a6b58-ceeb-4f1c-877c-05d21b49fb8b": {
    "status": "in force",
@@ -826,7 +812,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "6cfda8a1-8854-4728-9ea4-62b05ef451f0": {
    "status": "repealed",
@@ -845,7 +832,8 @@
      "id": "d9ebf180-662e-45ad-acac-2c03061775ff"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "a433397f-86e0-42a1-b9b8-c52581e01892": {
    "status": "in force",
@@ -858,7 +846,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "31d90ca4-e412-4ff6-99ec-f0f99f1d4794": {
    "status": "repealed",
@@ -872,7 +861,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "0e5df06d-630a-4a4c-b702-05e449ccd5ff": {
    "status": "in force",
@@ -885,7 +875,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "243d1cba-6153-4ac4-9556-14bb60bb0695": {
    "status": "repealed",
@@ -899,7 +890,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "ca142771-94a2-4fdf-875d-d36d8566b78b": {
    "status": "in force",
@@ -912,7 +904,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "2d923a88-3fc4-4500-8e11-ebd8ed1269e6": {
    "status": "repealed",
@@ -926,7 +919,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "3d204099-dfe9-42d9-94d7-fa3e587f6e84": {
    "status": "in force",
@@ -939,7 +933,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "655ff96b-5c65-41d4-8823-03e8a711383d": {
    "status": "repealed",
@@ -953,7 +948,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "0332e666-79f7-4834-9005-94017c08e687": {
    "status": "in force",
@@ -966,7 +962,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "8244e9bc-92b8-4ab0-ba7a-6ac516de72b2": {
    "status": "repealed",
@@ -980,7 +977,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "553f7fd8-7267-461d-b8c6-3a0b3a8f25b5": {
    "status": "in force",
@@ -993,7 +991,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "cb2c1221-bd92-44c0-8a2b-473b3309c2e4": {
    "status": "repealed",
@@ -1016,7 +1015,8 @@
      "id": "84ed1398-127e-437b-8b6d-22901a9ec5de"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "9b02fbfb-0c4d-4448-a787-0009feaeece7": {
    "status": "in force",
@@ -1038,7 +1038,8 @@
      "id": "84ed1398-127e-437b-8b6d-22901a9ec5de"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "1366f147-d053-4103-b3e3-9ce441ddb44e": {
    "status": "repealed",
@@ -1052,7 +1053,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "61747398-3ceb-4953-af27-5f1c2ab557e8": {
    "status": "in force",
@@ -1065,7 +1067,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "6ee6812d-1912-4ed7-900a-272a9097d087": {
    "status": "repealed",
@@ -1079,7 +1082,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "3ef0faf1-9061-4929-be25-1dcbfba41dee": {
    "status": "in force",
@@ -1092,7 +1096,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "a50fc27a-d294-4862-923f-94c7b9a19757": {
    "status": "repealed",
@@ -1111,7 +1116,8 @@
      "id": "4291f113-9cd4-4bf2-ad91-d5ea012068ac"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "10bb68d5-a171-47ad-b4b8-1bbf658da171": {
    "status": "in force",
@@ -1124,7 +1130,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "98a6dbc9-9f23-4940-a12f-a97023a969ee": {
    "status": "repealed",
@@ -1138,7 +1145,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "e4782a75-93b0-40cb-9d7c-57e6efcc7210": {
    "status": "in force",
@@ -1151,7 +1159,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "0fbb4d86-e055-41ad-afe7-75cc93249426": {
    "status": "repealed",
@@ -1165,7 +1174,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "57df186d-a35b-4f61-97e9-8c463410b9bb": {
    "status": "in force",
@@ -1178,7 +1188,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "a817c65e-4801-4207-9086-aab175565119": {
    "status": "repealed",
@@ -1205,7 +1216,8 @@
      "id": "390ea40f-d39a-46c6-83ba-f71a4a5ae3c1"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "5a0c57e7-cfdd-4348-8bf4-a719bd4f3c19": {
    "status": "in force",
@@ -1231,7 +1243,8 @@
      "id": "390ea40f-d39a-46c6-83ba-f71a4a5ae3c1"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "e6ffc30e-3065-4926-81e2-9c9d240e8a1e": {
    "status": "repealed",
@@ -1245,7 +1258,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "a93cec7b-1c48-406a-8110-b4bdfb2010ca": {
    "status": "in force",
@@ -1258,7 +1272,28 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
+  },
+  "f17d2ed0-6299-4f9d-bf9a-02c3242ef834": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "The Food Reserve Act, 2020",
+     "id": "89f8d435-2ba4-4e0f-9cdf-ee7f509c117d",
+     "evidence": "The Food Reserve Act, is repealed"
+    },
+    {
+     "title": "THE FOOD RESERVE ACT, 2026",
+     "id": "32fe866d-4e87-43e7-a57b-0fe9496b4881",
+     "evidence": "The Food Reserve Act, 2020 is repealed"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
   },
   "89f8d435-2ba4-4e0f-9cdf-ee7f509c117d": {
    "status": "in force",
@@ -1271,7 +1306,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "bc9ffad0-966b-457a-8dba-d2406e6b4481": {
    "status": "repealed",
@@ -1285,7 +1321,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "ed75016d-f38f-4740-b8d9-f349a3dfc838": {
    "status": "in force",
@@ -1298,7 +1335,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "8b988f49-df4a-4f07-844f-4ed8a6e455f7": {
    "status": "repealed",
@@ -1312,7 +1350,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "0670e07b-be43-4fa1-acef-24125f49e928": {
    "status": "in force",
@@ -1330,7 +1369,8 @@
      "id": "716d59e4-5103-4ee4-8210-5d7d5155b520"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "d32af689-832c-41d7-ad33-e7c88a542755": {
    "status": "repealed",
@@ -1349,7 +1389,8 @@
      "id": "cbd1a66d-438b-45b1-9e4b-6a922014f888"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "ffc4fb9d-8f68-4552-a994-c1051a1b9430": {
    "status": "in force",
@@ -1367,7 +1408,8 @@
      "id": "cbd1a66d-438b-45b1-9e4b-6a922014f888"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "b4837523-f483-4230-9d0e-3076856773eb": {
    "status": "repealed",
@@ -1381,7 +1423,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "4cd352b6-02f1-4577-a203-769eeefedbb3": {
    "status": "in force",
@@ -1394,7 +1437,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "de4897ae-594d-4f00-9e69-1a338a57e459": {
    "status": "repealed",
@@ -1408,7 +1452,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "0a7810de-681c-45a2-935d-a6302bac4a44": {
    "status": "in force",
@@ -1421,7 +1466,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "fa71a986-3a12-4c6b-8da2-cfffae0fe61d": {
    "status": "repealed",
@@ -1435,7 +1481,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "66ada4bc-3018-4b6d-a698-a55da5e87caf": {
    "status": "in force",
@@ -1448,7 +1495,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "a7503678-f56d-493e-8f8e-131bddc706dd": {
    "status": "repealed",
@@ -1467,7 +1515,8 @@
      "id": "046d24a3-9d15-4b9b-824c-061c0c119060"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "5509a45f-8116-4339-98d4-7565ebec4fa1": {
    "status": "in force",
@@ -1480,7 +1529,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "1b8c1f05-1c4c-4eec-961c-14d7fd0a0ef0": {
    "status": "repealed",
@@ -1494,7 +1544,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "88190d3e-cfe1-4f6c-948f-a218ec6c9f7a": {
    "status": "in force",
@@ -1512,7 +1563,46 @@
      "id": "40f4279f-60bf-44b5-958e-68a0b57e9ea0"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
+  },
+  "b7055ff9-b9df-4a2f-bbbb-f5c0bf1f1fbe": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "The Anti-Terrorism and Non-Proliferation Act, 2018",
+     "id": "22abb9d1-5671-4141-af73-24d9645709a1",
+     "evidence": "The Anti-Terrorism Act,2007is repealed"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "22abb9d1-5671-4141-af73-24d9645709a1": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "The Anti-Terrorism Act, 2007",
+     "id": "b7055ff9-b9df-4a2f-bbbb-f5c0bf1f1fbe"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Anti-Terrorism and Non-Proliferation (Amendment) Act, 2024",
+     "id": "08f7803a-302b-470d-ad1e-f7f5371c9bc2"
+    },
+    {
+     "title": "The Anti-Terrorism and Non-Proliferation (Amendment) Act",
+     "id": "27284a6a-6baa-4def-91b4-24f6a0e16578"
+    }
+   ],
+   "amends": [],
+   "enacted_as": []
   },
   "eb2fe381-70b0-4bd2-9498-7beead5d315a": {
    "status": "repealed",
@@ -1526,7 +1616,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "dd0a1a84-51f2-468c-a20d-3a9303e3cf60": {
    "status": "in force",
@@ -1539,7 +1630,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "42d7a79f-db67-4d29-9371-49a8556b952f": {
    "status": "repealed",
@@ -1558,7 +1650,8 @@
      "id": "2eb0d153-801b-45b6-9fbb-e24d65afb577"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "00387d35-e23a-491b-8dcf-66d44978e786": {
    "status": "in force",
@@ -1571,7 +1664,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "70a2201f-1392-4b99-bfb7-71f88247f82e": {
    "status": "in force",
@@ -1584,7 +1678,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "e314c088-cb7d-4b74-80e3-b6caa68b16d4": {
    "status": "repealed",
@@ -1598,7 +1693,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "3870b660-89b5-48b2-bd14-78471b52b84e": {
    "status": "in force",
@@ -1611,7 +1707,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "0153de1c-6518-4f2a-bb97-268f13528be0": {
    "status": "repealed",
@@ -1625,7 +1722,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "5faf1de2-97bd-4113-9cc1-0bec85d656b0": {
    "status": "in force",
@@ -1638,7 +1736,51 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
+  },
+  "32fe866d-4e87-43e7-a57b-0fe9496b4881": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "REPUBLIC OF ZAMBIA THE FOOD RESERVE ACT",
+     "id": "f17d2ed0-6299-4f9d-bf9a-02c3242ef834"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "0879f7b3-0a45-4ee8-9ad5-34514240e6b7": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "THE BANK OF ZAMBIA ACT, 2022",
+     "id": "d2c1fe29-8d05-4739-ad7a-505c39eb9bbc",
+     "evidence": "The Bank of Zambia Act, 1996, is repealed"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "d2c1fe29-8d05-4739-ad7a-505c39eb9bbc": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "REPUBLIC OF ZAMBIA THE BANK OF ZAMBIA ACT",
+     "id": "0879f7b3-0a45-4ee8-9ad5-34514240e6b7"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
   },
   "35d362b2-62e8-4a76-91c6-e39fd128752c": {
    "status": "repealed",
@@ -1652,7 +1794,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "32454561-4d6e-4744-9536-fa84b3f90456": {
    "status": "in force",
@@ -1665,7 +1808,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "3ffc9f21-c077-4d57-a3fc-2bb0bb4247ce": {
    "status": "repealed",
@@ -1679,7 +1823,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "be55c19d-2b1f-4b41-8ac1-8cba4c8b6d7f": {
    "status": "in force",
@@ -1692,7 +1837,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "9ceaf02f-4ccb-4f03-bd53-1c8dea0ed5ad": {
    "status": "repealed",
@@ -1706,7 +1852,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "75238622-83c3-46fa-b2da-39b89c61816f": {
    "status": "in force",
@@ -1719,7 +1866,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "a7c39066-8dd6-4d48-912f-bf3d4563fad8": {
    "status": "repealed",
@@ -1733,7 +1881,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "25c65dfb-83e3-4bfb-9c53-d9608bf55cb3": {
    "status": "in force",
@@ -1746,7 +1895,8 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "881305d4-ef28-4b88-b3b0-00fb864fed40": {
    "status": "in force",
@@ -1799,7 +1949,8 @@
      "id": "81b8fc00-0388-4d03-b2c7-cd9b66d654c2"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "900ba737-ba3e-4cff-a82e-7ff3cceb653b": {
    "status": "amending Act",
@@ -1812,7 +1963,8 @@
      "title": "REPUBLIC OF ZAMBIA THE INCOME TAX ACT",
      "id": "881305d4-ef28-4b88-b3b0-00fb864fed40"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "4d4a526d-a14e-478f-922f-64ba0cd0636e": {
    "status": "amending Act",
@@ -1833,7 +1985,8 @@
      "title": "THE COMPANIES ACT, 2017",
      "id": "7279308e-8514-4c90-b9bd-bc9ba6880ac0"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "4ea46d0b-d24a-4ea8-96bd-c226385275a7": {
    "status": "in force",
@@ -1854,7 +2007,8 @@
      "id": "668f9a44-2416-4d6e-96aa-9566bc7f412e"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "adcc84ca-ca06-434e-a0fc-a8cdfb1bcca7": {
    "status": "amending Act",
@@ -1867,7 +2021,8 @@
      "title": "REPUBLIC OF ZAMBIA THE CRIMINAL PROCEDURE CODE ACT",
      "id": "4ea46d0b-d24a-4ea8-96bd-c226385275a7"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "77585d6f-2d66-4aa0-8c45-a83f3f91cd8f": {
    "status": "in force",
@@ -1908,7 +2063,8 @@
      "id": "1cd53ebc-697c-4ae3-93c4-a65b6255c557"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "457839ba-e93e-4da0-a26d-ac5055f81ef5": {
    "status": "amending Act",
@@ -1921,7 +2077,8 @@
      "title": "The Supreme Court of Zambia Act",
      "id": "77585d6f-2d66-4aa0-8c45-a83f3f91cd8f"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "77999cbd-2d3d-492a-86dd-4e7b4107a8c7": {
    "status": "amending Act",
@@ -1934,7 +2091,8 @@
      "title": "The Supreme Court of Zambia Act",
      "id": "77585d6f-2d66-4aa0-8c45-a83f3f91cd8f"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "fb746a1d-08e7-4313-8f06-7b584ee321ee": {
    "status": "in force",
@@ -1967,7 +2125,8 @@
      "id": "d41cd6ef-dbb5-4f46-88ba-d6843e7dfefa"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "59cbdd0c-66c1-4014-ab19-f317f2796e1e": {
    "status": "amending Act",
@@ -1984,7 +2143,8 @@
      "title": "THE HIGH COURT ACT",
      "id": "efe3190a-2b90-49c1-8c2e-5749a6f0a5a5"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "efe3190a-2b90-49c1-8c2e-5749a6f0a5a5": {
    "status": "in force",
@@ -2017,7 +2177,8 @@
      "id": "d41cd6ef-dbb5-4f46-88ba-d6843e7dfefa"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "30ecabb3-c300-4049-8242-4c2f9b29cbff": {
    "status": "amending Act",
@@ -2030,7 +2191,8 @@
      "title": "The Supreme Court of Zambia Act",
      "id": "77585d6f-2d66-4aa0-8c45-a83f3f91cd8f"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "f4c09f40-b8d2-4f68-9fb2-b42ec132e3e1": {
    "status": "amending Act",
@@ -2043,7 +2205,8 @@
      "title": "The Supreme Court of Zambia Act",
      "id": "77585d6f-2d66-4aa0-8c45-a83f3f91cd8f"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "0263de07-9bfc-4cbb-a1f3-0a98e65c3f07": {
    "status": "amending Act",
@@ -2056,7 +2219,8 @@
      "title": "The Supreme Court of Zambia Act",
      "id": "77585d6f-2d66-4aa0-8c45-a83f3f91cd8f"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "beb9ec42-38a5-448f-ab4a-a8e2e7f6fb91": {
    "status": "amending Act",
@@ -2069,7 +2233,8 @@
      "title": "The Supreme Court of Zambia Act",
      "id": "77585d6f-2d66-4aa0-8c45-a83f3f91cd8f"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "bb61406f-ef14-4279-ba2d-880d0867d2d9": {
    "status": "amending Act",
@@ -2082,7 +2247,8 @@
      "title": "The Supreme Court of Zambia Act",
      "id": "77585d6f-2d66-4aa0-8c45-a83f3f91cd8f"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "1cd53ebc-697c-4ae3-93c4-a65b6255c557": {
    "status": "amending Act",
@@ -2095,7 +2261,8 @@
      "title": "The Supreme Court of Zambia Act",
      "id": "77585d6f-2d66-4aa0-8c45-a83f3f91cd8f"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "996df4ae-afbe-4148-90e0-0caf43c1ece8": {
    "status": "in force",
@@ -2112,7 +2279,8 @@
      "id": "4fea4a4e-3d8e-44c3-b3c2-ff53a3ced17d"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "b5d6aa11-ea9b-42ef-a35a-b51ac1b9a6fa": {
    "status": "amending Act",
@@ -2125,7 +2293,8 @@
      "title": "REPUBLIC OF ZAMBIA THE SUBORDINATE COURTS ACT",
      "id": "996df4ae-afbe-4148-90e0-0caf43c1ece8"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "555e1390-3cf6-4132-9a92-59bf135f56d6": {
    "status": "amending Act",
@@ -2142,7 +2311,8 @@
      "title": "THE HIGH COURT ACT",
      "id": "efe3190a-2b90-49c1-8c2e-5749a6f0a5a5"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "1aead762-2222-42d3-8ab5-7b77bbf98841": {
    "status": "amending Act",
@@ -2159,7 +2329,8 @@
      "title": "THE HIGH COURT ACT",
      "id": "efe3190a-2b90-49c1-8c2e-5749a6f0a5a5"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "b31dcc54-7b55-4385-b75b-8a802cb12c34": {
    "status": "amending Act",
@@ -2176,7 +2347,8 @@
      "title": "THE HIGH COURT ACT",
      "id": "efe3190a-2b90-49c1-8c2e-5749a6f0a5a5"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "e4518554-0a35-46ba-a28a-489384161173": {
    "status": "amending Act",
@@ -2193,7 +2365,8 @@
      "title": "THE HIGH COURT ACT",
      "id": "efe3190a-2b90-49c1-8c2e-5749a6f0a5a5"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "4fea4a4e-3d8e-44c3-b3c2-ff53a3ced17d": {
    "status": "amending Act",
@@ -2206,7 +2379,8 @@
      "title": "REPUBLIC OF ZAMBIA THE SUBORDINATE COURTS ACT",
      "id": "996df4ae-afbe-4148-90e0-0caf43c1ece8"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "b546d8f1-179f-4f4c-ab1a-3ea55681f0fc": {
    "status": "in force",
@@ -2219,7 +2393,8 @@
      "id": "98922b52-a8f9-42ca-a561-357438e89253"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "98922b52-a8f9-42ca-a561-357438e89253": {
    "status": "amending Act",
@@ -2232,7 +2407,8 @@
      "title": "The National Health Insurance Act, 2018",
      "id": "b546d8f1-179f-4f4c-ab1a-3ea55681f0fc"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "53a3386a-2640-41d5-8797-e9418f3bf54c": {
    "status": "in force",
@@ -2253,7 +2429,8 @@
      "id": "5e78b17b-8d82-44cf-84e4-eeb5dc93e129"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "9fe2d2b7-6dcc-46e6-af5a-c85c853e4e5b": {
    "status": "amending Act",
@@ -2270,7 +2447,8 @@
      "title": "The National Pension Scheme Act, 2026",
      "id": "2d87cd8b-3107-4186-9c48-6c352ec2de7f"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "2d87cd8b-3107-4186-9c48-6c352ec2de7f": {
    "status": "in force",
@@ -2291,7 +2469,8 @@
      "id": "5e78b17b-8d82-44cf-84e4-eeb5dc93e129"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "350f49bf-e4b7-4ec0-9f73-3b84807f6c77": {
    "status": "amending Act",
@@ -2308,7 +2487,8 @@
      "title": "The National Pension Scheme Act, 2026",
      "id": "2d87cd8b-3107-4186-9c48-6c352ec2de7f"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "5e78b17b-8d82-44cf-84e4-eeb5dc93e129": {
    "status": "amending Act",
@@ -2325,7 +2505,8 @@
      "title": "The National Pension Scheme Act, 2026",
      "id": "2d87cd8b-3107-4186-9c48-6c352ec2de7f"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "f6ad35a7-6e55-4c84-91b4-00d97a79fa3b": {
    "status": "in force",
@@ -2346,7 +2527,8 @@
      "id": "f75e3f4d-c19d-4ebd-997d-60558c0d5a59"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "cfc988fa-e79d-4afe-8b7d-2212b96ea893": {
    "status": "amending Act",
@@ -2359,7 +2541,8 @@
      "title": "The Penal Code Act",
      "id": "f6ad35a7-6e55-4c84-91b4-00d97a79fa3b"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "dcdf251f-97e6-49e8-b711-eb017c317800": {
    "status": "amending Act",
@@ -2372,7 +2555,8 @@
      "title": "The Penal Code Act",
      "id": "f6ad35a7-6e55-4c84-91b4-00d97a79fa3b"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "f75e3f4d-c19d-4ebd-997d-60558c0d5a59": {
    "status": "amending Act",
@@ -2385,7 +2569,8 @@
      "title": "The Penal Code Act",
      "id": "f6ad35a7-6e55-4c84-91b4-00d97a79fa3b"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "0a6d0e3a-0283-46c6-9d38-46a446ab63d8": {
    "status": "amending Act",
@@ -2398,7 +2583,8 @@
      "title": "REPUBLIC OF ZAMBIA THE CRIMINAL PROCEDURE CODE ACT",
      "id": "4ea46d0b-d24a-4ea8-96bd-c226385275a7"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "668f9a44-2416-4d6e-96aa-9566bc7f412e": {
    "status": "amending Act",
@@ -2411,7 +2597,8 @@
      "title": "REPUBLIC OF ZAMBIA THE CRIMINAL PROCEDURE CODE ACT",
      "id": "4ea46d0b-d24a-4ea8-96bd-c226385275a7"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "f997ac67-e243-463f-b091-4147b5344e4f": {
    "status": "in force",
@@ -2424,7 +2611,8 @@
      "id": "eec13484-c53b-4e81-a90b-bc2fced64b73"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "eec13484-c53b-4e81-a90b-bc2fced64b73": {
    "status": "amending Act",
@@ -2437,7 +2625,8 @@
      "title": "The Occupational Health and Safety Act",
      "id": "f997ac67-e243-463f-b091-4147b5344e4f"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "49ef6221-27c0-416a-a5f9-e29e3c883f21": {
    "status": "in force",
@@ -2450,7 +2639,8 @@
      "id": "55c397cb-b753-4602-9ee4-04653f3531b7"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "55c397cb-b753-4602-9ee4-04653f3531b7": {
    "status": "amending Act",
@@ -2463,7 +2653,8 @@
      "title": "The Patents and Companies Registration Agency Act, 2020",
      "id": "49ef6221-27c0-416a-a5f9-e29e3c883f21"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "17cc313b-6f4a-44f1-b298-379d8cef0671": {
    "status": "amending Act",
@@ -2480,7 +2671,8 @@
      "title": "The Local Government Act",
      "id": "cb2c1221-bd92-44c0-8a2b-473b3309c2e4"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "17e1032f-9a60-4f8c-942d-84679c32a13d": {
    "status": "amending Act",
@@ -2493,7 +2685,8 @@
      "title": "Tourism and Hospitality Act, 2015",
      "id": "718fa78f-8a12-4f1c-a1ff-147d2f57406e"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "6c94ef77-43af-4533-ae76-94830f6de260": {
    "status": "in force",
@@ -2506,7 +2699,8 @@
      "id": "16dd3fbe-778c-411d-995e-1c65285a374f"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "16dd3fbe-778c-411d-995e-1c65285a374f": {
    "status": "amending Act",
@@ -2519,7 +2713,8 @@
      "title": "THE NATIONAL HEALTH RESEARCH ACT, 2013",
      "id": "6c94ef77-43af-4533-ae76-94830f6de260"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "704f0b74-2d4b-47ab-b1ff-a41c2b386280": {
    "status": "in force",
@@ -2536,7 +2731,8 @@
      "id": "87a4143d-986f-4282-a108-529ddc797ffd"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "380f005a-755d-4ea1-ad45-2e387efceb74": {
    "status": "amending Act",
@@ -2549,7 +2745,8 @@
      "title": "The National Prosecution Authority 2010",
      "id": "704f0b74-2d4b-47ab-b1ff-a41c2b386280"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "eb5a83a0-d03c-42c7-a971-6b61d010f8e7": {
    "status": "in force",
@@ -2566,7 +2763,8 @@
      "id": "d05854d5-6e74-46b9-b742-4b03206703cb"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "1323e0ed-d228-4d2d-89ff-9833d80cb8c6": {
    "status": "amending Act",
@@ -2579,7 +2777,8 @@
      "title": "THE ZAMBIA DEVELOPMENT AGENCY ACT, 2022",
      "id": "eb5a83a0-d03c-42c7-a971-6b61d010f8e7"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "59e972a1-2dd7-4d0f-b911-106b3a599a2e": {
    "status": "in force",
@@ -2592,7 +2791,8 @@
      "id": "00ee768b-372c-475c-b233-2bebdcf0f98f"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "00ee768b-372c-475c-b233-2bebdcf0f98f": {
    "status": "amending Act",
@@ -2605,7 +2805,8 @@
      "title": "The Persons with Disabilities Act",
      "id": "59e972a1-2dd7-4d0f-b911-106b3a599a2e"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "c50ac2d4-3810-4cc6-8ed0-f6d87e1c36da": {
    "status": "in force",
@@ -2618,7 +2819,8 @@
      "id": "2227dd74-fbe9-46c3-be7e-364da79c49db"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "2227dd74-fbe9-46c3-be7e-364da79c49db": {
    "status": "amending Act",
@@ -2631,7 +2833,8 @@
      "title": "The Flying Doctor Service Act",
      "id": "c50ac2d4-3810-4cc6-8ed0-f6d87e1c36da"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "c56e99e2-2eb1-4172-9ef0-cb18672585a9": {
    "status": "in force",
@@ -2648,7 +2851,8 @@
      "id": "655997d1-19b5-4765-b61e-2ce68b0dcfeb"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "351bbc08-2874-4c77-93ab-cf954269a63d": {
    "status": "amending Act",
@@ -2661,7 +2865,8 @@
      "title": "The Zambia Institute for Tourism and Hospitality Studies",
      "id": "c56e99e2-2eb1-4172-9ef0-cb18672585a9"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "cffd554d-8e4d-4344-a728-3d6447f75400": {
    "status": "in force",
@@ -2690,7 +2895,8 @@
      "id": "034993d4-1f17-4877-bcce-768b16b09360"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "5ff9b00b-63d8-44a7-943c-dbca7f44c43d": {
    "status": "amending Act",
@@ -2703,7 +2909,8 @@
      "title": "The Zambia Revenue Authority Act",
      "id": "cffd554d-8e4d-4344-a728-3d6447f75400"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "046d24a3-9d15-4b9b-824c-061c0c119060": {
    "status": "amending Act",
@@ -2716,7 +2923,8 @@
      "title": "The Standards Act",
      "id": "a7503678-f56d-493e-8f8e-131bddc706dd"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "791534a3-851d-4bb2-b58a-b446b26e44f3": {
    "status": "in force",
@@ -2729,7 +2937,8 @@
      "id": "6ffaf235-c433-403d-bfc4-68b6f2b7fc31"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "6ffaf235-c433-403d-bfc4-68b6f2b7fc31": {
    "status": "amending Act",
@@ -2742,7 +2951,8 @@
      "title": "The Medicines and Allied Substances 2013",
      "id": "791534a3-851d-4bb2-b58a-b446b26e44f3"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "96e5eb3a-ec19-43d0-92b0-bf0cbdba459f": {
    "status": "in force",
@@ -2759,7 +2969,8 @@
      "id": "11c58bd2-e4f4-43ff-a01c-98924b29d17a"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "854ac28f-fe3c-4767-8787-bd8ae29131f6": {
    "status": "amending Act",
@@ -2772,7 +2983,8 @@
      "title": "The Zambia National Public Health Institute Act, 2020",
      "id": "96e5eb3a-ec19-43d0-92b0-bf0cbdba459f"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "d2379542-ac5f-4eca-8fe3-e07daeee75b3": {
    "status": "in force",
@@ -2785,7 +2997,8 @@
      "id": "7bd9bd92-de16-4def-a52a-17d159b6456a"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "7bd9bd92-de16-4def-a52a-17d159b6456a": {
    "status": "amending Act",
@@ -2798,7 +3011,8 @@
      "title": "The Sports Council of Zambia Act",
      "id": "d2379542-ac5f-4eca-8fe3-e07daeee75b3"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "33f8cf56-9a11-4c1e-b54b-152ee68fce6f": {
    "status": "in force",
@@ -2811,7 +3025,8 @@
      "id": "94ebc633-66d7-4b14-9100-0d66c045f192"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "94ebc633-66d7-4b14-9100-0d66c045f192": {
    "status": "amending Act",
@@ -2828,7 +3043,8 @@
      "title": "The Energy Regulation Act, 2019",
      "id": "57b24226-ea66-419b-8888-00859c6bb066"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "57b24226-ea66-419b-8888-00859c6bb066": {
    "status": "in force",
@@ -2841,7 +3057,8 @@
      "id": "94ebc633-66d7-4b14-9100-0d66c045f192"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "31b338dc-c41c-4396-93c6-6589bc708b10": {
    "status": "in force",
@@ -2854,7 +3071,8 @@
      "id": "d6be23ca-d557-419f-b9be-f814370785b0"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "d6be23ca-d557-419f-b9be-f814370785b0": {
    "status": "amending Act",
@@ -2867,7 +3085,8 @@
      "title": "The Food and Nutrition Act, 2020",
      "id": "31b338dc-c41c-4396-93c6-6589bc708b10"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "c8b08538-79de-4847-8c96-60cb2aebe77d": {
    "status": "in force",
@@ -2880,7 +3099,8 @@
      "id": "49bf740a-9bcb-42ed-9ef9-99d989bef1ab"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "49bf740a-9bcb-42ed-9ef9-99d989bef1ab": {
    "status": "amending Act",
@@ -2893,7 +3113,8 @@
      "title": "The National Museums Act",
      "id": "c8b08538-79de-4847-8c96-60cb2aebe77d"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "c7429658-9415-4ad1-85a5-77076667f983": {
    "status": "in force",
@@ -2906,7 +3127,8 @@
      "id": "bb4a610d-b580-496b-809b-acc54ee8d67a"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "bb4a610d-b580-496b-809b-acc54ee8d67a": {
    "status": "amending Act",
@@ -2919,7 +3141,8 @@
      "title": "THE GREEN ECONOMY AND CLIMATE CHANGE ACT, 2024",
      "id": "c7429658-9415-4ad1-85a5-77076667f983"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "29e9329d-2665-4a17-9f0b-d5aca0d8fc5e": {
    "status": "amending Act",
@@ -2932,7 +3155,8 @@
      "title": "THE NATIONAL HEALTH RESEARCH AND TRAINING INSTITUTE ACT, 2024",
      "id": "2e57c1bf-432e-4449-ad81-0fd19f17c045"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "1a864682-0299-461f-80a9-c54a60d87b6c": {
    "status": "in force",
@@ -2949,7 +3173,8 @@
      "id": "6566d702-f69b-412e-8ec2-622a12a56b9b"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "3201341b-db78-4008-9498-8a23603bda3a": {
    "status": "amending Act",
@@ -2962,7 +3187,8 @@
      "title": "The National HIV/ AIDS/ STI/ TB Council",
      "id": "1a864682-0299-461f-80a9-c54a60d87b6c"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "ffba71fe-2855-4ff9-ad4b-fcf79ac3d1b2": {
    "status": "amending Act",
@@ -2975,7 +3201,8 @@
      "title": "THE MINERALS REGULATION COMMISSION ACT, 2024",
      "id": "781ec6b8-5607-4e52-aca0-0afe0cb0ed81"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "254f7797-e796-4aa8-b506-68b0b07b8104": {
    "status": "in force",
@@ -2988,7 +3215,8 @@
      "id": "c1771670-e093-4417-985e-1923d779fab6"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "c1771670-e093-4417-985e-1923d779fab6": {
    "status": "amending Act",
@@ -3001,7 +3229,8 @@
      "title": "REPUBLIC OF ZAMBIA THE COFFEE ACT",
      "id": "254f7797-e796-4aa8-b506-68b0b07b8104"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "cbd1a66d-438b-45b1-9e4b-6a922014f888": {
    "status": "amending Act",
@@ -3018,7 +3247,8 @@
      "title": "The Nurses and Midwives Act 2019",
      "id": "ffc4fb9d-8f68-4552-a994-c1051a1b9430"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "90b5d9d0-3360-4a46-a40d-c25a91de453b": {
    "status": "in force",
@@ -3031,7 +3261,8 @@
      "id": "5c677ab9-5ff7-4d27-adc6-cf5aed8aca6b"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "5c677ab9-5ff7-4d27-adc6-cf5aed8aca6b": {
    "status": "amending Act",
@@ -3044,7 +3275,8 @@
      "title": "The National Council for Construction Act, 2020",
      "id": "90b5d9d0-3360-4a46-a40d-c25a91de453b"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "d50f57aa-122b-4d1e-8903-c50af89ff68e": {
    "status": "in force",
@@ -3057,7 +3289,8 @@
      "id": "47718cdf-f37e-4725-beba-c914b8f2da4a"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "47718cdf-f37e-4725-beba-c914b8f2da4a": {
    "status": "amending Act",
@@ -3070,7 +3303,8 @@
      "title": "REPUBLIC OF ZAMBIA THE NATIONAL HOUSING AUTHORITY ACT",
      "id": "d50f57aa-122b-4d1e-8903-c50af89ff68e"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "8e4e7163-fa99-4b66-af65-024a42710308": {
    "status": "in force",
@@ -3087,7 +3321,8 @@
      "id": "c3a6cb6e-2834-4666-bf72-60e78408cd2d"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "a6d2f6ff-e464-4592-8a72-ea77e0445fc7": {
    "status": "amending Act",
@@ -3100,7 +3335,8 @@
      "title": "The National Road Fund",
      "id": "8e4e7163-fa99-4b66-af65-024a42710308"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "5d0a5e5c-2ad2-4c49-9694-e76b8ceb6696": {
    "status": "amending Act",
@@ -3113,7 +3349,8 @@
      "title": "The Higher Education 2013",
      "id": "05368655-51a7-43be-b2f2-abca2f4fc1c3"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "8ba6a509-75d6-4c42-be47-129f1cee9c60": {
    "status": "amending Act",
@@ -3130,7 +3367,8 @@
      "title": "The Health Professions Act, 2024",
      "id": "5a0c57e7-cfdd-4348-8bf4-a719bd4f3c19"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "716d59e4-5103-4ee4-8210-5d7d5155b520": {
    "status": "amending Act",
@@ -3143,7 +3381,8 @@
      "title": "The Mental Health Act, 2019",
      "id": "0670e07b-be43-4fa1-acef-24125f49e928"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "5ce39d75-e8b8-4c90-b00a-c6390cc8909e": {
    "status": "in force",
@@ -3160,7 +3399,8 @@
      "id": "b0eec6e8-bd8e-44fd-a2fe-87f74829d79c"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "7fdde210-79fd-4a69-8841-9d7d1c56ee7e": {
    "status": "amending Act",
@@ -3173,7 +3413,8 @@
      "title": "The Business Regulatory Act ( 2014)",
      "id": "5ce39d75-e8b8-4c90-b00a-c6390cc8909e"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "5229c970-390e-4b88-9828-fb3ea877e6a2": {
    "status": "in force",
@@ -3190,7 +3431,8 @@
      "id": "da64e361-0fc8-41e1-bdfc-6a0121931984"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "22e30f86-924e-4aa9-b791-85f5d8b0b4cd": {
    "status": "amending Act",
@@ -3203,7 +3445,8 @@
      "title": "The National Heritage Conservation Commission Act",
      "id": "5229c970-390e-4b88-9828-fb3ea877e6a2"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "d88828a6-508e-4758-834c-7c5cc600c8b0": {
    "status": "amending Act",
@@ -3220,7 +3463,8 @@
      "title": "The Tobacco Act",
      "id": "541b29ab-fa52-40e6-af76-ef32ed285271"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "2a46a1c4-45db-4d97-beef-c88c142490f3": {
    "status": "in force",
@@ -3237,7 +3481,8 @@
      "id": "b04eec96-2b16-4e6c-b924-082002f9341a"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "4b3b7845-b349-4f02-952f-8b4d589e085f": {
    "status": "amending Act",
@@ -3250,7 +3495,8 @@
      "title": "THE ENVIRONMENTAL MANAGEMENT ACT, 2011",
      "id": "2a46a1c4-45db-4d97-beef-c88c142490f3"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "cf880f81-01da-495a-a698-c322018c4ecf": {
    "status": "in force",
@@ -3263,7 +3509,8 @@
      "id": "6b6c3f76-82e7-4523-a52f-47c0c54a6d43"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "6b6c3f76-82e7-4523-a52f-47c0c54a6d43": {
    "status": "amending Act",
@@ -3276,7 +3523,8 @@
      "title": "The National Youth Development Council Act",
      "id": "cf880f81-01da-495a-a698-c322018c4ecf"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "252c40e6-783c-4341-9cd4-43186ad5e60c": {
    "status": "in force",
@@ -3289,7 +3537,8 @@
      "id": "ec40215e-fe4a-45dd-b7f4-ae0c00385637"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "ec40215e-fe4a-45dd-b7f4-ae0c00385637": {
    "status": "amending Act",
@@ -3302,7 +3551,8 @@
      "title": "THE LEGAL AID ACT, 2021",
      "id": "252c40e6-783c-4341-9cd4-43186ad5e60c"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "58001d20-1150-4321-ba5c-930dd90ffd91": {
    "status": "in force",
@@ -3319,7 +3569,8 @@
      "id": "d5d048d7-9abc-4994-af08-592f2f87bc8f"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "81e2bbcb-54ce-404a-b279-865d4e6fbd3d": {
    "status": "amending Act",
@@ -3332,7 +3583,8 @@
      "title": "The Pension Scheme Regulation",
      "id": "58001d20-1150-4321-ba5c-930dd90ffd91"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "807ac2fc-a013-4bcc-b20b-cf00c7d8bad7": {
    "status": "in force",
@@ -3349,7 +3601,8 @@
      "id": "37bdc947-46f2-48d6-afdc-c151fb2a978d"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "2ef3164e-46e7-45a2-b1f4-c3e7d482083f": {
    "status": "amending Act",
@@ -3362,7 +3615,8 @@
      "title": "THE PUBLIC-PRIVATE PARTNERSHIP ACT, 2023",
      "id": "807ac2fc-a013-4bcc-b20b-cf00c7d8bad7"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "453e439e-58c4-40d0-a01e-2e33a144c277": {
    "status": "in force",
@@ -3375,7 +3629,8 @@
      "id": "ad4dc4cb-16cf-4b88-9e1e-734b87fac659"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "ad4dc4cb-16cf-4b88-9e1e-734b87fac659": {
    "status": "amending Act",
@@ -3388,7 +3643,8 @@
      "title": "REPUBLIC OF ZAMBIA THE LAND SURVEY ACT",
      "id": "453e439e-58c4-40d0-a01e-2e33a144c277"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "2deb21c7-6b0a-47d0-a858-affc69168ea3": {
    "status": "in force",
@@ -3401,7 +3657,8 @@
      "id": "28db84ee-89bd-49ff-8238-eb0b8dc1e5b0"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "28db84ee-89bd-49ff-8238-eb0b8dc1e5b0": {
    "status": "amending Act",
@@ -3418,7 +3675,8 @@
      "title": "THE EDUCATION ACT, 2011",
      "id": "ddf3b6d3-7755-4741-b26e-3778da74d4ee"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "ddf3b6d3-7755-4741-b26e-3778da74d4ee": {
    "status": "in force",
@@ -3431,7 +3689,8 @@
      "id": "28db84ee-89bd-49ff-8238-eb0b8dc1e5b0"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "2aeef595-56e1-495f-b902-931d710a1349": {
    "status": "in force",
@@ -3444,7 +3703,8 @@
      "id": "cf5dff5c-3e63-49af-ba16-704feec8e6f4"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "cf5dff5c-3e63-49af-ba16-704feec8e6f4": {
    "status": "amending Act",
@@ -3461,7 +3721,8 @@
      "title": "The Mobile Money Transaction Levy Act, 2023",
      "id": "d813873d-dd25-48e4-b076-173ac4ab61cd"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "d813873d-dd25-48e4-b076-173ac4ab61cd": {
    "status": "in force",
@@ -3474,7 +3735,8 @@
      "id": "cf5dff5c-3e63-49af-ba16-704feec8e6f4"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "eefa1cc8-e109-4fd3-b45e-349d6abc8bd9": {
    "status": "in force",
@@ -3487,7 +3749,8 @@
      "id": "875918f7-7422-4672-8ea4-30a3646fecba"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "875918f7-7422-4672-8ea4-30a3646fecba": {
    "status": "amending Act",
@@ -3500,7 +3763,8 @@
      "title": "The Disaster Management 2010",
      "id": "eefa1cc8-e109-4fd3-b45e-349d6abc8bd9"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "c3a6cb6e-2834-4666-bf72-60e78408cd2d": {
    "status": "amending Act",
@@ -3513,7 +3777,8 @@
      "title": "The National Road Fund",
      "id": "8e4e7163-fa99-4b66-af65-024a42710308"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "fb279a19-d572-4f18-b2fc-63a965bbb0cb": {
    "status": "in force",
@@ -3526,7 +3791,8 @@
      "id": "97f996fc-595d-488d-adcd-fa74cb440974"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "97f996fc-595d-488d-adcd-fa74cb440974": {
    "status": "amending Act",
@@ -3539,7 +3805,8 @@
      "title": "The Public Procurement Act, 2020",
      "id": "fb279a19-d572-4f18-b2fc-63a965bbb0cb"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "40f4279f-60bf-44b5-958e-68a0b57e9ea0": {
    "status": "amending Act",
@@ -3552,7 +3819,8 @@
      "title": "The Electoral Process",
      "id": "88190d3e-cfe1-4f6c-948f-a218ec6c9f7a"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "cf86bd50-252c-4d30-b2b1-86beb03989ce": {
    "status": "in force",
@@ -3581,7 +3849,8 @@
      "id": "9424a7f9-2321-4e57-953b-baa80ba9c183"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "f01b6f66-53e7-4a75-89de-4570d0678a2b": {
    "status": "amending Act",
@@ -3594,7 +3863,8 @@
      "title": "The Property Transfer Tax Act",
      "id": "cf86bd50-252c-4d30-b2b1-86beb03989ce"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "8525682f-f025-483f-a059-dda2d358c4d7": {
    "status": "amending Act",
@@ -3607,7 +3877,8 @@
      "title": "REPUBLIC OF ZAMBIA THE INCOME TAX ACT",
      "id": "881305d4-ef28-4b88-b3b0-00fb864fed40"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "2eb0d153-801b-45b6-9fbb-e24d65afb577": {
    "status": "amending Act",
@@ -3620,7 +3891,8 @@
      "title": "The Securities Act",
      "id": "42d7a79f-db67-4d29-9371-49a8556b952f"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "7dcbbfa7-5917-4721-af1d-ea0cbe920898": {
    "status": "amending Act",
@@ -3633,7 +3905,8 @@
      "title": "REPUBLIC OF ZAMBIA THE INCOME TAX ACT",
      "id": "881305d4-ef28-4b88-b3b0-00fb864fed40"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "c8d5a6bc-e1d1-44cf-bac2-5919907e2133": {
    "status": "in force",
@@ -3686,7 +3959,8 @@
      "id": "2ad0ea57-6076-481a-9e13-a316dc8a05c2"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "672d08ef-42c9-434a-b470-c7742e6233f0": {
    "status": "amending Act",
@@ -3699,7 +3973,8 @@
      "title": "The Value Added Tax Act",
      "id": "c8d5a6bc-e1d1-44cf-bac2-5919907e2133"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "9ee2ec5b-41c1-435d-ba20-45854c4750a9": {
    "status": "amending Act",
@@ -3712,7 +3987,8 @@
      "title": "The Property Transfer Tax Act",
      "id": "cf86bd50-252c-4d30-b2b1-86beb03989ce"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "22367e58-02ca-475b-b93b-fa1341d9936b": {
    "status": "in force",
@@ -3729,7 +4005,8 @@
      "id": "4d65e4a5-8df8-4225-ad1e-6b985c1686cd"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "aae053d3-9bdb-4bd0-bc88-6afa93bd6d77": {
    "status": "amending Act",
@@ -3742,7 +4019,8 @@
      "title": "The Civil Aviation",
      "id": "22367e58-02ca-475b-b93b-fa1341d9936b"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "6a82b8a6-3a57-48b5-9566-83e34e46afdb": {
    "status": "in force",
@@ -3755,7 +4033,8 @@
      "id": "63aa704d-3914-45c6-9001-1b9145295dea"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "63aa704d-3914-45c6-9001-1b9145295dea": {
    "status": "amending Act",
@@ -3768,7 +4047,8 @@
      "title": "The Registration of Business Names Act 2011",
      "id": "6a82b8a6-3a57-48b5-9566-83e34e46afdb"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "9730a34a-8642-459a-b4e4-818ffa29b84b": {
    "status": "amending Act",
@@ -3781,7 +4061,8 @@
      "title": "The Zambia Revenue Authority Act",
      "id": "cffd554d-8e4d-4344-a728-3d6447f75400"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "0ab3d460-4e90-4ae7-8c65-62acec2a913f": {
    "status": "in force",
@@ -3798,7 +4079,8 @@
      "id": "71739fc8-3ad3-4101-a2e1-aa469fff9827"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "e3d90e69-3fd7-41ec-b0d9-83ab8b194318": {
    "status": "amending Act",
@@ -3811,7 +4093,8 @@
      "title": "The Judiciary Administration",
      "id": "0ab3d460-4e90-4ae7-8c65-62acec2a913f"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "4d533571-f9ae-4c0b-b1d6-8a3acb50d067": {
    "status": "amending Act",
@@ -3824,7 +4107,8 @@
      "title": "The Value Added Tax Act",
      "id": "c8d5a6bc-e1d1-44cf-bac2-5919907e2133"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "8b04815e-558b-488f-b296-1f72bb241561": {
    "status": "in force",
@@ -3873,7 +4157,8 @@
      "id": "36cb966e-0c65-4372-8d9d-109af84ad749"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "90fe1029-d004-45bd-9e22-372cba9765de": {
    "status": "amending Act",
@@ -3886,7 +4171,8 @@
      "title": "REPUBLIC OF ZAMBIA THE CUSTOMS AND EXCISE ACT",
      "id": "8b04815e-558b-488f-b296-1f72bb241561"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "bfe9a920-c1d7-43eb-a3a4-7edd140ace5c": {
    "status": "in force",
@@ -3899,7 +4185,8 @@
      "id": "52ea85be-2bc5-4392-9518-29ff06451894"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "52ea85be-2bc5-4392-9518-29ff06451894": {
    "status": "amending Act",
@@ -3912,7 +4199,8 @@
      "title": "REPUBLIC OF ZAMBIA THE BUILDING SOCIETIES ACT",
      "id": "bfe9a920-c1d7-43eb-a3a4-7edd140ace5c"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "4d65e4a5-8df8-4225-ad1e-6b985c1686cd": {
    "status": "amending Act",
@@ -3925,7 +4213,8 @@
      "title": "The Civil Aviation",
      "id": "22367e58-02ca-475b-b93b-fa1341d9936b"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "a2908154-5ab8-492d-8dff-1bef1e81ba53": {
    "status": "amending Act",
@@ -3938,7 +4227,8 @@
      "title": "THE ANIMAL HEALTH ACT, 2010",
      "id": "b83ae57a-9693-48e2-b6a9-8c302063121d"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "1a639905-794e-47fd-aec7-a9d143754cb7": {
    "status": "in force",
@@ -3951,7 +4241,8 @@
      "id": "1f53f085-75ed-4b06-8330-6cd86b96fdcb"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "1f53f085-75ed-4b06-8330-6cd86b96fdcb": {
    "status": "amending Act",
@@ -3964,7 +4255,8 @@
      "title": "THE INVESTMENT, TRADE AND BUSINESS DEVELOPMENT ACT, 2022",
      "id": "1a639905-794e-47fd-aec7-a9d143754cb7"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "c0f3dd30-625d-4f41-be64-3c1ffe20e946": {
    "status": "amending Act",
@@ -3977,7 +4269,8 @@
      "title": "REPUBLIC OF ZAMBIA THE CUSTOMS AND EXCISE ACT",
      "id": "8b04815e-558b-488f-b296-1f72bb241561"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "8f015d7d-3e55-4129-ace3-b3ff19b4eb60": {
    "status": "in force",
@@ -3990,7 +4283,8 @@
      "id": "1eedb9c6-3ee1-4e81-9db2-054d2c4de22c"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "1eedb9c6-3ee1-4e81-9db2-054d2c4de22c": {
    "status": "amending Act",
@@ -4003,7 +4297,8 @@
      "title": "THE LOCAL AUTHORITIES SUPERANNUATION FUND ACT",
      "id": "8f015d7d-3e55-4129-ace3-b3ff19b4eb60"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "1ff74b2b-a5b5-4fb5-97fc-bbf9e355bacc": {
    "status": "in force",
@@ -4024,7 +4319,8 @@
      "id": "9c2daa86-4b45-4df9-a58e-0edc842c9fe0"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "1bb95c81-b25b-44ce-9ee8-d8a93d93b541": {
    "status": "amending Act",
@@ -4037,7 +4333,8 @@
      "title": "The Zambia Institute of Advanced Legal Education Act",
      "id": "1ff74b2b-a5b5-4fb5-97fc-bbf9e355bacc"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "84ed1398-127e-437b-8b6d-22901a9ec5de": {
    "status": "amending Act",
@@ -4054,7 +4351,8 @@
      "title": "The Local Government Act",
      "id": "cb2c1221-bd92-44c0-8a2b-473b3309c2e4"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "855d0634-2af3-4117-b242-c4e6efd00f2c": {
    "status": "amending Act",
@@ -4067,7 +4365,8 @@
      "title": "The Property Transfer Tax Act",
      "id": "cf86bd50-252c-4d30-b2b1-86beb03989ce"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "bb58f42c-cc80-4b52-ac13-dfbee56012e5": {
    "status": "amending Act",
@@ -4080,7 +4379,8 @@
      "title": "REPUBLIC OF ZAMBIA THE CUSTOMS AND EXCISE ACT",
      "id": "8b04815e-558b-488f-b296-1f72bb241561"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "81481799-e174-434d-96ea-3640425ff2f5": {
    "status": "in force",
@@ -4093,7 +4393,8 @@
      "id": "e55e2045-ad14-4a01-b1cd-680dca02af9f"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "e55e2045-ad14-4a01-b1cd-680dca02af9f": {
    "status": "amending Act",
@@ -4106,7 +4407,8 @@
      "title": "REPUBLIC OF ZAMBIA THE MARRIAGE ACT",
      "id": "81481799-e174-434d-96ea-3640425ff2f5"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "11c58bd2-e4f4-43ff-a01c-98924b29d17a": {
    "status": "amending Act",
@@ -4119,7 +4421,8 @@
      "title": "The Zambia National Public Health Institute Act, 2020",
      "id": "96e5eb3a-ec19-43d0-92b0-bf0cbdba459f"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "b04eec96-2b16-4e6c-b924-082002f9341a": {
    "status": "amending Act",
@@ -4132,7 +4435,8 @@
      "title": "THE ENVIRONMENTAL MANAGEMENT ACT, 2011",
      "id": "2a46a1c4-45db-4d97-beef-c88c142490f3"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "ff52c534-69ae-4fa7-af70-6d92543fee10": {
    "status": "in force",
@@ -4157,7 +4461,8 @@
      "id": "f5720f38-953c-4f98-8cfb-8ab24e0f739d"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "f3c75310-c107-4704-beab-eed00ac5f11e": {
    "status": "amending Act",
@@ -4170,7 +4475,8 @@
      "title": "The Insurance Premium Levy",
      "id": "ff52c534-69ae-4fa7-af70-6d92543fee10"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "ecb6b4c3-a7d0-4f40-ba76-0fd46dd1962b": {
    "status": "amending Act",
@@ -4183,7 +4489,8 @@
      "title": "The Value Added Tax Act",
      "id": "c8d5a6bc-e1d1-44cf-bac2-5919907e2133"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "858b6860-a5a3-4f8f-ae93-582130c1d8d8": {
    "status": "amending Act",
@@ -4196,24 +4503,8 @@
      "title": "REPUBLIC OF ZAMBIA THE INCOME TAX ACT",
      "id": "881305d4-ef28-4b88-b3b0-00fb864fed40"
     }
-   ]
-  },
-  "22abb9d1-5671-4141-af73-24d9645709a1": {
-   "status": "in force",
-   "repealed_by": [],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [
-    {
-     "title": "The Anti-Terrorism and Non-Proliferation (Amendment) Act, 2024",
-     "id": "08f7803a-302b-470d-ad1e-f7f5371c9bc2"
-    },
-    {
-     "title": "The Anti-Terrorism and Non-Proliferation (Amendment) Act",
-     "id": "27284a6a-6baa-4def-91b4-24f6a0e16578"
-    }
    ],
-   "amends": []
+   "enacted_as": []
   },
   "08f7803a-302b-470d-ad1e-f7f5371c9bc2": {
    "status": "amending Act",
@@ -4226,7 +4517,8 @@
      "title": "The Anti-Terrorism and Non-Proliferation Act, 2018",
      "id": "22abb9d1-5671-4141-af73-24d9645709a1"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "a4b2dcc5-7b13-49e6-aa71-5e592b848576": {
    "status": "amending Act",
@@ -4239,7 +4531,8 @@
      "title": "The Zambia Revenue Authority Act",
      "id": "cffd554d-8e4d-4344-a728-3d6447f75400"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "4cb77998-dd97-4704-a40b-904dd0f5f30b": {
    "status": "amending Act",
@@ -4252,7 +4545,8 @@
      "title": "The Zambia Revenue Authority Act",
      "id": "cffd554d-8e4d-4344-a728-3d6447f75400"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "91d81eba-5f80-40c7-bc1a-9cea585fe24a": {
    "status": "in force",
@@ -4265,7 +4559,8 @@
      "id": "4bd60032-3182-4ba0-974f-4d42131839c4"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "4bd60032-3182-4ba0-974f-4d42131839c4": {
    "status": "amending Act",
@@ -4278,7 +4573,8 @@
      "title": "THE TEACHING PROFESSION ACT, 2026",
      "id": "91d81eba-5f80-40c7-bc1a-9cea585fe24a"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "1a1bb0a8-a9e6-48c5-90b4-ff98630ca6d3": {
    "status": "in force",
@@ -4291,7 +4587,8 @@
      "id": "dcb69f81-d74b-424f-9f5e-5d7231c3aa68"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "dcb69f81-d74b-424f-9f5e-5d7231c3aa68": {
    "status": "amending Act",
@@ -4304,7 +4601,8 @@
      "title": "REPUBLIC OF ZAMBIA THE DEFENCE ACT",
      "id": "1a1bb0a8-a9e6-48c5-90b4-ff98630ca6d3"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "27284a6a-6baa-4def-91b4-24f6a0e16578": {
    "status": "amending Act",
@@ -4317,7 +4615,8 @@
      "title": "The Anti-Terrorism and Non-Proliferation Act, 2018",
      "id": "22abb9d1-5671-4141-af73-24d9645709a1"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "d5d048d7-9abc-4994-af08-592f2f87bc8f": {
    "status": "amending Act",
@@ -4330,7 +4629,8 @@
      "title": "The Pension Scheme Regulation",
      "id": "58001d20-1150-4321-ba5c-930dd90ffd91"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "6ca56d11-eb6f-4ef1-ae99-9c72ab8a8dd1": {
    "status": "amending Act",
@@ -4343,7 +4643,8 @@
      "title": "The Value Added Tax Act",
      "id": "c8d5a6bc-e1d1-44cf-bac2-5919907e2133"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "b7ef373b-a5b5-42bb-a6ac-9e71cf6c328e": {
    "status": "in force",
@@ -4356,7 +4657,8 @@
      "id": "5bc70f05-a5a9-4a81-87fc-903d101c4c71"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "5bc70f05-a5a9-4a81-87fc-903d101c4c71": {
    "status": "amending Act",
@@ -4369,7 +4671,8 @@
      "title": "REPUBLIC OF ZAMBIA THE BETTING CONTROL ACT",
      "id": "b7ef373b-a5b5-42bb-a6ac-9e71cf6c328e"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "87a4143d-986f-4282-a108-529ddc797ffd": {
    "status": "amending Act",
@@ -4382,7 +4685,8 @@
      "title": "The National Prosecution Authority 2010",
      "id": "704f0b74-2d4b-47ab-b1ff-a41c2b386280"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "3f240e30-615a-474d-8f27-a852ab0a32e9": {
    "status": "amending Act",
@@ -4395,7 +4699,8 @@
      "title": "The Zambia Institute of Advanced Legal Education Act",
      "id": "1ff74b2b-a5b5-4fb5-97fc-bbf9e355bacc"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "8ea70e0f-729f-405e-9178-d99e4c259707": {
    "status": "amending Act",
@@ -4408,7 +4713,8 @@
      "title": "REPUBLIC OF ZAMBIA THE CUSTOMS AND EXCISE ACT",
      "id": "8b04815e-558b-488f-b296-1f72bb241561"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "d05854d5-6e74-46b9-b742-4b03206703cb": {
    "status": "amending Act",
@@ -4421,7 +4727,8 @@
      "title": "THE ZAMBIA DEVELOPMENT AGENCY ACT, 2022",
      "id": "eb5a83a0-d03c-42c7-a971-6b61d010f8e7"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "715534bf-bb44-4dde-a9bc-164b992ded2e": {
    "status": "in force",
@@ -4434,7 +4741,8 @@
      "id": "71ff9a2d-b4e2-4c43-a68e-ab7a7b540911"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "71ff9a2d-b4e2-4c43-a68e-ab7a7b540911": {
    "status": "amending Act",
@@ -4447,7 +4755,8 @@
      "title": "The Probation of Offenders Act",
      "id": "715534bf-bb44-4dde-a9bc-164b992ded2e"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "ccf9ae4a-8267-44ef-a371-6c0111b55f0e": {
    "status": "amending Act",
@@ -4460,7 +4769,8 @@
      "title": "REPUBLIC OF ZAMBIA THE INCOME TAX ACT",
      "id": "881305d4-ef28-4b88-b3b0-00fb864fed40"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "1a0cc52a-fc3a-441a-a540-3efea780f916": {
    "status": "in force",
@@ -4473,7 +4783,8 @@
      "id": "027ae1e6-1f27-4376-8347-197c1113e2f0"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "027ae1e6-1f27-4376-8347-197c1113e2f0": {
    "status": "amending Act",
@@ -4486,7 +4797,8 @@
      "title": "The Competition and Consumer Protection 2010",
      "id": "1a0cc52a-fc3a-441a-a540-3efea780f916"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "d24e5053-cd4b-4754-ba87-4c7b884f0b90": {
    "status": "in force",
@@ -4503,7 +4815,8 @@
      "id": "3e4f57a3-31c3-4932-8e7a-42276593d74e"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "331b4181-2699-4e00-9ea4-0fc8b7f507ae": {
    "status": "amending Act",
@@ -4516,7 +4829,8 @@
      "title": "THE ZAMBIA INSTITUTE OF MARKETING ACT, 2022",
      "id": "d24e5053-cd4b-4754-ba87-4c7b884f0b90"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "6e7dc42f-515f-4e97-8312-3d4ed9222307": {
    "status": "amending Act",
@@ -4529,7 +4843,8 @@
      "title": "THE MINES AND MINERALS DEVELOPMENT ACT, 2015",
      "id": "e6f604bd-fc46-4b46-a106-f9eca4e5f393"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "35316af7-d210-4a69-89e2-6d8144a9c284": {
    "status": "amending Act",
@@ -4546,7 +4861,8 @@
      "title": "The Health Professions Act, 2024",
      "id": "5a0c57e7-cfdd-4348-8bf4-a719bd4f3c19"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "390ea40f-d39a-46c6-83ba-f71a4a5ae3c1": {
    "status": "amending Act",
@@ -4563,7 +4879,8 @@
      "title": "The Health Professions Act, 2024",
      "id": "5a0c57e7-cfdd-4348-8bf4-a719bd4f3c19"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "18cd9d24-6b64-4997-945f-4f880b0183b9": {
    "status": "amending Act",
@@ -4576,7 +4893,8 @@
      "title": "REPUBLIC OF ZAMBIA THE INCOME TAX ACT",
      "id": "881305d4-ef28-4b88-b3b0-00fb864fed40"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "46fe3638-1031-48a9-b7b6-5de796307a77": {
    "status": "amending Act",
@@ -4589,7 +4907,8 @@
      "title": "The Higher Education 2013",
      "id": "05368655-51a7-43be-b2f2-abca2f4fc1c3"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "da64e361-0fc8-41e1-bdfc-6a0121931984": {
    "status": "amending Act",
@@ -4602,7 +4921,8 @@
      "title": "The National Heritage Conservation Commission Act",
      "id": "5229c970-390e-4b88-9828-fb3ea877e6a2"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "0d9b5844-629d-49b2-820b-6ce4785f482c": {
    "status": "in force",
@@ -4615,7 +4935,8 @@
      "id": "b57b3cfc-f037-44a0-94fa-6c08a6d6afca"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "b57b3cfc-f037-44a0-94fa-6c08a6d6afca": {
    "status": "amending Act",
@@ -4628,7 +4949,8 @@
      "title": "The Rent Act",
      "id": "0d9b5844-629d-49b2-820b-6ce4785f482c"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "163838c5-3f85-427c-82fd-8d59b495a7be": {
    "status": "amending Act",
@@ -4641,7 +4963,8 @@
      "title": "The Insurance Premium Levy",
      "id": "ff52c534-69ae-4fa7-af70-6d92543fee10"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "034993d4-1f17-4877-bcce-768b16b09360": {
    "status": "amending Act",
@@ -4654,7 +4977,8 @@
      "title": "The Zambia Revenue Authority Act",
      "id": "cffd554d-8e4d-4344-a728-3d6447f75400"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "31a9fe4c-c9db-4b63-907a-ffb67e6325da": {
    "status": "amending Act",
@@ -4667,7 +4991,8 @@
      "title": "THE MONEY-LENDERS ACT",
      "id": "59a2cf54-6e80-486b-897f-13e733da7f53"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "b76021ea-b20d-451d-ba2b-1a8fb2cef01f": {
    "status": "in force",
@@ -4684,7 +5009,8 @@
      "id": "742b9374-a853-43c2-a515-59e3d958874f"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "f5adedb9-2a89-495b-9aaa-05b0e2f1048b": {
    "status": "amending Act",
@@ -4697,7 +5023,8 @@
      "title": "The Zambia Law Development Commission Act",
      "id": "b76021ea-b20d-451d-ba2b-1a8fb2cef01f"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "655997d1-19b5-4765-b61e-2ce68b0dcfeb": {
    "status": "amending Act",
@@ -4710,7 +5037,8 @@
      "title": "The Zambia Institute for Tourism and Hospitality Studies",
      "id": "c56e99e2-2eb1-4172-9ef0-cb18672585a9"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "b24d2421-e7d7-42b3-8cdc-04baec609af3": {
    "status": "in force",
@@ -4723,7 +5051,8 @@
      "id": "6c01dacd-e5dd-45c3-b177-a8fcd82b5e69"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "6c01dacd-e5dd-45c3-b177-a8fcd82b5e69": {
    "status": "amending Act",
@@ -4736,7 +5065,8 @@
      "title": "REPUBLIC OF ZAMBIA THE ENGINEERING INSTITUTION OF ZAMBIA ACT",
      "id": "b24d2421-e7d7-42b3-8cdc-04baec609af3"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "ff0a8b74-b62a-4727-994a-6ed051e8d64a": {
    "status": "in force",
@@ -4749,7 +5079,8 @@
      "id": "10b8f504-801e-485d-a8bb-0931ebc42156"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "10b8f504-801e-485d-a8bb-0931ebc42156": {
    "status": "amending Act",
@@ -4762,7 +5093,8 @@
      "title": "The Land (Perpetual Succession) Act",
      "id": "ff0a8b74-b62a-4727-994a-6ed051e8d64a"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "1467bfe2-d80b-4dfb-8b05-1051e2583392": {
    "status": "amending Act",
@@ -4783,7 +5115,8 @@
      "title": "THE COMPANIES ACT, 2017",
      "id": "7279308e-8514-4c90-b9bd-bc9ba6880ac0"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "d9ebf180-662e-45ad-acac-2c03061775ff": {
    "status": "amending Act",
@@ -4796,7 +5129,8 @@
      "title": "The Service Commissions Act",
      "id": "6cfda8a1-8854-4728-9ea4-62b05ef451f0"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "a8c54007-4f49-4ae2-bb5f-f4d9b36e344c": {
    "status": "amending Act",
@@ -4809,7 +5143,8 @@
      "title": "The Property Transfer Tax Act",
      "id": "cf86bd50-252c-4d30-b2b1-86beb03989ce"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "2f515837-0be9-4308-8cbb-19dc6f2bc392": {
    "status": "in force",
@@ -4822,7 +5157,8 @@
      "id": "69230190-2375-41c7-a579-6e2f307d736f"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "69230190-2375-41c7-a579-6e2f307d736f": {
    "status": "amending Act",
@@ -4839,7 +5175,8 @@
      "title": "The Zambia Chartered Institute of Logistics and Transport",
      "id": "65426984-a38b-4453-84af-e48d741685d9"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "65426984-a38b-4453-84af-e48d741685d9": {
    "status": "in force",
@@ -4852,7 +5189,8 @@
      "id": "69230190-2375-41c7-a579-6e2f307d736f"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "9c2daa86-4b45-4df9-a58e-0edc842c9fe0": {
    "status": "amending Act",
@@ -4865,7 +5203,8 @@
      "title": "The Zambia Institute of Advanced Legal Education Act",
      "id": "1ff74b2b-a5b5-4fb5-97fc-bbf9e355bacc"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "3e4f57a3-31c3-4932-8e7a-42276593d74e": {
    "status": "amending Act",
@@ -4878,7 +5217,8 @@
      "title": "THE ZAMBIA INSTITUTE OF MARKETING ACT, 2022",
      "id": "d24e5053-cd4b-4754-ba87-4c7b884f0b90"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "1b46629b-17dc-4e25-b63d-95375aadd2cc": {
    "status": "amending Act",
@@ -4891,7 +5231,8 @@
      "title": "The Tropical Diseases Research Centre Act",
      "id": "df054459-34cd-471d-bcfe-cd16fd8cf6c5"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "b9c3ade3-0738-420e-bc98-f7d347874050": {
    "status": "amending Act",
@@ -4904,7 +5245,8 @@
      "title": "REPUBLIC OF ZAMBIA THE CUSTOMS AND EXCISE ACT",
      "id": "8b04815e-558b-488f-b296-1f72bb241561"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "7bd84830-a47c-478c-a656-ca140321d34c": {
    "status": "in force",
@@ -4917,7 +5259,8 @@
      "id": "810d9183-7509-4761-864c-b8cc6c3e4174"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "810d9183-7509-4761-864c-b8cc6c3e4174": {
    "status": "amending Act",
@@ -4930,7 +5273,8 @@
      "title": "The Compensation Fund",
      "id": "7bd84830-a47c-478c-a656-ca140321d34c"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "d0292b7d-0779-4c24-acec-de0696b75437": {
    "status": "in force",
@@ -4943,7 +5287,8 @@
      "id": "9f65190a-7b07-4d54-a3d2-e21c94ee0533"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "9f65190a-7b07-4d54-a3d2-e21c94ee0533": {
    "status": "amending Act",
@@ -4956,7 +5301,8 @@
      "title": "REPUBLIC OF ZAMBIA THE ACCOUNTANTS ACT",
      "id": "d0292b7d-0779-4c24-acec-de0696b75437"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "6566d702-f69b-412e-8ec2-622a12a56b9b": {
    "status": "amending Act",
@@ -4969,7 +5315,8 @@
      "title": "The National HIV/ AIDS/ STI/ TB Council",
      "id": "1a864682-0299-461f-80a9-c54a60d87b6c"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "6783e075-b02c-43fa-a962-f5b9048a0ea5": {
    "status": "amending Act",
@@ -4982,7 +5329,8 @@
      "title": "The Value Added Tax Act",
      "id": "c8d5a6bc-e1d1-44cf-bac2-5919907e2133"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "796e0976-adc3-446e-8507-11b546aaef2c": {
    "status": "in force",
@@ -4995,7 +5343,8 @@
      "id": "39bd0848-8ced-465c-93b0-faa1044eb6ad"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "39bd0848-8ced-465c-93b0-faa1044eb6ad": {
    "status": "amending Act",
@@ -5008,7 +5357,8 @@
      "title": "The Zambia Institute of Diplomacy and International Studies Act",
      "id": "796e0976-adc3-446e-8507-11b546aaef2c"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "742b9374-a853-43c2-a515-59e3d958874f": {
    "status": "amending Act",
@@ -5021,7 +5371,8 @@
      "title": "The Zambia Law Development Commission Act",
      "id": "b76021ea-b20d-451d-ba2b-1a8fb2cef01f"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "4291f113-9cd4-4bf2-ad91-d5ea012068ac": {
    "status": "amending Act",
@@ -5034,7 +5385,8 @@
      "title": "The Public Service Pensions",
      "id": "a50fc27a-d294-4862-923f-94c7b9a19757"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "c1289d4f-8eaf-426e-bfb3-bf0a2aeacee2": {
    "status": "in force",
@@ -5047,7 +5399,8 @@
      "id": "a4b588fc-098b-4618-8a19-8a7b4d6f1b1a"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "a4b588fc-098b-4618-8a19-8a7b4d6f1b1a": {
    "status": "amending Act",
@@ -5060,7 +5413,8 @@
      "title": "THE FINANCIAL INTELLIGENCE CENTRE ACT, 2010",
      "id": "c1289d4f-8eaf-426e-bfb3-bf0a2aeacee2"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "14c53f39-b43e-4d3c-b72d-79a0031dea4f": {
    "status": "in force",
@@ -5073,7 +5427,8 @@
      "id": "03b586ca-d1df-4459-bde4-5f73dbf9c26c"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "03b586ca-d1df-4459-bde4-5f73dbf9c26c": {
    "status": "amending Act",
@@ -5086,7 +5441,8 @@
      "title": "The National Institute of Public Administration",
      "id": "14c53f39-b43e-4d3c-b72d-79a0031dea4f"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "ade6d4f8-b6a8-4bef-8ff9-edfcb1dba386": {
    "status": "in force",
@@ -5103,7 +5459,8 @@
      "id": "1b427f43-cffd-4994-a323-df8141be8808"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "b2edad0b-8c1e-477a-9a39-e9ee56e8f9c7": {
    "status": "amending Act",
@@ -5116,7 +5473,8 @@
      "title": "REPUBLIC OF ZAMBIA THE CONTROL OF GOODS ACT",
      "id": "ade6d4f8-b6a8-4bef-8ff9-edfcb1dba386"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "3996d28e-6038-4ab5-b6d9-3e20c269915b": {
    "status": "amending Act",
@@ -5129,7 +5487,8 @@
      "title": "REPUBLIC OF ZAMBIA THE CUSTOMS AND EXCISE ACT",
      "id": "8b04815e-558b-488f-b296-1f72bb241561"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "5000a7b9-3fcb-47c9-8663-a9676ba6202d": {
    "status": "amending Act",
@@ -5142,7 +5501,8 @@
      "title": "The Value Added Tax Act",
      "id": "c8d5a6bc-e1d1-44cf-bac2-5919907e2133"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "3a0fc5cf-6d5c-4af5-a692-5388509dd7ad": {
    "status": "amending Act",
@@ -5155,7 +5515,8 @@
      "title": "The Insurance Premium Levy",
      "id": "ff52c534-69ae-4fa7-af70-6d92543fee10"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "f5774fa5-90f1-4688-baba-3eed8706f2fd": {
    "status": "in force",
@@ -5168,7 +5529,8 @@
      "id": "f6b23254-8d94-4bb5-be55-dfe3d56344ca"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "f6b23254-8d94-4bb5-be55-dfe3d56344ca": {
    "status": "amending Act",
@@ -5181,7 +5543,8 @@
      "title": "The Petroleum (Exploration and Production) Act",
      "id": "f5774fa5-90f1-4688-baba-3eed8706f2fd"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "4e13d140-3f21-4ecb-b3e8-137b2263b766": {
    "status": "in force",
@@ -5194,7 +5557,8 @@
      "id": "ac39d7f4-09a0-4ea8-bee2-acabe7acb704"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "ac39d7f4-09a0-4ea8-bee2-acabe7acb704": {
    "status": "amending Act",
@@ -5207,7 +5571,8 @@
      "title": "REPUBLIC OF ZAMBIA THE ELECTORAL COMMISSION ACT",
      "id": "4e13d140-3f21-4ecb-b3e8-137b2263b766"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "90b45670-f750-4dca-bf95-751c5016b843": {
    "status": "amending Act",
@@ -5220,7 +5585,8 @@
      "title": "The Value Added Tax Act",
      "id": "c8d5a6bc-e1d1-44cf-bac2-5919907e2133"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "33648bd2-14ba-4c4f-be06-f9308fdf6d1d": {
    "status": "in force",
@@ -5233,7 +5599,8 @@
      "id": "63fde8d5-4b0c-4ed0-80a7-63aadf339372"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "63fde8d5-4b0c-4ed0-80a7-63aadf339372": {
    "status": "amending Act",
@@ -5246,7 +5613,8 @@
      "title": "REPUBLIC OF ZAMBIA THE INDUSTRIAL AND LABOUR RELATIONS ACT",
      "id": "33648bd2-14ba-4c4f-be06-f9308fdf6d1d"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "4f3afd1a-c3dc-48cc-a650-be157c0cc99f": {
    "status": "amending Act",
@@ -5259,7 +5627,8 @@
      "title": "REPUBLIC OF ZAMBIA THE INCOME TAX ACT",
      "id": "881305d4-ef28-4b88-b3b0-00fb864fed40"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "a3ed906e-2bd0-4238-9f81-66fc43422335": {
    "status": "in force",
@@ -5272,7 +5641,8 @@
      "id": "a3225e0e-74f2-443a-b828-db4213f2f2ed"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "a3225e0e-74f2-443a-b828-db4213f2f2ed": {
    "status": "amending Act",
@@ -5285,7 +5655,8 @@
      "title": "The Mutual Legal Assistance in Criminal Matters Act",
      "id": "a3ed906e-2bd0-4238-9f81-66fc43422335"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "b0eec6e8-bd8e-44fd-a2fe-87f74829d79c": {
    "status": "amending Act",
@@ -5298,7 +5669,8 @@
      "title": "The Business Regulatory Act ( 2014)",
      "id": "5ce39d75-e8b8-4c90-b00a-c6390cc8909e"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "b65294ca-a870-4400-9f40-69062027f23a": {
    "status": "amending Act",
@@ -5311,7 +5683,8 @@
      "title": "The Value Added Tax Act",
      "id": "c8d5a6bc-e1d1-44cf-bac2-5919907e2133"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "ab5bcd83-9fcd-4b2c-9a3b-16e4e900265f": {
    "status": "amending Act",
@@ -5328,7 +5701,8 @@
      "title": "REPUBLIC OF ZAMBIA THE BANKING AND FINANCIAL SERVICES ACT",
      "id": "5a4ede22-4193-4783-aa9a-7558a1a6ed7e"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "f4f819eb-baa1-42a2-9b7a-c151fa53bc61": {
    "status": "amending Act",
@@ -5341,7 +5715,8 @@
      "title": "REPUBLIC OF ZAMBIA THE EMPLOYMENT ACT",
      "id": "992415ed-3547-4f91-bb46-3b88bc7480b0"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "f5720f38-953c-4f98-8cfb-8ab24e0f739d": {
    "status": "amending Act",
@@ -5354,7 +5729,8 @@
      "title": "The Insurance Premium Levy",
      "id": "ff52c534-69ae-4fa7-af70-6d92543fee10"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "3837d756-8c76-42c0-ad0f-cb8fcca67a95": {
    "status": "amending Act",
@@ -5369,13 +5745,14 @@
     },
     {
      "title": "THE INDEPENDENT BROADCASTING AUTHORITY ACT, 2002",
-     "id": "0bf4d0d9-43e3-4ad9-82c4-98421349bb5c"
+     "id": "cfd36843-4a07-44b0-a8ec-2633cc56168d"
     },
     {
      "title": "THE INDEPENDENT BROADCASTING AUTHORITY ACT, 2002",
-     "id": "cfd36843-4a07-44b0-a8ec-2633cc56168d"
+     "id": "0bf4d0d9-43e3-4ad9-82c4-98421349bb5c"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "f6de129a-f61c-422c-a52c-09a55cccabec": {
    "status": "amending Act",
@@ -5388,7 +5765,8 @@
      "title": "REPUBLIC OF ZAMBIA THE INCOME TAX ACT",
      "id": "881305d4-ef28-4b88-b3b0-00fb864fed40"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "302b04e7-1188-4ef5-87c6-da6f55263561": {
    "status": "amending Act",
@@ -5401,7 +5779,8 @@
      "title": "REPUBLIC OF ZAMBIA THE CUSTOMS AND EXCISE ACT",
      "id": "8b04815e-558b-488f-b296-1f72bb241561"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "4a60a79f-fc21-4ebd-8b8d-0d28573edc90": {
    "status": "in force",
@@ -5414,7 +5793,8 @@
      "id": "61b0c773-dfd5-4161-b3a3-8f918e0acf2a"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "61b0c773-dfd5-4161-b3a3-8f918e0acf2a": {
    "status": "amending Act",
@@ -5427,7 +5807,8 @@
      "title": "The Skills Development Levy",
      "id": "4a60a79f-fc21-4ebd-8b8d-0d28573edc90"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "df720d1d-0b63-4dae-b385-da037ef1b6ad": {
    "status": "amending Act",
@@ -5440,7 +5821,8 @@
      "title": "REPUBLIC OF ZAMBIA THE CUSTOMS AND EXCISE ACT",
      "id": "8b04815e-558b-488f-b296-1f72bb241561"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "13f6d973-4067-4c0d-84fe-ddff7ccbef39": {
    "status": "amending Act",
@@ -5453,7 +5835,8 @@
      "title": "REPUBLIC OF ZAMBIA THE INCOME TAX ACT",
      "id": "881305d4-ef28-4b88-b3b0-00fb864fed40"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "13b04f9a-a18b-49dc-b2b1-bbe6e1bcb8c6": {
    "status": "amending Act",
@@ -5466,7 +5849,8 @@
      "title": "THE MINES AND MINERALS DEVELOPMENT ACT, 2015",
      "id": "e6f604bd-fc46-4b46-a106-f9eca4e5f393"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "3d6b1ad8-ebbc-4157-a972-b0b7e5533c72": {
    "status": "amending Act",
@@ -5479,7 +5863,8 @@
      "title": "The Value Added Tax Act",
      "id": "c8d5a6bc-e1d1-44cf-bac2-5919907e2133"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "0698be74-9957-4037-a882-f1076ada44d1": {
    "status": "amending Act",
@@ -5492,7 +5877,8 @@
      "title": "The Value Added Tax Act",
      "id": "c8d5a6bc-e1d1-44cf-bac2-5919907e2133"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "37bdc947-46f2-48d6-afdc-c151fb2a978d": {
    "status": "amending Act",
@@ -5505,7 +5891,8 @@
      "title": "THE PUBLIC-PRIVATE PARTNERSHIP ACT, 2023",
      "id": "807ac2fc-a013-4bcc-b20b-cf00c7d8bad7"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "71739fc8-3ad3-4101-a2e1-aa469fff9827": {
    "status": "amending Act",
@@ -5518,7 +5905,8 @@
      "title": "The Judiciary Administration",
      "id": "0ab3d460-4e90-4ae7-8c65-62acec2a913f"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "d41cd6ef-dbb5-4f46-88ba-d6843e7dfefa": {
    "status": "amending Act",
@@ -5535,7 +5923,8 @@
      "title": "THE HIGH COURT ACT",
      "id": "efe3190a-2b90-49c1-8c2e-5749a6f0a5a5"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "2e2cf306-0d42-4d91-bccc-d8f90eac731a": {
    "status": "amending Act",
@@ -5548,7 +5937,8 @@
      "title": "REPUBLIC OF ZAMBIA THE CUSTOMS AND EXCISE ACT",
      "id": "8b04815e-558b-488f-b296-1f72bb241561"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "70b98d6c-1614-40e6-98ff-e26e341a5483": {
    "status": "in force",
@@ -5561,7 +5951,8 @@
      "id": "376d14e7-6b99-4c70-a820-4c8d0e986d8d"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "376d14e7-6b99-4c70-a820-4c8d0e986d8d": {
    "status": "amending Act",
@@ -5573,8 +5964,27 @@
     {
      "title": "THE ZAMBIA NATIONAL BROADCASTING CORPORATION ACT, 2025",
      "id": "70b98d6c-1614-40e6-98ff-e26e341a5483"
+    },
+    {
+     "title": "The Zambia National Broadcasting Corporation Act",
+     "id": "8c1b9512-821e-419a-a409-d268efe84ebc"
     }
-   ]
+   ],
+   "enacted_as": []
+  },
+  "8c1b9512-821e-419a-a409-d268efe84ebc": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Zambia National Broadcasting Corporation (Amendment)",
+     "id": "376d14e7-6b99-4c70-a820-4c8d0e986d8d"
+    }
+   ],
+   "amends": [],
+   "enacted_as": []
   },
   "c5adba87-2a8f-4787-a1df-ac1ea640cc7a": {
    "status": "amending Act",
@@ -5587,7 +5997,8 @@
      "title": "REPUBLIC OF ZAMBIA THE INCOME TAX ACT",
      "id": "881305d4-ef28-4b88-b3b0-00fb864fed40"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "2ad0ea57-6076-481a-9e13-a316dc8a05c2": {
    "status": "amending Act",
@@ -5600,7 +6011,8 @@
      "title": "The Value Added Tax Act",
      "id": "c8d5a6bc-e1d1-44cf-bac2-5919907e2133"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "0e5d6c1f-9c2d-44ad-ab42-5276a3308ec7": {
    "status": "in force",
@@ -5621,7 +6033,8 @@
      "id": "7bada2c9-6840-4345-9f8c-c3e12e7c4e55"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "6f615056-4438-470b-941d-10cb59174f16": {
    "status": "amending Act",
@@ -5634,7 +6047,8 @@
      "title": "The Ministerial and Parliamentary Offices (Emoluments) Act",
      "id": "0e5d6c1f-9c2d-44ad-ab42-5276a3308ec7"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "00f12bd1-20be-4d30-8303-ee8a39927c59": {
    "status": "amending Act",
@@ -5647,7 +6061,8 @@
      "title": "The Ministerial and Parliamentary Offices (Emoluments) Act",
      "id": "0e5d6c1f-9c2d-44ad-ab42-5276a3308ec7"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "9424a7f9-2321-4e57-953b-baa80ba9c183": {
    "status": "amending Act",
@@ -5660,7 +6075,8 @@
      "title": "The Property Transfer Tax Act",
      "id": "cf86bd50-252c-4d30-b2b1-86beb03989ce"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "c107ed9e-a8fc-4066-a318-334ea4bc3dfe": {
    "status": "in force",
@@ -5673,7 +6089,8 @@
      "id": "f91b3a43-e867-434f-91e3-052cad601ef6"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "f91b3a43-e867-434f-91e3-052cad601ef6": {
    "status": "amending Act",
@@ -5686,7 +6103,8 @@
      "title": "The English Law (Extent of Application) Act",
      "id": "c107ed9e-a8fc-4066-a318-334ea4bc3dfe"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "7bada2c9-6840-4345-9f8c-c3e12e7c4e55": {
    "status": "amending Act",
@@ -5699,7 +6117,8 @@
      "title": "The Ministerial and Parliamentary Offices (Emoluments) Act",
      "id": "0e5d6c1f-9c2d-44ad-ab42-5276a3308ec7"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "9841b1f0-4c2c-4f87-a88f-c19c0d27e7e6": {
    "status": "in force",
@@ -5716,7 +6135,8 @@
      "id": "9487fd44-7058-494b-919b-158a7f218c21"
     }
    ],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "2f9e4b5d-a2e8-41bb-8f8c-9b97adbff762": {
    "status": "amending Act",
@@ -5729,7 +6149,8 @@
      "title": "The Mines and Minerals Act",
      "id": "9841b1f0-4c2c-4f87-a88f-c19c0d27e7e6"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "1b427f43-cffd-4994-a323-df8141be8808": {
    "status": "amending Act",
@@ -5742,7 +6163,8 @@
      "title": "REPUBLIC OF ZAMBIA THE CONTROL OF GOODS ACT",
      "id": "ade6d4f8-b6a8-4bef-8ff9-edfcb1dba386"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "81b8fc00-0388-4d03-b2c7-cd9b66d654c2": {
    "status": "amending Act",
@@ -5755,7 +6177,8 @@
      "title": "REPUBLIC OF ZAMBIA THE INCOME TAX ACT",
      "id": "881305d4-ef28-4b88-b3b0-00fb864fed40"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "9487fd44-7058-494b-919b-158a7f218c21": {
    "status": "amending Act",
@@ -5768,7 +6191,8 @@
      "title": "The Mines and Minerals Act",
      "id": "9841b1f0-4c2c-4f87-a88f-c19c0d27e7e6"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "36cb966e-0c65-4372-8d9d-109af84ad749": {
    "status": "amending Act",
@@ -5781,7 +6205,8 @@
      "title": "REPUBLIC OF ZAMBIA THE CUSTOMS AND EXCISE ACT",
      "id": "8b04815e-558b-488f-b296-1f72bb241561"
     }
-   ]
+   ],
+   "enacted_as": []
   },
   "12940f27-4564-49a4-9fca-f0f10101509e": {
    "status": "bill, not yet law",
@@ -5789,7 +6214,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "27024fe9-63bc-4a90-b1fd-be4a5fa6989a": {
    "status": "bill, not yet law",
@@ -5797,7 +6223,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "48c22f7a-8a78-4c22-b502-9ace80ce466e": {
    "status": "bill, not yet law",
@@ -5805,7 +6232,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "d6398c81-25c9-4d1a-b1aa-3b3229432688": {
    "status": "bill, not yet law",
@@ -5813,31 +6241,50 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "5da8573a-d70e-466c-8c36-4e93aa6792ae": {
-   "status": "bill, not yet law",
+   "status": "enacted",
    "repealed_by": [],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": [
+    {
+     "title": "The Prohibition of the Development, Production, Stockpiling and use of Chemical Weapons (Amendment) Act, 2026",
+     "id": "e074e964-a2c9-48f6-aa42-0e7f6f473eb8"
+    }
+   ]
   },
   "681ddfda-ea3e-43dd-bb82-991872d6d677": {
-   "status": "bill, not yet law",
+   "status": "enacted",
    "repealed_by": [],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": [
+    {
+     "title": "The Mental Health (Amendment) Act, 2026",
+     "id": "716d59e4-5103-4ee4-8210-5d7d5155b520"
+    }
+   ]
   },
   "1ae305b9-0df7-49cc-bd13-8347fdf9f7d8": {
-   "status": "bill, not yet law",
+   "status": "enacted",
    "repealed_by": [],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": [
+    {
+     "title": "The Nurses and Midwives (Amendment) Act, 2026",
+     "id": "cbd1a66d-438b-45b1-9e4b-6a922014f888"
+    }
+   ]
   },
   "9bf297f2-e095-4376-a26b-73b60319c71d": {
    "status": "bill, not yet law",
@@ -5845,7 +6292,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "87dfa386-60c9-45c3-a1e8-fc89e34363ba": {
    "status": "bill, not yet law",
@@ -5853,7 +6301,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "45ff18c8-2275-4cc6-adb0-b1232f376d50": {
    "status": "bill, not yet law",
@@ -5861,31 +6310,50 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "cb6bd542-3df7-4084-a606-bfa0d5f11ffe": {
-   "status": "bill, not yet law",
+   "status": "enacted",
    "repealed_by": [],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": [
+    {
+     "title": "The Persons with Disabilities (Amendment) Act, 2026",
+     "id": "00ee768b-372c-475c-b233-2bebdcf0f98f"
+    }
+   ]
   },
   "3f0c1ba8-ddd9-413b-b445-fa25d98b916d": {
-   "status": "bill, not yet law",
+   "status": "enacted",
    "repealed_by": [],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": [
+    {
+     "title": "The Patents and Companies Registration Agency (Amendment) Act, 2026",
+     "id": "55c397cb-b753-4602-9ee4-04653f3531b7"
+    }
+   ]
   },
   "3e9f03bc-09ea-4235-b1ef-738af5efd496": {
-   "status": "bill, not yet law",
+   "status": "enacted",
    "repealed_by": [],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": [
+    {
+     "title": "The Occupational Health and Safety (Amendment) Act, 2026",
+     "id": "eec13484-c53b-4e81-a90b-bc2fced64b73"
+    }
+   ]
   },
   "dc9aa45e-ad88-4366-bea0-da3197a900fd": {
    "status": "bill, not yet law",
@@ -5893,7 +6361,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "92e4a91a-098b-4c7e-9524-8f111b2cdc77": {
    "status": "bill, not yet law",
@@ -5901,23 +6370,36 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "43c4e328-ec0a-494e-bc27-829a7712abff": {
-   "status": "bill, not yet law",
+   "status": "enacted",
    "repealed_by": [],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": [
+    {
+     "title": "The National Health Research (Amendment) Act, 2026",
+     "id": "16dd3fbe-778c-411d-995e-1c65285a374f"
+    }
+   ]
   },
   "ab368149-5c34-47f6-a74c-ee215d925155": {
-   "status": "bill, not yet law",
+   "status": "enacted",
    "repealed_by": [],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": [
+    {
+     "title": "The Tourism and Hospitality (Amendment) Act, 2026",
+     "id": "17e1032f-9a60-4f8c-942d-84679c32a13d"
+    }
+   ]
   },
   "865aa1b0-7bd6-46e9-bba1-8c074e054cb6": {
    "status": "bill, not yet law",
@@ -5925,7 +6407,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "4b4c54dc-c59f-44f2-bb4b-cc32f249d063": {
    "status": "bill, not yet law",
@@ -5933,15 +6416,22 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "4fe04277-f8c6-4678-9faf-44838bf3a7bf": {
-   "status": "bill, not yet law",
+   "status": "enacted",
    "repealed_by": [],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": [
+    {
+     "title": "The Zambia Institute for Tourism and Hospitality Studies(Amendment) Act,2026",
+     "id": "351bbc08-2874-4c77-93ab-cf954269a63d"
+    }
+   ]
   },
   "fce0a116-a631-407e-9ea4-c855d750d50e": {
    "status": "bill, not yet law",
@@ -5949,39 +6439,64 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "37ae37d2-59e7-401f-957b-00fe742f04e5": {
-   "status": "bill, not yet law",
+   "status": "enacted",
    "repealed_by": [],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": [
+    {
+     "title": "The Standards(Amendment) Act,2026",
+     "id": "046d24a3-9d15-4b9b-824c-061c0c119060"
+    }
+   ]
   },
   "4d95793f-95f1-4c54-b20f-7996f5a34ad7": {
-   "status": "bill, not yet law",
+   "status": "enacted",
    "repealed_by": [],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": [
+    {
+     "title": "The Zambia Wildlife(Amendment) Act,2026",
+     "id": "c586063d-10c6-47aa-90d2-3d86fb111b60"
+    }
+   ]
   },
   "876e71ef-eec0-47db-9d3b-a3f1b4c81746": {
-   "status": "bill, not yet law",
+   "status": "enacted",
    "repealed_by": [],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": [
+    {
+     "title": "The Sports Council of Zambia (Amendment) Act,2026",
+     "id": "7bd9bd92-de16-4def-a52a-17d159b6456a"
+    }
+   ]
   },
   "b317d4e6-2907-442e-8fe7-2162facfe435": {
-   "status": "bill, not yet law",
+   "status": "enacted",
    "repealed_by": [],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": [
+    {
+     "title": "The Medicines and Allied Substances(Amendment) Act,2026",
+     "id": "6ffaf235-c433-403d-bfc4-68b6f2b7fc31"
+    }
+   ]
   },
   "8511ab51-bcfc-420e-b4a2-167fda911686": {
    "status": "bill, not yet law",
@@ -5989,7 +6504,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "2a327e51-ba92-4835-8827-595af87e8a28": {
    "status": "bill, not yet law",
@@ -5997,15 +6513,22 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "d115d2bc-724f-4b3d-aba1-87fa5cfa5c95": {
-   "status": "bill, not yet law",
+   "status": "enacted",
    "repealed_by": [],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": [
+    {
+     "title": "The Flying Doctor Service(Amendment)Act,2026",
+     "id": "2227dd74-fbe9-46c3-be7e-364da79c49db"
+    }
+   ]
   },
   "7810f0e8-c567-45df-8cb6-2b8cd11f2f6e": {
    "status": "bill, not yet law",
@@ -6013,7 +6536,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "10b1168b-c740-4e42-ae35-f6e6e051e691": {
    "status": "bill, not yet law",
@@ -6021,23 +6545,36 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "66592e6a-159f-49ec-b155-5077a6ec0ea5": {
-   "status": "bill, not yet law",
+   "status": "enacted",
    "repealed_by": [],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": [
+    {
+     "title": "The Electoral Process (Amendment) Act, 2026",
+     "id": "40f4279f-60bf-44b5-958e-68a0b57e9ea0"
+    }
+   ]
   },
   "4d2da1a5-63be-4f58-a7a3-fcc64bfdf73a": {
-   "status": "bill, not yet law",
+   "status": "enacted",
    "repealed_by": [],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": [
+    {
+     "title": "The National Health Research and Training Institute(Amendment) Act,2026",
+     "id": "29e9329d-2665-4a17-9f0b-d5aca0d8fc5e"
+    }
+   ]
   },
   "2baf8a79-7be5-4b2e-9b32-d6c5c4f6e70b": {
    "status": "bill, not yet law",
@@ -6045,15 +6582,22 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "67c34c41-74ad-4354-abdc-dd9552b4c240": {
-   "status": "bill, not yet law",
+   "status": "enacted",
    "repealed_by": [],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": [
+    {
+     "title": "The Biosafety (Amendment)Act,2026",
+     "id": "beef6b35-1079-4042-a968-a437aeb2e282"
+    }
+   ]
   },
   "9a86d475-e3ff-4fbc-bcd0-e246d9773d64": {
    "status": "bill, not yet law",
@@ -6061,7 +6605,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "a5eb20b2-b77d-4299-8202-5f26076b5026": {
    "status": "bill, not yet law",
@@ -6069,15 +6614,22 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "8b571872-316f-46eb-a1a1-f8121557f20d": {
-   "status": "bill, not yet law",
+   "status": "enacted",
    "repealed_by": [],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": [
+    {
+     "title": "The National Assembly (Speaker's Retirement Benefits) Act, 2026",
+     "id": "f4edb04e-e319-4d44-b2de-572bb713a347"
+    }
+   ]
   },
   "aa9e9330-6919-49eb-8122-848058459e00": {
    "status": "bill, not yet law",
@@ -6085,7 +6637,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "778c5cef-cf11-4271-bc31-8817a9070f7b": {
    "status": "bill, not yet law",
@@ -6093,79 +6646,134 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "28ac9c18-86ee-4411-b332-6822738ff1bf": {
-   "status": "bill, not yet law",
+   "status": "enacted",
    "repealed_by": [],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": [
+    {
+     "title": "The Penal Code (Amendment) Act, 2026",
+     "id": "f75e3f4d-c19d-4ebd-997d-60558c0d5a59"
+    }
+   ]
   },
   "edee8eef-bdc5-40da-94de-8bb7a1cb95cc": {
-   "status": "bill, not yet law",
+   "status": "enacted",
    "repealed_by": [],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": [
+    {
+     "title": "The Green Economy and Climate Change(Amendment) Act,2026",
+     "id": "bb4a610d-b580-496b-809b-acc54ee8d67a"
+    }
+   ]
   },
   "5562a05f-5c64-42e8-949e-d57566499290": {
-   "status": "bill, not yet law",
+   "status": "enacted",
    "repealed_by": [],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": [
+    {
+     "title": "The Food and Nutrition (Amendment) Act, 2026",
+     "id": "d6be23ca-d557-419f-b9be-f814370785b0"
+    }
+   ]
   },
   "c91ae21b-1c63-410c-a28c-55ce486375f9": {
-   "status": "bill, not yet law",
+   "status": "enacted",
    "repealed_by": [],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": [
+    {
+     "title": "The Energy Regulation(Amendment)Act,2026",
+     "id": "94ebc633-66d7-4b14-9100-0d66c045f192"
+    }
+   ]
   },
   "d3db0619-eaa7-4ef2-9def-906a365dca52": {
-   "status": "bill, not yet law",
+   "status": "enacted",
    "repealed_by": [],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": [
+    {
+     "title": "The Coffee(Amendment)Act,2026",
+     "id": "c1771670-e093-4417-985e-1923d779fab6"
+    }
+   ]
   },
   "c3c71bd9-865a-422d-b16d-aa0e2e305071": {
-   "status": "bill, not yet law",
+   "status": "enacted",
    "repealed_by": [],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": [
+    {
+     "title": "The Citizens Economic Empowerment(Amendment)Act,2026",
+     "id": "07d40586-13eb-4946-8e14-ee64a0d73e37"
+    }
+   ]
   },
   "45e50b89-75ba-4845-9bde-0e54ae92d020": {
-   "status": "bill, not yet law",
+   "status": "enacted",
    "repealed_by": [],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": [
+    {
+     "title": "The National Museums(Amendment)Act,2026",
+     "id": "49bf740a-9bcb-42ed-9ef9-99d989bef1ab"
+    }
+   ]
   },
   "0e14c107-93ff-4236-99f1-18a48613a1e7": {
-   "status": "bill, not yet law",
+   "status": "enacted",
    "repealed_by": [],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": [
+    {
+     "title": "The National Housing Authority(Amendment)Act,2026",
+     "id": "47718cdf-f37e-4725-beba-c914b8f2da4a"
+    }
+   ]
   },
   "2a52a7f4-4601-458b-a196-54d06512043c": {
-   "status": "bill, not yet law",
+   "status": "enacted",
    "repealed_by": [],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": [
+    {
+     "title": "The Minerals Regulation Commission (Amendment) Act,2026",
+     "id": "ffba71fe-2855-4ff9-ad4b-fcf79ac3d1b2"
+    }
+   ]
   },
   "dde4d378-5394-4b31-882a-6dcd4c951a48": {
    "status": "bill, not yet law",
@@ -6173,7 +6781,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "e9e53ade-127b-4a3e-b2bb-4489ae4c1542": {
    "status": "bill, not yet law",
@@ -6181,7 +6790,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   },
   "d8a86aeb-e32f-44de-9064-8257c52be867": {
    "status": "bill, not yet law",
@@ -6189,7 +6799,8 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
-   "amends": []
+   "amends": [],
+   "enacted_as": []
   }
  },
  "unresolved": [
@@ -6294,21 +6905,6 @@
    "evidence": "repeal and replace the Animal Identificati on Act"
   },
   {
-   "by": "9a8a10bc-c7b9-47c4-822c-2c470a1925e2",
-   "name": "Act (1) The Electronic Communications",
-   "evidence": "Act (1) The Electronic Communications and Transactions Act, 2009 is repealed"
-  },
-  {
-   "by": "9a8a10bc-c7b9-47c4-822c-2c470a1925e2",
-   "name": "Transactions Act",
-   "evidence": "Act (1) The Electronic Communications and Transactions Act, 2009 is repealed"
-  },
-  {
-   "by": "9a8a10bc-c7b9-47c4-822c-2c470a1925e2",
-   "name": "Electronic Communications and Transactions Act",
-   "evidence": "repeal and replace the Electronic Communications and Transactions Act"
-  },
-  {
    "by": "f8247c8a-d6b8-4f6e-9c46-ab07891ffbfa",
    "name": "Zambia Institute of Hum an Resources Management provisions Act",
    "evidence": "The Zambia Institute of Hum an Resources Management provisions Act, 1997, is repealed"
@@ -6342,16 +6938,6 @@
    "by": "9f87898a-b246-43c9-b4e9-81d23a798176",
    "name": "Rural Electrificati on Act",
    "evidence": "repeal and replace the Rural Electrificati on Act"
-  },
-  {
-   "by": "8c1b9512-821e-419a-a409-d268efe84ebc",
-   "name": "Zambia National Broadcasting Corporati on Act",
-   "evidence": "The Zambia National Broadcasting Corporati on Act is repealed"
-  },
-  {
-   "by": "8c1b9512-821e-419a-a409-d268efe84ebc",
-   "name": "Zambia National Broadcasting Corporati on Act",
-   "evidence": "repeal and replace the Zambia National Broadcasting Corporati on Act"
   },
   {
    "by": "d0292b7d-0779-4c24-acec-de0696b75437",
@@ -6869,11 +7455,6 @@
    "evidence": "repeal and replace the Official Oaths Act"
   },
   {
-   "by": "22abb9d1-5671-4141-af73-24d9645709a1",
-   "name": "Anti-Terrorism Act",
-   "evidence": "The Anti-Terrorism Act,2007is repealed"
-  },
-  {
    "by": "65dd452c-210f-4425-b1d4-22e97bea28b5",
    "name": "Measures Act",
    "evidence": "The Weights and Measures Act,1994, is repealed"
@@ -6982,6 +7563,31 @@
    "by": "376d14e7-6b99-4c70-a820-4c8d0e986d8d",
    "name": "Part IVof the principal Act",
    "evidence": "Part IVof the principal Act is repealed"
+  },
+  {
+   "by": "9a8a10bc-c7b9-47c4-822c-2c470a1925e2",
+   "name": "Act (1) The Electronic Communications",
+   "evidence": "Act (1) The Electronic Communications and Transactions Act, 2009 is repealed"
+  },
+  {
+   "by": "9a8a10bc-c7b9-47c4-822c-2c470a1925e2",
+   "name": "Transactions Act",
+   "evidence": "Act (1) The Electronic Communications and Transactions Act, 2009 is repealed"
+  },
+  {
+   "by": "9a8a10bc-c7b9-47c4-822c-2c470a1925e2",
+   "name": "Electronic Communications and Transactions Act",
+   "evidence": "repeal and replace the Electronic Communications and Transactions Act"
+  },
+  {
+   "by": "8c1b9512-821e-419a-a409-d268efe84ebc",
+   "name": "Zambia National Broadcasting Corporati on Act",
+   "evidence": "The Zambia National Broadcasting Corporati on Act is repealed"
+  },
+  {
+   "by": "8c1b9512-821e-419a-a409-d268efe84ebc",
+   "name": "Zambia National Broadcasting Corporati on Act",
+   "evidence": "repeal and replace the Zambia National Broadcasting Corporati on Act"
   }
  ]
 }

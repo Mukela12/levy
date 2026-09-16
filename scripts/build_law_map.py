@@ -257,7 +257,8 @@ def main() -> int:
 
     def slot(doc_id: str) -> dict:
         return entry.setdefault(doc_id, {"status": "in force", "repealed_by": [], "repeals": [],
-                                         "partially_repealed_by": [], "amended_by": [], "amends": []})
+                                         "partially_repealed_by": [], "amended_by": [], "amends": [],
+                                         "enacted_as": []})
 
     def add(items: list[dict], item: dict) -> None:
         if not any(x.get("id") == item.get("id") and x.get("title") == item.get("title") for x in items):
@@ -279,9 +280,25 @@ def main() -> int:
         add(slot(a["by"])["amends"], {"title": by_id[a["target"]]["title"], "id": a["target"]})
         if slot(a["by"])["status"] == "in force":
             slot(a["by"])["status"] = "amending Act"
+    # A bill whose Act is now in the library has passed. Left alone it would be
+    # announced as "not yet law", which is the same error in the other
+    # direction.
+    act_names = {norm(d["title"]): d for d in docs if d["document_type"] == "act"}
     for d in docs:
-        if d["document_type"] == "bill":
-            slot(d["id"])["status"] = "bill, not yet law"
+        if d["document_type"] != "bill":
+            continue
+        as_act = act_names.get(norm(re.sub(r"\bbill\b", "Act", d["title"], flags=re.I)))
+        # Same name is not enough: "The Land (Perpetual Succession) Bill" would
+        # match the old Act of that name. The Act must carry the bill's year.
+        bill_year = year_of(d["title"])
+        if as_act and bill_year and year_of(as_act["title"]) != bill_year and as_act.get("year") != bill_year:
+            as_act = None
+        e = slot(d["id"])
+        if as_act:
+            e["status"] = "enacted"
+            add(e["enacted_as"], {"title": as_act["title"], "id": as_act["id"]})
+        else:
+            e["status"] = "bill, not yet law"
 
     partial = [i for i, e in entry.items() if e["partially_repealed_by"] and e["status"] != "repealed"]
     repealed = [i for i, e in entry.items() if e["status"] == "repealed"]
@@ -294,6 +311,10 @@ def main() -> int:
         e = entry[i]
         print(f"  {by_id[i]['title'][:62]:64} <- {', '.join(x['title'][:40] for x in e['repealed_by'])}")
         print(f"      evidence: {e['repealed_by'][0]['evidence'][:120]}")
+    enacted = [i for i, e in entry.items() if e["status"] == "enacted"]
+    print(f"\nBILLS SINCE ENACTED (no longer 'not yet law'): {len(enacted)}")
+    for i in enacted[:8]:
+        print(f"  {by_id[i]['title'][:56]:58} -> {entry[i]['enacted_as'][0]['title'][:44]}")
     print(f"\nAMENDMENT LINKS: {len(amends)} (principals with amendments: "
           f"{len({a['target'] for a in amends})})")
     for pid in list({a['target'] for a in amends})[:8]:
