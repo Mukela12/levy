@@ -10,9 +10,11 @@
  *   • Steps with no anchor (welcome / done) render as a centered card.
  *
  * Mobile / tablet (<md):
- *   The desktop sidebar isn't in the DOM. Steps that point at sidebar items
- *   declare `requiresMenu: true`; when one of those steps is active the tour
- *   asks the dashboard layout to open the mobile sidebar (its data-tour
+ *   The desktop sidebar isn't in the DOM. A step whose destination also sits
+ *   in the Canopy bottom dock declares `dockSelector`, and while the dock is
+ *   on screen the tour spotlights the dock item and keeps the drawer shut.
+ *   Other steps that point at sidebar items declare `requiresMenu: true`;
+ *   the tour asks the layout to open the mobile sidebar (its data-tour
  *   anchors live inside the same `sidebarContent` JSX so they become visible
  *   automatically), then spotlights as normal.
  *
@@ -60,6 +62,10 @@ interface Step {
   pad?: number
   /** On mobile, ensure the mobile sidebar is open for this step. */
   requiresMenu?: boolean
+  /** Where the bottom dock is on screen, spotlight this instead and leave the
+   *  sidebar shut. A drawer sliding over a phone to show one link looked
+   *  clumsy when the same destination was already sitting in the dock. */
+  dockSelector?: string
 }
 
 const STEPS: Step[] = [
@@ -147,8 +153,8 @@ const STEPS: Step[] = [
 const CANOPY_STEPS: Step[] = [
   { title: 'Make yourself at home.', body: 'A place for your questions, source documents and working notes. Take a short look around.', image: 'welcome' },
   { title: 'Start with what you know.', body: 'Ask in plain language, attach a PDF, or choose Review draft for text you want checked. You can follow each tool’s progress as Levy works.', image: 'ask-attach', selector: '[data-tour="chat-input"]', route: '/chat' },
-  { title: 'Give your sources a home.', body: 'Group documents into folders. Open a file, ask about it, or keep it with the matter it belongs to.', image: 'documents', selector: '[data-tour="nav-documents"]', requiresMenu: true },
-  { title: 'Keep the work together.', body: 'Matters collect your conversations, documents and drafts. Create a matter when you want to keep a case together.', image: 'matters', selector: '[data-tour="nav-matters"]', requiresMenu: true },
+  { title: 'Give your sources a home.', body: 'Group documents into folders. Open a file, ask about it, or keep it with the matter it belongs to.', image: 'documents', selector: '[data-tour="nav-documents"]', dockSelector: '[data-tour="dock-documents"]', requiresMenu: true },
+  { title: 'Keep the work together.', body: 'Matters collect your conversations, documents and drafts. Create a matter when you want to keep a case together.', image: 'matters', selector: '[data-tour="nav-matters"]', dockSelector: '[data-tour="dock-matters"]', requiresMenu: true },
   { title: 'Check the work as you go.', body: 'Open the page behind a citation, inspect a calculation’s inputs, and review the IRAC analysis. Library matching does not guarantee correct legal advice.', image: 'verify-analyse', selector: '[data-tour="chat-input"]', route: '/chat' },
 ]
 
@@ -277,6 +283,13 @@ export function OnboardingTour({
 
 /* ---------- the visual frame ---------------------------------------------- */
 
+/** The dock is display:none on wide screens and while a keyboard is up, so ask
+ *  the page rather than guess from a breakpoint. */
+function dockShowing(): boolean {
+  const dock = document.querySelector<HTMLElement>('.cp-dock')
+  return !!dock && dock.getBoundingClientRect().width > 0
+}
+
 function findVisibleAnchor(selector: string): HTMLElement | null {
   const candidates = document.querySelectorAll(selector)
   for (const el of Array.from(candidates)) {
@@ -306,6 +319,9 @@ function TourFrame({
   onSkip: () => void
 }) {
   const [isDesktop, setIsDesktop] = useState(true)
+  // Read on first render, not after it: starting false would open the drawer
+  // for one frame on a phone before the dock was noticed.
+  const [dockVisible, setDockVisible] = useState(dockShowing)
   const [rect, setRect] = useState<DOMRect | null>(null)
   const [vp, setVp] = useState({ w: 1280, h: 800 })
   const tooltipRef = useRef<HTMLDivElement>(null)
@@ -339,24 +355,29 @@ function TourFrame({
     const measure = () => {
       setIsDesktop(window.innerWidth >= (current.image ? 1101 : 768))
       setVp({ w: window.innerWidth, h: window.innerHeight })
+      setDockVisible(dockShowing())
     }
     measure()
     window.addEventListener('resize', measure)
     return () => window.removeEventListener('resize', measure)
-  }, [current.image])
+  }, [current.image, step])
+
+  // Where the dock is the navigation, point at it and leave the drawer shut.
+  const onDock = dockVisible && !!current.dockSelector
+  const selector = onDock ? current.dockSelector : current.selector
 
   // Make sure the mobile sidebar is in the right state BEFORE we try to find
   // anchors that live inside it. The effect re-runs every step change.
   useEffect(() => {
     if (isDesktop) return
-    const shouldBeOpen = !!current.requiresMenu
+    const shouldBeOpen = !!current.requiresMenu && !onDock
     if (shouldBeOpen !== mobileMenuOpen) setMobileMenuOpen?.(shouldBeOpen)
-  }, [isDesktop, step, current.requiresMenu, mobileMenuOpen, setMobileMenuOpen])
+  }, [isDesktop, step, current.requiresMenu, onDock, mobileMenuOpen, setMobileMenuOpen])
 
   // Resolve the anchor rect. Poll briefly because the element may not yet
   // exist (route just changed, mobile sidebar still animating in, etc.).
   useLayoutEffect(() => {
-    if (!current.selector) {
+    if (!selector) {
       const frame = requestAnimationFrame(() => setRect(null))
       return () => cancelAnimationFrame(frame)
     }
@@ -364,7 +385,7 @@ function TourFrame({
     let attempts = 0
     const tick = () => {
       if (stopped) return
-      const el = findVisibleAnchor(current.selector!)
+      const el = findVisibleAnchor(selector)
       if (el) {
         setRect(el.getBoundingClientRect())
         return
@@ -377,7 +398,7 @@ function TourFrame({
     return () => {
       stopped = true
     }
-  }, [step, current.selector, isDesktop, vp.w, vp.h, mobileMenuOpen])
+  }, [step, selector, isDesktop, vp.w, vp.h, mobileMenuOpen])
 
   // Measure the tooltip AFTER it renders so we can place it without
   // overlapping the spotlight. We re-measure when the step changes or the
@@ -385,7 +406,8 @@ function TourFrame({
   useLayoutEffect(() => {
     if (!rect || !tooltipRef.current) return
     const r = tooltipRef.current.getBoundingClientRect()
-    const natural = tooltipRef.current.scrollHeight
+    // scrollHeight leaves out the card's own border.
+    const natural = tooltipRef.current.scrollHeight + tooltipRef.current.offsetHeight - tooltipRef.current.clientHeight
     if (
       Math.abs(r.width - tipSize.w) > 1 ||
       Math.abs(natural - tipSize.h) > 1
@@ -395,7 +417,7 @@ function TourFrame({
   }, [step, rect, vp.w, vp.h, tipSize.h, tipSize.w])
 
   /* ---- no anchor: centered card ---------------------------------------- */
-  if (!current.selector || !rect) {
+  if (!selector || !rect) {
     return (
       <motion.div
         key={`card-${step}`}
@@ -443,6 +465,9 @@ function TourFrame({
   // until the first measurement lands.
   const tooltipH = Math.max(120, tipSize.h || 200)
   const gap = 12
+  // The ring is drawn `pad` outside the element, so measure the gap from the
+  // ring. Measured from the element, the card sat 2 to 4px off the ring.
+  const reach = gap + pad
 
   // Pick best side automatically when unset, accounting for space available.
   const spaceTop = rect.top
@@ -466,8 +491,8 @@ function TourFrame({
   // On small screens, prefer bottom/top over left/right (sidebar usually
   // occupies the full width when open).
   if (!isDesktop) {
-    const fitsBelow = spaceBottom - gap - 12 >= tooltipH
-    const fitsAbove = spaceTop - gap - 12 >= tooltipH
+    const fitsBelow = spaceBottom - reach - 12 >= tooltipH
+    const fitsAbove = spaceTop - reach - 12 >= tooltipH
     resolvedSide = fitsBelow && !fitsAbove ? 'bottom'
       : fitsAbove && !fitsBelow ? 'top'
       : spaceBottom >= spaceTop ? 'bottom' : 'top'
@@ -476,18 +501,18 @@ function TourFrame({
   let tipX = 0
   let tipY = 0
   if (resolvedSide === 'right') {
-    tipX = rect.right + gap
+    tipX = rect.right + reach
     tipY = rect.top + rect.height / 2 - tooltipH / 2
   } else if (resolvedSide === 'left') {
-    tipX = rect.left - tooltipW - gap
+    tipX = rect.left - tooltipW - reach
     tipY = rect.top + rect.height / 2 - tooltipH / 2
   } else if (resolvedSide === 'top') {
     tipX = rect.left + rect.width / 2 - tooltipW / 2
-    tipY = rect.top - tooltipH - gap
+    tipY = rect.top - tooltipH - reach
   } else {
     // bottom
     tipX = rect.left + rect.width / 2 - tooltipW / 2
-    tipY = rect.bottom + gap
+    tipY = rect.bottom + reach
   }
   // Clamp inside viewport with 12px margin
   tipX = Math.max(12, Math.min(tipX, vp.w - tooltipW - 12))
@@ -502,11 +527,11 @@ function TourFrame({
     cardW = vp.w - 24
     tipX = 12
     if (resolvedSide === 'bottom') {
-      tipY = rect.bottom + gap
+      tipY = rect.bottom + reach
       maxH = Math.max(160, vp.h - tipY - 12)
     } else {
-      maxH = Math.max(160, rect.top - gap - 12)
-      tipY = Math.max(12, rect.top - gap - Math.min(tooltipH, maxH))
+      maxH = Math.max(160, rect.top - reach - 12)
+      tipY = Math.max(12, rect.top - reach - Math.min(tooltipH, maxH))
     }
   }
 

@@ -157,9 +157,9 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
   const initial = (user?.user_metadata?.full_name || user?.email || 'L')[0].toUpperCase()
 
   const dockDestinations: DockDestination[] = [
-    { id: 'chat', label: 'Chat', icon: 'chat', href: activeChat ? `/chat/${activeChat}` : '/chat' },
-    { id: 'documents', label: 'Files', icon: 'folder', href: '/documents' },
-    { id: 'matters', label: 'Matters', icon: 'work', href: '/matters' },
+    { id: 'chat', label: 'Chat', icon: 'chat', href: activeChat ? `/chat/${activeChat}` : '/chat', tour: 'dock-chat' },
+    { id: 'documents', label: 'Files', icon: 'folder', href: '/documents', tour: 'dock-documents' },
+    { id: 'matters', label: 'Matters', icon: 'work', href: '/matters', tour: 'dock-matters' },
   ]
   const dockActive = pathname.startsWith('/chat')
     ? 'chat'

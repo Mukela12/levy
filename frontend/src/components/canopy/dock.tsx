@@ -10,7 +10,9 @@ import { CanopyMenuToggle } from './menu-toggle'
 // and expandable tabs). Proximity springs for a mouse; stable targets and
 // route-owned selection for touch. The current page must stay identifiable,
 // so nothing deselects on click-outside.
-export type DockDestination = { id: string; label: string; icon: string; href: string }
+// `tour` names the onboarding anchor, so the tour can point at the dock on
+// the screens where the dock is the navigation.
+export type DockDestination = { id: string; label: string; icon: string; href: string; tour?: string }
 const spring = { mass: 0.6, stiffness: 420, damping: 34 }
 
 function DockItem({
@@ -39,6 +41,7 @@ function DockItem({
       className="cp-dock-item"
       aria-label={item.label}
       aria-current={selected ? 'page' : undefined}
+      data-tour={item.tour}
       onClick={() => go(item)}
       initial={false}
     >
