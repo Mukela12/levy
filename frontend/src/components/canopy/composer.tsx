@@ -8,12 +8,15 @@
  */
 
 import { useEffect, useRef, useState } from 'react'
-import { ArrowUp, Globe, Library, Loader2, Upload } from 'lucide-react'
+import Link from 'next/link'
+import { ArrowUp, Globe, Library, Loader2, LogIn, Upload, UserPlus } from 'lucide-react'
 import { ChoiceSelect } from './choice-select'
 import LordIcon from '@/components/ui/lord-icon'
 import { CANOPY_ICON } from './icons'
 
 export type ComposerMode = 'research' | 'review'
+
+const DRAFT_KEY = 'levy:composer-draft'
 
 export interface CanopyComposerProps {
   onSend: (message: string, options?: { webSearch?: boolean }) => void
@@ -23,6 +26,10 @@ export interface CanopyComposerProps {
   onWebSearchChange?: (next: boolean) => void
   onAttachClick?: () => void
   onUploadFile?: (file: File) => Promise<void>
+  /** Signed-out visitors: show the attach button anyway and explain that
+   *  files need an account. Most phone visitors are guests, so without this
+   *  nobody on a phone ever saw that Levy reads documents. */
+  attachNeedsAccount?: boolean
   attachmentCount?: number
   seed?: { text: string; nonce: number }
   /** When provided, a Research / Review draft control is shown. */
@@ -42,6 +49,7 @@ export function CanopyComposer({
   onWebSearchChange,
   onAttachClick,
   onUploadFile,
+  attachNeedsAccount = false,
   attachmentCount = 0,
   seed,
   mode,
@@ -66,8 +74,18 @@ export function CanopyComposer({
   useEffect(() => { onDraftPresenceChange?.(Boolean(message.trim())) }, [message, onDraftPresenceChange])
 
   useEffect(() => {
+    try {
+      const kept = sessionStorage.getItem(DRAFT_KEY)
+      if (kept) {
+        sessionStorage.removeItem(DRAFT_KEY)
+        setMessage((m) => m || kept)
+      }
+    } catch { /* storage unavailable */ }
+  }, [])
+
+  useEffect(() => {
     if (!attachMenuOpen) return
-    const frame = requestAnimationFrame(() => attachWrapRef.current?.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus())
+    const frame = requestAnimationFrame(() => attachWrapRef.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus())
     const handler = (e: MouseEvent) => {
       if (!attachWrapRef.current?.contains(e.target as Node)) setAttachMenuOpen(false)
     }
@@ -122,7 +140,12 @@ export function CanopyComposer({
     }
   }
   const hasContent = message.trim().length > 0
-  const showAttach = !!(onAttachClick || onUploadFile)
+  const canAttach = !!(onAttachClick || onUploadFile)
+  const showAttach = canAttach || attachNeedsAccount
+  // Keep what a guest typed across sign-in (same tab, so OAuth round trips too).
+  const keepDraft = () => {
+    try { if (message.trim()) sessionStorage.setItem(DRAFT_KEY, message) } catch { /* private mode */ }
+  }
   const effectivePlaceholder =
     placeholder ?? (mode === 'review' ? 'Paste your draft, then tell Levy what to review…' : 'Ask a question about Zambian law…')
 
@@ -169,8 +192,8 @@ export function CanopyComposer({
                 attachWrapRef.current?.querySelector<HTMLButtonElement>('[aria-haspopup="menu"]')?.focus()
               } else if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
                 event.preventDefault()
-                const items = Array.from(attachWrapRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]') ?? [])
-                const current = items.indexOf(document.activeElement as HTMLButtonElement)
+                const items = Array.from(attachWrapRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [])
+                const current = items.indexOf(document.activeElement as HTMLElement)
                 const next = event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1 : (current + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length
                 items[next]?.focus()
               } else if (event.key === 'Tab') setAttachMenuOpen(false)
@@ -188,7 +211,20 @@ export function CanopyComposer({
                 {uploadingFile ? <Loader2 size={18} className="animate-spin" /> : <LordIcon name={CANOPY_ICON.plus} size={21} />}
                 {attachmentCount > 0 && <span className="cp-attach-count">{attachmentCount > 9 ? '9+' : attachmentCount}</span>}
               </button>
-              {attachMenuOpen && (
+              {attachMenuOpen && !canAttach && (
+                <div role="menu" className="cp-menu is-guest">
+                  <p className="cp-menu-note">Attach PDFs or files from your library with a free account. What you typed stays here.</p>
+                  <Link role="menuitem" href="/auth/signup" onClick={keepDraft}>
+                    <UserPlus size={15} />
+                    <span>Create a free account</span>
+                  </Link>
+                  <Link role="menuitem" href="/auth/login" onClick={keepDraft}>
+                    <LogIn size={15} />
+                    <span>Sign in</span>
+                  </Link>
+                </div>
+              )}
+              {attachMenuOpen && canAttach && (
                 <div role="menu" className="cp-menu">
                   {onUploadFile && (
                     <button type="button" role="menuitem" onClick={() => fileInputRef.current?.click()}>

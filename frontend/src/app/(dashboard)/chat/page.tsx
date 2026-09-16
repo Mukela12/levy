@@ -659,6 +659,7 @@ export default function NewChatPage() {
                 onWebSearchChange={setWebSearch}
                 onAttachClick={user ? () => setAttachmentsOpen(true) : undefined}
                 onUploadFile={user ? handleUploadFile : undefined}
+                attachNeedsAccount={!user}
                 attachmentCount={stagedAttachments.length}
                 seed={inputSeed}
                 mode={reviewArmed ? 'review' : 'research'}
@@ -715,6 +716,7 @@ export default function NewChatPage() {
               onWebSearchChange: setWebSearch,
               onAttachClick: user ? () => setAttachmentsOpen(true) : undefined,
               onUploadFile: user ? handleUploadFile : undefined,
+              attachNeedsAccount: !user,
               attachmentCount: stagedAttachments.length,
             }}
             footNote={trialNudge ?? undefined}

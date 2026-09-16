@@ -514,6 +514,11 @@
 .cp-menu button span { flex: 1; }
 .cp-menu button small { font-size: 10px; color: var(--cp-muted); }
 .cp-menu button:hover { background: var(--cp-soft); }
+.cp-menu.is-guest { width: min(270px, calc(100vw - 48px)); }
+.cp-menu-note { margin: 4px 8px 6px; font-size: 12.5px; line-height: 1.5; color: var(--cp-muted); }
+.cp-menu a { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 10px 11px; border-radius: 9px; font-size: 13px; color: var(--cp-text); text-decoration: none; }
+.cp-menu a svg { color: var(--cp-primary); flex-shrink: 0; }
+.cp-menu a:hover, .cp-menu a:focus-visible { background: var(--cp-soft); }
 .cp-mode { position: relative; display: inline-flex; align-items: center; min-height: 40px; color: var(--cp-glass-muted); }
 .cp-mode select { appearance: none; -webkit-appearance: none; min-height: 40px; padding: 8px 26px 8px 8px; border: 0; background: transparent; font: 500 13px/1.4 var(--cp-font); color: inherit; cursor: pointer; outline: none; }
 .cp-mode > svg { position: absolute; right: 6px; pointer-events: none; }
