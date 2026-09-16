@@ -197,15 +197,25 @@ async def _search_corpus(
     settings = get_settings()
     threshold = threshold if threshold is not None else settings.similarity_threshold
     emb = await asyncio.to_thread(get_query_embedding_ex, query)
-    chunks = await asyncio.to_thread(
+    candidates = await asyncio.to_thread(
         search_chunks,
         emb["vector"],
-        top_k=top_k,
+        top_k=top_k * 3,
         threshold=threshold,
         caller_user_id=caller_user_id,
         attached_doc_ids=attached_doc_ids,
         space=emb["space"],
     )
+    # One big repealed Act can fill every slot: the Roads and Road Traffic Act
+    # (Cap. 464, dead since 2002) is 1,755 chunks and took all six for a
+    # driving-licence question. Live law goes first; at most two repealed
+    # matches stay, so the model still sees the warning and the old wording.
+    live = [c for c in candidates if not law_map.is_repealed(c.get("document_id"))]
+    dead = [c for c in candidates if law_map.is_repealed(c.get("document_id"))]
+    keep_dead = min(len(dead), 2 if live else top_k)
+    chunks = live[: top_k - keep_dead] + dead[:keep_dead]
+    chunks += dead[keep_dead : keep_dead + top_k - len(chunks)]
+    chunks.sort(key=lambda c: c.get("similarity", 0.0), reverse=True)
 
     results = []
     db_sources = []
@@ -252,14 +262,22 @@ async def _search_corpus(
             "Some matches are from REPEALED Acts (see each match's status). Answer from the Act in "
             "force, name the repealing Act, and say plainly that the old one no longer applies."
         )
-    top = max((r["similarity"] for r in results), default=0.0)
+    # Judge the miss on live law only. A strong match to a dead Act means the
+    # Act in force still has to be found, which is what a miss sends the model
+    # to do.
+    top = max((r["similarity"] for r in results if not law_map.is_repealed(r["document_id"])), default=0.0)
     if not results or top < 0.55:
         # The library is a cache. A miss is a signal to go to the source, not
         # an invitation to answer from memory.
         result["library_miss"] = True
-        result["next_step"] = (
-            "LIBRARY MISS: nothing held answers this directly (top similarity "
-            f"{top:.2f}). Do not answer from memory. Escalate: gov_search "
+        lead = (
+            "LIBRARY MISS: the close matches are from REPEALED Acts and no Act in force "
+            f"answers this (best live similarity {top:.2f}). Find the Act that replaced them. "
+            if law_map.has_repealed(results) else
+            f"LIBRARY MISS: nothing held answers this directly (top similarity {top:.2f}). "
+        )
+        result["next_step"] = lead + (
+            "Do not answer from memory. Escalate: gov_search "
             "(judiciaryzambia.com, parliament.gov.zm, the issuing body) -> open the "
             "primary source with web_fetch / fetch_web_pdf / read_pdf_pages -> quote "
             "it and cite the URL. If no official source is found, say so plainly."

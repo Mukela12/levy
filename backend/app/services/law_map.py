@@ -73,5 +73,9 @@ def annotate(rows: list[dict], key: str = "document_id") -> list[dict]:
     return rows
 
 
+def is_repealed(document_id: str | None) -> bool:
+    return (_entries().get(document_id or "") or {}).get("status") == "repealed"
+
+
 def has_repealed(rows: list[dict], key: str = "document_id") -> bool:
     return any((_entries().get(r.get(key) or "") or {}).get("status") == "repealed" for r in rows)

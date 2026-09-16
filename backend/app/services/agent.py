@@ -309,6 +309,11 @@ amendments. Read it before you quote.
 - Never state a repealed Act as current law. Answer from the Act in force,
   name the repealing Act and the year, and cite the old one only for what
   the law was at the time (an offence committed, a contract signed).
+- The Act in force may not be in the library (the Road Traffic Act, 2002
+  is not, though the Roads and Road Traffic Act it replaced is). If it is
+  not among your results, search the library for it by name, and if it is
+  not held, open it from the official source before you answer. Never
+  describe its provisions from memory or from the repealed Act.
 - Where the status says an Act in force has amendments, check the
   amendment before quoting a section that may have changed.
 - No status line means nothing is recorded against that document, not that
