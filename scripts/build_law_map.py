@@ -60,6 +60,21 @@ RE_AMENDMENT_TITLE = re.compile(r"^(?P<stem>.+?)\s*\(amendment\)", re.I)
 # not the Act. Marking a live Act dead would be worse than the bug being fixed.
 RE_PARTIAL = re.compile(r"\b(section|subsection|paragraph|part|parts|schedule|so much of|provisions of)\b", re.I)
 NOISE = re.compile(r"^(republic of zambia|the laws of zambia|government of zambia)\s+", re.I)
+# "This Act shall come into operation on such date as the Minister may, by
+# statutory instrument, appoint." Passed is not the same as in force: the
+# National Pension Scheme Act, 2026 repeals Cap. 256 but had no commencement
+# order in September 2026, so Cap. 256 was still the law.
+# Matched with all whitespace removed, so OCR spacing ("come in to operati on")
+# cannot hide it.
+RE_DEFERRED = re.compile(
+    # "on such date as the Minister may, by statutory instrument, appoint" and
+    # "on the date appointed by the Minister, by statutory instrument"; a
+    # spliced margin note ("and commence-") may sit inside the sentence.
+    r"comeinto(?:operation|force)on(?:such|the)?(?:a)?date.{0,40}?minister.{0,16}?bystatutoryinstrument",
+    re.I)
+# A deferred-commencement Act older than this is assumed to have started; the
+# library holds no commencement orders to say otherwise.
+PENDING_FROM_YEAR = 2025
 
 
 MARGIN = re.compile(r"\bRepeal(?:ed)?\s+of\b|\bCap\.?\s*\d+[\d,\s and]*|\bNo\.?\s*\d+\s+of\s+\d{4}\b|\bSection\s+\d+\b", re.I)
@@ -148,6 +163,10 @@ async def fetch_edge_chunks(docs: list[dict]) -> dict[str, str]:
              "chunk_index": f"lt.{HEAD_CHUNKS}", "order": "chunk_index"},
             {"select": "content", "document_id": f"eq.{d['id']}",
              "content": "ilike.*repeal*", "limit": str(REPEAL_HITS)},
+            # Section 1 is not always in the first chunks (an arrangement of
+            # sections can come first), and it says when the Act starts.
+            {"select": "content", "document_id": f"eq.{d['id']}",
+             "or": "(content.ilike.*into operation*,content.ilike.*into force*)", "limit": "3"},
         ]
         parts: list[str] = []
         async with sem:
@@ -239,8 +258,10 @@ def main() -> int:
     amends: list[dict] = []
     unresolved: list[dict] = []
 
+    deferred: dict[str, bool] = {}
     for d in scan:
         body = clean_clause(text.get(d["id"], ""))
+        deferred[d["id"]] = bool(RE_DEFERRED.search(re.sub(r"\s+", "", body)))
         found: list[tuple[str, str]] = []
         for m in RE_REPEALED.finditer(body):
             clause = m.group("list")
@@ -286,7 +307,7 @@ def main() -> int:
     def slot(doc_id: str) -> dict:
         return entry.setdefault(doc_id, {"status": "in force", "repealed_by": [], "repeals": [],
                                          "partially_repealed_by": [], "amended_by": [], "amends": [],
-                                         "enacted_as": []})
+                                         "enacted_as": [], "repeal_pending_by": []})
 
     def add(items: list[dict], item: dict) -> None:
         if not any(x.get("id") == item.get("id") and x.get("title") == item.get("title") for x in items):
@@ -298,6 +319,11 @@ def main() -> int:
         note = {"title": (by or {}).get("title", r["name"]), "id": r["by"], "evidence": r["evidence"][:160]}
         if r.get("partial"):
             add(t["partially_repealed_by"], note)
+            continue
+        if by and deferred.get(by["id"]) and (doc_year(by) or 0) >= PENDING_FROM_YEAR:
+            add(t["repeal_pending_by"], note)
+            if t["status"] != "repealed":
+                t["status"] = "repeal pending"
             continue
         t["status"] = "repealed"
         add(t["repealed_by"], note)

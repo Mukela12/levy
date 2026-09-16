@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import io
 import os
+import hashlib
 import re
 import sys
 import time
@@ -677,7 +678,10 @@ def slugify(name: str) -> str:
 
 def upload_pdf_to_storage(content: bytes, slug: str) -> str:
     db = get_db()
-    key = slug
+    # Keyed by content, not by name alone: two different PDFs called "The
+    # Appropriation.pdf" shared one object and the upsert left four Acts
+    # (and several form pairs) opening each other's file (found 16 Sep 2026).
+    key = f"{hashlib.sha256(content).hexdigest()[:12]}-{slug}"
     try:
         db.storage.from_(BUCKET).upload(
             path=key,

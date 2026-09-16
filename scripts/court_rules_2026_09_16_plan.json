@@ -1,0 +1,61 @@
+{
+ "description": "Court rules the library lacked, from the Judiciary of Zambia (judiciaryzambia.com). Three are scans; the 2016 Rules had a noisy text layer. All re-read with Apple Vision.",
+ "items": [
+  {
+   "key": "constitutional-court-rules-2016",
+   "action": "ingest",
+   "document_type": "court_rule",
+   "storage_prefix": "court-rules",
+   "original_file": "judiciary_constitutional-court-rules_2016.pdf",
+   "parser_file": "judiciary_constitutional-court-rules_2016.vision-ocr.pdf",
+   "sha256": "28b9018a0fdd2296e790ed1a503992c0292020afd90c4d1bb2b1e4c0ea146318",
+   "title": "The Constitutional Court Rules, 2016",
+   "short_name": "Constitutional Court Rules, 2016 (SI No. 37 of 2016)",
+   "act_number": "SI No. 37 of 2016",
+   "year": 2016,
+   "source_url": "https://judiciaryzambia.com/wp-content/uploads/2020/10/The-Constitutional-Court-Rules-2016.pdf"
+  },
+  {
+   "key": "constitutional-court-amendment-rules-2021",
+   "action": "ingest",
+   "document_type": "court_rule",
+   "storage_prefix": "court-rules",
+   "original_file": "judiciary_constitutional-court-amendment-rules_2021_si29.pdf",
+   "parser_file": "judiciary_constitutional-court-amendment-rules_2021_si29.vision-ocr.pdf",
+   "sha256": "f8987604b313f90a0e7e00dab88e447405b40d79a2e5b1468c2f876bcca85776",
+   "title": "The Constitutional Court (Amendment) Rules, 2021",
+   "short_name": "Constitutional Court (Amendment) Rules, 2021 (SI No. 29 of 2021)",
+   "act_number": "SI No. 29 of 2021",
+   "year": 2021,
+   "source_url": "https://judiciaryzambia.com/wp-content/uploads/2021/04/Statutory-Instrument-No-29-of-2021.pdf"
+  },
+  {
+   "key": "constitutional-court-fees-amendment-rules-2021",
+   "action": "ingest",
+   "document_type": "court_rule",
+   "storage_prefix": "court-rules",
+   "original_file": "judiciary_constitutional-court-fees-amendment-rules_2021_si30.pdf",
+   "parser_file": "judiciary_constitutional-court-fees-amendment-rules_2021_si30.vision-ocr.pdf",
+   "sha256": "f4581618dabb985e21ea0d380c7605484d85f21d0dfb10539cfb36d6079664a4",
+   "title": "The Constitutional Court (Fees) (Amendment) Rules, 2021",
+   "short_name": "Constitutional Court (Fees) (Amendment) Rules, 2021 (SI No. 30 of 2021)",
+   "act_number": "SI No. 30 of 2021",
+   "year": 2021,
+   "source_url": "https://judiciaryzambia.com/wp-content/uploads/2021/04/Statutory-Instrument-No-30-of-2021.pdf"
+  },
+  {
+   "key": "securities-capital-markets-tribunal-rules-2021",
+   "action": "ingest",
+   "document_type": "court_rule",
+   "storage_prefix": "court-rules",
+   "original_file": "judiciary_securities-capital-markets-tribunal-rules_2021_si32.pdf",
+   "parser_file": "judiciary_securities-capital-markets-tribunal-rules_2021_si32.vision-ocr.pdf",
+   "sha256": "9f16ec64d86712ef9b0f5e5e017a3f4610593e7a9385d3a9084111086fb04465",
+   "title": "The Securities (Capital Markets Tribunal) Rules, 2021",
+   "short_name": "Securities (Capital Markets Tribunal) Rules, 2021 (SI No. 32 of 2021)",
+   "act_number": "SI No. 32 of 2021",
+   "year": 2021,
+   "source_url": "https://judiciaryzambia.com/wp-content/uploads/2021/04/Statutory-Instrument-No-32-of-2021.pdf"
+  }
+ ]
+}

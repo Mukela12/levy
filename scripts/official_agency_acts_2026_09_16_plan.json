@@ -1,0 +1,40 @@
+{
+ "description": "Principal Acts the library held only amendments of, from the government agencies that administer them (RTSA, NRFA, the Ministry of Community Development). Parliament's index lists none of the three. The two 2002 Acts also repealed the Roads and Road Traffic Act (Cap. 464).",
+ "items": [
+  {
+   "key": "road-traffic-2002",
+   "action": "ingest",
+   "original_file": "The_Road_Traffic_Act_No_11_of_2002_RTSA.pdf",
+   "parser_file": "The_Road_Traffic_Act_No_11_of_2002_RTSA.vision-ocr.pdf",
+   "title": "The Road Traffic Act, 2002",
+   "short_name": "Road Traffic Act, 2002 (No. 11 of 2002)",
+   "act_number": "No. 11 of 2002",
+   "year": 2002,
+   "source_url": "https://www.rtsa.org.zm/wp-content/uploads/2019/09/The-Road-Traffic-Act-No-11-of-2002.pdf",
+   "sha256": "779cae99ee7a4c1a947d43a79c77f1d7d6da206c756fb05866912e0f90e99bc5"
+  },
+  {
+   "key": "public-roads-2002",
+   "action": "ingest",
+   "original_file": "The_Public_Roads_Act_No_12_of_2002_NRFA.pdf",
+   "parser_file": "The_Public_Roads_Act_No_12_of_2002_NRFA.vision-ocr.pdf",
+   "title": "The Public Roads Act, 2002",
+   "short_name": "Public Roads Act, 2002 (No. 12 of 2002)",
+   "act_number": "No. 12 of 2002",
+   "year": 2002,
+   "source_url": "https://nrfa.org.zm/wp-content/uploads/2019/01/FULL-PUBLIC-ROADS-ACT-2002.pdf",
+   "sha256": "10c81dc07627625bb8cc3ecc3b5ddd419e8b8ab55d0b7122dd3e02e3f58c450d"
+  },
+  {
+   "key": "anti-gender-based-violence-2011",
+   "action": "ingest",
+   "original_file": "The_Anti_Gender_Based_Violence_Act_No_1_of_2011_MCDSS.pdf",
+   "title": "The Anti-Gender-Based Violence Act, 2011",
+   "short_name": "Anti-Gender-Based Violence Act, 2011 (No. 1 of 2011)",
+   "act_number": "No. 1 of 2011",
+   "year": 2011,
+   "source_url": "https://www.mcdss.gov.zm/wp-content/uploads/2021/12/Anti-Gender-Based-Violence-Act.pdf",
+   "sha256": "001534b43cf1b3a2a6f7e42721ce8273c031aa6896da33a43fab70807749f548"
+  }
+ ]
+}
