@@ -75,6 +75,9 @@ RE_DEFERRED = re.compile(
 # A deferred-commencement Act older than this is assumed to have started; the
 # library holds no commencement orders to say otherwise.
 PENDING_FROM_YEAR = 2025
+# Parliament's undated "Chapter" texts come from the 1995 revised edition,
+# consolidated to about 1996.
+UNDATED_EDITION_YEAR = 1996
 
 
 MARGIN = re.compile(r"\bRepeal(?:ed)?\s+of\b|\bCap\.?\s*\d+[\d,\s and]*|\bNo\.?\s*\d+\s+of\s+\d{4}\b|\bSection\s+\d+\b", re.I)
@@ -233,15 +236,25 @@ def main() -> int:
             if len(kt) >= 2:
                 scored = []
                 for k, ids in index.items():
+                    # Leave the repealing Act out before ranking: "The Victoria
+                    # Memorial Institute (Repeal) Act" ties with its target and,
+                    # once dropped as a self-match, took the target with it.
+                    ids = [i for i in ids if not by or i != by["id"]]
                     ot = {w for w in k.split() if w not in STOP}
-                    if ot and len(kt & ot) / len(kt | ot) >= 0.75:
+                    if ids and ot and len(kt & ot) / len(kt | ot) >= 0.75:
                         scored.append((len(kt & ot) / len(kt | ot), ids))
                 if scored:
                     hits = list(max(scored, key=lambda x: x[0])[1])
         if by:
             by_y = doc_year(by)
             hits = [h for h in hits if h != by["id"]
-                    and not (by_y and doc_year(by_id[h]) and doc_year(by_id[h]) >= by_y)]
+                    and not (by_y and doc_year(by_id[h]) and doc_year(by_id[h]) >= by_y)
+                    # An undated repealer is a consolidated Chapter of the 1995
+                    # revised edition: it can only repeal what came before that.
+                    # Once its text read cleanly, the 1994 Companies Act's
+                    # "The Companies Act ... is repealed" (meaning the 1921 Act)
+                    # matched the Companies Act, 2017 and marked it dead.
+                    and not (not by_y and (doc_year(by_id[h]) or 0) > UNDATED_EDITION_YEAR)]
         want = year_of(name)
         if want and len(hits) > 1:
             exact = [h for h in hits if doc_year(by_id[h]) == want]
