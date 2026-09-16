@@ -25,11 +25,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   // Someone landing here from a search should learn it is repealed in the
   // result itself, not after reading the Act.
   const repealed = act.status?.status === 'repealed'
+  // The name already carries the year when two Acts share a name, and
+  // "Cotton Act, 2025 (2025)" reads like a mistake.
+  const dated = act.year && !act.name.includes(String(act.year)) ? ` (${act.year})` : ''
   const desc = repealed
     ? `${act.name}: a REPEALED Zambian Act${act.status?.repealedBy.length ? `, replaced by ${act.status.repealedBy[0]}` : ''}. Read its sections for the law as it stood, and ask Levy what applies now.`
-    : `${act.name}${act.year ? ` (${act.year})` : ''}: a Zambian Act of Parliament. Browse its sections and ask Levy questions answered with citations to the legislation.`
+    : `${act.name}${dated}: a Zambian Act of Parliament. Browse its sections and ask Levy questions answered with citations to the legislation.`
   return {
-    title: `${act.name}${act.year ? ` (${act.year})` : ''} | Zambian Law`,
+    title: `${act.name}${dated} | Zambian Law`,
     description: desc.slice(0, 300),
     alternates: { canonical: `${SITE_URL}/acts/${act.slug}` },
     openGraph: { title: `${act.name} | Zambian Law`, description: desc.slice(0, 300), url: `${SITE_URL}/acts/${act.slug}`, images: [SHARE_IMAGE] },

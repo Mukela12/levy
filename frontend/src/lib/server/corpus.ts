@@ -60,6 +60,17 @@ export function cleanName(title: string, shortName?: string | null): string {
   return t || 'Untitled Act'
 }
 
+/** The year an Act was passed, read off its title when the column is empty.
+ *  Prefers the year that follows "Act", so "Chapter 87 of the 1958 Edition of
+ *  the Laws" does not date a 2019 Act to 1958. */
+export function yearOf(title: string | null): number | null {
+  const t = title || ''
+  const after = t.match(/\bact\b[^0-9]{0,12}((?:18|19|20)\d{2})/i)
+  if (after) return Number(after[1])
+  const any = t.match(/\b((?:18|19|20)\d{2})\b/)
+  return any ? Number(any[1]) : null
+}
+
 export interface ActSummary {
   id: string
   slug: string
@@ -151,20 +162,33 @@ export async function listActs(): Promise<ActSummary[]> {
     .eq('is_global', true)
   if (error) return _memo?.acts ?? []
   const rows = (data || []).filter((r) => (r.total_chunks || 0) > 1)
+  // Sort by id first so collision suffixes are deterministic across builds.
+  // The short_name usually drops the year the title carries, so the Companies
+  // Act 2017 arrives as "Companies Act" and lands in the directory beside the
+  // 1994 Act of the same name, one of them repealed. Rows that would be
+  // indistinguishable keep their year, in the name and in the URL.
+  const prepared = [...rows]
+    .sort((a, b) => (a.id < b.id ? -1 : 1))
+    .map((r) => ({ r, base: cleanName(r.title, r.short_name), year: r.year ?? yearOf(r.title) }))
+  const nameCount = new Map<string, number>()
+  for (const p of prepared) nameCount.set(p.base, (nameCount.get(p.base) || 0) + 1)
+
   const seen = new Map<string, number>()
   const acts: ActSummary[] = []
-  // Sort by id first so collision suffixes are deterministic across builds.
-  for (const r of [...rows].sort((a, b) => (a.id < b.id ? -1 : 1))) {
-    const name = cleanName(r.title, r.short_name)
+  for (const p of prepared) {
+    const ambiguous = (nameCount.get(p.base) || 0) > 1
+    const name = ambiguous && p.year && !p.base.includes(String(p.year))
+      ? `${p.base}, ${p.year}`
+      : p.base
     let slug = slugify(name)
     const n = seen.get(slug) || 0
     seen.set(slug, n + 1)
-    if (n > 0) slug = `${slug}-${r.act_number || r.year || n + 1}`
+    if (n > 0) slug = `${slug}-${p.r.act_number || p.year || n + 1}`
     acts.push({
-      id: r.id, slug, name,
-      year: r.year ?? null,
-      actNumber: r.act_number ?? null,
-      sections: r.total_sections || 0,
+      id: p.r.id, slug, name,
+      year: p.year,
+      actNumber: p.r.act_number ?? null,
+      sections: p.r.total_sections || 0,
     })
   }
   const statuses = await lawStatuses()
@@ -179,7 +203,15 @@ export async function listActs(): Promise<ActSummary[]> {
 
 export async function getActBySlug(slug: string): Promise<ActDetail | null> {
   const acts = await listActs()
-  const act = acts.find((a) => a.slug === slug)
+  // Dating an ambiguous Act moves its URL ("/acts/cotton-act" became
+  // "/acts/cotton-act-2005" and "/acts/cotton-act-2025"). An old link should
+  // land on the Act that is law today rather than on a 404.
+  const act = acts.find((a) => a.slug === slug) ?? (() => {
+    const kin = acts.filter((a) => a.slug.startsWith(`${slug}-`))
+    if (!kin.length) return undefined
+    const live = kin.filter((a) => a.status?.status !== 'repealed')
+    return (live.length ? live : kin).sort((a, b) => (b.year ?? 0) - (a.year ?? 0))[0]
+  })()
   if (!act) return null
   const { data } = await db()
     .from('legal_chunks')
