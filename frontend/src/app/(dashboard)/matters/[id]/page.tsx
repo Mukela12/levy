@@ -2,7 +2,6 @@
 
 import { use, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ActionArt } from '@/components/canopy/action-art'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth/auth-provider'
 import { createClient } from '@/lib/supabase'
@@ -175,7 +174,6 @@ export default function MatterDetailPage({ params }: { params: Promise<{ id: str
         {/* Details */}
         <div className={card + ' mb-4'}>
           <div className="flex items-center gap-2.5 mb-3.5">
-            <ActionArt kind="matter" />
             <input
               aria-label="Matter title"
               value={fields.title}

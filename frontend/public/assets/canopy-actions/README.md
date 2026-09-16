@@ -6,8 +6,11 @@ from a developer's cache. No external attribution is supplied by the generator.
 
 - `irac-scales.png`: ivory ceramic and brushed-brass balanced scales, dark sage
   details. Used for the IRAC/Brief action, with an accessible button name.
-- `matters-case.png`: sage leather briefcase, brass clasp, ivory file edges.
-  Used on Matters headings and rows, paired with text.
+- `matters-case.png` (removed 16 September 2026): a sage leather briefcase that
+  sat on Matters headings and rows. A photographic render read as clip art in
+  a line-icon interface, and the same picture on every row told cases apart
+  not at all. Matters now uses monogram tiles and next-key-date pills; recover
+  the file from git history if it is ever wanted again.
 
 Generation briefs: a single premium three-dimensional object, recognizable at
 40 pixels, soft upper-left studio lighting, true transparent background, no
