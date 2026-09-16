@@ -38,6 +38,7 @@ except Exception:
 from ..config import get_settings
 from ..db.supabase import search_chunks
 from .embedder import get_query_embedding, get_query_embedding_ex
+from . import law_map
 from . import pdf_tools
 from . import templates as templates_service
 from .entitlements import calculate_entitlements
@@ -241,7 +242,16 @@ async def _search_corpus(
             }
         )
 
+    # A repealed Act reads exactly like a live one, so retrieval cannot warn
+    # the model on its own: the status travels with the match.
+    law_map.annotate(results)
+    law_map.annotate(db_sources)
     result: dict = {"matches": results, "count": len(results)}
+    if law_map.has_repealed(results):
+        result["status_warning"] = (
+            "Some matches are from REPEALED Acts (see each match's status). Answer from the Act in "
+            "force, name the repealing Act, and say plainly that the old one no longer applies."
+        )
     top = max((r["similarity"] for r in results), default=0.0)
     if not results or top < 0.55:
         # The library is a cache. A miss is a signal to go to the source, not

@@ -225,11 +225,14 @@ def _library_text_read(document_id: str, page_start: int, page_end: int | None,
         notes.append(f"{unit} {end + 1}-{total} not read; call again with page_start={end + 1} if needed.")
     if original:
         notes.append(f"The original is at {original}; fetch it only if this text is unreadable (government sites are slow).")
+    from .law_map import status_note
+    law_status = status_note(document_id)
     return {
         "result": {"source": doc.get("title") or f"library document {document_id}",
                    "origin": "library_text", f"total_{unit}": total,
                    "page_start": start, "page_end": end, "pages": pages_out,
-                   "note": " ".join(notes)},
+                   "note": " ".join(notes),
+                   **({"status": law_status} if law_status else {})},
         "_model_max_chars": 24_000,
         "db_sources": [],
         "web_sources": [],
@@ -328,9 +331,12 @@ async def read_pdf_pages(
         notes.append(f"page rendering failed: {render_error}")
     if end < total:
         notes.append(f"pages {end + 1}-{total} not read; call again with page_start={end + 1} if needed.")
+    from .law_map import status_note   # local import: pdf_tools loads before services
+    law_status = status_note(document_id) if document_id else None
     return {
         "result": {"source": label, "total_pages": total, "page_start": start, "page_end": end,
-                   "pages": pages_out, "note": " ".join(notes)},
+                   "pages": pages_out, "note": " ".join(notes),
+                   **({"status": law_status} if law_status else {})},
         "images": images,
         "_model_max_chars": 24_000,
         "db_sources": [],
