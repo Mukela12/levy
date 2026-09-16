@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import { AlertTriangle } from 'lucide-react'
 import { listActs, getActBySlug, SITE_URL, SHARE_IMAGE } from '@/lib/server/corpus'
 
-export const revalidate = 86400
+export const revalidate = 21600
 export const dynamicParams = true
 
 export async function generateStaticParams() {

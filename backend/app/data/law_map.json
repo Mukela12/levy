@@ -1,6 +1,44 @@
 {
- "generated_at": "2026-09-16T08:15:56+00:00",
+ "generated_at": "2026-09-16T08:28:25+00:00",
  "documents": {
+  "7a1d2b14-a289-49a0-bf35-0479ebb7c72f": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "THE ENVIRONMENTAL MANAGEMENT ACT, 2011",
+     "id": "2a46a1c4-45db-4d97-beef-c88c142490f3",
+     "evidence": "repeal and replace the Environmental Protecti on and Polluti on Control Act"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "2a46a1c4-45db-4d97-beef-c88c142490f3": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "REPUBLIC OF ZAMBIA THE ENVIRONMENTAL PROTECTION AND POLLUTION CONTROL ACT",
+     "id": "7a1d2b14-a289-49a0-bf35-0479ebb7c72f"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Environmental Management (Amendment) Act , 2026",
+     "id": "4b3b7845-b349-4f02-952f-8b4d589e085f"
+    },
+    {
+     "title": "The Environmental Management (Amendment) Act, 2023",
+     "id": "b04eec96-2b16-4e6c-b924-082002f9341a"
+    }
+   ],
+   "amends": [],
+   "enacted_as": []
+  },
   "992415ed-3547-4f91-bb46-3b88bc7480b0": {
    "status": "repealed",
    "repealed_by": [
@@ -51,6 +89,40 @@
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "4e13d140-3f21-4ecb-b3e8-137b2263b766": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "Electoral Commissi on of Zambia Act, 2016",
+     "id": "390298b1-7618-42cf-bbc4-393f3fadc2e7",
+     "evidence": "The Electoral Commissi on Act, 1996, is repealed"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "390298b1-7618-42cf-bbc4-393f3fadc2e7": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "REPUBLIC OF ZAMBIA THE ELECTORAL COMMISSION ACT",
+     "id": "4e13d140-3f21-4ecb-b3e8-137b2263b766"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Electoral Commission of Zambia (Amendment) Act, 2019",
+     "id": "ac39d7f4-09a0-4ea8-bee2-acabe7acb704"
+    }
+   ],
    "amends": [],
    "enacted_as": []
   },
@@ -114,6 +186,10 @@
     {
      "title": "The Juveniles Act [repealed by the Children's Code Act, 2022]",
      "id": "8b85e459-6d3b-4b47-bc46-985ab10ce0e4"
+    },
+    {
+     "title": "REPUBLIC OF ZAMBIA THE ADOPTION ACT",
+     "id": "c99b9a63-a9a4-4804-b275-50e19caea03f"
     }
    ],
    "partially_repealed_by": [],
@@ -122,6 +198,21 @@
    "enacted_as": []
   },
   "8b85e459-6d3b-4b47-bc46-985ab10ce0e4": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "Children\u2019s Code",
+     "id": "1b187a0f-565b-4be7-8850-533548ceb6b9",
+     "evidence": "The Legitimacy Act, 1929, the Juveniles Act, 1956, the Adopti on Act, 1956, and the Affiliati on and Maintenance of Acts Children Act, 1995 are repealed"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "c99b9a63-a9a4-4804-b275-50e19caea03f": {
    "status": "repealed",
    "repealed_by": [
     {
@@ -158,6 +249,35 @@
     {
      "title": "REPUBLIC OF ZAMBIA THE DANGEROUS DRUGS ACT",
      "id": "849e0b06-3b0d-4ce1-a7df-6b2d34a6b055"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "4605de0d-b070-475e-8609-7ba900aa853a": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "THE ANIMAL IDENTIFICATION AND TRACEABILITY ACT, 2024",
+     "id": "2ec09317-4e6a-4f1a-b1da-ad2baacc740f",
+     "evidence": "The Animal Identificati on Act, 2010, is repealed"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "2ec09317-4e6a-4f1a-b1da-ad2baacc740f": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "The Animal Identification 2010",
+     "id": "4605de0d-b070-475e-8609-7ba900aa853a"
     }
    ],
    "partially_repealed_by": [],
@@ -216,6 +336,83 @@
     {
      "title": "REPUBLIC OF ZAMBIA THE EXAMINATIONS COUNCIL OF ZAMBIA ACT",
      "id": "54ac5f15-1ec4-4a29-ba86-9fab9839ac59"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "d8fb8339-60a1-4bed-ae0f-b288015b1c5f": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "THE ZAMBIA INSTITUTE OF HUMAN RESOURCE MANAGEMENT ACT, 2022",
+     "id": "f8247c8a-d6b8-4f6e-9c46-ab07891ffbfa",
+     "evidence": "The Zambia Institute of Hum an Resources Management provisions Act, 1997, is repealed"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "f8247c8a-d6b8-4f6e-9c46-ab07891ffbfa": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "The Zambia Institute of Human Resources Management",
+     "id": "d8fb8339-60a1-4bed-ae0f-b288015b1c5f"
+    },
+    {
+     "title": "The Zambia Institute of Human Resources Management Act",
+     "id": "0b14dbe4-07c8-41c4-b0ac-6026525b53fb"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "0b14dbe4-07c8-41c4-b0ac-6026525b53fb": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "THE ZAMBIA INSTITUTE OF HUMAN RESOURCE MANAGEMENT ACT, 2022",
+     "id": "f8247c8a-d6b8-4f6e-9c46-ab07891ffbfa",
+     "evidence": "repeal and replace the Zambia Institute of Hum an Resources Management Act"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "c1cf3d70-f2c9-4ee5-a260-b187f54d4b31": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "THE COTTON ACT, 2025",
+     "id": "dfdaaaa7-b1f7-4258-9c92-6f3e4cbe2f36",
+     "evidence": "The Cott on Act, 2005, is repealed"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "dfdaaaa7-b1f7-4258-9c92-6f3e4cbe2f36": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "THE COTTON ACT, 2005",
+     "id": "c1cf3d70-f2c9-4ee5-a260-b187f54d4b31"
     }
    ],
    "partially_repealed_by": [],
@@ -426,6 +623,69 @@
    "amends": [],
    "enacted_as": []
   },
+  "0188b8eb-5c7b-48e4-ad47-d8d9a1d6450f": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "The Zambia Institute of Valuation Surveyors Act, 2023",
+     "id": "09682849-189e-41c4-a6a8-3b22b21a15cc",
+     "evidence": "The Valuati on Surveyors Act is repealed"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "09682849-189e-41c4-a6a8-3b22b21a15cc": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "The Valuation Surveyors Act",
+     "id": "0188b8eb-5c7b-48e4-ad47-d8d9a1d6450f"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "66ada4bc-3018-4b6d-a698-a55da5e87caf": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "THE BORDER MANAGEMENT AND TRADE FACILITATION ACT, 2025",
+     "id": "9c99833a-0d24-40b3-82ec-f288cb2e98fa",
+     "evidence": "repeal and replace the Border Management and Trade Facilitati on Act"
+    }
+   ],
+   "repeals": [
+    {
+     "title": "The One-Stop Border Control",
+     "id": "fa71a986-3a12-4c6b-8da2-cfffae0fe61d"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "9c99833a-0d24-40b3-82ec-f288cb2e98fa": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "The Border Management and Trade Facilitation Act, 2018",
+     "id": "66ada4bc-3018-4b6d-a698-a55da5e87caf"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
   "63012e41-c3ea-4bad-ac6e-bc564c12b8b8": {
    "status": "repealed",
    "repealed_by": [
@@ -556,6 +816,35 @@
    "amends": [],
    "enacted_as": []
   },
+  "2e3ca131-0e6f-4ac4-826f-70e43684d8fc": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "THE ANTI-CORRUPTION ACT, 2010",
+     "id": "452919e4-d5b8-4b4c-b4ac-2036391a518d",
+     "evidence": "repeal and replace the Anti-Corrupti on Commissi on Act"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "452919e4-d5b8-4b4c-b4ac-2036391a518d": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "THE ANTI-CORRUPTION COMMISSION ACT",
+     "id": "2e3ca131-0e6f-4ac4-826f-70e43684d8fc"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
   "9ee6076d-f668-4fa3-8f7d-d94f4227d532": {
    "status": "repealed",
    "repealed_by": [
@@ -662,6 +951,74 @@
      "id": "1467bfe2-d80b-4dfb-8b05-1051e2583392"
     }
    ],
+   "amends": [],
+   "enacted_as": []
+  },
+  "2deb21c7-6b0a-47d0-a858-affc69168ea3": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "THE EDUCATION ACT, 2011",
+     "id": "ddf3b6d3-7755-4741-b26e-3778da74d4ee",
+     "evidence": "repeal and replace the Educati on Act"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Education (Amendment) Act , 2026",
+     "id": "28db84ee-89bd-49ff-8238-eb0b8dc1e5b0"
+    }
+   ],
+   "amends": [],
+   "enacted_as": []
+  },
+  "ddf3b6d3-7755-4741-b26e-3778da74d4ee": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "REPUBLIC OF ZAMBIA THE EDUCATION ACT",
+     "id": "2deb21c7-6b0a-47d0-a858-affc69168ea3"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Education (Amendment) Act , 2026",
+     "id": "28db84ee-89bd-49ff-8238-eb0b8dc1e5b0"
+    }
+   ],
+   "amends": [],
+   "enacted_as": []
+  },
+  "4b626d0a-514f-44dc-b39e-026a4fd559bf": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "THE IONISING RADIATION PROTECTION ACT, 2005",
+     "id": "ad55d615-b0c2-4b7d-99d2-cc94aeccd877",
+     "evidence": "repeal and replace the Ionising Radiati on Act"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "ad55d615-b0c2-4b7d-99d2-cc94aeccd877": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "REPUBLIC OF ZAMBIA THE IONISING RADIATION ACT",
+     "id": "4b626d0a-514f-44dc-b39e-026a4fd559bf"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
    "amends": [],
    "enacted_as": []
   },
@@ -936,6 +1293,35 @@
    "amends": [],
    "enacted_as": []
   },
+  "41b2e022-0a76-4616-91bd-fa32080f7d71": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "The Public Protector",
+     "id": "f48a8d83-a604-4e16-9683-03925115553d",
+     "evidence": "The Commissi on f or Investigations Act, 1991, is repealed"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "f48a8d83-a604-4e16-9683-03925115553d": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "REPUBLIC OF ZAMBIA THE COMMISSION FOR INVESTIGATIONS ACT",
+     "id": "41b2e022-0a76-4616-91bd-fa32080f7d71"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
   "655ff96b-5c65-41d4-8823-03e8a711383d": {
    "status": "repealed",
    "repealed_by": [
@@ -958,6 +1344,40 @@
     {
      "title": "The Water Act",
      "id": "655ff96b-5c65-41d4-8823-03e8a711383d"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "d20860e3-f0d8-4eac-810a-e7fa21df1611": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "The Immigration and Deportation 2010",
+     "id": "27c32617-5b34-4255-bf5f-b3b900d209c6",
+     "evidence": "repeal and replace the Immigrati on and Deportati on Act"
+    },
+    {
+     "title": "The Immigration Control Act, 2026",
+     "id": "9c7a7161-853f-4230-bac8-801ada7c8409",
+     "evidence": "repeal and replace the Immigrati on and Deportati on Act"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "27c32617-5b34-4255-bf5f-b3b900d209c6": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "REPUBLIC OF ZAMBIA THE IMMIGRATION AND DEPORTATION ACT",
+     "id": "d20860e3-f0d8-4eac-810a-e7fa21df1611"
     }
    ],
    "partially_repealed_by": [],
@@ -1099,6 +1519,75 @@
    "amends": [],
    "enacted_as": []
   },
+  "53a3386a-2640-41d5-8797-e9418f3bf54c": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "The National Pension Scheme Act, 2026",
+     "id": "2d87cd8b-3107-4186-9c48-6c352ec2de7f",
+     "evidence": "repeal and replace the National Pensi on Scheme Act"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The National Pension Scheme (Amendment) Act, 2015",
+     "id": "9fe2d2b7-6dcc-46e6-af5a-c85c853e4e5b"
+    },
+    {
+     "title": "The National Pension Scheme (Amendment) Act, 2022",
+     "id": "350f49bf-e4b7-4ec0-9f73-3b84807f6c77"
+    },
+    {
+     "title": "The National Pension Scheme (Amendment) Act, 2023",
+     "id": "5e78b17b-8d82-44cf-84e4-eeb5dc93e129"
+    }
+   ],
+   "amends": [],
+   "enacted_as": []
+  },
+  "2d87cd8b-3107-4186-9c48-6c352ec2de7f": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "The National Pension Scheme Act",
+     "id": "53a3386a-2640-41d5-8797-e9418f3bf54c"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The National Pension Scheme (Amendment) Act, 2015",
+     "id": "9fe2d2b7-6dcc-46e6-af5a-c85c853e4e5b"
+    },
+    {
+     "title": "The National Pension Scheme (Amendment) Act, 2022",
+     "id": "350f49bf-e4b7-4ec0-9f73-3b84807f6c77"
+    },
+    {
+     "title": "The National Pension Scheme (Amendment) Act, 2023",
+     "id": "5e78b17b-8d82-44cf-84e4-eeb5dc93e129"
+    }
+   ],
+   "amends": [],
+   "enacted_as": []
+  },
+  "9c7a7161-853f-4230-bac8-801ada7c8409": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "REPUBLIC OF ZAMBIA THE IMMIGRATION AND DEPORTATION ACT",
+     "id": "d20860e3-f0d8-4eac-810a-e7fa21df1611"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
   "a50fc27a-d294-4862-923f-94c7b9a19757": {
    "status": "repealed",
    "repealed_by": [
@@ -1133,6 +1622,127 @@
    "amends": [],
    "enacted_as": []
   },
+  "8f015d7d-3e55-4129-ace3-b3ff19b4eb60": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "The Local Authorities Superannuation Act, 2026",
+     "id": "fff725a7-1864-4784-bc48-634de9e1b851",
+     "evidence": "The Local Authorities Superannuati on Fund Act is repealed"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Local Authorities Superannuation Fund (Amendment) Act, 2024",
+     "id": "1eedb9c6-3ee1-4e81-9db2-054d2c4de22c"
+    }
+   ],
+   "amends": [],
+   "enacted_as": []
+  },
+  "fff725a7-1864-4784-bc48-634de9e1b851": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "THE LOCAL AUTHORITIES SUPERANNUATION FUND ACT",
+     "id": "8f015d7d-3e55-4129-ace3-b3ff19b4eb60"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "64d5e146-66ac-41c9-8601-b30fe633a47d": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "The Benefits of Former Presidents and Former Vice-Presidents Act , 2026",
+     "id": "7470bba2-459b-4010-bb94-deccac103d8b",
+     "evidence": "The Benef its of Former Presidents Act is repealed"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "7470bba2-459b-4010-bb94-deccac103d8b": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "The Benefits of Former Presidents Act",
+     "id": "64d5e146-66ac-41c9-8601-b30fe633a47d"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "0ec1b51d-f727-4d01-80b3-c00d71c74844": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "The Human Rights Commission Act, 2024",
+     "id": "61c57f1a-51ec-46d1-8712-410770cb20c7",
+     "evidence": "The Hum an Rights Commissi on Act is repealed"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "61c57f1a-51ec-46d1-8712-410770cb20c7": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "REPUBLIC OF ZAMBIA THE HUMAN RIGHTS COMMISSION ACT",
+     "id": "0ec1b51d-f727-4d01-80b3-c00d71c74844"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "b4392489-2bab-48bc-95fa-77464727f78d": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "The Water Supply and Sanitation Services Act, 2026",
+     "id": "99bcb531-ea45-462c-a603-d73b6cae5dc8",
+     "evidence": "repeal and replace the Water Supply and Sanitati on Act"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "99bcb531-ea45-462c-a603-d73b6cae5dc8": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "The Water Supply and Sanitation",
+     "id": "b4392489-2bab-48bc-95fa-77464727f78d"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
   "98a6dbc9-9f23-4940-a12f-a97023a969ee": {
    "status": "repealed",
    "repealed_by": [
@@ -1155,6 +1765,35 @@
     {
      "title": "The Self-Management Enterprises Act",
      "id": "98a6dbc9-9f23-4940-a12f-a97023a969ee"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "73277430-185e-4fe6-8036-5e0ab71b978b": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "The Agricultural Credits and Warehouse Receipts Act, 2026",
+     "id": "5e438c4c-52ae-45a0-9770-db96b93916c2",
+     "evidence": "The Agricultural Cred its Act is repealed"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "5e438c4c-52ae-45a0-9770-db96b93916c2": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "REPUBLIC OF ZAMBIA THE AGRICULTURAL CREDITS ACT",
+     "id": "73277430-185e-4fe6-8036-5e0ab71b978b"
     }
    ],
    "partially_repealed_by": [],
@@ -1338,6 +1977,45 @@
    "amends": [],
    "enacted_as": []
   },
+  "33f8cf56-9a11-4c1e-b54b-152ee68fce6f": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "The Energy Regulation Act, 2019",
+     "id": "57b24226-ea66-419b-8888-00859c6bb066",
+     "evidence": "The Energy Regulati on Act,1995is repealed"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Energy Regulation(Amendment)Act,2026",
+     "id": "94ebc633-66d7-4b14-9100-0d66c045f192"
+    }
+   ],
+   "amends": [],
+   "enacted_as": []
+  },
+  "57b24226-ea66-419b-8888-00859c6bb066": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "REPUBLIC OF ZAMBIA THE ENERGY REGULATION ACT",
+     "id": "33f8cf56-9a11-4c1e-b54b-152ee68fce6f"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Energy Regulation(Amendment)Act,2026",
+     "id": "94ebc633-66d7-4b14-9100-0d66c045f192"
+    }
+   ],
+   "amends": [],
+   "enacted_as": []
+  },
   "8b988f49-df4a-4f07-844f-4ed8a6e455f7": {
    "status": "repealed",
    "repealed_by": [
@@ -1367,6 +2045,40 @@
     {
      "title": "The Mental Health (Amendment) Act, 2026",
      "id": "716d59e4-5103-4ee4-8210-5d7d5155b520"
+    }
+   ],
+   "amends": [],
+   "enacted_as": []
+  },
+  "52974278-343a-4c40-962c-55dfecf8b19a": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "The Competition and Consumer Protection 2010",
+     "id": "1a0cc52a-fc3a-441a-a540-3efea780f916",
+     "evidence": "repeal and replace the Competiti on and Fair Trading Act"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "1a0cc52a-fc3a-441a-a540-3efea780f916": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "REPUBLIC OF ZAMBIA THE COMPETITION AND FAIR TRADING ACT",
+     "id": "52974278-343a-4c40-962c-55dfecf8b19a"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Competition and Consumer Protection (Amendment) Act, 2023",
+     "id": "027ae1e6-1f27-4376-8347-197c1113e2f0"
     }
    ],
    "amends": [],
@@ -1406,6 +2118,40 @@
     {
      "title": "The Nurses and Midwives (Amendment) Act, 2026",
      "id": "cbd1a66d-438b-45b1-9e4b-6a922014f888"
+    }
+   ],
+   "amends": [],
+   "enacted_as": []
+  },
+  "dece4635-9b65-4b62-b53a-07dbce580be9": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "The Food and Nutrition Act, 2020",
+     "id": "31b338dc-c41c-4396-93c6-6589bc708b10",
+     "evidence": "repeal and replace the National Food and Nutriti on Commissi on Act"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "31b338dc-c41c-4396-93c6-6589bc708b10": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "The National Food and Nutrition Commission Act",
+     "id": "dece4635-9b65-4b62-b53a-07dbce580be9"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Food and Nutrition (Amendment) Act, 2026",
+     "id": "d6be23ca-d557-419f-b9be-f814370785b0"
     }
    ],
    "amends": [],
@@ -1484,20 +2230,6 @@
    "amends": [],
    "enacted_as": []
   },
-  "66ada4bc-3018-4b6d-a698-a55da5e87caf": {
-   "status": "in force",
-   "repealed_by": [],
-   "repeals": [
-    {
-     "title": "The One-Stop Border Control",
-     "id": "fa71a986-3a12-4c6b-8da2-cfffae0fe61d"
-    }
-   ],
-   "partially_repealed_by": [],
-   "amended_by": [],
-   "amends": [],
-   "enacted_as": []
-  },
   "a7503678-f56d-493e-8f8e-131bddc706dd": {
    "status": "repealed",
    "repealed_by": [
@@ -1525,6 +2257,40 @@
     {
      "title": "The Standards Act",
      "id": "a7503678-f56d-493e-8f8e-131bddc706dd"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "f5774fa5-90f1-4688-baba-3eed8706f2fd": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "The Petroleum (Exploration and Production)",
+     "id": "f08ed135-7690-48b4-9a21-1113c4a3ad8c",
+     "evidence": "repeal and replace the Petroleum (Explorati on and Producti on) Act"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Petroleum (Exploration and Production) (Amendment) Act, 2021",
+     "id": "f6b23254-8d94-4bb5-be55-dfe3d56344ca"
+    }
+   ],
+   "amends": [],
+   "enacted_as": []
+  },
+  "f08ed135-7690-48b4-9a21-1113c4a3ad8c": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "The Petroleum (Exploration and Production) Act",
+     "id": "f5774fa5-90f1-4688-baba-3eed8706f2fd"
     }
    ],
    "partially_repealed_by": [],
@@ -1664,6 +2430,44 @@
    ],
    "partially_repealed_by": [],
    "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "ff2fb805-1f83-4d9c-8c39-ba7716604d4b": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "The Judiciary Administration",
+     "id": "0ab3d460-4e90-4ae7-8c65-62acec2a913f",
+     "evidence": "The Judicature Administrati on Act, 1994, is repealed"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": []
+  },
+  "0ab3d460-4e90-4ae7-8c65-62acec2a913f": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "REPUBLIC OF ZAMBIA THE JUDICATURE ADMINISTRATION ACT",
+     "id": "ff2fb805-1f83-4d9c-8c39-ba7716604d4b"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Judiciary Administration (Amendment) Act, 2024",
+     "id": "e3d90e69-3fd7-41ec-b0d9-83ab8b194318"
+    },
+    {
+     "title": "The Judiciary Administration (Amendment) Act, 2018",
+     "id": "71739fc8-3ad3-4101-a2e1-aa469fff9827"
+    }
+   ],
    "amends": [],
    "enacted_as": []
   },
@@ -2410,28 +3214,6 @@
    ],
    "enacted_as": []
   },
-  "53a3386a-2640-41d5-8797-e9418f3bf54c": {
-   "status": "in force",
-   "repealed_by": [],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [
-    {
-     "title": "The National Pension Scheme (Amendment) Act, 2015",
-     "id": "9fe2d2b7-6dcc-46e6-af5a-c85c853e4e5b"
-    },
-    {
-     "title": "The National Pension Scheme (Amendment) Act, 2022",
-     "id": "350f49bf-e4b7-4ec0-9f73-3b84807f6c77"
-    },
-    {
-     "title": "The National Pension Scheme (Amendment) Act, 2023",
-     "id": "5e78b17b-8d82-44cf-84e4-eeb5dc93e129"
-    }
-   ],
-   "amends": [],
-   "enacted_as": []
-  },
   "9fe2d2b7-6dcc-46e6-af5a-c85c853e4e5b": {
    "status": "amending Act",
    "repealed_by": [],
@@ -2448,28 +3230,6 @@
      "id": "2d87cd8b-3107-4186-9c48-6c352ec2de7f"
     }
    ],
-   "enacted_as": []
-  },
-  "2d87cd8b-3107-4186-9c48-6c352ec2de7f": {
-   "status": "in force",
-   "repealed_by": [],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [
-    {
-     "title": "The National Pension Scheme (Amendment) Act, 2015",
-     "id": "9fe2d2b7-6dcc-46e6-af5a-c85c853e4e5b"
-    },
-    {
-     "title": "The National Pension Scheme (Amendment) Act, 2022",
-     "id": "350f49bf-e4b7-4ec0-9f73-3b84807f6c77"
-    },
-    {
-     "title": "The National Pension Scheme (Amendment) Act, 2023",
-     "id": "5e78b17b-8d82-44cf-84e4-eeb5dc93e129"
-    }
-   ],
-   "amends": [],
    "enacted_as": []
   },
   "350f49bf-e4b7-4ec0-9f73-3b84807f6c77": {
@@ -3014,20 +3774,6 @@
    ],
    "enacted_as": []
   },
-  "33f8cf56-9a11-4c1e-b54b-152ee68fce6f": {
-   "status": "in force",
-   "repealed_by": [],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [
-    {
-     "title": "The Energy Regulation(Amendment)Act,2026",
-     "id": "94ebc633-66d7-4b14-9100-0d66c045f192"
-    }
-   ],
-   "amends": [],
-   "enacted_as": []
-  },
   "94ebc633-66d7-4b14-9100-0d66c045f192": {
    "status": "amending Act",
    "repealed_by": [],
@@ -3044,34 +3790,6 @@
      "id": "57b24226-ea66-419b-8888-00859c6bb066"
     }
    ],
-   "enacted_as": []
-  },
-  "57b24226-ea66-419b-8888-00859c6bb066": {
-   "status": "in force",
-   "repealed_by": [],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [
-    {
-     "title": "The Energy Regulation(Amendment)Act,2026",
-     "id": "94ebc633-66d7-4b14-9100-0d66c045f192"
-    }
-   ],
-   "amends": [],
-   "enacted_as": []
-  },
-  "31b338dc-c41c-4396-93c6-6589bc708b10": {
-   "status": "in force",
-   "repealed_by": [],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [
-    {
-     "title": "The Food and Nutrition (Amendment) Act, 2026",
-     "id": "d6be23ca-d557-419f-b9be-f814370785b0"
-    }
-   ],
-   "amends": [],
    "enacted_as": []
   },
   "d6be23ca-d557-419f-b9be-f814370785b0": {
@@ -3466,24 +4184,6 @@
    ],
    "enacted_as": []
   },
-  "2a46a1c4-45db-4d97-beef-c88c142490f3": {
-   "status": "in force",
-   "repealed_by": [],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [
-    {
-     "title": "The Environmental Management (Amendment) Act , 2026",
-     "id": "4b3b7845-b349-4f02-952f-8b4d589e085f"
-    },
-    {
-     "title": "The Environmental Management (Amendment) Act, 2023",
-     "id": "b04eec96-2b16-4e6c-b924-082002f9341a"
-    }
-   ],
-   "amends": [],
-   "enacted_as": []
-  },
   "4b3b7845-b349-4f02-952f-8b4d589e085f": {
    "status": "amending Act",
    "repealed_by": [],
@@ -3646,20 +4346,6 @@
    ],
    "enacted_as": []
   },
-  "2deb21c7-6b0a-47d0-a858-affc69168ea3": {
-   "status": "in force",
-   "repealed_by": [],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [
-    {
-     "title": "The Education (Amendment) Act , 2026",
-     "id": "28db84ee-89bd-49ff-8238-eb0b8dc1e5b0"
-    }
-   ],
-   "amends": [],
-   "enacted_as": []
-  },
   "28db84ee-89bd-49ff-8238-eb0b8dc1e5b0": {
    "status": "amending Act",
    "repealed_by": [],
@@ -3676,20 +4362,6 @@
      "id": "ddf3b6d3-7755-4741-b26e-3778da74d4ee"
     }
    ],
-   "enacted_as": []
-  },
-  "ddf3b6d3-7755-4741-b26e-3778da74d4ee": {
-   "status": "in force",
-   "repealed_by": [],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [
-    {
-     "title": "The Education (Amendment) Act , 2026",
-     "id": "28db84ee-89bd-49ff-8238-eb0b8dc1e5b0"
-    }
-   ],
-   "amends": [],
    "enacted_as": []
   },
   "2aeef595-56e1-495f-b902-931d710a1349": {
@@ -4064,24 +4736,6 @@
    ],
    "enacted_as": []
   },
-  "0ab3d460-4e90-4ae7-8c65-62acec2a913f": {
-   "status": "in force",
-   "repealed_by": [],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [
-    {
-     "title": "The Judiciary Administration (Amendment) Act, 2024",
-     "id": "e3d90e69-3fd7-41ec-b0d9-83ab8b194318"
-    },
-    {
-     "title": "The Judiciary Administration (Amendment) Act, 2018",
-     "id": "71739fc8-3ad3-4101-a2e1-aa469fff9827"
-    }
-   ],
-   "amends": [],
-   "enacted_as": []
-  },
   "e3d90e69-3fd7-41ec-b0d9-83ab8b194318": {
    "status": "amending Act",
    "repealed_by": [],
@@ -4270,20 +4924,6 @@
      "id": "8b04815e-558b-488f-b296-1f72bb241561"
     }
    ],
-   "enacted_as": []
-  },
-  "8f015d7d-3e55-4129-ace3-b3ff19b4eb60": {
-   "status": "in force",
-   "repealed_by": [],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [
-    {
-     "title": "The Local Authorities Superannuation Fund (Amendment) Act, 2024",
-     "id": "1eedb9c6-3ee1-4e81-9db2-054d2c4de22c"
-    }
-   ],
-   "amends": [],
    "enacted_as": []
   },
   "1eedb9c6-3ee1-4e81-9db2-054d2c4de22c": {
@@ -4770,20 +5410,6 @@
      "id": "881305d4-ef28-4b88-b3b0-00fb864fed40"
     }
    ],
-   "enacted_as": []
-  },
-  "1a0cc52a-fc3a-441a-a540-3efea780f916": {
-   "status": "in force",
-   "repealed_by": [],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [
-    {
-     "title": "The Competition and Consumer Protection (Amendment) Act, 2023",
-     "id": "027ae1e6-1f27-4376-8347-197c1113e2f0"
-    }
-   ],
-   "amends": [],
    "enacted_as": []
   },
   "027ae1e6-1f27-4376-8347-197c1113e2f0": {
@@ -5518,20 +6144,6 @@
    ],
    "enacted_as": []
   },
-  "f5774fa5-90f1-4688-baba-3eed8706f2fd": {
-   "status": "in force",
-   "repealed_by": [],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [
-    {
-     "title": "The Petroleum (Exploration and Production) (Amendment) Act, 2021",
-     "id": "f6b23254-8d94-4bb5-be55-dfe3d56344ca"
-    }
-   ],
-   "amends": [],
-   "enacted_as": []
-  },
   "f6b23254-8d94-4bb5-be55-dfe3d56344ca": {
    "status": "amending Act",
    "repealed_by": [],
@@ -5546,20 +6158,6 @@
    ],
    "enacted_as": []
   },
-  "4e13d140-3f21-4ecb-b3e8-137b2263b766": {
-   "status": "in force",
-   "repealed_by": [],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [
-    {
-     "title": "The Electoral Commission of Zambia (Amendment) Act, 2019",
-     "id": "ac39d7f4-09a0-4ea8-bee2-acabe7acb704"
-    }
-   ],
-   "amends": [],
-   "enacted_as": []
-  },
   "ac39d7f4-09a0-4ea8-bee2-acabe7acb704": {
    "status": "amending Act",
    "repealed_by": [],
@@ -5568,8 +6166,8 @@
    "amended_by": [],
    "amends": [
     {
-     "title": "REPUBLIC OF ZAMBIA THE ELECTORAL COMMISSION ACT",
-     "id": "4e13d140-3f21-4ecb-b3e8-137b2263b766"
+     "title": "Electoral Commissi on of Zambia Act, 2016",
+     "id": "390298b1-7618-42cf-bbc4-393f3fadc2e7"
     }
    ],
    "enacted_as": []
@@ -6805,11 +7403,6 @@
  },
  "unresolved": [
   {
-   "by": "2a46a1c4-45db-4d97-beef-c88c142490f3",
-   "name": "Environmental Protecti on and Polluti on Control Act",
-   "evidence": "repeal and replace the Environmental Protecti on and Polluti on Control Act"
-  },
-  {
    "by": "fe976ae2-a240-43e3-bdb0-36448febe68f",
    "name": "Children Act",
    "evidence": "The Employment Act,1965,the Employment(Special Provisions) Act, 1966, the Employment of Young Persons and Children Act, 1933, and the Minimum Wages and Conditions of 270,274and 276 Employment Act,1982"
@@ -6840,16 +7433,6 @@
    "evidence": "repeal and replace the Constituency Development Fund Act"
   },
   {
-   "by": "390298b1-7618-42cf-bbc4-393f3fadc2e7",
-   "name": "Electoral Commissi on Act",
-   "evidence": "The Electoral Commissi on Act, 1996, is repealed"
-  },
-  {
-   "by": "390298b1-7618-42cf-bbc4-393f3fadc2e7",
-   "name": "Electoral Commissi on Act",
-   "evidence": "repeal and replace the Electoral Commissi on Act"
-  },
-  {
    "by": "718fa78f-8a12-4f1c-a1ff-147d2f57406e",
    "name": "Act (1) The Tourism",
    "evidence": "Act and Act (1) The Tourism and Hospitality Act, 2007 and the Zambia Tourism Board Act, 2007 are repealed"
@@ -6863,11 +7446,6 @@
    "by": "eb5a83a0-d03c-42c7-a971-6b61d010f8e7",
    "name": "Zambia Development Agency Act",
    "evidence": "repeal and replace the Zambia Development Agency Act"
-  },
-  {
-   "by": "1b187a0f-565b-4be7-8850-533548ceb6b9",
-   "name": "Adopti on Act",
-   "evidence": "The Legitimacy Act, 1929, the Juveniles Act, 1956, the Adopti on Act, 1956, and the Affiliati on and Maintenance of Acts Children Act, 1995 are repealed"
   },
   {
    "by": "1b187a0f-565b-4be7-8850-533548ceb6b9",
@@ -6888,41 +7466,6 @@
    "by": "d24e5053-cd4b-4754-ba87-4c7b884f0b90",
    "name": "Zambia Institute of Marketing Act",
    "evidence": "repeal and replace the Zambia Institute of Marketing Act"
-  },
-  {
-   "by": "2ec09317-4e6a-4f1a-b1da-ad2baacc740f",
-   "name": "Animal Identificati on Act",
-   "evidence": "The Animal Identificati on Act, 2010, is repealed"
-  },
-  {
-   "by": "2ec09317-4e6a-4f1a-b1da-ad2baacc740f",
-   "name": "Animal Identificati on Act",
-   "evidence": "The Animal Identificati on Act, 2010, is repealed"
-  },
-  {
-   "by": "2ec09317-4e6a-4f1a-b1da-ad2baacc740f",
-   "name": "Animal Identificati on Act",
-   "evidence": "repeal and replace the Animal Identificati on Act"
-  },
-  {
-   "by": "f8247c8a-d6b8-4f6e-9c46-ab07891ffbfa",
-   "name": "Zambia Institute of Hum an Resources Management provisions Act",
-   "evidence": "The Zambia Institute of Hum an Resources Management provisions Act, 1997, is repealed"
-  },
-  {
-   "by": "f8247c8a-d6b8-4f6e-9c46-ab07891ffbfa",
-   "name": "Zambia Institute of Hum an Resources Management Act",
-   "evidence": "repeal and replace the Zambia Institute of Hum an Resources Management Act"
-  },
-  {
-   "by": "dfdaaaa7-b1f7-4258-9c92-6f3e4cbe2f36",
-   "name": "Cott on Act",
-   "evidence": "The Cott on Act, 2005, is repealed"
-  },
-  {
-   "by": "dfdaaaa7-b1f7-4258-9c92-6f3e4cbe2f36",
-   "name": "Cott on Act",
-   "evidence": "repeal and replace the Cott on Act"
   },
   {
    "by": "9f87898a-b246-43c9-b4e9-81d23a798176",
@@ -7020,21 +7563,6 @@
    "evidence": "The Cyber Security and Cyber Crimes Act, 2021 is repealed"
   },
   {
-   "by": "09682849-189e-41c4-a6a8-3b22b21a15cc",
-   "name": "Valuati on Surveyors Act",
-   "evidence": "The Valuati on Surveyors Act is repealed"
-  },
-  {
-   "by": "09682849-189e-41c4-a6a8-3b22b21a15cc",
-   "name": "Valuati on Surveyors Act",
-   "evidence": "The Valuati on Surveyors Act is repealed"
-  },
-  {
-   "by": "09682849-189e-41c4-a6a8-3b22b21a15cc",
-   "name": "Valuati on Surveyors Act",
-   "evidence": "repeal and replace the Valuati on Surveyors Act"
-  },
-  {
    "by": "8d3ee593-9a33-4a46-a408-04adeb6f21e7",
    "name": "Electronic Communications and Transactions Act",
    "evidence": "repeal and replace the Electronic Communications and Transactions Act"
@@ -7045,11 +7573,6 @@
    "evidence": "The Border Management and Trade Facilitati on Act, 2018, is repealed"
   },
   {
-   "by": "9c99833a-0d24-40b3-82ec-f288cb2e98fa",
-   "name": "Border Management and Trade Facilitati on Act",
-   "evidence": "repeal and replace the Border Management and Trade Facilitati on Act"
-  },
-  {
    "by": "b1d202f0-7d73-46d0-9e6b-acc8b69d1119",
    "name": "Diseases Act",
    "evidence": "The Plant Pests and Diseases Act, 1958, is repealed"
@@ -7058,11 +7581,6 @@
    "by": "31abb2b8-7a72-483a-b31a-8e99b4636640",
    "name": "Financial Services Act",
    "evidence": "The Banking and Financial Services Act and the Money-lenders Act are repealed"
-  },
-  {
-   "by": "452919e4-d5b8-4b4c-b4ac-2036391a518d",
-   "name": "Anti-Corrupti on Commissi on Act",
-   "evidence": "repeal and replace the Anti-Corrupti on Commissi on Act"
   },
   {
    "by": "0879f7b3-0a45-4ee8-9ad5-34514240e6b7",
@@ -7115,11 +7633,6 @@
    "evidence": "The Immunities and Privileges Act, 1956, is repealed"
   },
   {
-   "by": "ddf3b6d3-7755-4741-b26e-3778da74d4ee",
-   "name": "Educati on Act",
-   "evidence": "repeal and replace the Educati on Act"
-  },
-  {
    "by": "0138f851-256f-4b0e-96c0-4da24c1d97a3",
    "name": "Hotels Act",
    "evidence": "repeal and replace the Hotels Act"
@@ -7148,11 +7661,6 @@
    "by": "62febb25-27d0-48e1-b522-3f78f397ee93",
    "name": "Applied Act or Ordinance or part there of",
    "evidence": "Where any Act, Applied Act or Ordinance or part there of is repealed"
-  },
-  {
-   "by": "ad55d615-b0c2-4b7d-99d2-cc94aeccd877",
-   "name": "Ionising Radiati on Act",
-   "evidence": "repeal and replace the Ionising Radiati on Act"
   },
   {
    "by": "e2395f5a-fc2f-4a75-9846-c4ce274886e2",
@@ -7210,31 +7718,11 @@
    "evidence": "Part X (2) Part X of the Local Government Act is repealed"
   },
   {
-   "by": "f48a8d83-a604-4e16-9683-03925115553d",
-   "name": "Commissi on f or Investigations Act",
-   "evidence": "The Commissi on f or Investigations Act, 1991, is repealed"
-  },
-  {
-   "by": "f48a8d83-a604-4e16-9683-03925115553d",
-   "name": "Commissi on f or Investigations Act",
-   "evidence": "repeal and replace the Commissi on f or Investigations Act"
-  },
-  {
-   "by": "27c32617-5b34-4255-bf5f-b3b900d209c6",
-   "name": "Immigrati on and Deportati on Act",
-   "evidence": "repeal and replace the Immigrati on and Deportati on Act"
-  },
-  {
    "by": "2d87cd8b-3107-4186-9c48-6c352ec2de7f",
    "name": "National Pensions Scheme Act",
    "evidence": "The National Pensions Scheme Act, is repealed"
   },
   {
-   "by": "2d87cd8b-3107-4186-9c48-6c352ec2de7f",
-   "name": "National Pensi on Scheme Act",
-   "evidence": "repeal and replace the National Pensi on Scheme Act"
-  },
-  {
    "by": "9c7a7161-853f-4230-bac8-801ada7c8409",
    "name": "Deportati on Act",
    "evidence": "The Immigrati on and Deportati on Act is repealed"
@@ -7243,11 +7731,6 @@
    "by": "9c7a7161-853f-4230-bac8-801ada7c8409",
    "name": "Deportati on Act",
    "evidence": "The Immigrati on and Deportati on Act is repealed"
-  },
-  {
-   "by": "9c7a7161-853f-4230-bac8-801ada7c8409",
-   "name": "Immigrati on and Deportati on Act",
-   "evidence": "repeal and replace the Immigrati on and Deportati on Act"
   },
   {
    "by": "f4edb04e-e319-4d44-b2de-572bb713a347",
@@ -7255,51 +7738,11 @@
    "evidence": "repeal and replace the National Assembly Speaker\u2019s Retirement Benef its Act"
   },
   {
-   "by": "fff725a7-1864-4784-bc48-634de9e1b851",
-   "name": "Local Authorities Superannuati on Fund Act",
-   "evidence": "The Local Authorities Superannuati on Fund Act is repealed"
-  },
-  {
-   "by": "fff725a7-1864-4784-bc48-634de9e1b851",
-   "name": "Local Authorities Superannuati on Fund Act",
-   "evidence": "repeal and replace the Local Authorities Superannuati on Fund Act"
-  },
-  {
-   "by": "7470bba2-459b-4010-bb94-deccac103d8b",
-   "name": "Benef its of Former Presidents Act",
-   "evidence": "The Benef its of Former Presidents Act is repealed"
-  },
-  {
-   "by": "7470bba2-459b-4010-bb94-deccac103d8b",
-   "name": "Benef its of Former Presidents Act",
-   "evidence": "repeal and replace the Benef its of Former Presidents Act"
-  },
-  {
-   "by": "61c57f1a-51ec-46d1-8712-410770cb20c7",
-   "name": "Hum an Rights Commissi on Act",
-   "evidence": "The Hum an Rights Commissi on Act is repealed"
-  },
-  {
-   "by": "61c57f1a-51ec-46d1-8712-410770cb20c7",
-   "name": "Hum an Rights Commissi on Act",
-   "evidence": "The Hum an Rights Commissi on Act is repealed"
-  },
-  {
-   "by": "61c57f1a-51ec-46d1-8712-410770cb20c7",
-   "name": "Hum an Rights Commissi on Act",
-   "evidence": "repeal and replace the Hum an Rights Commissi on Act"
-  },
-  {
    "by": "99bcb531-ea45-462c-a603-d73b6cae5dc8",
    "name": "Sanitati on Act",
    "evidence": "The Water Supply and Sanitati on Act is repealed"
   },
   {
-   "by": "99bcb531-ea45-462c-a603-d73b6cae5dc8",
-   "name": "Water Supply and Sanitati on Act",
-   "evidence": "repeal and replace the Water Supply and Sanitati on Act"
-  },
-  {
    "by": "e358a099-76dc-4e9a-8c20-06211339f715",
    "name": "Zambia Wildlife Act",
    "evidence": "The Zambia Wildlife Act, 1998, is repealed"
@@ -7308,21 +7751,6 @@
    "by": "e358a099-76dc-4e9a-8c20-06211339f715",
    "name": "Zambia Wildlife Act",
    "evidence": "The Zambia Wildlife Act, 1998, is repealed"
-  },
-  {
-   "by": "5e438c4c-52ae-45a0-9770-db96b93916c2",
-   "name": "Agricultural Cred its Act",
-   "evidence": "The Agricultural Cred its Act is repealed"
-  },
-  {
-   "by": "5e438c4c-52ae-45a0-9770-db96b93916c2",
-   "name": "Agricultural Cred its Act",
-   "evidence": "The Agricultural Cred its Act is repealed"
-  },
-  {
-   "by": "5e438c4c-52ae-45a0-9770-db96b93916c2",
-   "name": "Agricultural Cred its Act",
-   "evidence": "repeal and replace the Agricultural Cred its Act"
   },
   {
    "by": "54895b6c-d555-4c04-a0e2-2101bd52b98f",
@@ -7380,21 +7808,6 @@
    "evidence": "repeal and replace the Patents and Companies Registrati on Agency Act"
   },
   {
-   "by": "57b24226-ea66-419b-8888-00859c6bb066",
-   "name": "Energy Regulati on Act",
-   "evidence": "The Energy Regulati on Act,1995is repealed"
-  },
-  {
-   "by": "57b24226-ea66-419b-8888-00859c6bb066",
-   "name": "Energy Regulati on Act",
-   "evidence": "The Energy Regulati on Act,1995is repealed"
-  },
-  {
-   "by": "57b24226-ea66-419b-8888-00859c6bb066",
-   "name": "Energy Regulati on Act",
-   "evidence": "repeal and replace the Energy Regulati on Act"
-  },
-  {
    "by": "dc5ef809-9fbf-4599-b719-2e80a5f97e7b",
    "name": "Official Secrets Act",
    "evidence": "The Official Secrets Act, 1967, is repealed"
@@ -7403,11 +7816,6 @@
    "by": "dc5ef809-9fbf-4599-b719-2e80a5f97e7b",
    "name": "Official Secrets Act",
    "evidence": "The Official Secrets Act, 1967, is repealed"
-  },
-  {
-   "by": "1a0cc52a-fc3a-441a-a540-3efea780f916",
-   "name": "Competiti on and Fair Trading Act",
-   "evidence": "repeal and replace the Competiti on and Fair Trading Act"
   },
   {
    "by": "ffc4fb9d-8f68-4552-a994-c1051a1b9430",
@@ -7425,19 +7833,9 @@
    "evidence": "The Food and Nutriti on Commissi on Act,is repealed"
   },
   {
-   "by": "31b338dc-c41c-4396-93c6-6589bc708b10",
-   "name": "National Food and Nutriti on Commissi on Act",
-   "evidence": "repeal and replace the National Food and Nutriti on Commissi on Act"
-  },
-  {
    "by": "a71ca53e-e0b5-4d12-aeae-5a1ce815b4b9",
    "name": "Liqu or Licensing Act",
    "evidence": "repeal and replace the Liqu or Licensing Act"
-  },
-  {
-   "by": "f08ed135-7690-48b4-9a21-1113c4a3ad8c",
-   "name": "Petroleum (Explorati on and Producti on) Act",
-   "evidence": "repeal and replace the Petroleum (Explorati on and Producti on) Act"
   },
   {
    "by": "6a82b8a6-3a57-48b5-9566-83e34e46afdb",
@@ -7463,21 +7861,6 @@
    "by": "65dd452c-210f-4425-b1d4-22e97bea28b5",
    "name": "Measures Act",
    "evidence": "The Weights and Measures Act,1994, is repealed"
-  },
-  {
-   "by": "0ab3d460-4e90-4ae7-8c65-62acec2a913f",
-   "name": "Judicature Administrati on Act",
-   "evidence": "The Judicature Administrati on Act, 1994, is repealed"
-  },
-  {
-   "by": "0ab3d460-4e90-4ae7-8c65-62acec2a913f",
-   "name": "Judicature Administrati on Act",
-   "evidence": "The Judicature Administrati on Act, 1994, is repealed"
-  },
-  {
-   "by": "0ab3d460-4e90-4ae7-8c65-62acec2a913f",
-   "name": "Judicature Administrati on Act",
-   "evidence": "repeal and replace the Judicature Administrati on Act"
   },
   {
    "by": "28492165-2090-4527-a773-03c480ab4f94",

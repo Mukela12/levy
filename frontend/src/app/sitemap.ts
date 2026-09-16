@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next'
 import { listActs, SITE_URL } from '@/lib/server/corpus'
 import { answers } from '@/lib/server/answers'
 
-export const revalidate = 86400
+export const revalidate = 21600
 
 // Public, indexable surface. Per-user routes (saved chats, documents, templates,
 // profile) stay private and out of the index — see robots.ts. The bulk of the

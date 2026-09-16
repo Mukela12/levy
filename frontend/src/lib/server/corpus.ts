@@ -92,7 +92,7 @@ export async function lawStatuses(): Promise<Record<string, LawStatus>> {
   try {
     const api = process.env.NEXT_PUBLIC_API_URL
     if (!api) return {}
-    const res = await fetch(`${api}/api/law-map`, { signal: AbortSignal.timeout(10000), next: { revalidate: 86400 } })
+    const res = await fetch(`${api}/api/law-map`, { signal: AbortSignal.timeout(10000), next: { revalidate: 21600 } })
     if (!res.ok) return _statusMemo?.map ?? {}
     const map = ((await res.json()) as { documents?: Record<string, LawStatus> }).documents ?? {}
     _statusMemo = { at: Date.now(), map }

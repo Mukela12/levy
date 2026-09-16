@@ -82,6 +82,29 @@ def year_of(text: str) -> int | None:
     return int(m[-1][0] + m[-1][1]) if m else None
 
 
+# The scanned Acts OCR a word into two: "the Educati on Act", "Commissi on",
+# "Hum an Rights", "Cred its". A repeal clause naming the "Educati on Act"
+# must still match the EDUCATION ACT in the library, so the splits are sewn
+# back up on both sides of the comparison. Each rule needs a stem that cannot
+# stand alone as a word, so "Commission on Human Rights" is left intact.
+_OCR_SPLITS = [
+    (re.compile(r"\b([a-z]*(?:ti|si|ssi|zi))\s+on\b"), r"\1on"),
+    (re.compile(r"\b(hum|afric|lo|germ|org)\s+an\b"), r"\1an"),
+    (re.compile(r"\b(cred|benef|prof|prod|un)\s+its\b"), r"\1its"),
+    (re.compile(r"\b(sm|sh|met)\s+all\b"), r"\1all"),
+    (re.compile(r"\b(th|wh)\s+is\b"), r"\1is"),
+    (re.compile(r"\b(f|maj|min)\s+or\b"), r"\1or"),
+    (re.compile(r"\b(cott|butt|carb)\s+on\b"), r"\1on"),
+    (re.compile(r"\b(st|br|dem)\s+and\b"), r"\1and"),
+]
+
+
+def unsplit(s: str) -> str:
+    for rx, rep in _OCR_SPLITS:
+        s = rx.sub(rep, s)
+    return s
+
+
 def norm(name: str) -> str:
     """Normalise a title for matching: drop boilerplate, case, punctuation, year."""
     s = re.sub(r"\[[^\]]*\]", " ", name or "")          # [repealed by ...]
@@ -94,7 +117,7 @@ def norm(name: str) -> str:
     s = re.sub(r",?\s*(19|20)\d{2}\b", " ", s)
     s = re.sub(r"^the\s+", "", s.strip(), flags=re.I)
     s = re.sub(r"[^a-z0-9 ]+", " ", s.lower())
-    return re.sub(r"\s+", " ", s).strip()
+    return re.sub(r"\s+", " ", unsplit(s)).strip()
 
 
 def candidate_names(text: str) -> list[str]:

@@ -3,7 +3,10 @@ import Link from 'next/link'
 import { listActs, SITE_URL, SHARE_IMAGE } from '@/lib/server/corpus'
 import { ActsDirectory } from '@/components/canopy/acts-directory'
 
-export const revalidate = 86400 // refresh daily
+// The library gains Acts between deploys, and a repeal changes what a page
+// should say, so the public legislation pages re-read the corpus every six
+// hours instead of once a day.
+export const revalidate = 21600
 
 export const metadata: Metadata = {
   title: 'Acts of Parliament of Zambia',
