@@ -45,15 +45,20 @@ def get_pdf_hash(pdf_path: str) -> str:
 
 def fix_concatenated_words(text: str) -> str:
     """
-    Fix common PDF extraction issues where words get concatenated.
-    E.g., "Shorttitleandcommencement" → "Short title and commencement"
+    Separate the two kinds of glue PDF extraction really produces: words run
+    together at a case change ("ActThe") and a short function word fused to
+    the next one ("ofthe", "inany").
+
+    An earlier rule also split any word that ENDED in a common word, which
+    rewrote clean text: "shall" became "sh all", "section" "secti on",
+    "company" "comp any", "within" "with in". It ran over about 800 Acts and
+    every uploaded PDF before it was caught (16 Sep 2026), and it never split
+    the glued text it was written for. Do not bring it back; a word may only
+    be split where the whole token is known glue.
     """
     # Insert space before lowercase→uppercase transitions (camelCase artifacts)
     text = re.sub(r"([a-z])([A-Z])", r"\1 \2", text)
-    # Insert space before common lowercase words that got stuck to previous word
-    common_words = r"(the|and|or|of|in|to|for|with|by|from|an|at|on|is|as|that|which|shall|may|not|be|has|have|had|was|were|are|been|being|this|any|all|such|each|other|than|but|if|no|its|under|into|upon)"
-    text = re.sub(rf"([a-z])({common_words})\b", r"\1 \2", text)
-    # Fix "ofthe" "inthe" etc.
+    # "ofthe", "inthe", "toany": the whole token is two function words
     text = re.sub(r"\b(of|in|to|by|for|and|or|the|with)(the|a|an|any|all|such|this|that)\b", r"\1 \2", text)
     return text
 
