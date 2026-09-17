@@ -13,8 +13,11 @@ number that continues the numbering.
   stage      (default) parse each stored PDF (or its transcription, given by
              --parser-files) with the fixed parser and write
              <work>/staged/<id>.json. Reads Supabase only; no embeddings.
-  --execute  embed and replace, exactly as scripts/reparse_split_acts.py does
-             (harvest key only, new rows before old ones are deleted).
+  --embed-ahead  embed every staged document not yet replaced (harvest key
+             only) and keep the vectors in <work>/vectors, so the database
+             writes can finish after the key is revoked.
+  --execute  replace each document's chunks, new rows before old ones are
+             deleted, using saved vectors where they exist.
 
 A document is staged "ok" only when
   * every body line its current chunks hold is still there after the
@@ -167,6 +170,128 @@ def stage(work: Path, ids: list[str], parser_files: dict[str, str], workers: int
                 print(f"  parsed {done}/{len(ready)}", flush=True)
 
 
+def _vectors(work: Path, doc_id: str) -> Path:
+    return work / "vectors" / f"{doc_id}.f32"
+
+
+def _replaced(work: Path) -> set[str]:
+    return {json.loads(line)["id"] for log in work.glob("executed.*.jsonl")
+            for line in log.read_text().splitlines() if line.strip()}
+
+
+def _embed(texts: list[str]) -> list[list[float]]:
+    from app.services.embedder import get_embeddings
+    vectors: list[list[float]] = []
+    for i in range(0, len(texts), 256):
+        vectors += get_embeddings(texts[i:i + 256])
+    if len(vectors) != len(texts) or any(len(v) != 768 for v in vectors):
+        raise RuntimeError(f"embedded {len(vectors)} of {len(texts)}")
+    return vectors
+
+
+def embed_ahead(work: Path, ids: list[str], max_tokens: int) -> None:
+    """Embed every staged document not yet replaced and keep the vectors.
+
+    Database writes slowed to about eight seconds per five rows on 17 Sep
+    (reads stayed fast). With the vectors on disk the writes can finish
+    after the harvest key is revoked.
+    """
+    from array import array
+    base._harvest_key()
+    (work / "vectors").mkdir(exist_ok=True)
+    replaced, spent, count = _replaced(work), 0, 0
+    for doc_id in ids:
+        path = _vectors(work, doc_id)
+        st = json.loads((work / "staged" / f"{doc_id}.json").read_text())
+        if doc_id in replaced or path.exists() or st["status"] != "ok":
+            continue
+        if spent + st["tokens"] > max_tokens:
+            print(f"budget stop before {st['title'][:50]} ({spent} tokens)", flush=True)
+            break
+        flat = array("f")
+        for v in _embed([c["content"] for c in st["chunks"]]):
+            flat.extend(v)
+        tmp = path.with_suffix(".tmp")
+        tmp.write_bytes(flat.tobytes())
+        tmp.replace(path)
+        spent += st["tokens"]
+        count += 1
+    print(f"embedded {count} documents, {spent} tokens (${spent * 0.02 / 1e6:.3f})", flush=True)
+
+
+def execute(work: Path, ids: list[str], max_tokens: int, shard: str) -> None:
+    """Replace each staged document's chunks; reuse saved vectors when present.
+
+    Same order of operations as reparse_split_acts.execute: new rows first,
+    then the old ones deleted, then the count checked. Every step is safe to
+    repeat, so a killed shard is simply started again.
+    """
+    import uuid
+    from array import array
+    k, n = (int(x) for x in shard.split("/"))
+    ids = [i for j, i in enumerate(ids) if j % n == k - 1]
+    log = work / f"executed.{k}of{n}.jsonl"
+    db = _db_with_timeout()
+    done = _replaced(work)
+    spent, keyed = 0, False
+    for pos, doc_id in enumerate(ids, 1):
+        if doc_id in done:
+            continue
+        st = json.loads((work / "staged" / f"{doc_id}.json").read_text())
+        if st["status"] != "ok":
+            continue
+        texts = [c["content"] for c in st["chunks"]]
+        path = _vectors(work, doc_id)
+        if path.exists():
+            flat = array("f")
+            flat.frombytes(path.read_bytes())
+            vectors = [flat[i:i + 768].tolist() for i in range(0, len(flat), 768)]
+            if len(vectors) != len(texts):
+                raise RuntimeError(f"{doc_id}: {len(vectors)} saved vectors for {len(texts)} chunks")
+        else:
+            if spent + st["tokens"] > max_tokens:
+                print(f"budget stop before {st['title'][:50]} ({spent} tokens)", flush=True)
+                break
+            if not keyed:
+                base._harvest_key()
+                keyed = True
+            vectors = _embed(texts)
+            spent += st["tokens"]
+        old_ids = [r["id"] for r in base._all_chunks(db, doc_id, "id")]
+        rows = []
+        for c, v in zip(st["chunks"], vectors):
+            meta = dict(c["metadata"])
+            meta["ingestion_run"] = RUN_TAG
+            rows.append({"id": str(uuid.uuid4()), "document_id": doc_id, "content": c["content"],
+                         "summary": c["summary"], "embedding": v, "metadata": meta,
+                         "chunk_index": c["chunk_index"], "page_start": c["page_start"], "page_end": c["page_end"]})
+        base._insert(db, rows)
+        db.table("legal_documents").update({"total_chunks": len(rows), "total_sections": st["sections"]}).eq("id", doc_id).execute()
+        for i in range(0, len(old_ids), 100):
+            db.table("legal_chunks").delete().in_("id", old_ids[i:i + 100]).execute()
+        count = db.table("legal_chunks").select("id", count="exact").eq("document_id", doc_id).limit(1).execute().count
+        if count != len(rows):
+            raise RuntimeError(f"{doc_id}: {count} chunks after replace, expected {len(rows)}")
+        with log.open("a") as fh:
+            fh.write(json.dumps({"id": doc_id, "chunks": len(rows), "tokens": st["tokens"]}) + "\n")
+        print(f"[{pos}/{len(ids)}] {st['title'][:52]:54} {len(old_ids):>5} -> {len(rows):<5} "
+              f"{'saved vectors' if path.exists() else 'embedded'}", flush=True)
+
+
+def _db_with_timeout():
+    """The shared client has no request timeout. On 17 Sep three shards hung
+    for over an hour on dead connections after their embeddings came back.
+    Fail after a minute instead: inserts retry, and a restarted shard picks
+    up where it stopped (every step is safe to repeat)."""
+    import os
+
+    from dotenv import load_dotenv
+    from supabase import ClientOptions, create_client
+    load_dotenv(REPO / "backend" / ".env")
+    return create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_KEY"],
+                         options=ClientOptions(postgrest_client_timeout=60))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--work", type=Path, required=True)
@@ -175,13 +300,17 @@ def main() -> int:
     ap.add_argument("--workers", type=int, default=6)
     ap.add_argument("--min-gain", type=int, default=80, help="characters of recovered body text needed to replace")
     ap.add_argument("--execute", action="store_true")
+    ap.add_argument("--embed-ahead", action="store_true", help="embed and save vectors for every document not yet replaced")
     ap.add_argument("--max-tokens", type=int, default=24_000_000, help="hard stop per shard; $0.02 per million")
     ap.add_argument("--shard", default="1/1", help="k/n: handle every n-th document starting at k (run n processes)")
     args = ap.parse_args()
     ids = [line.strip() for line in args.ids.read_text().splitlines() if line.strip()]
-    if args.execute:
-        base.RUN_TAG = RUN_TAG
-        base.execute(args.work, ids, args.max_tokens, args.shard)
+    if args.embed_ahead:
+        base._db()
+        embed_ahead(args.work, ids, args.max_tokens)
+    elif args.execute:
+        base._db()   # loads backend/.env
+        execute(args.work, ids, args.max_tokens, args.shard)
     else:
         parser_files = json.loads(args.parser_files.read_text()) if args.parser_files else {}
         stage(args.work, ids, parser_files, args.workers, args.min_gain)
