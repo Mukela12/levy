@@ -109,6 +109,7 @@ def display_name(title: str, year: int | str | None = None) -> str:
     """
     t = clean_title(re.sub(r"\(No\.?[^)]*\)", " ", (title or "").replace("_", " ")))
     t = re.sub(r"\(\s+", "(", re.sub(r"\s+\)", ")", re.sub(r"\s+", " ", t))).strip(" ,")
+    t = re.sub(r",\s*(Act|Code)\b", r" \1", t)   # "Technologies, Act"
     m = _YEAR_END.search(t)
     name = t[:m.start()].strip(" ,") if m else t
     if name and not re.search(r"\b(act|code|ordinance|constitution)\b", name, re.I):

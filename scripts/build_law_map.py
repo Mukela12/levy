@@ -42,7 +42,7 @@ from app.db.supabase import get_db  # noqa: E402
 
 OUT = REPO / "backend" / "app" / "data" / "law_map.json"
 HEAD_CHUNKS = 2     # long title lives here
-REPEAL_HITS = 8     # chunks mentioning "repeal", wherever they sit in the Act
+REPEAL_HITS = 12    # chunks with a repeal clause or long title, then any "repeal" mention
 
 # "... the X Act, 1956, and the Y Act, 1995 are repealed". Scans allow missing
 # spaces ("arerepealed") because the corpus is OCR'd from scanned PDFs.
@@ -94,7 +94,7 @@ def clean_clause(text: str) -> str:
     t = re.sub(r"(?i)(are|is)(repealed)", r"\1 \2", t)
     # "Act No.22 of the Public Health Act ... are repealed": the full stop in
     # "No." ended the clause there and lost "sections 79 and 83 of".
-    t = re.sub(r"\b(No|Nos|Cap)\.\s*(?=\d)", r"\1 ", t)
+    t = re.sub(r"\b(No|Nos|Cap|Caps)\.\s*(?=\d)", r"\1 ", t)
     t = MARGIN.sub(" ", t)
     # Margin Chapter numbers spliced into a name: "the Minimum Wages and
     # Conditions of 270,274and 276 Employment Act,1982" (Employment Code Act,
@@ -208,8 +208,19 @@ async def fetch_edge_chunks(docs: list[dict]) -> dict[str, str]:
         queries = [
             {"select": "content", "document_id": f"eq.{d['id']}",
              "chunk_index": f"lt.{HEAD_CHUNKS}", "order": "chunk_index"},
+            # The repeal section itself first. A plain "*repeal*" match with a
+            # limit returned the definitions ("the repealed Act" means ...)
+            # once the Companies Act, 2017 was re-parsed, and s. 376 fell
+            # outside the limit (17 Sep 2026).
             {"select": "content", "document_id": f"eq.{d['id']}",
-             "content": "ilike.*repeal*", "limit": str(REPEAL_HITS)},
+             "or": "(content.ilike.*is repealed*,content.ilike.*are repealed*,content.ilike.*isrepealed*,"
+                   "content.ilike.*arerepealed*,content.ilike.*hereby repealed*,"
+                   # the long title: "An Act to ... repeal and replace the X Act"
+                   "content.ilike.*repeal and replace*,content.ilike.*repealandreplace*,"
+                   "content.ilike.*repeals and replaces*)",
+             "order": "chunk_index.desc", "limit": str(REPEAL_HITS)},
+            {"select": "content", "document_id": f"eq.{d['id']}",
+             "content": "ilike.*repeal*", "order": "chunk_index.desc", "limit": str(REPEAL_HITS)},
             # Section 1 is not always in the first chunks (an arrangement of
             # sections can come first), and it says when the Act starts.
             {"select": "content", "document_id": f"eq.{d['id']}",
