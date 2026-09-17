@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   // "Cotton Act, 2025 (2025)" reads like a mistake.
   const dated = act.year && !act.name.includes(String(act.year)) ? ` (${act.year})` : ''
   const desc = repealed
-    ? `${act.name}: a REPEALED Zambian Act${act.status?.repealedBy.length ? `, replaced by ${act.status.repealedBy[0]}` : ''}. Read its sections for the law as it stood, and ask Levy what applies now.`
+    ? `${act.name}: a REPEALED Zambian Act${act.status?.repealedBy.length ? `, replaced by the ${act.status.repealedBy[0]}` : ''}. Read its sections for the law as it stood, and ask Levy what applies now.`
     : `${act.name}${dated}: a Zambian Act of Parliament. Browse its sections and ask Levy questions answered with citations to the legislation.`
   return {
     title: `${act.name}${dated} | Zambian Law`,
@@ -102,7 +102,7 @@ export default async function ActPage({ params }: { params: Promise<{ slug: stri
             {replacement ? (
               <>It was replaced by <Link href={`/acts/${replacement.slug}`}>{replacement.name}</Link>. Read this one for the law as it stood, not as it is now.</>
             ) : act.status.repealedBy.length ? (
-              <>It was replaced by {act.status.repealedBy.join(', ')}. Read this one for the law as it stood, not as it is now.</>
+              <>It was replaced by the {act.status.repealedBy.join(', the ')}. Read this one for the law as it stood, not as it is now.</>
             ) : (
               <>It is no longer in force. Read it for the law as it stood, not as it is now.</>
             )}
@@ -117,7 +117,7 @@ export default async function ActPage({ params }: { params: Promise<{ slug: stri
             {replacement ? (
               <><Link href={`/acts/${replacement.slug}`}>{replacement.name}</Link> has been passed to replace it</>
             ) : (
-              <>{act.status.repealedBy.join(', ') || 'A newer Act'} has been passed to replace it</>
+              <>{act.status.repealedBy.length ? `The ${act.status.repealedBy.join(', the ')}` : 'A newer Act'} has been passed to replace it</>
             )}, but it only starts on a date the Minister sets by statutory instrument. Check whether that has happened before relying on either.
           </div>
         </div>

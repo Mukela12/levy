@@ -11,6 +11,9 @@
  *    the library matched. A conflict is shown as "check citation".
  *  - Missing audit data is neutral ("no citation check recorded"), never a
  *    pending spinner and never a positive badge.
+ *  - An Act the law map records as repealed is never "verified": being in
+ *    the library is not the same as being law. A repeal that has passed but
+ *    not started leaves the badge alone and is shown as a note.
  */
 import type { ChunkUsed, CitationVerdict, WebSource } from '@/lib/api'
 import type { MessageBlock } from '@/components/chat/chat-message'
@@ -30,6 +33,8 @@ export interface SourceRow {
   preview?: string
   conflict: boolean
   foreign: boolean
+  lawStatus?: 'repealed' | 'repeal pending'
+  replacedBy: string[]
   verification: SourceVerification
 }
 
@@ -50,7 +55,8 @@ export function safeSourceUrl(value?: string | null): string | null {
   }
 }
 
-const yearOf = (s?: string) => String(s || '').match(/\b(?:19|20)\d{2}\b/)?.[0]
+// Not from a "[repealed by the Road Traffic Act, 2002]" note in a title.
+const yearOf = (s?: string) => String(s || '').replace(/\[[^\]]*\]/g, ' ').match(/\b(?:19|20)\d{2}\b/)?.[0]
 const numberOf = (s?: string) => String(s || '').match(/\bNo\.?\s*(\d+)/i)?.[1]
 
 /** The answer cited a number or year that differs from the matched instrument. */
@@ -92,6 +98,7 @@ export function sourceModel(input: {
         verdicts: [],
         conflict: false,
         foreign: false,
+        replacedBy: [],
         verification: 'none',
       }
       docs.set(key, row)
@@ -119,6 +126,7 @@ export function sourceModel(input: {
         verdicts: [],
         conflict: false,
         foreign: false,
+        replacedBy: [],
         verification: 'none',
       }
       rows.push(row)
@@ -131,10 +139,15 @@ export function sourceModel(input: {
   for (const row of rows) {
     row.conflict = row.verdicts.some(citationConflict)
     row.foreign = row.verdicts.some((c) => c.foreign === true)
+    const flagged = row.verdicts.filter((c) => c.status === 'verified' && c.law_status)
+    row.lawStatus = flagged.some((c) => c.law_status === 'repealed')
+      ? 'repealed'
+      : flagged.length ? 'repeal pending' : undefined
+    row.replacedBy = Array.from(new Set(flagged.filter((c) => c.law_status === row.lawStatus).flatMap((c) => c.replaced_by || [])))
     row.verification =
       state !== 'complete'
         ? 'none'
-        : row.verdicts.some((c) => c.status !== 'verified' || !c.document_id) || row.conflict || row.foreign
+        : row.verdicts.some((c) => c.status !== 'verified' || !c.document_id) || row.conflict || row.foreign || row.lawStatus === 'repealed'
           ? 'review'
           : row.verdicts.length
             ? 'verified'
@@ -158,6 +171,7 @@ export function sourceModel(input: {
       verdicts: [],
       conflict: false,
       foreign: false,
+      replacedBy: [],
       verification: 'none',
     })
   })

@@ -17,7 +17,7 @@ test('weekly edition has bounded dates and original safe sources', () => {
   }
 })
 test('new 3D assets are present as PNGs with alpha-capable color type', () => {
-  for (const name of ['irac-scales','matters-case']) {
+  for (const name of ['irac-scales']) {  // matters-case.png left with the Matters redesign
     const data = fs.readFileSync(new URL(`../public/assets/canopy-actions/${name}.png`, import.meta.url))
     assert.equal(data.subarray(1,4).toString(), 'PNG')
     assert.equal(data[25], 6)

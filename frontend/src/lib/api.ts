@@ -37,6 +37,10 @@ export interface CitationVerdict {
   title?: string
   /** An English or other foreign authority: fairly outside the Zambian library. */
   foreign?: boolean
+  /** Set only when the law map is sure the cited Act is no longer (or soon not) law. */
+  law_status?: 'repealed' | 'repeal pending'
+  /** Names of the Acts that repealed it, or will. */
+  replaced_by?: string[]
 }
 
 interface ChunkUsed {

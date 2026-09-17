@@ -378,6 +378,12 @@ export default function NewChatPage() {
                   : c,
               ),
             })),
+          // Guests get the same citation checks, repealed-Act flags included.
+          onCitationAudit: (citations) =>
+            updateLast((last) => ({
+              ...last,
+              blocks: [...(last.blocks ?? []), { kind: 'citation_audit', citations }],
+            })),
           onArtifact: (artifact) =>
             updateLast((last) => {
               const existing = last.artifacts ?? []

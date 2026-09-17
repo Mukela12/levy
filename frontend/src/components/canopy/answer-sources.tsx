@@ -5,7 +5,7 @@
  *
  * Rows come from the typed source model: retrieved passages grouped by
  * document, audit verdicts (verified / not in library / foreign / conflicting
- * number or year) and web results. Only an actual verified verdict with a
+ * number or year / repealed) and web results. Only an actual verified verdict with a
  * document id earns the positive badge, and the badge means "matched in
  * Levy's library", nothing more; the explainer says so in words.
  */
@@ -28,10 +28,19 @@ function ReviewSeal({ size = 22 }: { size?: number }) {
 
 function badgeLabel(row: SourceRow): string {
   if (row.verification === 'verified') return 'Verified'
+  if (row.lawStatus === 'repealed') return 'Repealed'
   if (row.foreign) return 'Foreign authority'
   if (row.conflict) return 'Check citation'
   if (row.documentId) return 'Check result'
   return 'Not in library'
+}
+
+/** "Repealed · replaced by the Children's Code Act, 2022" */
+function lawStatusText(row: SourceRow): string | null {
+  const by = row.replacedBy.join(' and ')
+  if (row.lawStatus === 'repealed') return by ? `Repealed · replaced by the ${by}` : 'Repealed'
+  if (row.lawStatus === 'repeal pending') return by ? `Still in force · the ${by} will replace it once it starts` : 'Still in force · a replacement has been passed'
+  return null
 }
 
 function Badge({ row, onClick }: { row: SourceRow; onClick: () => void }) {
@@ -126,6 +135,9 @@ export function AnswerSources({ citations, webSources, blocks, onOpenPassage, on
                     {row.title}
                     <ArrowUpRight size={14} />
                   </button>
+                  {row.lawStatus && (
+                    <div className={'cp-source-law' + (row.lawStatus === 'repealed' ? ' is-repealed' : ' is-pending')}>{lawStatusText(row)}</div>
+                  )}
                   <div className="cp-source-context">
                     {row.passages.length ? (
                       <>
@@ -178,7 +190,8 @@ export function AnswerSources({ citations, webSources, blocks, onOpenPassage, on
             <h3>Matched in Levy’s library.</h3>
           </div>
           <p>The badge means the authority named in the answer matched a document in the library.</p>
-          <p>It does not confirm the exact quotation, that the passage supports the answer, or that the law is still current.</p>
+          <p>It does not confirm the exact quotation or that the passage supports the answer.</p>
+          <p>An Act the library records as repealed is marked Repealed instead, with the Act that replaced it.</p>
           <div className="cp-verify-boundary"><Info size={17} /><span>Search relevance scores and web links are separate from citation verification.</span></div>
         </Dialog>
       )}
@@ -194,28 +207,34 @@ export function AnswerSources({ citations, webSources, blocks, onOpenPassage, on
                 <h3>
                   {detail.verification === 'verified'
                     ? 'Authority matched in the library'
-                    : detail.foreign
-                      ? 'Foreign authority · check the original report'
-                      : detail.conflict
-                        ? 'Citation details need review'
-                        : detail.type === 'web'
-                          ? 'A web link is not a verified citation'
-                          : detail.verdicts.length
-                            ? 'No confirmed library match'
-                            : 'No citation verdict recorded'}
+                    : detail.lawStatus === 'repealed' && !detail.conflict
+                      ? 'This Act has been repealed'
+                      : detail.foreign
+                        ? 'Foreign authority · check the original report'
+                        : detail.conflict
+                          ? 'Citation details need review'
+                          : detail.type === 'web'
+                            ? 'A web link is not a verified citation'
+                            : detail.verdicts.length
+                              ? 'No confirmed library match'
+                              : 'No citation verdict recorded'}
                 </h3>
                 <p>
                   {detail.verification === 'verified'
-                    ? 'Check the passage and the document’s current status before relying on the answer.'
-                    : detail.foreign
-                      ? 'This authority was identified as outside the Zambian library. Check its original report and its relevance to the Zambian question.'
-                      : detail.conflict
-                        ? 'The number or year in the answer differs from the library record. Check which instrument was intended.'
-                        : detail.type === 'web'
-                          ? 'Review the publisher, publication date and source content directly.'
-                          : detail.verdicts.some((c) => c.status === 'not_found')
-                            ? 'Levy could not match this authority in its library. It may exist elsewhere; this is not a finding that it is invented.'
-                            : 'A missing or incomplete check cannot establish verification.'}
+                    ? detail.lawStatus === 'repeal pending'
+                      ? `This Act is still law, but ${detail.replacedBy.length ? `the ${detail.replacedBy.join(' and ')}` : 'a new Act'} will replace it once the Minister sets a start date. Check whether that has happened before relying on the answer.`
+                      : 'Check the passage and the document’s current status before relying on the answer.'
+                    : detail.lawStatus === 'repealed' && !detail.conflict
+                      ? `The answer cites this Act, but ${detail.replacedBy.length ? `the ${detail.replacedBy.join(' and ')} repealed it` : 'a later Act repealed it'}. Unless the question is about what the law used to be, check the answer against the Act that replaced it.`
+                      : detail.foreign
+                        ? 'This authority was identified as outside the Zambian library. Check its original report and its relevance to the Zambian question.'
+                        : detail.conflict
+                          ? 'The number or year in the answer differs from the library record. Check which instrument was intended.'
+                          : detail.type === 'web'
+                            ? 'Review the publisher, publication date and source content directly.'
+                            : detail.verdicts.some((c) => c.status === 'not_found')
+                              ? 'Levy could not match this authority in its library. It may exist elsewhere; this is not a finding that it is invented.'
+                              : 'A missing or incomplete check cannot establish verification.'}
                 </p>
               </div>
             </div>
@@ -223,9 +242,14 @@ export function AnswerSources({ citations, webSources, blocks, onOpenPassage, on
               <dl className="cp-citation-comparison" key={i}>
                 <div><dt>Cited in answer</dt><dd>{v.text}</dd></div>
                 {v.title && <div><dt>Matched document</dt><dd>{v.title}</dd></div>}
+                {v.law_status && (
+                  <div><dt>Status</dt><dd>{v.law_status === 'repealed'
+                    ? v.replaced_by?.length ? `Repealed by the ${v.replaced_by.join(' and the ')}` : 'Repealed'
+                    : v.replaced_by?.length ? `In force until the ${v.replaced_by.join(' and the ')} starts` : 'In force, replacement passed'}</dd></div>
+                )}
               </dl>
             ))}
-            <div className="cp-verify-boundary"><Info size={17} /><span>Library matching does not check legal validity, subsequent treatment, exact quotations or whether a passage supports the answer.</span></div>
+            <div className="cp-verify-boundary"><Info size={17} /><span>Library matching does not check subsequent treatment, exact quotations or whether a passage supports the answer. Repeal flags cover only the Acts the library records as repealed.</span></div>
             {(detail.documentId || detail.passages.length > 0) && (
               <button type="button" className="cp-btn primary" style={{ marginTop: 16 }} onClick={() => { const row = detail; setDetail(null); open(row) }}>
                 Open the document <ArrowUpRight size={15} />

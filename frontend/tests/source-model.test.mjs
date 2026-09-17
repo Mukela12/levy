@@ -43,3 +43,23 @@ test('links reject executable schemes and embedded credentials', () => {
   for (const value of ['javascript:alert(1)', 'data:text/html,test', 'https://user:password@example.com']) assert.equal(safeSourceUrl(value), null)
   assert.equal(safeSourceUrl('https://example.com/document.pdf'), 'https://example.com/document.pdf')
 })
+test('a repealed Act is never verified and names its replacement', () => {
+  const value = model({ ...verdict, law_status: 'repealed', replaced_by: ['Children’s Code Act, 2022'] })
+  assert.equal(value.verified, 0)
+  assert.equal(value.review, 1)
+  assert.equal(value.rows[0].lawStatus, 'repealed')
+  assert.deepEqual([...value.rows[0].replacedBy], ['Children’s Code Act, 2022'])  // copied out of the vm realm
+})
+test('a passed but not started repeal keeps the badge and carries a note', () => {
+  const value = model({ ...verdict, law_status: 'repeal pending', replaced_by: ['National Pension Scheme Act, 2026'] })
+  assert.equal(value.verified, 1)
+  assert.equal(value.rows[0].lawStatus, 'repeal pending')
+})
+test('a repeal note in the matched title is not a year conflict', () => {
+  const v = { kind: 'statute', text: 'Roads and Road Traffic Act, 1995', title: 'Roads and Road Traffic Act [repealed by the Road Traffic Act, 2002]', document_id: 'doc-1', status: 'verified' }
+  assert.equal(model(v).rows[0].conflict, false)
+})
+test('a not-found verdict never carries a law status', () => {
+  const value = model({ ...verdict, status: 'not_found', document_id: undefined, law_status: 'repealed' })
+  assert.ok(value.rows.every((r) => r.lawStatus === undefined))
+})
