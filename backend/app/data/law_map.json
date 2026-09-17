@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-17T08:02:18+00:00",
+ "generated_at": "2026-09-17T08:57:58+00:00",
  "documents": {
   "992415ed-3547-4f91-bb46-3b88bc7480b0": {
    "status": "repealed",
@@ -2444,6 +2444,35 @@
    "title": "Agricultural Credits Act, 2010",
    "short_name": "Agricultural Credits Act, 2010 (No. 35 of 2010)",
    "year": 2010,
+   "is_global": true
+  },
+  "9841b1f0-4c2c-4f87-a88f-c19c0d27e7e6": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "the Mines and Minerals Development Act, 2008",
+     "id": null,
+     "evidence": "title annotation"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Mines and Minerals (Amendment)",
+     "id": "2f9e4b5d-a2e8-41bb-8f8c-9b97adbff762"
+    },
+    {
+     "title": "The Mines and Minerals (Amendment) Act, 2002",
+     "id": "9487fd44-7058-494b-919b-158a7f218c21"
+    }
+   ],
+   "amends": [],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "title": "The Mines and Minerals Act [repealed by the Mines and Minerals Development Act, 2008]",
+   "short_name": "Mines and Minerals Act",
+   "year": null,
    "is_global": true
   },
   "0fbb4d86-e055-41ad-afe7-75cc93249426": {
@@ -9208,29 +9237,6 @@
    "year": 2002,
    "is_global": true
   },
-  "9841b1f0-4c2c-4f87-a88f-c19c0d27e7e6": {
-   "status": "in force",
-   "repealed_by": [],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [
-    {
-     "title": "The Mines and Minerals (Amendment)",
-     "id": "2f9e4b5d-a2e8-41bb-8f8c-9b97adbff762"
-    },
-    {
-     "title": "The Mines and Minerals (Amendment) Act, 2002",
-     "id": "9487fd44-7058-494b-919b-158a7f218c21"
-    }
-   ],
-   "amends": [],
-   "enacted_as": [],
-   "repeal_pending_by": [],
-   "title": "The Mines and Minerals Act",
-   "short_name": "Mines and Minerals Act",
-   "year": null,
-   "is_global": true
-  },
   "2f9e4b5d-a2e8-41bb-8f8c-9b97adbff762": {
    "status": "amending Act",
    "repealed_by": [],
@@ -9239,7 +9245,7 @@
    "amended_by": [],
    "amends": [
     {
-     "title": "The Mines and Minerals Act",
+     "title": "The Mines and Minerals Act [repealed by the Mines and Minerals Development Act, 2008]",
      "id": "9841b1f0-4c2c-4f87-a88f-c19c0d27e7e6"
     }
    ],
@@ -9372,7 +9378,7 @@
    "amended_by": [],
    "amends": [
     {
-     "title": "The Mines and Minerals Act",
+     "title": "The Mines and Minerals Act [repealed by the Mines and Minerals Development Act, 2008]",
      "id": "9841b1f0-4c2c-4f87-a88f-c19c0d27e7e6"
     }
    ],

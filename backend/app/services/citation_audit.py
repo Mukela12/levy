@@ -359,6 +359,13 @@ def extract_citations(text: str) -> list[dict]:
         for sep in (" Under the ", " under the ", " Under ", " The "):
             if sep in joined:
                 joined = joined.rsplit(sep, 1)[-1]
+        # "The Sentence the Penal Code Prescribes" (a heading, 17 Sep): a
+        # lowercase "the" after anything but a connector starts the real name,
+        # while "Protection of the Environment Act" keeps its "of the".
+        cut = [g for g in re.finditer(r"(\S+)\s+the\s+", joined)
+               if g.group(1).lower() not in ("of", "and", "for", "to", "on", "in", "by")]
+        if cut:
+            joined = joined[cut[-1].end():]
         parts = joined.split()
         # peel any heading/prose words off the front
         while parts and parts[0].lower().strip(".,") in (_NOT_A_STATUTE_START | {"of", "the"}):
@@ -459,6 +466,10 @@ def _statute_candidates(c: dict, index: list[dict]) -> list[dict]:
     name = _norm(c["name"])
     if name in ("constitution", "constitution of zambia"):
         name = "constitution of zambia"
+    # "Citizens Economic Empowerment Act, 2006" is not the (Amendment) Act
+    # that happens to be the only title holding those words.
+    amend_ok = "amendment" in name
+    index = [r for r in index if amend_ok or "amendment" not in r["_ntitle"]]
     cands = [r for r in index
              if r.get("document_type") in _STATUTE_TYPES
              and ((name and name in r["_ntitle"]) or (r["_nshort"] and name == r["_nshort"]))]
@@ -526,6 +537,42 @@ def _match_statute(c: dict, index: list[dict]) -> dict | None:
     return min(cands, key=rank)
 
 
+_ACK = re.compile(r"repeal|no longer (?:in force|appl|govern|the law)|replaced (?:by|it)|superseded", re.I)
+
+
+# A sentence ends at ". " before a capital (not "Cap. 268", "No. 3 of") or a line break.
+_SENT_END = re.compile(r"[.!?](?=\s+[A-Z*#>(\[])|\n")
+_BACK_REF = re.compile(r"^[\s*>\-]*(?:they|it|this act|these|those|both|that act|each)\b", re.I)
+
+
+def _acknowledged(answer: str, cited: str) -> bool:
+    """Every mention of `cited` already says it is dead ("Cap. 268 has been
+    repealed and replaced by this Act"). The flag is then a confirmation, not
+    something for the reader to chase.
+
+    The words must sit in the citation's own sentence, or in the next one
+    when it points back ("... the Mines and Minerals Development Act, 2015.
+    They no longer govern this area."). A repeal mentioned about some other
+    Act nearby does not count.
+    """
+    rx = r"\s+".join(re.escape(w) for w in cited.split())
+    hits = list(re.finditer(rx, answer, re.I))
+    if not hits:
+        return False
+    for m in hits:
+        start = max((x.end() for x in _SENT_END.finditer(answer, 0, m.start())), default=0)
+        end_m = _SENT_END.search(answer, m.end())
+        end = end_m.end() if end_m else len(answer)
+        if _ACK.search(answer[start:end]):
+            continue
+        nxt_m = _SENT_END.search(answer, end)
+        nxt = answer[end:nxt_m.end() if nxt_m else len(answer)]
+        if _BACK_REF.search(nxt) and _ACK.search(nxt):
+            continue
+        return False
+    return True
+
+
 def _law_status(c: dict, row: dict, index: list[dict]) -> dict:
     """Repealed or pending, when that is certain for the Act the answer means.
 
@@ -586,6 +633,8 @@ def audit_answer(text: str) -> list[dict]:
                     # The badge says the Act is in the library; this says
                     # whether it is still law.
                     verdict.update(_law_status(c, row, index))
+                    if verdict.get("law_status") == "repealed" and _acknowledged(text, c["text"]):
+                        verdict["acknowledged"] = True
                 out.append(verdict)
             else:
                 verdict = {"text": c["text"], "kind": c["kind"], "status": "not_found"}
