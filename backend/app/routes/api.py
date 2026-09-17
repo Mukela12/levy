@@ -563,7 +563,7 @@ def get_law_map():
     browsing the library sees the same thing the model is told. Only documents
     with something to say are returned; everything else is simply in force.
     """
-    from ..services.law_map import _entries
+    from ..services.law_map import _entries, ref_name
 
     out = {}
     for doc_id, e in _entries().items():
@@ -575,7 +575,9 @@ def get_law_map():
         by = e.get("repealed_by") or [] if status != "repeal pending" else e.get("repeal_pending_by") or []
         out[doc_id] = {
             "status": status,
-            "repealedBy": [x.get("title") for x in by if x.get("title")],
+            # "Urban and Regional Planning Act, 2015", not the parsed
+            # "The Urban and Regional Planning" or an all-caps title.
+            "repealedBy": [ref_name(x) for x in by if x.get("title")],
             "repealedById": next((x.get("id") for x in by if x.get("id")), None),
             "amendments": len(amended),
         }

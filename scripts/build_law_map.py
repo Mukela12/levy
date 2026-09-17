@@ -67,10 +67,14 @@ NOISE = re.compile(r"^(republic of zambia|the laws of zambia|government of zambi
 # Matched with all whitespace removed, so OCR spacing ("come in to operati on")
 # cannot hide it.
 RE_DEFERRED = re.compile(
-    # "on such date as the Minister may, by statutory instrument, appoint" and
-    # "on the date appointed by the Minister, by statutory instrument"; a
-    # spliced margin note ("and commence-") may sit inside the sentence.
-    r"comeinto(?:operation|force)on(?:such|the)?(?:a)?date.{0,40}?minister.{0,16}?bystatutoryinstrument",
+    # "on such date as the Minister may, by statutory instrument, appoint",
+    # "on the date appointed by the President by statutory instrument". The
+    # authority varies, and spliced margin notes land anywhere in the sentence
+    # ("on commence- the date", "by commence- statutory instrument"), so any
+    # "date ... appoint ... statutory instrument" sentence counts. "The date
+    # of publication" and "the date of assent" do not.
+    r"comeinto(?:operation|force)on[^.]{0,14}?(?:such|the|a)?date(?!of)(?=[^.]{0,90}?appoint)"
+    r"[^.]{0,80}?statutoryinstrument",
     re.I)
 # A deferred-commencement Act older than this is assumed to have started; the
 # library holds no commencement orders to say otherwise.
@@ -88,7 +92,14 @@ def clean_clause(text: str) -> str:
     """Strip marginal notes the OCR spliced into the sentence, and unglue words."""
     t = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", text)          # "arerepealed" stays, "ActThe" splits
     t = re.sub(r"(?i)(are|is)(repealed)", r"\1 \2", t)
+    # "Act No.22 of the Public Health Act ... are repealed": the full stop in
+    # "No." ended the clause there and lost "sections 79 and 83 of".
+    t = re.sub(r"\b(No|Nos|Cap)\.\s*(?=\d)", r"\1 ", t)
     t = MARGIN.sub(" ", t)
+    # Margin Chapter numbers spliced into a name: "the Minimum Wages and
+    # Conditions of 270,274and 276 Employment Act,1982" (Employment Code Act,
+    # s. 137). Left in, the Act never matched and read as still in force.
+    t = re.sub(r"\b\d{2,3}(?:\s*,\s*\d{2,3})*\s*and\s*\d{2,3}\b(?!\s*of\b)", " ", t)
     return re.sub(r"\s+", " ", t)
 
 
@@ -139,17 +150,50 @@ def norm(name: str) -> str:
     return re.sub(r"\s+", " ", unsplit(s)).strip()
 
 
-def candidate_names(text: str) -> list[str]:
-    """Split a repeal clause's subject list into individual Act names."""
-    out = []
-    for part in re.split(r",| and ", text):
-        part = part.strip(" \t\n;:.")
-        if not re.search(r"\bact\b", part, re.I):
-            continue
-        part = re.sub(r"^(?:the|and)\s+", "", part, flags=re.I)
-        if 6 <= len(part) <= 140:
-            out.append(part)
+# "sections 79 and 83 of the Public Health Act": OCR glues the words
+# ("andsections79and83"), so no word boundary in front.
+RE_PART_OF = re.compile(r"(?:sub)?sections?\s*\(?\d|paragraphs?\s*\(?\d|parts?\s*[IVX\d]+\b"
+                        r"|schedules?\s*[IVX\d]*\s*to|schedules?\s*[IVX\d]|so\s*much\s*of|provisions\s*of", re.I)
+
+
+def candidate_parts(text: str) -> list[tuple[str, bool]]:
+    """Split a repeal clause's subject list into (Act name, partial) pairs.
+
+    Names end at "Act"; splitting on every " and " cut "the Minimum Wages and
+    Conditions of Employment Act" down to "Conditions of Employment Act", so
+    the list is cut after each "Act" instead and the joiners are peeled off.
+    Partial is decided per name: in "The Food and Drugs Act, 1972 and sections
+    79 and 83 of the Public Health Act, 1930 are repealed" only the Public
+    Health Act is partly repealed. A section reference cut off from its Act
+    by a spliced margin note carries over to the next name.
+    """
+    out: list[tuple[str, bool]] = []
+    carry = False
+    for seg in re.findall(r".*?\b(?:Act|Code)\b(?!\s*Act)", text, flags=re.S | re.I):
+        part = seg.strip(" \t\n;:.")
+        marker = None
+        for marker in RE_PART_OF.finditer(part):
+            pass
+        partial = carry
+        if marker:
+            partial = True
+            tail = part[marker.end():]
+            if re.search(r"(?:of|to)$", marker.group(0), re.I):
+                part = tail                      # "so much of the X Act"
+            else:                                # "sections 79 and 83 of the X Act"
+                of = list(re.finditer(r"\b(?:of|to)\s+(?:the\s+)?", tail, re.I))
+                part = tail[of[-1].end():] if of else ""
+        part = re.sub(r"^(?:[\s,;:\d]+|and\s+|the\s+|of\s+|(?:act\s*)?no\.?\s*\d+\s*(?:of\s*)?)+", "", part, flags=re.I)
+        if 6 <= len(part) <= 140 and re.search(r"[A-Za-z]{3}", part[:-3]):
+            out.append((part, partial))
+            carry = False
+        else:
+            carry = partial
     return out
+
+
+def candidate_names(text: str) -> list[str]:
+    return [n for n, _ in candidate_parts(text)]
 
 
 async def fetch_edge_chunks(docs: list[dict]) -> dict[str, str]:
@@ -212,14 +256,20 @@ def main() -> int:
     for d in docs:
         if d["document_type"] not in ("act", "court_rule"):
             continue
-        for key in {norm(d["title"]), norm(d.get("short_name") or "")}:
-            if len(key) > 4:
+        keys = {norm(d["title"]), norm(d.get("short_name") or "")}
+        # The parser cut "Act" off some titles ("The Immigration and
+        # Deportation 2010", "The Metrology"); index them under the full name.
+        keys |= {k + " act" for k in keys if d["document_type"] == "act" and not re.search(r"\b(act|code)\b", k)}
+        for key in keys:
+            if len(key) > 4 and d["id"] not in index[key]:
                 index[key].append(d["id"])
 
     def doc_year(d: dict) -> int | None:
-        return d.get("year") or year_of(d.get("act_number") or "") or year_of(d["title"])
+        # Not from a "[repealed by the Road Traffic Act, 2002]" annotation.
+        return (d.get("year") or year_of(d.get("act_number") or "")
+                or year_of(re.sub(r"\[[^\]]*\]", " ", d["title"])))
 
-    def resolve(name: str, by: dict | None = None) -> list[str]:
+    def resolve(name: str, by: dict | None = None, before: int | None = None) -> list[str]:
         """Documents a repeal clause's name refers to.
 
         A clause names a year ("the Employment Act, 1965"); the library often
@@ -256,10 +306,30 @@ def main() -> int:
                     # matched the Companies Act, 2017 and marked it dead.
                     and not (not by_y and (doc_year(by_id[h]) or 0) > UNDATED_EDITION_YEAR)]
         want = year_of(name)
-        if want and len(hits) > 1:
+        undated = [h for h in hits if not doc_year(by_id[h])]
+        if want:
+            # "The Food Reserve Act, 2020 is repealed" is not the 1989 Act.
+            # Undated rows stay: they are Chapter editions or copies whose
+            # year the parser missed ("The Rating Act" beside "The Rating",
+            # 1997), and may be the Act named.
             exact = [h for h in hits if doc_year(by_id[h]) == want]
             if exact:
-                return exact
+                return exact + undated
+            # Without the named version, only older ones are surely dead.
+            return [h for h in hits if (doc_year(by_id[h]) or 0) < want]
+        dated = [doc_year(by_id[h]) for h in hits if doc_year(by_id[h])]
+        if before:
+            # "Companies (Amendment) Act, 2011" amends the Act of that name in
+            # force in 2011, not the Companies Act, 2017.
+            dated = [y for y in dated if y <= before]
+            if not dated:
+                return undated
+        if len(hits) > 1 and dated:
+            # An undated name in a new Act means the version in force when it
+            # passed: the Immigration Control Act, 2026 repeals the 2010
+            # Immigration and Deportation Act, not the 1965 one before it.
+            newest = max(dated)
+            hits = [h for h in hits if doc_year(by_id[h]) in (None, newest)]
         return hits
 
     scan = [d for d in docs if d["document_type"] in ("act", "court_rule")]
@@ -277,9 +347,7 @@ def main() -> int:
         deferred[d["id"]] = bool(RE_DEFERRED.search(re.sub(r"\s+", "", body)))
         found: list[tuple[str, str]] = []
         for m in RE_REPEALED.finditer(body):
-            clause = m.group("list")
-            partial = bool(RE_PARTIAL.search(clause))
-            for nm in candidate_names(clause):
+            for nm, partial in candidate_parts(m.group("list")):
                 found.append((nm, re.sub(r"\s+", " ", m.group(0))[:200], partial))
         for m in RE_REPLACE.finditer(body):
             found.append((m.group("name"), re.sub(r"\s+", " ", m.group(0))[:200], False))
@@ -309,7 +377,7 @@ def main() -> int:
                                 "evidence": "(Repeal) Act title"})
         m = RE_AMENDMENT_TITLE.match(d["title"])
         if m:
-            for pid in resolve(m.group("stem") + " Act", by=None):
+            for pid in resolve(m.group("stem") + " Act", by=None, before=doc_year(d)):
                 if "(amendment)" in by_id[pid]["title"].lower():
                     continue    # an amendment does not amend another amendment
                 amends.append({"by": d["id"], "target": pid})
@@ -392,6 +460,15 @@ def main() -> int:
 
     if args.write:
         OUT.parent.mkdir(parents=True, exist_ok=True)
+        # Each entry names its own document, so the prompt can list repealed
+        # Acts and the citation audit can say which Act it flagged without a
+        # database round trip.
+        for doc_id, e in entry.items():
+            d = by_id.get(doc_id) or {}
+            e["title"] = d.get("title") or ""
+            e["short_name"] = d.get("short_name") or ""
+            e["year"] = doc_year(d) if d else None
+            e["is_global"] = bool(d.get("is_global"))
         payload = json.dumps({
             "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "documents": entry,

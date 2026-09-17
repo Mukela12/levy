@@ -36,6 +36,17 @@ _INDEX_AT = 0.0
 _INDEX_TTL = 600.0
 
 
+def _with_act(r: dict, title: str) -> str:
+    """ "The Immigration and Deportation 2010" -> "... Deportation Act 2010".
+
+    The parser cut "Act" off some library titles; without it a citation of
+    the 2010 Act only matched the 1965 one.
+    """
+    if r.get("document_type") != "act" or not title or re.search(r"\b(?:act|code|constitution)\b", title, re.I):
+        return title
+    return re.sub(r"^(.*?)(\s*,?\s*(?:\((?:No|Cap)[^)]*\)|(?:19|20)\d{2}\b).*)?$", r"\1 Act\2", title.strip(), count=1)
+
+
 def _norm(s: str) -> str:
     s = unicodedata.normalize("NFKD", s or "")
     s = re.sub(r"[^a-z0-9 ]+", " ", s.lower())
@@ -51,16 +62,21 @@ def _load_index() -> list[dict]:
     rows: list[dict] = []
     off, step = 0, 1000
     while True:  # PostgREST caps a single select at 1000 rows
+        # Public library only: a user's private upload must never verify, or
+        # show its title under, somebody else's answer.
         page = (db.table("legal_documents")
-                .select("id,title,short_name,document_type")
+                .select("id,title,short_name,document_type,year,act_number")
+                .eq("is_global", True)
                 .range(off, off + step - 1).execute().data) or []
         rows += page
         if len(page) < step:
             break
         off += step
     for r in rows:
-        r["_ntitle"] = _norm(r.get("title") or "")
-        r["_nshort"] = _norm(r.get("short_name") or "")
+        title, short = _with_act(r, r.get("title") or ""), _with_act(r, r.get("short_name") or "")
+        r["_ntitle"] = _norm(title)
+        r["_nshort"] = _norm(short)
+        r["_btitle"], r["_bshort"] = _base(title), _base(short)
     _INDEX, _INDEX_AT = rows, time.time()
     return rows
 
@@ -436,24 +452,118 @@ def _match_case(c: dict, index: list[dict]) -> dict | None:
     return top[0]
 
 
-def _match_statute(c: dict, index: list[dict]) -> dict | None:
+_STATUTE_TYPES = ("act", "bill", "court_rule", "statutory_instrument")
+
+
+def _statute_candidates(c: dict, index: list[dict]) -> list[dict]:
     name = _norm(c["name"])
     if name in ("constitution", "constitution of zambia"):
         name = "constitution of zambia"
     cands = [r for r in index
-             if r.get("document_type") in ("act", "bill", "court_rule", "statutory_instrument")
+             if r.get("document_type") in _STATUTE_TYPES
              and ((name and name in r["_ntitle"]) or (r["_nshort"] and name == r["_nshort"]))]
     if cands:
-        # the shortest title is the principal instrument; amendments and
-        # commencement orders carry longer names
-        return min(cands, key=lambda r: len(r["_ntitle"]))
+        return cands
     # tolerate the common "Employment Code Act" vs "THE EMPLOYMENT CODE ACT, 2019"
     toks = [t for t in name.split() if t not in ("the", "of", "zambia")]
     if len(toks) >= 2:
-        for r in index:
-            if r.get("document_type") in ("act", "bill", "court_rule", "statutory_instrument") and all(t in r["_ntitle"] for t in toks):
-                return r
-    return None
+        return [r for r in index
+                if r.get("document_type") in _STATUTE_TYPES and all(t in r["_ntitle"] for t in toks)]
+    return []
+
+
+def _doc_year(r: dict) -> int | None:
+    if r.get("year"):
+        return int(r["year"])
+    title = re.sub(r"\[[^\]]*\]", " ", r.get("title") or "")   # not "[repealed by ..., 2002]"
+    m = re.search(r"\b((?:19|20)\d{2})\b", f"{r.get('act_number') or ''} {title}")
+    return int(m.group(1)) if m else None
+
+
+def _cited_year(c: dict) -> int | None:
+    m = re.search(r"\b((?:19|20)\d{2})\b", c.get("text", "")[len(c.get("name", "")):])
+    return int(m.group(1)) if m else None
+
+
+def _base(title: str) -> str:
+    """ "REPUBLIC OF ZAMBIA THE COMPANIES ACT, 2017 (No. 10 of 2017)" -> "companies act"."""
+    t = re.sub(r"\[[^\]]*\]|\([^)]*\)", " ", title or "")
+    t = _norm(t)
+    t = re.sub(r"^(?:republic of zambia )?(?:the )?", "", t)
+    t = re.sub(r"\b(?:19|20)\d{2}\b|\bno \d+ of\b|\bcap(?:ter)? \d+\b", " ", t)
+    return re.sub(r"\s+", " ", t).strip()
+
+
+def _kind_fits(name: str, r: dict) -> bool:
+    last = _norm(name).split()[-1:] or [""]
+    if last[0] in ("act", "code", "constitution"):
+        return r.get("document_type") in ("act", "bill")
+    return r.get("document_type") in ("court_rule", "statutory_instrument")
+
+
+def _match_statute(c: dict, index: list[dict]) -> dict | None:
+    cands = _statute_candidates(c, index)
+    if not cands:
+        return None
+    name = c["name"]
+    year = _cited_year(c)
+    capped = bool(re.search(r"\bCap(?:ter)?\.?\s*\d+", c.get("text", ""), re.I))
+
+    def rank(r: dict) -> tuple:
+        # An exact name beats a longer title that merely contains it ("Test
+        # Certificates Regulations (Roads and Road Traffic Act)"); the kind of
+        # instrument must fit; a cited year must agree, and a Cap. number
+        # without a year points at the old consolidated edition (undated or
+        # before 1997), so "Companies Act, Cap. 388" is not the 2017 Act.
+        dy = _doc_year(r)
+        return (
+            0 if _base(name) in (r["_bshort"], r["_btitle"]) else 1,
+            0 if _kind_fits(name, r) else 1,
+            0 if not year or dy == year else 1,
+            0 if not capped or year or not dy or dy <= 1996 else 1,
+            len(r["_ntitle"]),
+        )
+    return min(cands, key=rank)
+
+
+def _law_status(c: dict, row: dict, index: list[dict]) -> dict:
+    """Repealed or pending, when that is certain for the Act the answer means.
+
+    A wrong "repealed" on live law is worse than no flag, so the flag needs
+    the matched Act to be repealed AND either the citation to pin it down (a
+    year, or a Cap. number, which only the old consolidated edition carries)
+    or every Act of that name in the library to be repealed. "Companies Act"
+    alone is left unflagged: the Companies Act, 2017 is in force.
+    """
+    from . import law_map
+    e = law_map.entry(row["id"])
+    status = e.get("status")
+    if status not in ("repealed", "repeal pending"):
+        return {}
+    key = "repealed_by" if status == "repealed" else "repeal_pending_by"
+    refs = e.get(key) or []
+    text = c.get("text", "")
+    year = _cited_year(c)
+    if year:
+        # "Arbitration Act, 2000" when only the 1933 Act is in the library:
+        # the match is by name, but the answer means the newer Act.
+        dy = _doc_year(row)
+        newest = max((y for y in (law_map.ref_year(x) for x in refs) if y), default=None)
+        if (dy and dy != year) or (newest and year >= newest):
+            return {}
+    pinned = bool(year) or bool(re.search(r"\bCap(?:ter)?\.?\s*\d+", text, re.I))
+    if not pinned:
+        # Only an Act of exactly this name can make the citation ambiguous;
+        # "Employment Act" is not the Minimum Wages and Conditions of
+        # Employment Act.
+        live = [r for r in _statute_candidates(c, index)
+                if r.get("document_type") == "act" and r["id"] != row["id"]
+                and r["_btitle"] == _base(c["name"])
+                and law_map.entry(r["id"]).get("status") not in ("repealed",)]
+        if live and status == "repealed":
+            return {}
+    by = [law_map.ref_name(x) for x in refs if x.get("title")]
+    return {"law_status": status, "replaced_by": list(dict.fromkeys(b for b in by if b))[:3]}
 
 
 def audit_answer(text: str) -> list[dict]:
@@ -470,9 +580,13 @@ def audit_answer(text: str) -> list[dict]:
             if not foreign:
                 row = _match_case(c, index) if c["kind"] == "case" else _match_statute(c, index)
             if row:
-                out.append({"text": c["text"], "kind": c["kind"], "status": "verified",
-                            "document_id": row["id"],
-                            "title": row.get("title"), })
+                verdict = {"text": c["text"], "kind": c["kind"], "status": "verified",
+                           "document_id": row["id"], "title": row.get("title")}
+                if c["kind"] == "statute":
+                    # The badge says the Act is in the library; this says
+                    # whether it is still law.
+                    verdict.update(_law_status(c, row, index))
+                out.append(verdict)
             else:
                 verdict = {"text": c["text"], "kind": c["kind"], "status": "not_found"}
                 if foreign:

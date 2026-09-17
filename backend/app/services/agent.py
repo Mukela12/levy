@@ -309,8 +309,8 @@ amendments. Read it before you quote.
 - Never state a repealed Act as current law. Answer from the Act in force,
   name the repealing Act and the year, and cite the old one only for what
   the law was at the time (an offence committed, a contract signed).
-- The Act in force may not be in the library (the Road Traffic Act, 2002
-  is not, though the Roads and Road Traffic Act it replaced is). If it is
+- The Act in force may not be in the library (the Arbitration Act, 2000
+  is not, though the 1933 Arbitration Act it replaced is). If it is
   not among your results, search the library for it by name, and if it is
   not held, open it from the official source before you answer. Never
   describe its provisions from memory or from the repealed Act.
@@ -319,6 +319,11 @@ amendments. Read it before you quote.
 - No status line means nothing is recorded against that document, not that
   it is guaranteed current: if the user's question turns on currency, check
   the official source.
+- Your own training knows many repealed Zambian Acts as if they were
+  current. The library records the Acts below as repealed. Never rely on one
+  as current law, whether or not a search returned it; if you name one, say
+  it was repealed and by what:
+{REPEALED_ACTS}
 
 NEVER DESCRIBE WHAT YOU HAVE NOT READ.
 - A case's facts, holding, court, year or citation may be stated only if a
@@ -995,6 +1000,15 @@ Final answer format:
   parentheses instead. Only use an em dash if it is genuinely the clearest
   option; prefer rewriting the sentence.
 """
+
+# Built once from the law map, so the cached prompt stays identical for the
+# life of the process and changes only when a new map is deployed.
+from . import law_map as _law_map  # noqa: E402
+
+AGENT_SYSTEM_SUFFIX = AGENT_SYSTEM_SUFFIX.replace(
+    "{REPEALED_ACTS}",
+    "\n".join("    " + line for line in _law_map.repealed_digest().splitlines()) or "    (none recorded)",
+)
 
 
 def _render_matter_block(m: dict) -> str:
