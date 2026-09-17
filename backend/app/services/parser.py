@@ -27,6 +27,13 @@ SECTION_PATTERN = re.compile(
     r"^(\d+)\.\s+(.+?)$",
     re.MULTILINE,
 )
+# Parliament's layout prints the section's margin note on the same line as its
+# number: "Planning 49. (1) A person shall not carry out any development".
+# SECTION_PATTERN is anchored at the number, so it never saw these.
+NOTED_SECTION_PATTERN = re.compile(
+    r"^(?P<note>[A-Z][A-Za-z’'\-,]*(?:\s+[A-Za-z’'\-,]+){0,5})\s+"
+    r"(?P<num>\d{1,3})(?P<suffix>[A-Z]?)\.\s+(?P<rest>\(1\)\s*\S.*|[A-Z“\"].*)$"
+)
 SUBSECTION_PATTERN = re.compile(
     r"^\((\d+)\)\s+(.+)",
     re.MULTILINE,
@@ -166,7 +173,62 @@ def parse_legal_pdf(pdf_path: str) -> dict:
     current_part = None
     current_section = None
     current_content_lines = []
-    current_page_start = 1
+    # Lines seen while no section is open. They used to be dropped, which lost
+    # every section after a PART heading until some later line happened to
+    # start with a number: ss. 49-50 of the Urban and Regional Planning Act,
+    # the planning-permission offence itself (17 Sep 2026).
+    loose_lines = []
+    last_number = 0
+    last_suffix = ""
+
+    def close_section(page_num):
+        nonlocal current_section, current_content_lines
+        if current_section and current_content_lines:
+            current_section.content = "\n".join(current_content_lines).strip()
+            current_section.page_end = page_num
+            current_section.cross_references = find_cross_references(current_section.content)
+            sections.append(current_section)
+        current_section = None
+        current_content_lines = []
+
+    def open_section(number, title, page_num, first_line):
+        nonlocal current_section, current_content_lines, loose_lines
+        current_section = ParsedSection(
+            level="section",
+            number=number,
+            title=title,
+            content="",
+            page_start=page_num,
+            page_end=page_num,
+            parent_number=current_part.number if current_part else None,
+        )
+        current_content_lines = loose_lines + [first_line]
+        loose_lines = []
+
+    def noted_start(stripped):
+        """A margin-noted section start, only where it continues the numbering.
+
+        Numbers must follow the last section (49 -> 50, or 49 -> 49A), so a
+        line such as "Under section 12. The Minister" inside a section can
+        never start a new one.
+        """
+        m = NOTED_SECTION_PATTERN.match(stripped)
+        if not m:
+            return None
+        n, suffix = int(m.group("num")), m.group("suffix")
+        follows = last_number < n <= last_number + 3 and not suffix
+        inserted = n == last_number and suffix and suffix > last_suffix
+        # The body restarts at 1 after the arrangement of sections.
+        restart = n == 1 and not suffix and ("cited" in m.group("rest").lower()
+                                             or "short title" in m.group("note").lower())
+        return m if (follows or inserted or restart) else None
+
+    def keep_loose():
+        nonlocal loose_lines
+        body = [s for s in sections if s.level == "section"]
+        if loose_lines and body:
+            body[-1].content += "\n" + "\n".join(loose_lines)
+        loose_lines = []
 
     for page in pages:
         page_num = page["page_number"]
@@ -180,14 +242,8 @@ def parse_legal_pdf(pdf_path: str) -> dict:
             # Check for Part header
             part_match = PART_PATTERN.match(stripped)
             if part_match:
-                # Save previous section if exists
-                if current_section and current_content_lines:
-                    current_section.content = "\n".join(current_content_lines).strip()
-                    current_section.page_end = page_num
-                    sections.append(current_section)
-                    current_content_lines = []
-                    current_section = None
-
+                close_section(page_num)
+                keep_loose()   # text that belonged to no section stays with the last one
                 current_part = ParsedSection(
                     level="part",
                     number=part_match.group(1),
@@ -202,30 +258,28 @@ def parse_legal_pdf(pdf_path: str) -> dict:
             # Check for Section header (e.g., "5. Employment agreements")
             section_match = SECTION_PATTERN.match(stripped)
             if section_match:
-                # Save previous section
-                if current_section and current_content_lines:
-                    current_section.content = "\n".join(current_content_lines).strip()
-                    current_section.page_end = page_num
-                    cross_refs = find_cross_references(current_section.content)
-                    current_section.cross_references = cross_refs
-                    sections.append(current_section)
-                    current_content_lines = []
+                close_section(page_num)
+                open_section(section_match.group(1), section_match.group(2).strip(), page_num, stripped)
+                last_number, last_suffix = int(section_match.group(1)), ""
+                continue
 
-                current_section = ParsedSection(
-                    level="section",
-                    number=section_match.group(1),
-                    title=section_match.group(2).strip(),
-                    content="",
-                    page_start=page_num,
-                    page_end=page_num,
-                    parent_number=current_part.number if current_part else None,
-                )
-                current_content_lines.append(stripped)
+            noted = noted_start(stripped)
+            if noted:
+                close_section(page_num)
+                number = noted.group("num") + noted.group("suffix")
+                open_section(number, noted.group("rest").strip(), page_num, stripped)
+                last_number, last_suffix = int(noted.group("num")), noted.group("suffix")
                 continue
 
             # Accumulate content for current section
             if current_section:
                 current_content_lines.append(stripped)
+            elif (current_part is not None and not loose_lines and len(current_part.title or "") < 120
+                  and stripped.upper() == stripped and re.search(r"[A-Z]{3}", stripped)):
+                # "PART VI" / "PLANNING APPLICATIONS AND PERMISSION": the title
+                current_part.title = f"{current_part.title} {stripped}".strip()
+            elif current_part is not None or sections:
+                loose_lines.append(stripped)
 
     # Don't forget the last section
     if current_section and current_content_lines:
@@ -233,6 +287,8 @@ def parse_legal_pdf(pdf_path: str) -> dict:
         current_section.page_end = pages[-1]["page_number"]
         current_section.cross_references = find_cross_references(current_section.content)
         sections.append(current_section)
+    else:
+        keep_loose()
 
     print(f"  Parsed: {metadata.get('short_name', pdf_path)}")
     print(f"  Pages: {len(pages)}")
