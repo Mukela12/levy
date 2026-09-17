@@ -41,6 +41,8 @@ export interface CitationVerdict {
   law_status?: 'repealed' | 'repeal pending'
   /** Names of the Acts that repealed it, or will. */
   replaced_by?: string[]
+  /** The answer itself already calls this Act repealed wherever it names it. */
+  acknowledged?: boolean
 }
 
 interface ChunkUsed {

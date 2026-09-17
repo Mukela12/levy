@@ -12,13 +12,15 @@
  *  - Missing audit data is neutral ("no citation check recorded"), never a
  *    pending spinner and never a positive badge.
  *  - An Act the law map records as repealed is never "verified": being in
- *    the library is not the same as being law. A repeal that has passed but
- *    not started leaves the badge alone and is shown as a note.
+ *    the library is not the same as being law. When the answer itself already
+ *    calls it repealed the row is "noted" (shown, not counted for review). A
+ *    repeal that has passed but not started leaves the badge alone and is
+ *    shown as a note.
  */
 import type { ChunkUsed, CitationVerdict, WebSource } from '@/lib/api'
 import type { MessageBlock } from '@/components/chat/chat-message'
 
-export type SourceVerification = 'verified' | 'review' | 'none'
+export type SourceVerification = 'verified' | 'review' | 'noted' | 'none'
 
 export interface SourceRow {
   id: string
@@ -43,6 +45,7 @@ export interface SourceModel {
   state: 'complete' | 'unavailable'
   verified: number
   review: number
+  noted: number
 }
 
 export function safeSourceUrl(value?: string | null): string | null {
@@ -144,14 +147,17 @@ export function sourceModel(input: {
       ? 'repealed'
       : flagged.length ? 'repeal pending' : undefined
     row.replacedBy = Array.from(new Set(flagged.filter((c) => c.law_status === row.lawStatus).flatMap((c) => c.replaced_by || [])))
+    const repealedNamed = row.lawStatus === 'repealed' && flagged.every((c) => c.law_status !== 'repealed' || c.acknowledged === true)
     row.verification =
       state !== 'complete'
         ? 'none'
-        : row.verdicts.some((c) => c.status !== 'verified' || !c.document_id) || row.conflict || row.foreign || row.lawStatus === 'repealed'
+        : row.verdicts.some((c) => c.status !== 'verified' || !c.document_id) || row.conflict || row.foreign
           ? 'review'
-          : row.verdicts.length
-            ? 'verified'
-            : 'none'
+          : row.lawStatus === 'repealed'
+            ? repealedNamed ? 'noted' : 'review'
+            : row.verdicts.length
+              ? 'verified'
+              : 'none'
   }
 
   const urls = new Set<string>()
@@ -181,6 +187,7 @@ export function sourceModel(input: {
     state,
     verified: rows.filter((r) => r.verification === 'verified').length,
     review: rows.filter((r) => r.verification === 'review').length,
+    noted: rows.filter((r) => r.verification === 'noted').length,
   }
 }
 

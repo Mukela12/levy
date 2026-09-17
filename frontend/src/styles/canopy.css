@@ -686,10 +686,12 @@
 .cp-source-title { display: flex; align-items: flex-start; gap: 9px; width: 100%; min-height: 36px; padding: 5px 0 3px; font: 500 15px/1.5 var(--cp-font); color: var(--cp-text); text-align: left; overflow-wrap: anywhere; }
 .cp-source-title > svg { margin: 5px 0 0 auto; color: var(--cp-muted); flex-shrink: 0; }
 .cp-source-title:hover { color: var(--cp-primary); }
+.cp-citation-badge.is-noted { color: var(--cp-muted); background: var(--cp-soft); border-color: var(--cp-line); }
 .cp-source-law { margin: 0 0 4px; font-size: 12px; line-height: 1.5; font-weight: 500; overflow-wrap: anywhere; }
 .cp-source-law.is-repealed { color: #a12622; }
 .dark .cp-source-law.is-repealed { color: #f0a9a5; }
 .cp-source-law.is-pending { color: var(--cp-warn); }
+.cp-source-law.is-noted { color: var(--cp-muted); font-weight: 400; }
 .cp-source-context { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 7px; font-size: 12px; line-height: 1.6; color: var(--cp-muted); }
 .cp-passage-links { display: inline-flex; flex-wrap: wrap; gap: 6px; width: 100%; margin-top: 4px; }
 .cp-passage-links button { padding: 3px 8px; border-radius: 6px; border: 1px solid var(--cp-line); font-size: 11px; color: var(--cp-primary); }

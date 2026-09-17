@@ -63,3 +63,14 @@ test('a not-found verdict never carries a law status', () => {
   const value = model({ ...verdict, status: 'not_found', document_id: undefined, law_status: 'repealed' })
   assert.ok(value.rows.every((r) => r.lawStatus === undefined))
 })
+test('a repeal the answer already names is noted, not queued for review', () => {
+  const value = model({ ...verdict, law_status: 'repealed', replaced_by: ['Employment Code Act, 2019'], acknowledged: true })
+  assert.equal(value.rows[0].verification, 'noted')
+  assert.equal(value.review, 0)
+  assert.equal(value.verified, 0)
+  assert.equal(value.noted, 1)
+})
+test('an acknowledged repeal with a number conflict still needs review', () => {
+  const value = model({ ...verdict, title: 'Example Act No. 4 of 2019', law_status: 'repealed', acknowledged: true })
+  assert.equal(value.rows[0].verification, 'review')
+})

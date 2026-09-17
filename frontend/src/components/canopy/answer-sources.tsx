@@ -11,7 +11,7 @@
  */
 
 import { useId, useState } from 'react'
-import { ArrowRight, ArrowUpRight, BookOpen, ChevronDown, ChevronUp, FileText, Globe, Info, Scale } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, BookOpen, ChevronDown, ChevronUp, FileText, Globe, History, Info, Scale } from 'lucide-react'
 import { CanopyModal as Dialog } from './modal'
 import type { ChunkUsed, CitationVerdict, WebSource } from '@/lib/api'
 import type { MessageBlock } from '@/components/chat/chat-message'
@@ -35,17 +35,62 @@ function badgeLabel(row: SourceRow): string {
   return 'Not in library'
 }
 
+/** ["Road Traffic Act, 2002", "Public Roads Act, 2002"] -> "the Road Traffic Act, 2002 and the Public Roads Act, 2002" */
+function theActs(names: string[]): string {
+  return names.map((n) => `the ${n}`).join(' and ')
+}
+
 /** "Repealed · replaced by the Children's Code Act, 2022" */
 function lawStatusText(row: SourceRow): string | null {
-  const by = row.replacedBy.join(' and ')
-  if (row.lawStatus === 'repealed') return by ? `Repealed · replaced by the ${by}` : 'Repealed'
-  if (row.lawStatus === 'repeal pending') return by ? `Still in force · the ${by} will replace it once it starts` : 'Still in force · a replacement has been passed'
+  const by = theActs(row.replacedBy)
+  if (row.lawStatus === 'repealed') return by ? `Repealed · replaced by ${by}` : 'Repealed'
+  if (row.lawStatus === 'repeal pending') return by ? `Still in force · ${by} will replace it once it starts` : 'Still in force · a replacement has been passed'
   return null
+}
+
+function verdictHeading(row: SourceRow): string {
+  if (row.verification === 'verified') return 'Authority matched in the library'
+  if (row.verification === 'noted') return 'Named in the answer as repealed'
+  if (row.lawStatus === 'repealed' && !row.conflict) return 'This Act has been repealed'
+  if (row.foreign) return 'Foreign authority · check the original report'
+  if (row.conflict) return 'Citation details need review'
+  if (row.type === 'web') return 'A web link is not a verified citation'
+  return row.verdicts.length ? 'No confirmed library match' : 'No citation verdict recorded'
+}
+
+function verdictText(row: SourceRow): string {
+  const by = theActs(row.replacedBy)
+  if (row.verification === 'verified') {
+    return row.lawStatus === 'repeal pending'
+      ? `This Act is still law, but ${by || 'a new Act'} will replace it once a start date is set by statutory instrument. Check whether that has happened before relying on the answer.`
+      : 'Check the passage and the document’s current status before relying on the answer.'
+  }
+  if (row.verification === 'noted') {
+    return `The answer already says this Act is no longer law, and the library agrees: ${by || 'a later Act'} replaced it.`
+  }
+  if (row.lawStatus === 'repealed' && !row.conflict) {
+    return `The answer cites this Act, but ${by || 'a later Act'} repealed it. Unless the question is about what the law used to be, check the answer against the Act that replaced it.`
+  }
+  if (row.foreign) return 'This authority was identified as outside the Zambian library. Check its original report and its relevance to the Zambian question.'
+  if (row.conflict) return 'The number or year in the answer differs from the library record. Check which instrument was intended.'
+  if (row.type === 'web') return 'Review the publisher, publication date and source content directly.'
+  return row.verdicts.some((c) => c.status === 'not_found')
+    ? 'Levy could not match this authority in its library. It may exist elsewhere; this is not a finding that it is invented.'
+    : 'A missing or incomplete check cannot establish verification.'
 }
 
 function Badge({ row, onClick }: { row: SourceRow; onClick: () => void }) {
   if (row.verification === 'none') {
     return <span className="cp-source-origin">{row.type === 'web' ? 'Web source' : 'Retrieved'}</span>
+  }
+  if (row.verification === 'noted') {
+    // The answer already calls this Act repealed; the badge only confirms it.
+    return (
+      <button type="button" className="cp-citation-badge is-noted" onClick={onClick} aria-label={`Repealed Act, named as such in the answer: ${row.title}`}>
+        <History size={14} aria-hidden="true" />
+        <span>Repealed</span>
+      </button>
+    )
   }
   const verified = row.verification === 'verified'
   return (
@@ -114,7 +159,7 @@ export function AnswerSources({ citations, webSources, blocks, onOpenPassage, on
             {model.review} to review <ArrowRight size={12} />
           </button>
         )}
-        {!model.verified && !model.review && (
+        {!model.verified && !model.review && !model.noted && (
           <span>{model.state === 'complete' ? 'No citation verdicts returned' : 'No citation check recorded'}</span>
         )}
       </div>
@@ -136,7 +181,7 @@ export function AnswerSources({ citations, webSources, blocks, onOpenPassage, on
                     <ArrowUpRight size={14} />
                   </button>
                   {row.lawStatus && (
-                    <div className={'cp-source-law' + (row.lawStatus === 'repealed' ? ' is-repealed' : ' is-pending')}>{lawStatusText(row)}</div>
+                    <div className={'cp-source-law' + (row.verification === 'noted' ? ' is-noted' : row.lawStatus === 'repealed' ? ' is-repealed' : ' is-pending')}>{lawStatusText(row)}</div>
                   )}
                   <div className="cp-source-context">
                     {row.passages.length ? (
@@ -204,38 +249,8 @@ export function AnswerSources({ citations, webSources, blocks, onOpenPassage, on
             <div className={'cp-citation-verdict' + (detail.verification === 'verified' ? ' is-positive' : '')}>
               {detail.verification === 'verified' ? <CitationSeal size={40} /> : <Info size={19} />}
               <div>
-                <h3>
-                  {detail.verification === 'verified'
-                    ? 'Authority matched in the library'
-                    : detail.lawStatus === 'repealed' && !detail.conflict
-                      ? 'This Act has been repealed'
-                      : detail.foreign
-                        ? 'Foreign authority · check the original report'
-                        : detail.conflict
-                          ? 'Citation details need review'
-                          : detail.type === 'web'
-                            ? 'A web link is not a verified citation'
-                            : detail.verdicts.length
-                              ? 'No confirmed library match'
-                              : 'No citation verdict recorded'}
-                </h3>
-                <p>
-                  {detail.verification === 'verified'
-                    ? detail.lawStatus === 'repeal pending'
-                      ? `This Act is still law, but ${detail.replacedBy.length ? `the ${detail.replacedBy.join(' and ')}` : 'a new Act'} will replace it once the Minister sets a start date. Check whether that has happened before relying on the answer.`
-                      : 'Check the passage and the document’s current status before relying on the answer.'
-                    : detail.lawStatus === 'repealed' && !detail.conflict
-                      ? `The answer cites this Act, but ${detail.replacedBy.length ? `the ${detail.replacedBy.join(' and ')} repealed it` : 'a later Act repealed it'}. Unless the question is about what the law used to be, check the answer against the Act that replaced it.`
-                      : detail.foreign
-                        ? 'This authority was identified as outside the Zambian library. Check its original report and its relevance to the Zambian question.'
-                        : detail.conflict
-                          ? 'The number or year in the answer differs from the library record. Check which instrument was intended.'
-                          : detail.type === 'web'
-                            ? 'Review the publisher, publication date and source content directly.'
-                            : detail.verdicts.some((c) => c.status === 'not_found')
-                              ? 'Levy could not match this authority in its library. It may exist elsewhere; this is not a finding that it is invented.'
-                              : 'A missing or incomplete check cannot establish verification.'}
-                </p>
+                <h3>{verdictHeading(detail)}</h3>
+                <p>{verdictText(detail)}</p>
               </div>
             </div>
             {detail.verdicts.map((v: CitationVerdict, i) => (
@@ -244,8 +259,8 @@ export function AnswerSources({ citations, webSources, blocks, onOpenPassage, on
                 {v.title && <div><dt>Matched document</dt><dd>{v.title}</dd></div>}
                 {v.law_status && (
                   <div><dt>Status</dt><dd>{v.law_status === 'repealed'
-                    ? v.replaced_by?.length ? `Repealed by the ${v.replaced_by.join(' and the ')}` : 'Repealed'
-                    : v.replaced_by?.length ? `In force until the ${v.replaced_by.join(' and the ')} starts` : 'In force, replacement passed'}</dd></div>
+                    ? v.replaced_by?.length ? `Repealed by ${theActs(v.replaced_by)}` : 'Repealed'
+                    : v.replaced_by?.length ? `In force until ${theActs(v.replaced_by)} starts` : 'In force, replacement passed'}</dd></div>
                 )}
               </dl>
             ))}
