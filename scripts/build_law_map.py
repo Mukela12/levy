@@ -196,8 +196,14 @@ def candidate_names(text: str) -> list[str]:
     return [n for n, _ in candidate_parts(text)]
 
 
-async def fetch_edge_chunks(docs: list[dict]) -> dict[str, str]:
-    """First HEAD_CHUNKS and last TAIL_CHUNKS of each document, as one string."""
+async def fetch_edge_chunks(docs: list[dict]) -> tuple[dict[str, str], list[str], list[str]]:
+    """The chunks of each document that can hold a repeal or a start date, as one string.
+
+    Also returns the documents whose fetch failed (the build must stop: a
+    missing clause would quietly turn a repealed Act back into law) and the
+    ones whose repeal-clause query hit its limit (raise REPEAL_HITS if any).
+    Every query is ordered, so two runs read the same text.
+    """
     base = os.environ["SUPABASE_URL"].rstrip("/") + "/rest/v1/legal_chunks"
     key = os.environ["SUPABASE_KEY"]
     headers = {"apikey": key, "Authorization": f"Bearer {key}"}
@@ -224,30 +230,40 @@ async def fetch_edge_chunks(docs: list[dict]) -> dict[str, str]:
             # Section 1 is not always in the first chunks (an arrangement of
             # sections can come first), and it says when the Act starts.
             {"select": "content", "document_id": f"eq.{d['id']}",
-             "or": "(content.ilike.*into operation*,content.ilike.*into force*)", "limit": "3"},
+             "or": "(content.ilike.*into operation*,content.ilike.*into force*)",
+             "order": "chunk_index", "limit": "5"},
         ]
         parts: list[str] = []
         async with sem:
-            for params in queries:
-                for attempt in range(3):
+            for n, params in enumerate(queries):
+                for attempt in range(4):
                     try:
                         r = await client.get(base, params=params, headers=headers, timeout=90)
                         if r.status_code == 200:
-                            parts += [c["content"] for c in r.json()]
+                            rows = r.json()
+                            parts += [c["content"] for c in rows]
+                            if n == 1 and len(rows) >= REPEAL_HITS:
+                                saturated.append(d["id"])
                             break
                     except Exception:  # noqa: BLE001
                         pass
-                    await asyncio.sleep(1 + attempt)
+                    await asyncio.sleep(1 + 2 * attempt)
+                else:
+                    failed.append(d["id"])
         out[d["id"]] = "\n".join(parts)
 
+    failed: list[str] = []
+    saturated: list[str] = []
     async with httpx.AsyncClient() as client:
         await asyncio.gather(*(one(client, d) for d in docs))
-    return out
+    return out, failed, saturated
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--write", action="store_true", help="write the map file")
+    ap.add_argument("--accept-losses", action="store_true",
+                    help="write even if an Act leaves repealed/pending or a bill leaves enacted")
     args = ap.parse_args()
 
     db = get_db()
@@ -255,6 +271,7 @@ def main() -> int:
     while True:
         rows = (db.table("legal_documents")
                 .select("id,title,short_name,document_type,year,act_number,total_chunks,is_global")
+                .order("id")   # pages without an order can skip or repeat rows
                 .range(start, start + 999).execute().data)
         docs += rows
         start += 1000
@@ -303,9 +320,10 @@ def main() -> int:
                     ids = [i for i in ids if not by or i != by["id"]]
                     ot = {w for w in k.split() if w not in STOP}
                     if ids and ot and len(kt & ot) / len(kt | ot) >= 0.75:
-                        scored.append((len(kt & ot) / len(kt | ot), ids))
+                        scored.append((len(kt & ot) / len(kt | ot), k, ids))
                 if scored:
-                    hits = list(max(scored, key=lambda x: x[0])[1])
+                    # best score; a tie goes to the same name on every run
+                    hits = list(min(scored, key=lambda x: (-x[0], x[1]))[2])
         if by:
             by_y = doc_year(by)
             hits = [h for h in hits if h != by["id"]
@@ -345,8 +363,18 @@ def main() -> int:
 
     scan = [d for d in docs if d["document_type"] in ("act", "court_rule")]
     print(f"documents {len(docs)} | scanning {len(scan)} acts and rules for repeal clauses", flush=True)
-    text = asyncio.run(fetch_edge_chunks(scan))
+    text, failed, saturated = asyncio.run(fetch_edge_chunks(scan))
     print(f"fetched edge text for {len(text)} documents", flush=True)
+    if failed:
+        # A document read without its repeal clause turns a repealed Act back
+        # into law. Better no new map than a quietly wrong one.
+        print(f"FETCH FAILED for {len(failed)} documents, nothing written: "
+              + ", ".join(by_id[i]["title"][:40] for i in failed[:5]), flush=True)
+        return 1
+    if saturated:
+        print(f"note: {len(saturated)} documents have at least {REPEAL_HITS} repeal-clause chunks; "
+              f"raise REPEAL_HITS if a repeal goes missing: "
+              + ", ".join(by_id[i]["title"][:40] for i in saturated[:5]), flush=True)
 
     repeals: list[dict] = []          # {by, target_id|None, name, evidence}
     amends: list[dict] = []
@@ -429,16 +457,21 @@ def main() -> int:
     # A bill whose Act is now in the library has passed. Left alone it would be
     # announced as "not yet law", which is the same error in the other
     # direction.
-    act_names = {norm(d["title"]): d for d in docs if d["document_type"] == "act"}
+    act_names: dict[str, list[dict]] = defaultdict(list)
+    for d in docs:
+        if d["document_type"] == "act":
+            act_names[norm(d["title"])].append(d)
     for d in docs:
         if d["document_type"] != "bill":
             continue
-        as_act = act_names.get(norm(re.sub(r"\bbill\b", "Act", d["title"], flags=re.I)))
         # Same name is not enough: "The Land (Perpetual Succession) Bill" would
-        # match the old Act of that name. The Act must carry the bill's year.
+        # match the old Act of that name. The Act must carry the bill's year,
+        # and every Act of that name is checked: norm() drops the year, so the
+        # 2010 and 2026 amendment Acts share a key, and keeping only one of
+        # them flipped bills between "enacted" and "not yet law" from run to run.
         bill_year = year_of(d["title"])
-        if as_act and bill_year and year_of(as_act["title"]) != bill_year and as_act.get("year") != bill_year:
-            as_act = None
+        same = act_names.get(norm(re.sub(r"\bbill\b", "Act", d["title"], flags=re.I)), [])
+        as_act = next((a for a in same if bill_year and bill_year in (year_of(a["title"]), a.get("year"))), None)
         e = slot(d["id"])
         if as_act:
             e["status"] = "enacted"
@@ -469,6 +502,26 @@ def main() -> int:
     for u in unresolved[:10]:
         print(f"  {by_id[u['by']]['title'][:45]:47} says repealed: {u['name'][:60]}")
 
+    # An Act that stops reading as repealed goes back to being law in every
+    # answer. On 17 Sep a change to which chunks were fetched did exactly that
+    # to the 1994 Companies Act, and only a manual diff caught it.
+    losses = []
+    if OUT.exists():
+        previous = json.loads(OUT.read_text()).get("documents", {})
+        for doc_id, old in previous.items():
+            new_status = (entry.get(doc_id) or {}).get("status")
+            if old.get("status") in ("repealed", "repeal pending") and new_status not in ("repealed", "repeal pending"):
+                losses.append((old.get("title") or doc_id, old["status"], new_status))
+            elif old.get("status") == "enacted" and new_status != "enacted":
+                losses.append((old.get("title") or doc_id, old["status"], new_status))
+    if losses:
+        print(f"\nSTATUS LOSSES against the current map: {len(losses)}")
+        for title, was, now in losses[:20]:
+            print(f"  {title[:60]:62} {was} -> {now}")
+
+    if args.write and losses and not args.accept_losses:
+        print("\nnothing written: check these, then rerun with --accept-losses if they are right")
+        return 1
     if args.write:
         OUT.parent.mkdir(parents=True, exist_ok=True)
         # Each entry names its own document, so the prompt can list repealed
