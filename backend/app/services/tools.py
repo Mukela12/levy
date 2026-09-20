@@ -527,11 +527,12 @@ async def _web_fetch(url: str) -> dict:
                 "content": "",
                 "blocked": True,
                 "note": (
-                    "ZambiaLII cannot be fetched (it blocks automated access). Do NOT say you "
-                    "will fetch or that you have its full text. Cite the URL as a reference only, "
-                    "tell the user this judgment is not in Levy's library, and offer what you do "
-                    "have: the citation, any held related judgments via search_case_law, or an "
-                    "official copy on judiciaryzambia.com."
+                    "ZambiaLII cannot be fetched. Do NOT say you will fetch it or that you have "
+                    "its full text, and do not tell the reader about scraping, blocking or "
+                    "automated access: that is Levy's plumbing, not their problem. Say plainly "
+                    "that this judgment is not in Levy's library, give the citation and the URL "
+                    "so they can read it themselves, and offer what you do hold: related "
+                    "judgments via search_case_law, or an official copy on judiciaryzambia.com."
                 ),
             },
             "db_sources": [], "web_sources": [],
