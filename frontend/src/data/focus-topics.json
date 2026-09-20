@@ -1,28 +1,72 @@
 {
-  "reviewed": "2026-09-14",
-  "expires": "2026-09-21",
+  "reviewed": "2026-09-21",
+  "expires": "2026-09-28",
   "topics": [
     {
-      "id": "public-gathering-bill-2026",
-      "question": "What does the Public Gathering Bill propose, and has its status changed?",
-      "kind": "Bill",
-      "published": "2026",
-      "source": "National Assembly",
-      "sourceTitle": "Public Gathering Bill, N.A.B. No. 71 of 2026",
-      "url": "https://www.parliament.gov.zm/sites/default/files/documents/bills/N.%20A.%20B.%2071%20of%202026%2C%20The%20Public%20Gathering%20Bill.pdf",
-      "context": "Explore the published bill alongside Parliament's committee report. A bill is a proposal, not proof of the law currently in force.",
-      "status": "Passage, assent and commencement have not been verified. Check the current status before relying on any proposal."
+      "id": "minimum-wage-2023",
+      "question": "What is the minimum wage and what allowances must an employer pay?",
+      "kind": "Statutory instrument",
+      "published": "2023",
+      "source": "Ministry of Labour and Social Security",
+      "sourceTitle": "The Employment Code (Minimum Wages and Conditions of Employment) (General) Order, 2023 (SI No. 48 of 2023)",
+      "url": "https://www.mlss.gov.zm/wp-content/uploads/2023/12/IS-NO.48-1.pdf",
+      "context": "The general order sets the lowest pay and the allowances for protected employees. Shop workers and truck and bus drivers have their own orders, SI 50 of 2023 and SI 3 of 2025.",
+      "status": "Minimum wages change by statutory instrument. Check for an order later than 2025, and check which order covers the job before relying on a figure."
     },
     {
-      "id": "personal-data-sharing",
-      "question": "When can a business share my personal data without asking me?",
+      "id": "immigration-control-act-2026",
+      "question": "A new Immigration Control Act was passed in 2026. Which law governs my work permit today?",
       "kind": "Act",
-      "published": "2021",
+      "published": "2026",
       "source": "National Assembly",
-      "sourceTitle": "The Data Protection Act, 2021",
-      "url": "https://www.parliament.gov.zm/node/8853",
-      "context": "Start with the published Data Protection Act and investigate the lawful basis for sharing personal data.",
-      "status": "Check applicable exceptions and current amendments. Do not assume consent is the only lawful basis or that sharing automatically establishes a breach."
+      "sourceTitle": "The Immigration Control Act, 2026 (No. 3 of 2026)",
+      "url": "https://www.parliament.gov.zm/sites/default/files/documents/acts/The%20Immigration%20Control%20Act%2C%202026.pdf",
+      "context": "Read the new Act beside the Immigration and Deportation Act, 2010, which is the one the Department of Immigration has been applying.",
+      "status": "The 2026 Act starts on a date the Minister appoints by statutory instrument, and no commencement order is recorded here. Check the Gazette before relying on either Act."
+    },
+    {
+      "id": "planning-permission-2015",
+      "question": "Must I get planning permission before building, and what is the penalty for developing land without it?",
+      "kind": "Act",
+      "published": "2015",
+      "source": "National Assembly",
+      "sourceTitle": "The Urban and Regional Planning Act, 2015 (No. 3 of 2015)",
+      "url": "https://www.parliament.gov.zm/sites/default/files/documents/acts/The%20Urban%20and%20Regional%20Planning%20%20Act%2C%202015.pdf",
+      "context": "Section 49 carries the rule, the offence and the planning authority's power to demolish without compensation. This Act replaced the Town and Country Planning Act.",
+      "status": "Councils apply their own plans and by-laws on top of the Act, and the value of a penalty unit is set by statutory instrument. Confirm local requirements with your council."
+    },
+    {
+      "id": "napsa-contributions",
+      "question": "What NAPSA contribution must an employer pay and what is the penalty for late payment?",
+      "kind": "Act",
+      "published": "1996",
+      "source": "National Assembly",
+      "sourceTitle": "The National Pension Scheme Act (Cap. 256)",
+      "url": "https://www.parliament.gov.zm/sites/default/files/documents/acts/National%20Pension%20Scheme%20Act.pdf",
+      "context": "The Act says who must contribute, who pays it over and what happens when payment is late. The rate itself and the earnings ceiling are set separately by statutory instrument.",
+      "status": "A National Pension Scheme Act, 2026 has been passed but starts on a date the President appoints, and no commencement order is recorded here. Cap. 256 is the law for now."
+    },
+    {
+      "id": "workplace-safety-2025",
+      "question": "What must an employer do to keep a workplace safe, and who inspects it?",
+      "kind": "Act",
+      "published": "2025",
+      "source": "National Assembly",
+      "sourceTitle": "The Occupational Health and Safety Act, 2025 (No. 16 of 2025)",
+      "url": "https://www.parliament.gov.zm/sites/default/files/documents/acts/Occupationa%20Health%20Act.pdf",
+      "context": "The 2025 Act replaced the Occupational Health and Safety Act, 2010. It sets the employer's duties, when a workplace needs a health and safety committee, and what an inspector may do.",
+      "status": "Regulations made under the Act can add duties for particular industries. Check for statutory instruments made since 2025."
+    },
+    {
+      "id": "protection-order-gbv",
+      "question": "How does someone apply for a protection order under the Anti-Gender-Based Violence Act?",
+      "kind": "Act",
+      "published": "2011",
+      "source": "Ministry of Community Development and Social Services",
+      "sourceTitle": "The Anti-Gender-Based Violence Act, 2011 (No. 1 of 2011)",
+      "url": "https://www.mcdss.gov.zm/wp-content/uploads/2021/12/Anti-Gender-Based-Violence-Act.pdf",
+      "context": "The Act lets a survivor, or someone applying on their behalf, ask a court for a protection order, and sets out what the court can order.",
+      "status": "Court practice, forms and fees differ between courts. If you are in danger now, contact the police Victim Support Unit or a One Stop Centre first."
     }
   ]
 }

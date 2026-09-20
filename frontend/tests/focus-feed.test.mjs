@@ -5,6 +5,10 @@ const feed = JSON.parse(fs.readFileSync(new URL('../src/data/focus-topics.json',
 test('weekly edition has bounded dates and original safe sources', () => {
   const start = Date.parse(feed.reviewed), end = Date.parse(feed.expires)
   assert.ok(Number.isFinite(start) && end > start && end - start <= 8 * 86400000)
+  // A review dated ahead of today hides the panel until that day. Compare in
+  // Lusaka, as the component does: at 01:00 in Lusaka it is still yesterday in UTC.
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Lusaka', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
+  assert.ok(feed.reviewed <= today, `reviewed ${feed.reviewed} is ahead of ${today} in Lusaka`)
   assert.ok(feed.topics.length > 0 && feed.topics.length <= 7)
   const ids = new Set()
   for (const item of feed.topics) {
