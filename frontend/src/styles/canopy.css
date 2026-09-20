@@ -605,6 +605,11 @@
 .cp-answer-body li { margin-bottom: 4px; }
 .cp-answer-body strong { color: var(--cp-text); font-weight: 600; }
 .cp-answer-body a { color: var(--cp-primary); text-decoration: underline; text-underline-offset: 2px; }
+/* A citation in the prose that opens the document it names. Quieter than a
+   web link: the brackets are the affordance, so it reads as legal text. */
+.cp-cite { display: inline; padding: 0 1px; font: inherit; color: var(--cp-primary); text-align: left;
+  border-bottom: 1px dotted color-mix(in srgb, var(--cp-primary) 55%, transparent); border-radius: 3px; }
+.cp-cite:hover, .cp-cite:focus-visible { background: var(--cp-tint); border-bottom-style: solid; }
 .cp-answer-body code { font-size: 13px; padding: 1px 5px; border-radius: 5px; background: var(--cp-soft); color: var(--cp-primary); }
 .cp-answer-body pre { overflow-x: auto; padding: 12px 14px; border-radius: 10px; background: var(--cp-soft); font-size: 12.5px; }
 .cp-answer-body pre code { background: transparent; padding: 0; }

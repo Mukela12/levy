@@ -8,7 +8,7 @@
  * the sources panel with conservative citation badges.
  */
 
-import { useState, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { AlertCircle, Check, CheckCircle2, ChevronDown, Clock, Copy, Loader2, Paperclip, Scale } from 'lucide-react'
@@ -27,8 +27,29 @@ import { AnswerFeedback } from '@/components/chat/answer-feedback'
 import { useBrief } from '@/components/chat/brief-context'
 import type { ChatMessageProps, MessageBlock } from '@/components/chat/chat-message'
 import type { ChunkUsed } from '@/lib/api'
+import { buildCiteIndex, rehypeCiteLinks } from '@/lib/cite-links'
 import { AnswerSources } from './answer-sources'
 import { QuestionCard } from './question-card'
+
+/** A citation the prose names, rewritten by rehypeCiteLinks into `cite:<id>`. */
+function CiteAnchor({ href, children, open, ...rest }: {
+  href?: string
+  children?: ReactNode
+  open: (documentId: string, title: string, page?: number) => void
+} & Record<string, unknown>) {
+  const page = Number(rest['data-page'] as string | undefined) || undefined
+  const documentId = rest['data-cite'] as string | undefined
+  if (documentId) {
+    return (
+      <button type="button" className="cp-cite" title="Open this source"
+        onClick={() => open(documentId, String(rest['data-title'] ?? 'Source'), page)}>
+        {children}
+      </button>
+    )
+  }
+  const external = /^https?:/i.test(href || '')
+  return <a href={href} {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>{children}</a>
+}
 
 function kindLabel(toolCalls: ToolCallView[] | undefined): string {
   const names = new Set((toolCalls || []).map((c) => c.name))
@@ -124,6 +145,10 @@ export function CanopyMessage(props: ChatMessageProps) {
   } = props
   const brief = useBrief()
   const [copied, setCopied] = useState(false)
+  // Citations in the prose link to the document they name, at the page the
+  // passage came from. Built from this answer's own sources, so a citation
+  // Levy did not actually use stays plain text.
+  const citeSources = useMemo(() => buildCiteIndex({ citations, blocks }), [citations, blocks])
 
   if (role === 'user') {
     const attachBlock = blocks?.find((b): b is Extract<MessageBlock, { kind: 'attachments' }> => b.kind === 'attachments')
@@ -143,8 +168,16 @@ export function CanopyMessage(props: ChatMessageProps) {
     )
   }
 
-  const open = (documentId: string, title: string) =>
-    onOpenCitation?.({ document_id: documentId, act_name: title, page_start: 1 } as ChunkUsed)
+  const open = (documentId: string, title: string, page?: number) =>
+    onOpenCitation?.({ document_id: documentId, act_name: title, page_start: page || 1 } as ChunkUsed)
+
+  const markdown = (text: string) => (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      rehypePlugins={[rehypeCiteLinks(citeSources)]}
+      components={{ a: (props) => <CiteAnchor {...props} open={open} /> }}
+    >{text}</ReactMarkdown>
+  )
 
   const rendered: ReactNode[] = []
   if (blocks && blocks.length > 0) {
@@ -154,7 +187,7 @@ export function CanopyMessage(props: ChatMessageProps) {
         const last = idx === blocks.length - 1
         rendered.push(
           <div key={`t-${idx}`}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{block.text}</ReactMarkdown>
+            {markdown(block.text)}
             {isStreaming && last && <span className="cp-cursor" aria-hidden="true" />}
           </div>,
         )
@@ -202,7 +235,7 @@ export function CanopyMessage(props: ChatMessageProps) {
   } else if (content) {
     rendered.push(
       <div key="legacy">
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+        {markdown(content)}
         {isStreaming && <span className="cp-cursor" aria-hidden="true" />}
       </div>,
     )
