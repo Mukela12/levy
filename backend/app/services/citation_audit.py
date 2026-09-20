@@ -150,7 +150,10 @@ _NUMCITE = re.compile(
 # with optional "No. 3 of 2019" / "Cap. 87" tails.
 _ACT = re.compile(
     r"\b(?P<name>"
-    r"(?:[A-Z][A-Za-z’'\-]+(?:\s+(?:of|and|the|[A-Z][A-Za-z’'\-]+)){0,7}\s+(?:Act|Code|Rules|Regulations))(?![A-Za-z])"
+    # A parenthesised qualifier is part of the name: "Law Reform (Miscellaneous
+    # Provisions) Act", "Road Traffic (Removal of Vehicles) Regulations".
+    r"(?:[A-Z][A-Za-z’'\-]+(?:\s+(?:of|and|the|[A-Z][A-Za-z’'\-]+)){0,7}"
+    r"(?:\s+\([A-Z][^()]{2,60}\))?\s+(?:Act|Code|Rules|Regulations))(?![A-Za-z])"
     r"|Constitution(?:\s+of\s+Zambia)?"
     r")"
     r"(?P<tail>\s*,?\s*(?:No\.?\s*\d+\s*of\s*\d{4}|\(?Cap\.?\s*\d+\)?|\d{4}))?")
@@ -459,7 +462,18 @@ def _match_case(c: dict, index: list[dict]) -> dict | None:
     return top[0]
 
 
-_STATUTE_TYPES = ("act", "bill", "court_rule", "statutory_instrument")
+_STATUTE_TYPES = ("act", "bill", "court_rule", "statutory_instrument", "reference")
+# The principal rules of court are printed inside their Act, so a citation of
+# "the High Court Rules" is held, under the Act's name (17 Sep: readers were
+# told the rules they were reading about were not in the library).
+_RULES_IN_ACT = {
+    "high court rules": "high court act",
+    "rules of the high court": "high court act",
+    "subordinate court rules": "subordinate courts act",
+    "subordinate courts rules": "subordinate courts act",
+    "supreme court rules": "supreme court of zambia act",
+    "rules of the supreme court": "supreme court of zambia act",
+}
 
 
 def _statute_candidates(c: dict, index: list[dict]) -> list[dict]:
@@ -475,6 +489,9 @@ def _statute_candidates(c: dict, index: list[dict]) -> list[dict]:
              and ((name and name in r["_ntitle"]) or (r["_nshort"] and name == r["_nshort"]))]
     if cands:
         return cands
+    inside = _RULES_IN_ACT.get(re.sub(r"\s*cap(?:ter)?\.?\s*\d+|\s*(?:19|20)\d{2}", "", name).strip())
+    if inside:
+        return [r for r in index if r.get("document_type") == "act" and inside in r["_ntitle"]]
     # tolerate the common "Employment Code Act" vs "THE EMPLOYMENT CODE ACT, 2019"
     toks = [t for t in name.split() if t not in ("the", "of", "zambia")]
     if len(toks) >= 2:
@@ -505,11 +522,22 @@ def _base(title: str) -> str:
     return re.sub(r"\s+", " ", t).strip()
 
 
+def _instrument(title: str) -> str:
+    """Like _base, but the qualifier that names the instrument survives:
+    "Law Reform (Frustrated Contracts) Act" and "Law Reform (Miscellaneous
+    Provisions) Act" are different Acts, and _base collapses both."""
+    t = re.sub(r"\[[^\]]*\]|\((?:no|cap)[^)]*\)", " ", title or "", flags=re.I)
+    t = _norm(t)
+    t = re.sub(r"^(?:republic of zambia )?(?:the )?", "", t)
+    t = re.sub(r"\b(?:19|20)\d{2}\b|\bno \d+ of\b|\bcap(?:ter)? \d+\b", " ", t)
+    return re.sub(r"\s+", " ", t).strip()
+
+
 def _kind_fits(name: str, r: dict) -> bool:
     last = _norm(name).split()[-1:] or [""]
     if last[0] in ("act", "code", "constitution"):
-        return r.get("document_type") in ("act", "bill")
-    return r.get("document_type") in ("court_rule", "statutory_instrument")
+        return r.get("document_type") in ("act", "bill", "reference")
+    return r.get("document_type") in ("court_rule", "statutory_instrument", "reference")
 
 
 def _match_statute(c: dict, index: list[dict]) -> dict | None:
@@ -517,6 +545,13 @@ def _match_statute(c: dict, index: list[dict]) -> dict | None:
     if not cands:
         return None
     name = c["name"]
+    # "Law Reform Act, Cap. 74" matched the Law Reform (Frustrated Contracts)
+    # Act, because the shortest title won. A name that fits several different
+    # Acts pins none of them: say not found rather than name the wrong one.
+    if not any(_instrument(r.get("title") or "") == _instrument(name)
+               or _instrument(r.get("short_name") or "") == _instrument(name)
+               for r in cands) and len({_instrument(r.get("title") or "") for r in cands}) > 1:
+        return None
     year = _cited_year(c)
     capped = bool(re.search(r"\bCap(?:ter)?\.?\s*\d+", c.get("text", ""), re.I))
 
