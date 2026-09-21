@@ -365,6 +365,11 @@ def main() -> int:
                             # This lands in the header chunk, so retrieval can
                             # see whether an authority binds or persuades.
                             issuing_authority=court, source_url=pdf,
+                            # This harvester OCRs a scan into the new row a few
+                            # lines below, so a title-only row here is a step,
+                            # not the finished article. With --no-ocr nothing
+                            # would follow it, so let the guard refuse instead.
+                            ocr_follows=not args.no_ocr,
                         )
                     except Exception as e:  # noqa: BLE001
                         print(f"    ! ingest: {str(e)[:80]}")

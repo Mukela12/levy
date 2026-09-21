@@ -52,6 +52,41 @@ PAGE_MIN_CHARS = 200
 # what the embedding model takes happily.
 PAGE_MAX_CHARS = 4500
 
+# Documents whose whole worth is their text. A form survives an unreadable
+# text layer, because the person opens the PDF and fills it in, and the
+# title-only chunk below keeps it findable. A judgment does not: stored as a
+# title alone it tells Levy the case exists while giving it nothing to quote,
+# and an answer can end up naming a precedent the library cannot show. That
+# is how header-only judgments reached the corpus; they are refused here and
+# sent for OCR instead, the way the Parliament harvest already treats scans.
+# Acts are not on this list yet: the Parliament harvest already queues scans
+# before it gets here, and the remaining Act callers do not handle a refusal,
+# so adding them would abort a run rather than skip a file.
+TEXT_REQUIRED_TYPES = {"judgment"}
+# A scan rarely extracts to nothing at all. Stray marks and a registry stamp
+# come back as a handful of characters, so a usable text layer needs a floor
+# rather than a not-empty check. Even a one-page order runs past this.
+TEXT_LAYER_MIN_CHARS = 200
+
+
+class NeedsOcr(RuntimeError):
+    """A text-required document arrived without a usable text layer.
+
+    Raised before anything is written, so a caller that does not handle it
+    leaves no half-made row behind. Callers that harvest in bulk should
+    queue `pdf_path` for an OCR pass and carry on.
+    """
+
+    def __init__(self, pdf_path: str, document_type: str, characters: int):
+        self.pdf_path = pdf_path
+        self.document_type = document_type
+        self.characters = characters
+        super().__init__(
+            f"{Path(pdf_path).name}: this {document_type} has {characters} characters "
+            f"of extractable text (needs at least {TEXT_LAYER_MIN_CHARS}). OCR it and "
+            "ingest the result; do not store it as a title-only row."
+        )
+
 
 def _read_pages(pdf_path: str) -> list[str]:
     reader = PdfReader(pdf_path)
@@ -125,6 +160,7 @@ def ingest_form_pdf(
     issuing_authority: str | None = None,
     source_url: str | None = None,
     force: bool = False,
+    ocr_follows: bool = False,
 ) -> dict:
     """Ingest a non-statute PDF (form, application, guide, fee schedule).
 
@@ -136,6 +172,13 @@ def ingest_form_pdf(
 
     `document_type` is one of: 'form', 'application', 'guide', 'fee_schedule',
     'checklist', 'circular'. Anything outside the 'act' lane.
+
+    A type in TEXT_REQUIRED_TYPES with no readable text layer raises
+    `NeedsOcr` and writes nothing. Pass `ocr_follows=True` only if you OCR
+    into the new row straight afterwards, the way
+    `scripts/harvest_court_decisions.py` does: the guard exists to stop a
+    title-only row being the FINAL state of a judgment, not to stop it being
+    a step on the way to the text.
     """
     pdf_path = str(Path(pdf_path).resolve())
     print(f"\n  Ingesting form: {Path(pdf_path).name}")
@@ -148,6 +191,10 @@ def ingest_form_pdf(
         return {"status": "skipped", "document": existing}
 
     pages = _read_pages(pdf_path)
+    extractable = sum(len(page.strip()) for page in pages)
+    if (document_type in TEXT_REQUIRED_TYPES and not ocr_follows
+            and extractable < TEXT_LAYER_MIN_CHARS):
+        raise NeedsOcr(pdf_path, document_type, extractable)
     if not pages or not any(p.strip() for p in pages):
         print("    No extractable text — possibly scanned image; ingesting anyway as a one-chunk header so it's still discoverable.")
         # Even if the PDF is image-only, we want the form to appear in

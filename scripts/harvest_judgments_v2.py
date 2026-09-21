@@ -11,6 +11,10 @@ showed OLDER (2018) judgment PDFs are mostly 404 (purged), while RECENT
   - parses rich metadata (court, case number, parties, year, area) from the
     post slug so precedent search can filter.
 
+Scanned judgments (no text layer) are NOT ingested. They go to
+needs_ocr_judgments.txt for an OCR pass, so no case ever sits in the library
+as a title with no text behind it.
+
 Sources ONLY judiciaryzambia.com (the court's own public-domain judgments,
 robots-open). Never zambialii.org. Never the copyrighted Zambia Law Reports.
 
@@ -35,11 +39,15 @@ import _dns_resilient  # noqa: E402,F401  patch getaddrinfo before any client
 from dotenv import load_dotenv
 load_dotenv(REPO / "backend" / ".env")
 from app.db.supabase import get_db                         # noqa: E402
-from app.services.form_ingester import ingest_form_pdf     # noqa: E402
+from app.services.form_ingester import ingest_form_pdf, NeedsOcr  # noqa: E402
 
 BASE = "https://judiciaryzambia.com"
 BUCKET = "legal-docs"
 DL = Path("/tmp/levy-judgments"); DL.mkdir(parents=True, exist_ok=True)
+# Scanned judgments are queued here rather than stored as a title-only row,
+# the same way the Parliament harvest queues scanned Acts. Read it with
+# scripts/ocr_parliament_scans_vision.py, then ingest the OCR output.
+NEEDS_OCR = REPO / "scripts" / "needs_ocr_judgments.txt"
 SITEMAPS = [f"{BASE}/wp-sitemap-posts-post-{i}.xml" for i in (1, 2, 3)]
 
 SKIP = re.compile(r"/(hon-|justice-|judge|registrar|about|contact|news|event|"
@@ -197,7 +205,7 @@ def main():
 
     have = have_urls()
     print(f"have {len(have)} judgments already")
-    ingested = scanned = skipped = failed = 0
+    ingested = scanned = skipped = failed = queued_ocr = 0
     with http() as c:
         urls = post_urls(c)
         # recent first: WP sitemaps are oldest->newest, so reverse.
@@ -228,6 +236,14 @@ def main():
                     short_name=(meta["case_no"] or meta["title"])[:80], description=desc,
                     document_type="judgment", category=meta["area"],
                     issuing_authority=meta["court"], source_url=pdf_url)
+            except NeedsOcr:
+                # The PDF is a scan. Keep the file and the page it came from so
+                # an OCR pass can finish the job; storing the case name on its
+                # own would let Levy cite a judgment it cannot quote.
+                with NEEDS_OCR.open("a") as f:
+                    f.write(f"{local}|{meta['title']}|{pdf_url}|{p}\n")
+                print(f"  scanned, queued for OCR: {meta['title'][:58]}")
+                queued_ocr += 1; continue
             except Exception as e:
                 print("  ! ingest:", e); failed += 1; continue
             if res["status"] == "skipped":
@@ -245,7 +261,10 @@ def main():
             ingested += 1
             print(f"  [{ingested}/{args.limit}] ({meta['area']:>12} | {meta['court'][:22]:22}) {meta['title'][:55]}")
             time.sleep(0.5)
-    print(f"\nSUMMARY scanned={scanned} ingested={ingested} skipped={skipped} failed={failed}")
+    print(f"\nSUMMARY scanned={scanned} ingested={ingested} skipped={skipped} "
+          f"queued_for_ocr={queued_ocr} failed={failed}")
+    if queued_ocr:
+        print(f"  {queued_ocr} scanned judgment(s) listed in {NEEDS_OCR}")
 
 
 if __name__ == "__main__":
