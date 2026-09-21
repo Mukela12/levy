@@ -196,9 +196,43 @@ def _prepare(item: dict[str, Any], document_id: str) -> tuple[list[Any], int]:
     }
     chunks = chunk_sections(parsed["sections"], metadata, document_id)
     if not chunks:
-        raise RuntimeError(f"{item['key']}: parser produced no chunks")
+        # A one-page repeal or appropriation Act prints its section numbers in
+        # the margin, and OCR drops them: "1. This Act may be cited" arrives as
+        # "This Act may be cited ... Short title". The statute parser then sees
+        # no sections. Losing the whole Act over its numbering is worse than
+        # indexing the page as it reads, so fall back to the raw text.
+        chunks = _plain_chunks(parsed, metadata, document_id)
+        if not chunks:
+            raise RuntimeError(f"{item['key']}: neither sections nor text")
+        print("  no numbered sections survived OCR; indexed as plain text", flush=True)
     sections = sum(section.level == "section" for section in parsed["sections"])
     return chunks, sections
+
+
+def _plain_chunks(parsed: dict[str, Any], metadata: dict[str, Any], document_id: str) -> list[Any]:
+    """Whole-page text as chunks, for a document the section parser cannot read."""
+    from app.models.schemas import LegalChunk
+
+    name = metadata.get("short_name") or metadata.get("title") or ""
+    rows: list[Any] = []
+    for page in parsed.get("raw_pages", []):
+        text = (page.get("text") or "").strip()
+        if len(text) < 40:
+            continue
+        rows.append(LegalChunk(
+            document_id=document_id,
+            content=f"{name} - page {page['page_number']}\n\n{text}",
+            summary=None,
+            metadata={"act_name": name, "act_title": metadata.get("title", ""),
+                      "act_number": metadata.get("act_number", ""), "year": metadata.get("year"),
+                      "level": "page", "section_number": None, "section_title": None,
+                      "part_number": None, "page_start": page["page_number"],
+                      "page_end": page["page_number"], "cross_references": []},
+            chunk_index=len(rows),
+            page_start=page["page_number"],
+            page_end=page["page_number"],
+        ))
+    return rows
 
 
 def _rows_for_chunks(
