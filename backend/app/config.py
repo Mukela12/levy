@@ -38,6 +38,12 @@ class Settings(BaseSettings):
     # Anthropic (for chat)
     anthropic_api_key: str = ""
 
+    # OpenCode Zen free models (dev free-compute for RAG generation only).
+    # Own key from https://opencode.ai/auth. Empty = Zen path never attempted.
+    # Free prompts may train future models: never send confidential matter.
+    zen_api_key: str = ""
+    zen_chat_model: str = "mimo-v2.5-free"
+
     # Tavily (web search)
     tavily_api_key: str = ""
 
@@ -106,6 +112,11 @@ class Settings(BaseSettings):
     # for the numbers and why the sticker price misleads).
     moonshot_api_key: str = ""
     kimi_fallback_model: str = "kimi-k2.6"
+    # Moonshot's search/fetch REST tools, used only where ours come back
+    # empty: OCR for a scanned web PDF, a page we cannot read at all, and a
+    # gov search that found nothing. See services/kimi_tools.py for the
+    # measurements. Billed per successful call ($0.002 fetch, $0.003 search).
+    kimi_tools_enabled: bool = True
 
     # Primary agent model, env-overridable so the cheaper tier can be A/B'd
     # against the answer-feedback signal without a code change. Empty = the

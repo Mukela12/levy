@@ -39,7 +39,7 @@ from ..config import get_settings
 from ..db.supabase import search_chunks
 from .embedder import get_query_embedding, get_query_embedding_ex
 from . import law_map
-from . import pdf_tools
+from . import kimi_tools, pdf_tools
 from . import templates as templates_service
 from .entitlements import calculate_entitlements
 
@@ -478,7 +478,22 @@ async def _tavily_search(
 
 async def _gov_search(query: str, max_results: int = 5) -> dict:
     """Search restricted to whitelisted Zambian government / institutional sites."""
-    return await _tavily_search(query, max_results=max_results, include_domains=GOV_ZM_DOMAINS)
+    found = await _tavily_search(query, max_results=max_results, include_domains=GOV_ZM_DOMAINS)
+    if (found.get("result") or {}).get("count"):
+        return found
+    # Nothing on the allowlist. Moonshot's search_pro reads the pages first
+    # and returns the passages, which saves a fetch; it accepts only five
+    # domains, which is why it is the fallback and not the search.
+    passages = await kimi_tools.search_official(query, limit=min(max_results, 5))
+    if not passages:
+        return found
+    return {
+        "result": {"matches": passages, "count": len(passages),
+                   "note": "Passages from official sites (Moonshot search). Quote from the passage or open the URL."},
+        "db_sources": [],
+        "web_sources": [{"title": p["title"], "url": p["url"], "snippet": p["content"][:300],
+                         "domain": _extract_domain(p["url"])} for p in passages],
+    }
 
 
 async def _web_search(query: str, max_results: int = 5) -> dict:
@@ -621,6 +636,17 @@ async def _web_fetch(url: str) -> dict:
     except Exception as e:  # noqa: BLE001
         direct_error = f"direct fetch exception: {e}"
 
+    # Both readers failed. Moonshot's fetch reads some hosts ours cannot
+    # (and vice versa: parliament.gov.zm HTML fails there, works here).
+    recovered = await kimi_tools.fetch_url(url)
+    if recovered:
+        return {
+            "result": {"url": url, "content": recovered["markdown"][:12000],
+                       "length": len(recovered["markdown"]), "fallback": "moonshot"},
+            "db_sources": [],
+            "web_sources": [{"title": recovered["title"] or url, "url": url,
+                             "snippet": recovered["markdown"][:300], "domain": _extract_domain(url)}],
+        }
     return {
         "result": {
             "error": " | ".join(filter(None, [tavily_error, direct_error]))
@@ -652,7 +678,19 @@ async def _fetch_pdf_as_text(url: str) -> dict:
     result: dict = {"url": url, "kind": "pdf", "total_pages": total, "pages_read": len(pages),
                     "content": text, "scanned": scanned}
     if scanned:
-        result["next_step"] = "No text layer. Call read_pdf_pages(url=...) to read the pages as images."
+        # A scan gives pdfplumber nothing. Moonshot's fetch OCRs it for
+        # $0.002, which beats sending the reader away empty-handed; Apple
+        # Vision is better but runs only on the harvest machine.
+        recovered = await kimi_tools.fetch_url(url)
+        if recovered:
+            result["content"] = recovered["markdown"][:12000]
+            result["text_provenance"] = "OCR (Moonshot fetch): no page numbers, and OCR errors are likely"
+            result["next_step"] = (
+                "This text came from OCR of a scan, so cite the Act and section, never a page, "
+                "and quote only what reads cleanly. For a page-accurate read call read_pdf_pages(url=...)."
+            )
+        else:
+            result["next_step"] = "No text layer. Call read_pdf_pages(url=...) to read the pages as images."
     elif total > len(pages):
         result["next_step"] = f"Pages {len(pages) + 1}-{total} not read; use read_pdf_pages(url=..., page_start=...) for the rest. Use fetch_web_pdf to hand the user the file."
     return {"result": result, "_model_max_chars": 14_000, "db_sources": [],
