@@ -99,6 +99,45 @@ def split_large_content(content: str, max_size: int = MAX_CHUNK_SIZE) -> list[st
     return final_chunks
 
 
+def plain_page_chunks(raw_pages: list[dict], act_metadata: dict, document_id: str) -> list[LegalChunk]:
+    """Page text as chunks, for a document whose sections the parser cannot read.
+
+    A one-page repeal or appropriation Act prints its section numbers in the
+    margin and OCR drops them, so the parser sees no sections and the
+    document used to be stored with no text at all: a title in the library
+    with nothing behind it (4 Acts, 21 Sep 2026). Indexing the page as it
+    reads is worse than a clean parse and far better than an empty row.
+    """
+    name = act_metadata.get("short_name") or act_metadata.get("title") or ""
+    chunks: list[LegalChunk] = []
+    for page in raw_pages or []:
+        text = (page.get("text") or "").strip()
+        if len(text) < 40:
+            continue
+        number = page.get("page_number") or len(chunks) + 1
+        chunks.append(LegalChunk(
+            document_id=document_id,
+            content=f"{name} - page {number}\n\n{text}",
+            metadata={
+                "act_name": name,
+                "act_title": act_metadata.get("title", ""),
+                "act_number": act_metadata.get("act_number", ""),
+                "year": act_metadata.get("year"),
+                "level": "page",
+                "section_number": None,
+                "section_title": None,
+                "part_number": None,
+                "page_start": number,
+                "page_end": number,
+                "cross_references": [],
+            },
+            chunk_index=len(chunks),
+            page_start=number,
+            page_end=number,
+        ))
+    return chunks
+
+
 def chunk_sections(
     sections: list[ParsedSection],
     act_metadata: dict,

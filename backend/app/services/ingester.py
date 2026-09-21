@@ -6,7 +6,7 @@ This is the main pipeline for adding new legal documents to the system.
 
 from pathlib import Path
 from .parser import parse_legal_pdf, get_pdf_hash
-from .chunker import chunk_sections
+from .chunker import chunk_sections, plain_page_chunks
 from .embedder import get_embeddings
 from ..db.supabase import (
     insert_document,
@@ -68,6 +68,13 @@ def ingest_pdf(pdf_path: str, force: bool = False, overrides: dict | None = None
     # Step 4: Create chunks
     print("\n[3/4] Chunking sections...")
     chunks = chunk_sections(parsed["sections"], metadata, document_id)
+    if not chunks:
+        # No numbered section survived (a margin-numbered one-page Act, or a
+        # scan). Index the page text rather than storing a title with nothing
+        # behind it.
+        chunks = plain_page_chunks(parsed.get("raw_pages", []), metadata, document_id)
+        if chunks:
+            print(f"  No numbered sections; indexed {len(chunks)} page(s) of text instead.")
 
     if not chunks:
         print("  WARNING: No chunks created. PDF may not have parseable structure.")
@@ -139,6 +146,8 @@ def chunk_existing_pdf(pdf_path: str, document_id: str) -> dict:
     metadata = parsed["metadata"]
 
     chunks = chunk_sections(parsed["sections"], metadata, document_id)
+    if not chunks:
+        chunks = plain_page_chunks(parsed.get("raw_pages", []), metadata, document_id)
     if not chunks:
         return {"status": "empty", "document_id": document_id, "chunks_created": 0}
 
