@@ -13,8 +13,11 @@ import { submitFeedback, clearFeedback } from '@/lib/api'
  * thumbs-down opens a one-line "what was wrong?" box, because the reason is
  * worth far more than the count.
  *
- * Deliberately quiet: it sits at the same weight as the timing readout and
- * only gains colour once used, so it never competes with the answer itself.
+ * It used to be 12px icons at 15% white, which on the light theme is white on
+ * white. Across 448 questions between July and September not one person voted
+ * either way, so every quality judgement still came from reading threads by
+ * hand. It now carries a label and sits at the weight of the other actions in
+ * the row: quiet, but legible on both themes.
  */
 export function AnswerFeedback({ messageId }: { messageId: string }) {
   const [rating, setRating] = useState<'up' | 'down' | null>(null)
@@ -60,48 +63,38 @@ export function AnswerFeedback({ messageId }: { messageId: string }) {
     }
   }
 
-  const base =
-    'p-1 rounded transition-colors duration-150 hover:bg-white/[0.06] disabled:opacity-40'
+  const base = 'cp-feedback-btn'
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <div className="flex items-center gap-0.5">
+    <div className="cp-feedback">
+      <div className="cp-feedback-row">
+        {!sent && !failed && <span className="cp-feedback-label">Helpful?</span>}
         <button
           type="button"
           onClick={() => vote('up')}
           aria-label="This answer was helpful"
           aria-pressed={rating === 'up'}
-          className={base}
+          className={`${base}${rating === 'up' ? ' is-up' : ''}`}
         >
-          <ThumbsUp
-            className={`w-3 h-3 ${
-              rating === 'up' ? 'text-emerald-400' : 'text-white/15 hover:text-white/40'
-            }`}
-          />
+          <ThumbsUp className="w-4 h-4" />
         </button>
         <button
           type="button"
           onClick={() => vote('down')}
           aria-label="This answer was not helpful"
           aria-pressed={rating === 'down'}
-          className={base}
+          className={`${base}${rating === 'down' ? ' is-down' : ''}`}
         >
-          <ThumbsDown
-            className={`w-3 h-3 ${
-              rating === 'down' ? 'text-amber-400' : 'text-white/15 hover:text-white/40'
-            }`}
-          />
+          <ThumbsDown className="w-4 h-4" />
         </button>
-        {sent && <span className="text-[10px] text-white/25 ml-1">Thanks — noted.</span>}
+        {sent && <span className="cp-feedback-note">Thanks, noted.</span>}
         {failed && (
-          <span className="text-[10px] text-white/25 ml-1">
-            Could not save that. Your answer is unaffected.
-          </span>
+          <span className="cp-feedback-note">Could not save that. Your answer is unaffected.</span>
         )}
       </div>
 
       {askReason && (
-        <div className="flex items-center gap-1.5">
+        <div className="cp-feedback-reason">
           <input
             autoFocus
             value={reason}
@@ -112,12 +105,12 @@ export function AnswerFeedback({ messageId }: { messageId: string }) {
             }}
             placeholder="What was wrong? (optional)"
             maxLength={2000}
-            className="flex-1 max-w-sm bg-white/[0.03] border border-white/10 rounded px-2 py-1 text-[11px] text-white/80 placeholder-white/25 focus:outline-none focus:border-white/25"
+            className="cp-feedback-input"
           />
           <button
             type="button"
             onClick={sendReason}
-            className="text-[10.5px] text-white/45 hover:text-white/80 px-1.5 py-1"
+            className="cp-feedback-send"
           >
             Send
           </button>

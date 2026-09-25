@@ -2,7 +2,8 @@
 
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase'
-import { streamQuery } from '@/lib/api'
+import { AlreadyAnswering, streamQuery } from '@/lib/api'
+import { shouldWaitForAnswer } from '@/lib/stream-recovery'
 import { clearAwaiting, markAwaiting } from '@/lib/session-status'
 import type { ToolCallView } from '@/components/chat/tool-call-card'
 import type { MessageBlock } from '@/components/chat/chat-message'
@@ -155,11 +156,14 @@ export function ChatStreamProvider({ children }: { children: React.ReactNode }) 
   // then swap it in for the stalled placeholder. Runs take up to a couple of
   // minutes, so poll patiently and give up quietly after three.
   const recoverSaved = useCallback(
-    (sid: string, knownIds: Set<string>) => {
+    (sid: string, knownIds: Set<string>, onGiveUp?: () => void) => {
       const supabase = createClient()
       const startedAt = Date.now()
       const tick = async () => {
-        if (Date.now() - startedAt > 180_000) return
+        if (Date.now() - startedAt > 180_000) {
+          onGiveUp?.()
+          return
+        }
         try {
           const { data } = await supabase
             .from('chat_messages')
@@ -242,15 +246,33 @@ export function ChatStreamProvider({ children }: { children: React.ReactNode }) 
         }
       })
 
-      // Persist the user turn (fire-and-forget; streaming proceeds regardless).
-      void saveMessage(sid, 'user', userMsg)
-
       // For stream-drop recovery: every assistant id we already know about.
       // A recovered row must be newer than all of these.
       const knownIds = new Set(
         cur.messages.map((m) => m.id).filter((x): x is string => Boolean(x)),
       )
       let runCompleted = false
+      // Did the server take this run? A pre-flight refusal (not signed in,
+      // trial used up, rate limited) never started one, so there is nothing
+      // to recover and the reader must be told straight away.
+      let runAccepted = false
+
+      // Give up on this turn: show the reason in the empty placeholder and
+      // release the thread, so the composer unlocks. Both the clean-close and
+      // the error path end here.
+      const fail = (text: string) =>
+        commit((prev) => {
+          const c = prev[sid]
+          if (!c || c.messages.length === 0) return prev
+          const msgs = [...c.messages]
+          const last = msgs[msgs.length - 1]
+          if (last.role === 'assistant' && !last.content) {
+            msgs[msgs.length - 1] = { ...last, content: text }
+          }
+          return { ...prev, [sid]: { ...c, status: 'error', messages: msgs } }
+        })
+      const STILL_WRITING =
+        'That answer is taking longer than usual. Reload the page to pick it up.'
 
       streamQuery(
         question,
@@ -265,6 +287,13 @@ export function ChatStreamProvider({ children }: { children: React.ReactNode }) 
         undefined,
         undefined,
         {
+          // Persist the question only once the server has taken the run. The
+          // duplicate-run guard refuses a resend, and saving before that left
+          // the same question in the thread twice.
+          onAccepted: () => {
+            runAccepted = true
+            void saveMessage(sid, 'user', userMsg)
+          },
           onToken: (chunk) =>
             updateLast(sid, (last) => {
               const blocks = [...(last.blocks ?? [])]
@@ -500,29 +529,39 @@ export function ChatStreamProvider({ children }: { children: React.ReactNode }) 
       ).then(() => {
         // The stream closed cleanly but the run never announced completion:
         // a proxy or flaky network cut the connection early. The durable run
-        // is still going server-side; go fetch what it saves.
-        if (!runCompleted && opts.token) recoverSaved(sid, knownIds)
+        // is still going server-side; go fetch what it saves. If it never
+        // arrives, say so and release the thread — leaving it 'streaming'
+        // locks the composer with nothing on the way.
+        if (!runCompleted && opts.token) {
+          recoverSaved(sid, knownIds, () =>
+            fail(STILL_WRITING),
+          )
+        }
       }).catch((e) => {
         const friendly =
           e instanceof Error && !e.message.startsWith('API error') && !e.message.startsWith('No response')
             ? e.message
             : 'Sorry, I encountered an error. Please try again.'
-        commit((prev) => {
-          const c = prev[sid]
-          if (!c || c.messages.length === 0) return prev
-          const msgs = [...c.messages]
-          const last = msgs[msgs.length - 1]
-          if (last.role === 'assistant' && !last.content) {
-            msgs[msgs.length - 1] = {
-              ...last,
-              content: friendly,
-            }
-          }
-          return { ...prev, [sid]: { ...c, status: 'error', messages: msgs } }
-        })
-        // Mid-stream failures leave a half-answer on screen; the server-side
-        // run usually still finishes and saves. Recover it when signed in.
-        if (opts.token) recoverSaved(sid, knownIds)
+        // A run outlives the connection that started it, so a lost stream does
+        // not mean a lost answer. While it can still be recovered the thread
+        // stays 'streaming': that keeps the composer locked, and unlocking it
+        // here is what let one question collect two answers. Only when the
+        // recovery gives up does this become an error the reader must act on.
+        if (
+          shouldWaitForAnswer({
+            accepted: runAccepted,
+            alreadyAnswering: e instanceof AlreadyAnswering,
+            signedIn: Boolean(opts.token),
+          })
+        ) {
+          recoverSaved(sid, knownIds, () =>
+            fail(
+              e instanceof AlreadyAnswering ? STILL_WRITING : friendly,
+            ),
+          )
+          return
+        }
+        fail(friendly)
       })
     },
     [commit, updateLast, recoverSaved],

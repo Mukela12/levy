@@ -602,6 +602,12 @@ export interface AskUserEvent {
 }
 
 export interface StreamHandlers {
+  /**
+   * The server accepted this run: the request got past auth, the trial gate
+   * and the duplicate-run guard. Only now is the question definitely going to
+   * be answered, so this is when it is worth persisting.
+   */
+  onAccepted?: () => void
   /** Free-trial budget for signed-out visitors, sent once at stream start. */
   onTrial?: (info: { remaining: number; limit: number; pass?: string }) => void
   /**
@@ -626,6 +632,20 @@ export interface StreamHandlers {
   onCitationAudit?: (citations: CitationVerdict[]) => void
   onDone?: (metadata: AgentDoneMetadata) => void
   onError?: (message: string) => void
+}
+
+/**
+ * The server is already running this exact question for this thread.
+ *
+ * Not a failure: a run outlives the connection that started it, so when a
+ * stream drops and the question is sent again the first run is still writing
+ * the answer. Callers wait for it rather than showing an error.
+ */
+export class AlreadyAnswering extends Error {
+  constructor(detail?: string) {
+    super(detail || 'Levy is still answering that question. The answer will appear shortly.')
+    this.name = 'AlreadyAnswering'
+  }
 }
 
 export async function streamQuery(
@@ -676,6 +696,9 @@ export async function streamQuery(
     } catch {
       // non-JSON error body; fall through to the generic messages
     }
+    // 409 = this exact question is already being answered on the server. The
+    // caller waits for the running answer instead of asking for it twice.
+    if (res.status === 409) throw new AlreadyAnswering(detail)
     // 402 = the free trial for signed-out visitors is used up for today.
     if (res.status === 402)
       throw new Error(detail || 'You have used your free questions for today. Please sign in to keep going — it is free.')
@@ -686,6 +709,8 @@ export async function streamQuery(
       throw new Error(detail || 'Levy is handling a lot of requests right now. Please wait a moment and try again.')
     throw new Error(`API error: ${res.status}`)
   }
+
+  handlers?.onAccepted?.()
 
   const reader = res.body?.getReader()
   if (!reader) throw new Error('No response body')

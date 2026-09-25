@@ -26,6 +26,7 @@ import time
 from ..services import rag
 from ..services.agent import run_agent, DEFAULT_MODEL as DEFAULT_AGENT_MODEL
 from ..services.chat_persist import RunAccumulator, ensure_user_turn
+from ..services import run_registry
 from ..services.ingester import ingest_pdf
 from ..services.embedder import get_query_embedding
 from ..db.supabase import search_chunks, get_db
@@ -504,6 +505,7 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
                         naming_task.add_done_callback(_INFLIGHT_RUNS.discard)
                 except Exception:
                     logger.exception("durable save failed")
+            run_registry.end(safe_session_id, request.query)
             await queue.put(None)  # stream sentinel — must be last
             # Anonymous runs have no session row, so this is the only record
             # that the question was ever asked. Content-free; see _log_anon.
@@ -518,6 +520,16 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
                     http_request=http_request,
                 )
 
+    # A dropped stream unlocks the composer while the detached run above keeps
+    # going, so the same question can arrive twice and be answered twice. Claim
+    # it here, immediately before the task is created, and release it in the
+    # run's finally. The client turns the 409 into a wait for the answer the
+    # first run is already writing.
+    if not run_registry.begin(safe_session_id, request.query):
+        raise HTTPException(
+            status_code=409,
+            detail="Levy is still answering that question. The answer will appear shortly.",
+        )
     task = asyncio.create_task(_drive())
     _INFLIGHT_RUNS.add(task)
     task.add_done_callback(_INFLIGHT_RUNS.discard)
