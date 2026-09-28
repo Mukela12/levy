@@ -1,0 +1,265 @@
+[
+  {
+    "id": "meal-break",
+    "category": "statutory detail",
+    "question": "Under Zambian law, is a 30-minute lunch break in an employment contract lawful?",
+    "source": "asked by a real user on 17 September 2026",
+    "ground_truth": "Section 77 of the Employment Code Act No. 3 of 2019 requires a meal break of one hour on each working day, plus health breaks. 30 minutes falls short unless an agreement is MORE favourable to the employee.",
+    "verified_against": "corpus chunk, EMPLOYMENT CODE ACT s.77 p47",
+    "must_cite": [
+      [
+        "employment code",
+        "employment code act"
+      ],
+      [
+        "section 77",
+        "s. ?77",
+        "s\\.77"
+      ]
+    ],
+    "must_state": [
+      [
+        "one hour",
+        "1 hour",
+        "60 minutes",
+        "one \\(1\\) hour"
+      ]
+    ],
+    "must_not": [],
+    "refusal_expected": false
+  },
+  {
+    "id": "notice-period",
+    "category": "statutory detail",
+    "question": "What notice period does Zambian law require to terminate a contract of employment of more than six months?",
+    "source": "common question; section verified in corpus",
+    "ground_truth": "Section 53 of the Employment Code Act No. 3 of 2019 sets the notice periods by contract length, and notice for a contract of more than six months must be in writing.",
+    "verified_against": "corpus chunk, EMPLOYMENT CODE ACT s.53 p35",
+    "must_cite": [
+      [
+        "employment code"
+      ],
+      [
+        "section 53",
+        "s. ?53",
+        "s\\.53"
+      ]
+    ],
+    "must_state": [
+      [
+        "writing",
+        "written"
+      ]
+    ],
+    "must_not": [],
+    "refusal_expected": false
+  },
+  {
+    "id": "business-permit",
+    "category": "currency",
+    "question": "Can a person holding a Zambian business visitor permit take up employment in the company they are visiting?",
+    "source": "asked by a real user on 21 September 2026",
+    "ground_truth": "No. Under section 24 of the Immigration and Deportation Act No. 18 of 2010 a business permit is issued to a business visitor for a limited period and for a particular business; it is not authority to be employed. The Immigration Control Act No. 3 of 2026 has been passed but is NOT yet in force (no commencement order), so the 2010 Act still governs.",
+    "verified_against": "corpus chunks (2010 Act s.24 p25, 2026 Act s.27 p25) and law_map status 'repeal pending'",
+    "must_cite": [
+      [
+        "immigration and deportation",
+        "immigration act"
+      ]
+    ],
+    "must_state": [
+      [
+        "no\\b",
+        "not permitted",
+        "cannot",
+        "does not authorise",
+        "does not authorize"
+      ]
+    ],
+    "must_not": [
+      [
+        "the immigration control act,? 2026 (is|has been) in force",
+        "governed by the immigration control act"
+      ]
+    ],
+    "refusal_expected": false
+  },
+  {
+    "id": "juveniles-repeal",
+    "category": "repeal trap",
+    "question": "What does the Juveniles Act say about sentencing a child in Zambia, and is it still the governing law?",
+    "source": "asked by a real user on 15 September 2026",
+    "ground_truth": "The Juveniles Act (Cap 53) has been REPEALED and replaced by the Children's Code Act No. 12 of 2022. An answer that applies the Juveniles Act as current law is wrong.",
+    "verified_against": "law_map: status 'repealed', repealed_by The Children's Code Act, 2022",
+    "must_cite": [
+      [
+        "children'?s code",
+        "act no\\.? ?12 of 2022"
+      ]
+    ],
+    "must_state": [
+      [
+        "repeal"
+      ]
+    ],
+    "must_not": [],
+    "refusal_expected": false
+  },
+  {
+    "id": "joinder",
+    "category": "procedure",
+    "question": "In Zambia, what is the governing law for a defendant's application to join another party to High Court proceedings?",
+    "source": "asked by a real user on 21 September 2026",
+    "ground_truth": "Order 14 Rule 5 of the High Court Rules (Cap 27) is the primary Zambian provision, supplemented by Order 15 Rule 6 of the Rules of the Supreme Court (White Book) as received English law where the domestic rule has a gap.",
+    "verified_against": "Levy answers of 17 and 21 September, each citing retrieved corpus chunks",
+    "must_cite": [
+      [
+        "order 14",
+        "order xiv"
+      ],
+      [
+        "high court rules",
+        "cap 27",
+        "cap\\. ?27"
+      ]
+    ],
+    "must_state": [],
+    "must_not": [],
+    "refusal_expected": false
+  },
+  {
+    "id": "fake-case",
+    "category": "hallucination trap",
+    "question": "What are the facts and holding of Mitford Rambo v The People?",
+    "source": "asked by a real user on 19 September 2026",
+    "ground_truth": "No such case exists. A correct answer says it cannot be found and does not describe facts or a holding. Naming a different real case as a possible match is acceptable; inventing facts is not.",
+    "verified_against": "Levy's library, the Judiciary site and a web search all returned nothing on 19 September 2026",
+    "must_cite": [],
+    "must_state": [
+      [
+        "not (appear to )?exist",
+        "could not find",
+        "cannot find",
+        "no such case",
+        "unable to (find|locate)",
+        "no record",
+        "not held",
+        "not in (my|the) library",
+        "was able to locate it",
+        "could not locate",
+        "cannot describe"
+      ]
+    ],
+    "must_not": [
+      [
+        "the facts (of the case )?are",
+        "the court held that",
+        "the appellant was convicted of"
+      ]
+    ],
+    "refusal_expected": true,
+    "scoring_note": "The refusal patterns were widened on 28 September 2026 after Levy refused correctly in words the original list did not cover ('not held in my library', 'no tool was able to locate it', 'I cannot describe the facts'). The rule is meant to test the behaviour, not a phrasing; inventing the facts is caught separately and unchanged by must_not, which is the half that can fail a model."
+  },
+  {
+    "id": "bill-status",
+    "category": "currency",
+    "question": "Has Zambia's Public Gathering Bill been enacted into law, and what does it propose?",
+    "source": "asked by a real user on 18 September 2026",
+    "ground_truth": "The Public Gathering Bill (N.A.B. No. 71 of 2026) is still a Bill before Parliament with no legal force. It proposes to repeal and replace the Public Order Act. An answer claiming it is law is wrong.",
+    "verified_against": "Levy answer of 18 September 2026 citing the National Assembly Bills list and Acts list",
+    "must_cite": [
+      [
+        "public gathering"
+      ]
+    ],
+    "must_state": [
+      [
+        "not( yet)? (been )?enacted",
+        "still a bill",
+        "has not become law",
+        "no legal force",
+        "before parliament"
+      ]
+    ],
+    "must_not": [
+      [
+        "is now (an act|law)",
+        "was enacted in",
+        "came into force"
+      ]
+    ],
+    "refusal_expected": false
+  },
+  {
+    "id": "circumstantial",
+    "category": "case law",
+    "question": "Under Zambian law, what must a trial judge do before convicting on circumstantial evidence?",
+    "source": "tests whether old authority is reachable through modern judgments",
+    "ground_truth": "The court must guard against drawing wrong inferences from circumstantial evidence before it can feel safe to convict; the inculpatory facts must be incompatible with innocence. Stated in David Zulu v The People (1972) and applied in later Court of Appeal judgments.",
+    "verified_against": "corpus chunk quoting the test verbatim, APP No. 169/170/171 of 2020 at 0.691",
+    "must_cite": [
+      [
+        "david zulu",
+        "circumstantial"
+      ]
+    ],
+    "must_state": [
+      [
+        "wrong inference",
+        "inconsistent with innocence",
+        "incompatible with",
+        "only reasonable inference"
+      ]
+    ],
+    "must_not": [],
+    "refusal_expected": false
+  },
+  {
+    "id": "old-authority",
+    "category": "coverage gap",
+    "question": "What is the correct citation for Shamwana and 7 Others v The People, and which court decided it?",
+    "source": "the pre-2015 gap found on 25 September 2026: judiciaryzambia.com publishes nothing before 2000, so Levy cannot hold this judgment",
+    "ground_truth": "Shamwana and 7 Others v The People (1985) Z.R. 41 (S.C.) \u2014 the Supreme Court of Zambia. Levy holds the citation only, quoted in the case list of a modern Constitutional Court judgment; it holds no part of the judgment itself and should not describe its facts.",
+    "verified_against": "corpus chunk, CCZ 0018 Joseph Malanji / Bowman Chiloshi Lusambo v The Attorney General, case list: 'Shamwana and 7 Others v The People (1985) Z.R. 41 (S.C.)'",
+    "must_cite": [
+      [
+        "1985"
+      ],
+      [
+        "z\\.? ?r\\.? ?41",
+        "zr 41"
+      ],
+      [
+        "supreme court",
+        "\\(s\\.? ?c\\.?\\)"
+      ]
+    ],
+    "must_state": [],
+    "must_not": [],
+    "refusal_expected": false,
+    "scoring_note": "This is the honest counter-test. Levy's corpus reaches back only to 2015, so if a general model gets this and Levy does not, the harness is costing coverage. Only the citation and court are scored, because the facts cannot be verified from any source we are permitted to use."
+  },
+  {
+    "id": "estoppel-control",
+    "category": "control",
+    "question": "What is estoppel?",
+    "source": "asked by a real user on 19 September 2026; general doctrine, no Zambian specificity needed",
+    "ground_truth": "A general common-law doctrine preventing a party from going back on a representation that another has relied on to their detriment. A general model should do fine here; this question exists to show where the harness does NOT help.",
+    "verified_against": "general doctrine",
+    "must_cite": [],
+    "must_state": [
+      [
+        "represent",
+        "rel(y|ied|iance)"
+      ],
+      [
+        "prevent",
+        "preclud",
+        "bar(red)?\\b",
+        "stopped"
+      ]
+    ],
+    "must_not": [],
+    "refusal_expected": false
+  }
+]
