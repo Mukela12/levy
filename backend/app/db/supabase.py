@@ -81,6 +81,37 @@ def search_chunks(
     return result.data
 
 
+def search_keyword(
+    query_text: str,
+    query_embedding: list[float] | None = None,
+    top_k: int = 30,
+    *,
+    caller_user_id: str | None = None,
+    attached_doc_ids: list[str] | None = None,
+) -> list[dict]:
+    """Keyword search (supabase/migrations/20260928000000_keyword_search.sql).
+
+    Same visibility rules as search_chunks. Returns [] if the function is not
+    there or fails, so search falls back to vectors alone rather than break.
+    """
+    try:
+        result = get_db().rpc(
+            "search_legal_chunks_keyword",
+            {
+                "query_text": query_text,
+                "query_embedding": query_embedding,
+                "match_count": top_k,
+                "caller_user_id": caller_user_id,
+                "attached_doc_ids": attached_doc_ids or [],
+            },
+        ).execute()
+        return result.data or []
+    except Exception:  # noqa: BLE001 — keyword search is an addition, never a dependency
+        import logging
+        logging.getLogger(__name__).warning("keyword search unavailable", exc_info=True)
+        return []
+
+
 def get_document_by_hash(pdf_hash: str) -> dict | None:
     """Check if a document has already been ingested."""
     db = get_db()

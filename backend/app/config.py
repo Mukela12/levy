@@ -158,6 +158,15 @@ class Settings(BaseSettings):
     # RAG config
     retrieval_top_k: int = 5
     similarity_threshold: float = 0.7
+    # Fuse keyword search with vector search (app/services/hybrid.py). Off
+    # until the Postgres keyword function is migrated and measured against the
+    # BM25 prototype: the prototype's numbers do not transfer automatically,
+    # because Postgres full-text ranking is not BM25.
+    hybrid_retrieval_enabled: bool = False
+    # Vector candidates fed into fusion come from a deeper, looser list than
+    # the dense-only path uses; each list contributes this many.
+    hybrid_candidates: int = 30
+    hybrid_dense_threshold: float = 0.3
 
     class Config:
         env_file = str(_ENV_FILE)

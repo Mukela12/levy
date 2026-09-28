@@ -36,9 +36,9 @@ except Exception:
     pass
 
 from ..config import get_settings
-from ..db.supabase import search_chunks
+from ..db.supabase import search_chunks, search_keyword
 from .embedder import get_query_embedding, get_query_embedding_ex
-from . import law_map
+from . import hybrid, law_map
 from . import kimi_tools, pdf_tools
 from . import templates as templates_service
 from .entitlements import calculate_entitlements
@@ -197,15 +197,32 @@ async def _search_corpus(
     settings = get_settings()
     threshold = threshold if threshold is not None else settings.similarity_threshold
     emb = await asyncio.to_thread(get_query_embedding_ex, query)
-    candidates = await asyncio.to_thread(
-        search_chunks,
-        emb["vector"],
-        top_k=top_k * 3,
-        threshold=threshold,
-        caller_user_id=caller_user_id,
-        attached_doc_ids=attached_doc_ids,
-        space=emb["space"],
-    )
+    # Hybrid only in the primary (OpenAI) space: the keyword function scores
+    # its hits against that column, and the Gemini fallback path is rare.
+    if getattr(settings, "hybrid_retrieval_enabled", False) and emb["space"] == "openai":
+        n = settings.hybrid_candidates
+        dense, keyword = await asyncio.gather(
+            asyncio.to_thread(
+                search_chunks, emb["vector"], top_k=n,
+                threshold=min(threshold, settings.hybrid_dense_threshold),
+                caller_user_id=caller_user_id, attached_doc_ids=attached_doc_ids, space=emb["space"],
+            ),
+            asyncio.to_thread(
+                search_keyword, query, emb["vector"], n,
+                caller_user_id=caller_user_id, attached_doc_ids=attached_doc_ids,
+            ),
+        )
+        candidates = hybrid.fuse(dense, keyword) if keyword else dense
+    else:
+        candidates = await asyncio.to_thread(
+            search_chunks,
+            emb["vector"],
+            top_k=top_k * 3,
+            threshold=threshold,
+            caller_user_id=caller_user_id,
+            attached_doc_ids=attached_doc_ids,
+            space=emb["space"],
+        )
     # One big repealed Act can fill every slot: the Roads and Road Traffic Act
     # (Cap. 464, dead since 2002) is 1,755 chunks and took all six for a
     # driving-licence question. Live law goes first; at most two repealed
@@ -215,7 +232,10 @@ async def _search_corpus(
     keep_dead = min(len(dead), 2 if live else top_k)
     chunks = live[: top_k - keep_dead] + dead[:keep_dead]
     chunks += dead[keep_dead : keep_dead + top_k - len(chunks)]
-    chunks.sort(key=lambda c: c.get("similarity", 0.0), reverse=True)
+    # Fused results are already in their fused order; re-sorting them by
+    # cosine would undo the fusion and hand the ranking back to the vectors.
+    if not (getattr(settings, "hybrid_retrieval_enabled", False) and emb["space"] == "openai"):
+        chunks.sort(key=lambda c: c.get("similarity", 0.0), reverse=True)
 
     results = []
     db_sources = []
