@@ -1,0 +1,1028 @@
+{
+ "summary": {
+  "current law": {
+   "dense": {
+    "act": 0.312,
+    "sec": 0.188,
+    "p": 0.237,
+    "mrr": 0.125,
+    "terms": 0.729,
+    "ms": 591
+   },
+   "lexical": {
+    "act": 0.625,
+    "sec": 0.25,
+    "p": 0.313,
+    "mrr": 0.177,
+    "terms": 0.786,
+    "ms": 1413
+   },
+   "hybrid": {
+    "act": 0.625,
+    "sec": 0.312,
+    "p": 0.287,
+    "mrr": 0.188,
+    "terms": 0.823,
+    "ms": 0
+   },
+   "prod-off": {
+    "act": 0.312,
+    "sec": 0.188,
+    "p": 0.237,
+    "mrr": 0.125,
+    "terms": 0.729,
+    "ms": 772
+   },
+   "prod-on": {
+    "act": 0.625,
+    "sec": 0.312,
+    "p": 0.3,
+    "mrr": 0.188,
+    "terms": 0.823,
+    "ms": 3428
+   }
+  },
+  "all, as written": {
+   "dense": {
+    "act": 0.417,
+    "sec": 0.167,
+    "p": 0.208,
+    "mrr": 0.094,
+    "terms": 0.747,
+    "ms": 591
+   },
+   "lexical": {
+    "act": 0.75,
+    "sec": 0.208,
+    "p": 0.308,
+    "mrr": 0.126,
+    "terms": 0.706,
+    "ms": 1413
+   },
+   "hybrid": {
+    "act": 0.708,
+    "sec": 0.25,
+    "p": 0.275,
+    "mrr": 0.135,
+    "terms": 0.782,
+    "ms": 0
+   },
+   "prod-off": {
+    "act": 0.417,
+    "sec": 0.167,
+    "p": 0.208,
+    "mrr": 0.104,
+    "terms": 0.747,
+    "ms": 772
+   },
+   "prod-on": {
+    "act": 0.708,
+    "sec": 0.25,
+    "p": 0.292,
+    "mrr": 0.135,
+    "terms": 0.772,
+    "ms": 3428
+   }
+  }
+ },
+ "per_question": [
+  {
+   "id": "env-01",
+   "difficulty": "easy",
+   "dense": {
+    "act": true,
+    "sec": false,
+    "p": 0.8,
+    "mrr": 0.0,
+    "terms": 0.6666666666666666
+   },
+   "lexical": {
+    "act": true,
+    "sec": false,
+    "p": 0.8,
+    "mrr": 0.0,
+    "terms": 0.3333333333333333
+   },
+   "hybrid": {
+    "act": true,
+    "sec": false,
+    "p": 0.6,
+    "mrr": 0.0,
+    "terms": 0.6666666666666666
+   },
+   "prod-off": {
+    "act": true,
+    "sec": false,
+    "p": 0.8,
+    "mrr": 0.0,
+    "terms": 0.6666666666666666
+   },
+   "prod-on": {
+    "act": true,
+    "sec": false,
+    "p": 0.8,
+    "mrr": 0.0,
+    "terms": 0.6666666666666666
+   }
+  },
+  {
+   "id": "env-02",
+   "difficulty": "medium",
+   "dense": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "lexical": {
+    "act": true,
+    "sec": false,
+    "p": 0.4,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "hybrid": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-off": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-on": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 1.0
+   }
+  },
+  {
+   "id": "env-03",
+   "difficulty": "easy",
+   "dense": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.25
+   },
+   "lexical": {
+    "act": true,
+    "sec": true,
+    "p": 0.8,
+    "mrr": 0.3333333333333333,
+    "terms": 0.25
+   },
+   "hybrid": {
+    "act": true,
+    "sec": true,
+    "p": 0.2,
+    "mrr": 0.3333333333333333,
+    "terms": 0.25
+   },
+   "prod-off": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.25
+   },
+   "prod-on": {
+    "act": true,
+    "sec": true,
+    "p": 0.2,
+    "mrr": 0.3333333333333333,
+    "terms": 0.25
+   }
+  },
+  {
+   "id": "env-04",
+   "difficulty": "medium",
+   "dense": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "lexical": {
+    "act": true,
+    "sec": true,
+    "p": 0.2,
+    "mrr": 0.5,
+    "terms": 0.5
+   },
+   "hybrid": {
+    "act": true,
+    "sec": true,
+    "p": 0.2,
+    "mrr": 0.3333333333333333,
+    "terms": 1.0
+   },
+   "prod-off": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-on": {
+    "act": true,
+    "sec": true,
+    "p": 0.2,
+    "mrr": 0.3333333333333333,
+    "terms": 1.0
+   }
+  },
+  {
+   "id": "env-05",
+   "difficulty": "medium",
+   "dense": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.0
+   },
+   "lexical": {
+    "act": true,
+    "sec": false,
+    "p": 0.6,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "hybrid": {
+    "act": true,
+    "sec": false,
+    "p": 0.6,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-off": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.0
+   },
+   "prod-on": {
+    "act": true,
+    "sec": false,
+    "p": 0.6,
+    "mrr": 0.0,
+    "terms": 1.0
+   }
+  },
+  {
+   "id": "env-06",
+   "difficulty": "medium",
+   "dense": {
+    "act": true,
+    "sec": true,
+    "p": 0.6,
+    "mrr": 0.5,
+    "terms": 1.0
+   },
+   "lexical": {
+    "act": true,
+    "sec": false,
+    "p": 0.4,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "hybrid": {
+    "act": true,
+    "sec": false,
+    "p": 0.6,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-off": {
+    "act": true,
+    "sec": true,
+    "p": 0.6,
+    "mrr": 0.5,
+    "terms": 1.0
+   },
+   "prod-on": {
+    "act": true,
+    "sec": false,
+    "p": 0.6,
+    "mrr": 0.0,
+    "terms": 1.0
+   }
+  },
+  {
+   "id": "env-07",
+   "difficulty": "hard",
+   "dense": {
+    "act": true,
+    "sec": false,
+    "p": 0.6,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "lexical": {
+    "act": true,
+    "sec": false,
+    "p": 0.6,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "hybrid": {
+    "act": true,
+    "sec": false,
+    "p": 0.6,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-off": {
+    "act": true,
+    "sec": false,
+    "p": 0.6,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-on": {
+    "act": true,
+    "sec": false,
+    "p": 0.6,
+    "mrr": 0.0,
+    "terms": 1.0
+   }
+  },
+  {
+   "id": "emp-01",
+   "difficulty": "easy",
+   "dense": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "lexical": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "hybrid": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-off": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-on": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   }
+  },
+  {
+   "id": "emp-02",
+   "difficulty": "medium",
+   "dense": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "lexical": {
+    "act": true,
+    "sec": true,
+    "p": 0.4,
+    "mrr": 1.0,
+    "terms": 0.75
+   },
+   "hybrid": {
+    "act": true,
+    "sec": true,
+    "p": 0.4,
+    "mrr": 1.0,
+    "terms": 0.75
+   },
+   "prod-off": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-on": {
+    "act": true,
+    "sec": true,
+    "p": 0.4,
+    "mrr": 1.0,
+    "terms": 0.75
+   }
+  },
+  {
+   "id": "emp-03",
+   "difficulty": "medium",
+   "dense": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "lexical": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "hybrid": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.75
+   },
+   "prod-off": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-on": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.75
+   }
+  },
+  {
+   "id": "emp-04",
+   "difficulty": "easy",
+   "dense": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "lexical": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "hybrid": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-off": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-on": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   }
+  },
+  {
+   "id": "emp-05",
+   "difficulty": "medium",
+   "dense": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.5
+   },
+   "lexical": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.75
+   },
+   "hybrid": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.75
+   },
+   "prod-off": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.5
+   },
+   "prod-on": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.75
+   }
+  },
+  {
+   "id": "emp-06",
+   "difficulty": "easy",
+   "dense": {
+    "act": true,
+    "sec": true,
+    "p": 0.8,
+    "mrr": 1.0,
+    "terms": 1.0
+   },
+   "lexical": {
+    "act": true,
+    "sec": true,
+    "p": 0.4,
+    "mrr": 1.0,
+    "terms": 1.0
+   },
+   "hybrid": {
+    "act": true,
+    "sec": true,
+    "p": 0.6,
+    "mrr": 1.0,
+    "terms": 1.0
+   },
+   "prod-off": {
+    "act": true,
+    "sec": true,
+    "p": 0.8,
+    "mrr": 1.0,
+    "terms": 1.0
+   },
+   "prod-on": {
+    "act": true,
+    "sec": true,
+    "p": 0.6,
+    "mrr": 1.0,
+    "terms": 1.0
+   }
+  },
+  {
+   "id": "emp-07",
+   "difficulty": "hard",
+   "dense": {
+    "act": true,
+    "sec": true,
+    "p": 1.0,
+    "mrr": 0.5,
+    "terms": 0.25
+   },
+   "lexical": {
+    "act": true,
+    "sec": false,
+    "p": 0.4,
+    "mrr": 0.0,
+    "terms": 0.25
+   },
+   "hybrid": {
+    "act": true,
+    "sec": true,
+    "p": 0.6,
+    "mrr": 0.3333333333333333,
+    "terms": 0.25
+   },
+   "prod-off": {
+    "act": true,
+    "sec": true,
+    "p": 1.0,
+    "mrr": 0.5,
+    "terms": 0.25
+   },
+   "prod-on": {
+    "act": true,
+    "sec": true,
+    "p": 0.6,
+    "mrr": 0.3333333333333333,
+    "terms": 0.25
+   }
+  },
+  {
+   "id": "emp-08",
+   "difficulty": "easy",
+   "dense": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "lexical": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "hybrid": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-off": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-on": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   }
+  },
+  {
+   "id": "mine-01",
+   "difficulty": "easy",
+   "dense": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.8
+   },
+   "lexical": {
+    "act": true,
+    "sec": false,
+    "p": 0.4,
+    "mrr": 0.0,
+    "terms": 0.2
+   },
+   "hybrid": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.4
+   },
+   "prod-off": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.8
+   },
+   "prod-on": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.4
+   }
+  },
+  {
+   "id": "mine-02",
+   "difficulty": "medium",
+   "dense": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.8
+   },
+   "lexical": {
+    "act": true,
+    "sec": false,
+    "p": 0.4,
+    "mrr": 0.0,
+    "terms": 0.8
+   },
+   "hybrid": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.8
+   },
+   "prod-off": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.8
+   },
+   "prod-on": {
+    "act": true,
+    "sec": false,
+    "p": 0.4,
+    "mrr": 0.0,
+    "terms": 0.8
+   }
+  },
+  {
+   "id": "mine-03",
+   "difficulty": "medium",
+   "dense": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.25
+   },
+   "lexical": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.25
+   },
+   "hybrid": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.25
+   },
+   "prod-off": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.25
+   },
+   "prod-on": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.25
+   }
+  },
+  {
+   "id": "mine-04",
+   "difficulty": "hard",
+   "dense": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "lexical": {
+    "act": true,
+    "sec": false,
+    "p": 0.4,
+    "mrr": 0.0,
+    "terms": 0.25
+   },
+   "hybrid": {
+    "act": true,
+    "sec": false,
+    "p": 0.4,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-off": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-on": {
+    "act": true,
+    "sec": false,
+    "p": 0.4,
+    "mrr": 0.0,
+    "terms": 0.75
+   }
+  },
+  {
+   "id": "mine-05",
+   "difficulty": "hard",
+   "dense": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.8
+   },
+   "lexical": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "hybrid": {
+    "act": true,
+    "sec": false,
+    "p": 0.4,
+    "mrr": 0.0,
+    "terms": 0.8
+   },
+   "prod-off": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.8
+   },
+   "prod-on": {
+    "act": true,
+    "sec": false,
+    "p": 0.4,
+    "mrr": 0.0,
+    "terms": 0.8
+   }
+  },
+  {
+   "id": "mine-06",
+   "difficulty": "medium",
+   "dense": {
+    "act": true,
+    "sec": true,
+    "p": 0.4,
+    "mrr": 0.25,
+    "terms": 1.0
+   },
+   "lexical": {
+    "act": true,
+    "sec": true,
+    "p": 0.4,
+    "mrr": 0.2,
+    "terms": 0.5
+   },
+   "hybrid": {
+    "act": true,
+    "sec": true,
+    "p": 0.4,
+    "mrr": 0.25,
+    "terms": 0.75
+   },
+   "prod-off": {
+    "act": true,
+    "sec": true,
+    "p": 0.4,
+    "mrr": 0.5,
+    "terms": 1.0
+   },
+   "prod-on": {
+    "act": true,
+    "sec": true,
+    "p": 0.4,
+    "mrr": 0.25,
+    "terms": 0.75
+   }
+  },
+  {
+   "id": "mine-07",
+   "difficulty": "medium",
+   "dense": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.6
+   },
+   "lexical": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.6
+   },
+   "hybrid": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.6
+   },
+   "prod-off": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.6
+   },
+   "prod-on": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.6
+   }
+  },
+  {
+   "id": "cross-01",
+   "difficulty": "hard",
+   "dense": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "lexical": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.75
+   },
+   "hybrid": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-off": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-on": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   }
+  },
+  {
+   "id": "cross-02",
+   "difficulty": "hard",
+   "dense": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.0
+   },
+   "lexical": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.75
+   },
+   "hybrid": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.75
+   },
+   "prod-off": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.0
+   },
+   "prod-on": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.75
+   }
+  }
+ ],
+ "lexical": "pg",
+ "rerank": null
+}

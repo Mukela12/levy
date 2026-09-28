@@ -197,6 +197,9 @@ async def _search_corpus(
     settings = get_settings()
     threshold = threshold if threshold is not None else settings.similarity_threshold
     emb = await asyncio.to_thread(get_query_embedding_ex, query)
+    # "dense": the normal query; "fused": hybrid ranking; "derived": the normal
+    # result read off the hybrid path's vector list.
+    mode = "dense"
     # Hybrid only in the primary (OpenAI) space: the keyword function scores
     # its hits against that column, and the Gemini fallback path is rare.
     if getattr(settings, "hybrid_retrieval_enabled", False) and emb["space"] == "openai":
@@ -210,10 +213,22 @@ async def _search_corpus(
             asyncio.to_thread(
                 search_keyword, query, emb["vector"], n,
                 caller_user_id=caller_user_id, attached_doc_ids=attached_doc_ids,
+                rpc_name=settings.hybrid_keyword_rpc,
             ),
         )
-        candidates = hybrid.fuse(dense, keyword) if keyword else dense
-    else:
+        if keyword:
+            candidates = hybrid.fuse(dense, keyword)
+            mode = "fused"
+        elif n >= top_k * 3:
+            # No keyword results (a missing function, or a query too generic
+            # for keyword ranking). The loose list is the top n by cosine, so
+            # its rows at or above the normal threshold, cut to top_k * 3, are
+            # exactly what the normal query returns; no second call needed.
+            candidates = [c for c in dense if c.get("similarity", 0.0) >= threshold][: top_k * 3]
+            mode = "derived"
+    if mode == "dense":
+        # A missing/failed keyword RPC must restore the original threshold,
+        # candidate count and ordering, not expose the looser hybrid shortlist.
         candidates = await asyncio.to_thread(
             search_chunks,
             emb["vector"],
@@ -234,7 +249,7 @@ async def _search_corpus(
     chunks += dead[keep_dead : keep_dead + top_k - len(chunks)]
     # Fused results are already in their fused order; re-sorting them by
     # cosine would undo the fusion and hand the ranking back to the vectors.
-    if not (getattr(settings, "hybrid_retrieval_enabled", False) and emb["space"] == "openai"):
+    if mode != "fused":
         chunks.sort(key=lambda c: c.get("similarity", 0.0), reverse=True)
 
     results = []

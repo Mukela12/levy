@@ -59,10 +59,10 @@ def status_note(document_id: str | None) -> str | None:
         # model its section 24 had been repealed in 2016.
         tail = (f" It has also been amended by {_titles(amended, 3)}: check each section's own "
                 f"status before quoting it as it stands.") if amended else ""
-        return (f"STILL IN FORCE FOR NOW: {by} will repeal this Act, but it starts only on a date the "
-                f"Minister appoints by statutory instrument, and no commencement order is recorded. Say "
-                f"that the new Act has been passed and may not be in force yet, and check the official "
-                f"source before relying on either.{tail}")
+        return (f"COMMENCEMENT NOT VERIFIED: {by} provides for repeal of this Act on commencement. "
+                f"The library does not record the required commencement order; that is not evidence "
+                f"that no order exists or that either Act is currently in force. Verify the official "
+                f"commencement instrument and relevant date before relying on either Act.{tail}")
     if status == "bill, not yet law":
         return "BILL before Parliament, not yet law."
     if status == "enacted":

@@ -1,0 +1,290 @@
+[
+  {
+    "id": "immigration-24",
+    "question": "Can I rely on section 24 of the Immigration and Deportation Act 2010 for a business permit? Please explain briefly and cite the relevant amendment if it changed.",
+    "answer": "**No, you cannot rely on section 24 of the Immigration and Deportation Act 2010 for a business permit. It is a dead provision.** Here is the full picture:\n\n---\n\n## 1. Section 24 is Repealed\n\nSection 24 of the Immigration and Deportation Act, 2010 was headed \"Business permit\" and originally provided (in the text as enacted) that:\n\n> A business permit could be issued by an immigration officer to a **business visitor** for a period not exceeding **30 days**, and had to specify the business to be undertaken, the inviting person or institution, the period of validity, and sanctions for non-compliance. [Immigration and Deportation Act, 2010, s.24] (p. 25)\n\nThat provision was **expressly repealed** by the **Immigration and Deportation (Amendment) Act, No. 19 of 2016**. The recorded evidence of the repeal is the phrase \"repeal of section twenty-four\" in that amending Act. As of 2016, the section ceased to be law and must not be quoted or applied as current authority.\n\n---\n\n## 2. The Parent Act Itself Faces Further Repeal\n\nThere is a second-level warning you should be aware of. The **Immigration Control Act, No. 3 of 2026** provides for the repeal of the entire Immigration and Deportation Act, 2010 on its commencement. However, **my library does not hold a verified commencement order** for the 2026 Act. That means:\n\n- The 2026 Act may or may not currently be in force.\n- You must **verify with the official Government Gazette or the Department of Immigration** whether a commencement order has been issued before relying on either Act as the operative statute today.\n\n---\n\n## 3. Where Business Permits Now Live\n\nThe corpus shows that the **Immigration Control Act, 2026 (No. 3 of 2026)** contains a **Section 27** also titled \"Business permit\" in Part IV. If the 2026 Act has commenced, that is the provision to rely on, not section 24 of the 2010 Act.\n\n---\n\n## Practical Summary\n\n| Point | Position |\n|---|---|\n| Section 24, Immigration and Deportation Act 2010 | **Repealed** by Immigration and Deportation (Amendment) Act, No. 19 of 2016 |\n| Parent Act (2010) | Repeal pending under Immigration Control Act, 2026 (No. 3 of 2026) - commencement unverified |\n| Current business permit provision | Likely **Immigration Control Act, 2026, s.27** - verify commencement |\n\n**Bottom line:** Do not cite or plead section 24 of the 2010 Act. Verify whether the Immigration Control Act, 2026 has commenced (check the Government Gazette or the Department of Immigration at eservices.zambiaimmigration.gov.zm), and if it has, rely on section 27 of that Act instead.",
+    "events": [
+      {
+        "type": "tool_call",
+        "id": "toolu_019J3TesecaMv45RKtE5pv85",
+        "name": "check_provision_status",
+        "input": {
+          "act": "Immigration and Deportation Act 2010",
+          "section": "24"
+        }
+      },
+      {
+        "type": "tool_result",
+        "id": "toolu_019J3TesecaMv45RKtE5pv85",
+        "name": "check_provision_status",
+        "ok": true,
+        "db": [],
+        "web": [],
+        "artifact": null,
+        "ms": 2768
+      },
+      {
+        "type": "tool_call",
+        "id": "toolu_01LKrJ2L7D6fy9m2ZXFjuyC8",
+        "name": "search_corpus",
+        "input": {
+          "query": "Immigration and Deportation Act 2010 section 24 business permit"
+        }
+      },
+      {
+        "type": "tool_result",
+        "id": "toolu_01LKrJ2L7D6fy9m2ZXFjuyC8",
+        "name": "search_corpus",
+        "ok": true,
+        "db": [
+          {
+            "id": "d63026f3-3e15-4aa2-b440-05ba92f760fb",
+            "document_id": "27c32617-5b34-4255-bf5f-b3b900d209c6",
+            "act_name": "Immigration and Deportation 2010",
+            "section": "24",
+            "part": "IV",
+            "page_start": 2,
+            "page_end": 2,
+            "similarity": 0.8937,
+            "content_preview": "Immigration and Deportation 2010 - Part IV - Section 24. Business permit\n\n24. Business permit",
+            "status": "COMMENCEMENT NOT VERIFIED: Immigration Control Act, 2026 provides for repeal of this Act on commencement. The library does not record the required commencement order; that is not evidence that no order exists or that either Act is currently in force. Verify the official commencement instrument and relevant date before relying on either Act. It has also been amended by Immigration and Deportation (Amendment) Act, 2016: check each section's own status before quoting it as it stands.",
+            "section_status": "SECTION 24 IS REPEALED: Immigration and Deportation (Amendment) Act, 2016 (No. 19 of 2016) repealed it. It is no longer law. Do not quote or apply it as current; say that it has been repealed, and by which Act."
+          },
+          {
+            "id": "3ba73a24-02fc-4c27-8ae0-c578e96b2847",
+            "document_id": "9c7a7161-853f-4230-bac8-801ada7c8409",
+            "act_name": "Immigration Control Act, 2026 (No. 3 of 2026)",
+            "section": "27",
+            "part": "IV",
+            "page_start": 2,
+            "page_end": 2,
+            "similarity": 0.779,
+            "content_preview": "Immigration Control Act, 2026 (No. 3 of 2026) - Part IV - Section 27. Business permit\n\n27. Business permit"
+          },
+          {
+            "id": "63926b6b-fc31-4d66-89dd-b1f90ebbe988",
+            "document_id": "27c32617-5b34-4255-bf5f-b3b900d209c6",
+            "act_name": "Immigration and Deportation 2010",
+            "section": "24",
+            "part": "IV",
+            "page_start": 25,
+            "page_end": 25,
+            "similarity": 0.7629,
+            "content_preview": "Immigration and Deportation 2010 - Part IV - Section 24. (1) Subject to section twenty one, a business permit may\n\nBusiness 24. (1) Subject to section twenty one, a business permit may\npermit\nbe issued by an immigration officer to a busines",
+            "status": "COMMENCEMENT NOT VERIFIED: Immigration Control Act, 2026 provides for repeal of this Act on commencement. The library does not record the required commencement order; that is not evidence that no order exists or that either Act is currently in force. Verify the official commencement instrument and relevant date before relying on either Act. It has also been amended by Immigration and Deportation (Amendment) Act, 2016: check each section's own status before quoting it as it stands.",
+            "section_status": "SECTION 24 IS REPEALED: Immigration and Deportation (Amendment) Act, 2016 (No. 19 of 2016) repealed it. It is no longer law. Do not quote or apply it as current; say that it has been repealed, and by which Act."
+          },
+          {
+            "id": "b4b9013e-eef0-4b2e-9c78-4adaced95cad",
+            "document_id": "27c32617-5b34-4255-bf5f-b3b900d209c6",
+            "act_name": "Immigration and Deportation 2010",
+            "section": "54",
+            "part": "VI",
+            "page_start": 3,
+            "page_end": 3,
+            "similarity": 0.7341,
+            "content_preview": "Immigration and Deportation 2010 - Part VI - Section 54. Engaging in employment, etc. without permit\n\n54. Engaging in employment, etc. without permit",
+            "status": "COMMENCEMENT NOT VERIFIED: Immigration Control Act, 2026 provides for repeal of this Act on commencement. The library does not record the required commencement order; that is not evidence that no order exists or that either Act is currently in force. Verify the official commencement instrument and relevant date before relying on either Act. It has also been amended by Immigration and Deportation (Amendment) Act, 2016: check each section's own status before quoting it as it stands."
+          },
+          {
+            "id": "7abd2298-dad3-4d60-b2f5-7e0ff8881a2c",
+            "document_id": "27c32617-5b34-4255-bf5f-b3b900d209c6",
+            "act_name": "Immigration and Deportation 2010",
+            "section": "27",
+            "part": "IV",
+            "page_start": 2,
+            "page_end": 2,
+            "similarity": 0.7296,
+            "content_preview": "Immigration and Deportation 2010 - Part IV - Section 27. Temporary permit\n\n27. Temporary permit",
+            "status": "COMMENCEMENT NOT VERIFIED: Immigration Control Act, 2026 provides for repeal of this Act on commencement. The library does not record the required commencement order; that is not evidence that no order exists or that either Act is currently in force. Verify the official commencement instrument and relevant date before relying on either Act. It has also been amended by Immigration and Deportation (Amendment) Act, 2016: check each section's own status before quoting it as it stands."
+          }
+        ],
+        "web": [],
+        "artifact": null,
+        "ms": 4586
+      },
+      {
+        "type": "tool_call",
+        "id": "toolu_013D5fTuPkEU7SfCfDzc3XcA",
+        "name": "read_pdf_pages",
+        "input": {
+          "document_id": "9c7a7161-853f-4230-bac8-801ada7c8409",
+          "page_start": 1,
+          "page_end": 3
+        }
+      },
+      {
+        "type": "tool_result",
+        "id": "toolu_013D5fTuPkEU7SfCfDzc3XcA",
+        "name": "read_pdf_pages",
+        "ok": false,
+        "db": [],
+        "web": [],
+        "artifact": null,
+        "ms": 0
+      },
+      {
+        "type": "citation_audit",
+        "citations": [
+          {
+            "text": "Immigration and Deportation Act 2010",
+            "kind": "statute",
+            "status": "verified",
+            "document_id": "27c32617-5b34-4255-bf5f-b3b900d209c6",
+            "title": "The Immigration and Deportation 2010",
+            "law_status": "repeal pending",
+            "replaced_by": [
+              "Immigration Control Act, 2026"
+            ],
+            "section_status": [
+              {
+                "section": "24",
+                "status": "repealed",
+                "by": "Immigration and Deportation (Amendment) Act, 2016 (No. 19 of 2016)",
+                "acknowledged": false
+              }
+            ]
+          },
+          {
+            "text": "Immigration and Deportation (Amendment) Act, No. 19 of 2016",
+            "kind": "statute",
+            "status": "verified",
+            "document_id": "4d0a1626-4c67-4bc7-89f9-8515ded06d64",
+            "title": "The Immigration and Deportation (Amendment)"
+          },
+          {
+            "text": "Parent Act",
+            "kind": "statute",
+            "status": "not_found"
+          },
+          {
+            "text": "Immigration Control Act, No. 3 of 2026",
+            "kind": "statute",
+            "status": "verified",
+            "document_id": "9c7a7161-853f-4230-bac8-801ada7c8409",
+            "title": "The Immigration Control Act, 2026"
+          },
+          {
+            "text": "Likely Immigration Control Act, 2026",
+            "kind": "statute",
+            "status": "not_found"
+          }
+        ]
+      },
+      {
+        "type": "done",
+        "usage": {
+          "input_tokens": 438,
+          "output_tokens": 1443
+        },
+        "timing": {
+          "total_ms": 43994
+        },
+        "iterations": 3,
+        "model": "claude-sonnet-4-6"
+      }
+    ],
+    "condition": "local agent; full schemas; corpus/status tools only; max 5 iterations, 4096 output tokens per call",
+    "seconds": 44.02
+  },
+  {
+    "id": "penal-69",
+    "question": "Is section 69 of the Zambian Penal Code still an offence I can be charged under? Please verify the section status and keep the answer brief.",
+    "answer": "**No.** Section 69 of the Penal Code Act is **repealed** and no longer law. It was expressly repealed by the **Penal Code (Amendment) Act, 2022 (No. 23 of 2022)**. You cannot be charged under it.\n\nThe Penal Code itself remains in force (and has been further amended in 2023 and 2026), but section 69 specifically was removed in 2022 and cannot ground a criminal charge.",
+    "events": [
+      {
+        "type": "tool_call",
+        "id": "toolu_01MzgcybeQYRnTAkEidK61xD",
+        "name": "check_provision_status",
+        "input": {
+          "act": "Penal Code",
+          "section": "69"
+        }
+      },
+      {
+        "type": "tool_result",
+        "id": "toolu_01MzgcybeQYRnTAkEidK61xD",
+        "name": "check_provision_status",
+        "ok": true,
+        "db": [],
+        "web": [],
+        "artifact": null,
+        "ms": 3
+      },
+      {
+        "type": "tool_call",
+        "id": "toolu_01TCqGrEnWBW1q1xMDorMz2U",
+        "name": "search_corpus",
+        "input": {
+          "query": "Penal Code section 69"
+        }
+      },
+      {
+        "type": "tool_result",
+        "id": "toolu_01TCqGrEnWBW1q1xMDorMz2U",
+        "name": "search_corpus",
+        "ok": true,
+        "db": [],
+        "web": [],
+        "artifact": null,
+        "ms": 2121
+      },
+      {
+        "type": "citation_audit",
+        "citations": [
+          {
+            "text": "Penal Code Act",
+            "kind": "statute",
+            "status": "verified",
+            "document_id": "f6ad35a7-6e55-4c84-91b4-00d97a79fa3b",
+            "title": "The Penal Code Act",
+            "section_status": [
+              {
+                "section": "69",
+                "status": "repealed",
+                "by": "Penal Code (Amendment) Act, 2022 (No. 23 of 2022)",
+                "acknowledged": false
+              }
+            ]
+          },
+          {
+            "text": "Penal Code (Amendment) Act, 2022",
+            "kind": "statute",
+            "status": "verified",
+            "document_id": "cfc988fa-e79d-4afe-8b7d-2212b96ea893",
+            "title": "The Penal Code (Amendment) Act, 2022"
+          },
+          {
+            "text": "Penal Code",
+            "kind": "statute",
+            "status": "verified",
+            "document_id": "f6ad35a7-6e55-4c84-91b4-00d97a79fa3b",
+            "title": "The Penal Code Act",
+            "section_status": [
+              {
+                "section": "69",
+                "status": "repealed",
+                "by": "Penal Code (Amendment) Act, 2022 (No. 23 of 2022)",
+                "acknowledged": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "done",
+        "usage": {
+          "input_tokens": 428,
+          "output_tokens": 359
+        },
+        "timing": {
+          "total_ms": 12544
+        },
+        "iterations": 2,
+        "model": "claude-sonnet-4-6"
+      }
+    ],
+    "condition": "local agent; full schemas; corpus/status tools only; max 5 iterations, 4096 output tokens per call",
+    "seconds": 12.55
+  }
+]

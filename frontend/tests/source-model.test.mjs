@@ -50,10 +50,16 @@ test('a repealed Act is never verified and names its replacement', () => {
   assert.equal(value.rows[0].lawStatus, 'repealed')
   assert.deepEqual([...value.rows[0].replacedBy], ['Children’s Code Act, 2022'])  // copied out of the vm realm
 })
-test('a passed but not started repeal keeps the badge and carries a note', () => {
+test('unverified commencement keeps only the library identity badge and carries a note', () => {
   const value = model({ ...verdict, law_status: 'repeal pending', replaced_by: ['National Pension Scheme Act, 2026'] })
   assert.equal(value.verified, 1)
   assert.equal(value.rows[0].lawStatus, 'repeal pending')
+})
+test('citation explanations never infer current force from missing commencement evidence', () => {
+  const source = fs.readFileSync(new URL('../src/components/canopy/answer-sources.tsx', import.meta.url), 'utf8')
+  assert.match(source, /Commencement unverified/)
+  assert.match(source, /not proof that this Act remains in force/)
+  assert.doesNotMatch(source, /Still in force|The Act is still law|This Act is still law|In force until|In force, replacement passed/)
 })
 test('a repeal note in the matched title is not a year conflict', () => {
   const v = { kind: 'statute', text: 'Roads and Road Traffic Act, 1995', title: 'Roads and Road Traffic Act [repealed by the Road Traffic Act, 2002]', document_id: 'doc-1', status: 'verified' }

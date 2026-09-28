@@ -44,6 +44,7 @@ class Fusion(unittest.TestCase):
 
 def settings(**kw):
     base = dict(similarity_threshold=0.6, hybrid_retrieval_enabled=False,
+                hybrid_keyword_rpc="search_legal_chunks_keyword",
                 hybrid_candidates=30, hybrid_dense_threshold=0.3)
     base.update(kw)
     return SimpleNamespace(**base)
@@ -78,10 +79,44 @@ class SearchCorpus(unittest.IsolatedAsyncioTestCase):
         # cosine the answer would be a, b, c: the fusion would be undone.
         self.assertEqual(ids, ["c", "a", "b"])
 
+    async def test_versioned_keyword_rpc_preserves_caller_scope(self):
+        kw = self.patches(settings(hybrid_retrieval_enabled=True,
+                                  hybrid_keyword_rpc="search_legal_chunks_keyword_v2"),
+                          [row("a", .8)], [row("a", .8)])
+        await tools._search_corpus("meal break", caller_user_id="owner", attached_doc_ids=["attachment"])
+        kw.assert_called_once_with("meal break", [0.0] * 4, 30,
+                                   caller_user_id="owner", attached_doc_ids=["attachment"],
+                                   rpc_name="search_legal_chunks_keyword_v2")
+
     async def test_a_missing_keyword_function_falls_back_to_vectors(self):
         self.patches(settings(hybrid_retrieval_enabled=True), [row("a", .9), row("b", .8)], [])
         out = await tools._search_corpus("meal break", top_k=2)
         self.assertEqual({m["chunk_id"] for m in out["result"]["matches"]}, {"a", "b"})
+
+    async def test_keyword_failure_gives_the_normal_result_without_a_second_call(self):
+        # The loose list is the top 30 by cosine, so its rows at the normal
+        # threshold are exactly the normal result: the 0.35 row must not leak.
+        self.patches(settings(hybrid_retrieval_enabled=True), [], [])
+        tools.search_chunks.side_effect = [[row("a", .9), row("b", .7), row("loose", .35)]]
+        out = await tools._search_corpus(
+            "meal break", top_k=2, caller_user_id="owner", attached_doc_ids=["attached"])
+        self.assertEqual([m["chunk_id"] for m in out["result"]["matches"]], ["a", "b"])
+        self.assertEqual(tools.search_chunks.call_count, 1)
+
+    async def test_a_bigger_request_than_the_loose_list_asks_again(self):
+        # top_k 12 needs 36 candidates; the loose list holds 30, so the normal
+        # query must run with its own parameters and the caller's scope.
+        self.patches(settings(hybrid_retrieval_enabled=True), [], [])
+        tools.search_chunks.side_effect = [
+            [row("a", .9), row("loose", .35)],
+            [row("a", .9)],
+        ]
+        await tools._search_corpus(
+            "meal break", top_k=12, caller_user_id="owner", attached_doc_ids=["attached"])
+        self.assertEqual(tools.search_chunks.call_count, 2)
+        tools.search_chunks.assert_called_with(
+            [0.0] * 4, top_k=36, threshold=.6,
+            caller_user_id="owner", attached_doc_ids=["attached"], space="openai")
 
     async def test_the_library_miss_signal_still_works(self):
         self.patches(settings(hybrid_retrieval_enabled=True), [row("a", .40)], [row("k", .35)])

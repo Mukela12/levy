@@ -88,6 +88,8 @@ def search_keyword(
     *,
     caller_user_id: str | None = None,
     attached_doc_ids: list[str] | None = None,
+    rpc_name: str = "search_legal_chunks_keyword",
+    raise_on_error: bool = False,
 ) -> list[dict]:
     """Keyword search (supabase/migrations/20260928000000_keyword_search.sql).
 
@@ -96,7 +98,7 @@ def search_keyword(
     """
     try:
         result = get_db().rpc(
-            "search_legal_chunks_keyword",
+            rpc_name,
             {
                 "query_text": query_text,
                 "query_embedding": query_embedding,
@@ -107,6 +109,8 @@ def search_keyword(
         ).execute()
         return result.data or []
     except Exception:  # noqa: BLE001 — keyword search is an addition, never a dependency
+        if raise_on_error:
+            raise
         import logging
         logging.getLogger(__name__).warning("keyword search unavailable", exc_info=True)
         return []

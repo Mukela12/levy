@@ -41,6 +41,7 @@ import time
 import types
 from collections import Counter, defaultdict
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "backend"))
@@ -196,6 +197,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--corpus", type=Path, help="local chunk copy, for the BM25 prototype")
     ap.add_argument("--lexical", choices=["bm25", "pg"], default="bm25")
+    ap.add_argument("--keyword-rpc", choices=["search_legal_chunks_keyword", "search_legal_chunks_keyword_v2"],
+                    default="search_legal_chunks_keyword")
     ap.add_argument("--rerank", help="cross-encoder model name, e.g. cross-encoder/ms-marco-MiniLM-L-6-v2")
     ap.add_argument("--dump-candidates", type=Path,
                     help="write each question's fused shortlist, for reranking in another environment")
@@ -242,12 +245,24 @@ def main() -> int:
         base = config.get_settings()
         variants += ["prod-off", "prod-on"]
 
-        def run_prod(question: str, on: bool) -> list[dict]:
-            s = base.model_copy(update={"hybrid_retrieval_enabled": on})
-            with patch_settings(tools, s):
+        def run_prod(question: str, on: bool, embedding: dict) -> tuple[list[dict], dict]:
+            from app.db.supabase import search_keyword
+            diagnostics = {"keyword_called": False, "keyword_rows": 0, "keyword_error": None}
+            def checked_keyword(*a, **kw):
+                diagnostics["keyword_called"] = True
+                try:
+                    found = search_keyword(*a, **kw, raise_on_error=True)
+                    diagnostics["keyword_rows"] = len(found)
+                    return found
+                except Exception as e:
+                    diagnostics["keyword_error"] = {"type": type(e).__name__, "code": getattr(e, "code", None)}
+                    return []
+            s = base.model_copy(update={"hybrid_retrieval_enabled": on, "hybrid_keyword_rpc": args.keyword_rpc})
+            with patch_settings(tools, s), patch.object(tools, "search_keyword", checked_keyword), \
+                    patch.object(tools, "get_query_embedding_ex", lambda _: embedding):
                 out = asyncio.run(tools._search_corpus(question, top_k=K))
             return [{"id": m["chunk_id"], "document_id": m["document_id"], "content": m["content"],
-                     "act": m["act_name"], "section": m["section"]} for m in out["result"]["matches"]]
+                     "act": m["act_name"], "section": m["section"]} for m in out["result"]["matches"]], diagnostics
     results: dict[str, list[dict]] = {v: [] for v in variants}
     timing: dict[str, list[float]] = {v: [] for v in variants}
     per_q = []
@@ -262,23 +277,30 @@ def main() -> int:
         deep = [as_row(c) for c in search_chunks(emb["vector"], top_k=DEEP, threshold=0.3, space=emb["space"])]
 
         t0 = time.time()
+        lexical_error = None
         if bm25:
             lex = [as_row(c) for c in bm25.search(q["question"])]
         else:
-            lex = [as_row(c) for c in (pg.rpc("search_legal_chunks_keyword", {
-                "query_text": q["question"], "match_count": DEEP,
-                "caller_user_id": None, "attached_doc_ids": []}).execute().data or [])]
+            try:
+                lex = [as_row(c) for c in (pg.rpc(args.keyword_rpc, {
+                    "query_text": q["question"], "match_count": DEEP,
+                    "caller_user_id": None, "attached_doc_ids": []}).execute().data or [])]
+            except Exception as e:
+                lexical_error = {"type": type(e).__name__, "code": getattr(e, "code", None)}
+                lex = []
         timing["lexical"].append(time.time() - t0)
         lex_top = demote_repealed(lex)[:K]
 
         fused = rrf(deep, lex)
         hyb_top = demote_repealed(fused)[:K]
 
-        row = {"id": q["id"], "difficulty": q.get("difficulty")}
+        row = {"id": q["id"], "difficulty": q.get("difficulty"), "retrieved_ids": {}, "diagnostics": {}}
+        row["diagnostics"]["lexical_error"] = lexical_error
         for name, top in (("dense", dense_top), ("lexical", lex_top), ("hybrid", hyb_top)):
             s = score(q, top)
             results[name].append(s)
             row[name] = s
+            row["retrieved_ids"][name] = [r["id"] for r in top]
         short = fused[:DEEP]
         if args.dump_candidates:
             dump[q["id"]] = {"question": q["question"],
@@ -298,11 +320,14 @@ def main() -> int:
         if args.prod:
             for name, on in (("prod-off", False), ("prod-on", True)):
                 t0 = time.time()
-                top = run_prod(q["question"], on)
+                top, diagnostics = run_prod(q["question"], on, emb)
+                row["diagnostics"][name] = diagnostics
+                row["retrieved_ids"][name] = [r["id"] for r in top]
                 timing[name].append(time.time() - t0)
                 s = score(q, top)
                 results[name].append(s)
                 row[name] = s
+        row["timing_ms"] = {v: round(timing[v][-1] * 1000) if timing[v] else None for v in variants}
         per_q.append(row)
         print(f"  [{i:>2}/{len(gold)}] {q['id']:<12} " + "  ".join(
             f"{v}:{'S' if row[v]['sec'] else ('A' if row[v]['act'] else '-')}" for v in variants), flush=True)
@@ -322,16 +347,26 @@ def main() -> int:
         print(f"{'variant':<9} {'act@5':>6} {'sec@5':>6} {'p@5':>6} {'mrr':>6} {'terms':>6} {'ms/q':>7}")
         for v in variants:
             s = {k: round(mean(v, k, ids), 3) for k in ("act", "sec", "p", "mrr", "terms")}
-            ms = 1000 * sum(timing[v]) / max(len(timing[v]), 1)
-            s["ms"] = round(ms)
+            # An unmeasured duration is not a zero-millisecond search.
+            durations = [r["timing_ms"][v] for r in per_q if r["id"] in ids and r["timing_ms"][v] is not None]
+            ms = sum(durations) / len(durations) if durations else None
+            s["ms"] = round(ms) if ms is not None else None
+            s["p95_ms"] = sorted(durations)[math.ceil(.95 * len(durations)) - 1] if durations else None
             summary.setdefault(label, {})[v] = s
-            print(f"{v:<9} {s['act']:>6.0%} {s['sec']:>6.0%} {s['p']:>6.0%} {s['mrr']:>6.2f} {s['terms']:>6.0%} {ms:>7.0f}")
+            ms_label = f"{ms:.0f}" if ms is not None else "n/a"
+            print(f"{v:<9} {s['act']:>6.0%} {s['sec']:>6.0%} {s['p']:>6.0%} {s['mrr']:>6.2f} {s['terms']:>6.0%} {ms_label:>7}")
     print("  (A = right Act in the top five, S = right section too, - = neither)")
+    error_count = sum(bool(r["diagnostics"].get("lexical_error")) +
+                      bool(r["diagnostics"].get("prod-on", {}).get("keyword_error")) for r in per_q)
+    print(f"Keyword failures: {error_count}; scores include failures/fallbacks, not only successful queries.")
     if args.out:
         args.out.write_text(json.dumps({"summary": summary, "per_question": per_q,
-                                        "lexical": args.lexical, "rerank": args.rerank}, indent=1))
+                                        "lexical": args.lexical, "rerank": args.rerank,
+                                        "keyword_rpc": args.keyword_rpc,
+                                        "timing_condition": "one shared query embedding per question; retrieval timings exclude embedding generation",
+                                        "keyword_errors": error_count}, indent=1))
         print(f"wrote {args.out}")
-    return 0
+    return 1 if error_count else 0
 
 
 if __name__ == "__main__":

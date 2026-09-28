@@ -14,8 +14,8 @@
  *  - An Act the law map records as repealed is never "verified": being in
  *    the library is not the same as being law. When the answer itself already
  *    calls it repealed the row is "noted" (shown, not counted for review). A
- *    repeal that has passed but not started leaves the badge alone and is
- *    shown as a note.
+ *    repeal whose commencement is unverified leaves the library-identity
+ *    badge alone and is shown as an uncertainty note, not proof of currency.
  */
 import type { ChunkUsed, CitationVerdict, DeadSection, WebSource } from '@/lib/api'
 import type { MessageBlock } from '@/components/chat/chat-message'

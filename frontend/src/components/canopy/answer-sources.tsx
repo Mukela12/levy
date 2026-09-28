@@ -64,7 +64,7 @@ function theActs(names: string[]): string {
 function lawStatusText(row: SourceRow): string | null {
   const by = theActs(row.replacedBy)
   if (row.lawStatus === 'repealed') return by ? `Repealed · replaced by ${by}` : 'Repealed'
-  if (row.lawStatus === 'repeal pending') return by ? `Still in force · ${by} will replace it once it starts` : 'Still in force · a replacement has been passed'
+  if (row.lawStatus === 'repeal pending') return by ? `Commencement unverified · replacement: ${by}` : 'Commencement unverified · a replacement has been passed'
   return null
 }
 
@@ -85,7 +85,7 @@ function verdictText(row: SourceRow): string {
   const by = theActs(row.replacedBy)
   if (row.verification === 'verified') {
     return row.lawStatus === 'repeal pending'
-      ? `This Act is still law, but ${by || 'a new Act'} will replace it once a start date is set by statutory instrument. Check whether that has happened before relying on the answer.`
+      ? `The library records a replacement by ${by || 'a new Act'}, but has not verified its commencement. A missing commencement order is not proof that this Act remains in force. Check the official instrument and relevant date before relying on either Act.`
       : 'Check the passage and the document’s current status before relying on the answer.'
   }
   if (row.verification === 'noted') {
@@ -99,8 +99,8 @@ function verdictText(row: SourceRow): string {
     const d = dead[0]
     const which = dead.length === 1 ? `section ${d.section}` : `sections ${dead.map((x) => x.section).join(', ')}`
     return d.status === 'repealed' && dead.every((x) => x.status === 'repealed')
-      ? `The Act is still law, but the answer relies on ${which}, which the ${d.by} repealed. Check the answer against the law in force before relying on it.`
-      : `The Act is still law, but ${which} has been repealed or replaced since the wording the answer uses (${d.by}). Check the current text before relying on it.`
+      ? `The answer relies on ${which}, which the ${d.by} repealed. Check the answer against the law in force before relying on it.`
+      : `${which} has been repealed or replaced since the wording the answer uses (${d.by}). Check the current text before relying on it.`
   }
   if (row.foreign) return 'This authority was identified as outside the Zambian library. Check its original report and its relevance to the Zambian question.'
   if (row.conflict) return 'The number or year in the answer differs from the library record. Check which instrument was intended.'
@@ -294,7 +294,7 @@ export function AnswerSources({ citations, webSources, blocks, onOpenPassage, on
                 {v.law_status && (
                   <div><dt>Status</dt><dd>{v.law_status === 'repealed'
                     ? v.replaced_by?.length ? `Repealed by ${theActs(v.replaced_by)}` : 'Repealed'
-                    : v.replaced_by?.length ? `In force until ${theActs(v.replaced_by)} starts` : 'In force, replacement passed'}</dd></div>
+                    : v.replaced_by?.length ? `Commencement unverified: ${theActs(v.replaced_by)}` : 'Commencement unverified'}</dd></div>
                 )}
                 {v.section_status?.map((d) => (
                   <div key={d.section}><dt>Section {d.section}</dt><dd>{d.status === 'repealed' ? `Repealed by the ${d.by}` : `Replaced by the ${d.by}`}</dd></div>

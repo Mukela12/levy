@@ -1,6 +1,7 @@
 from pathlib import Path
 from pydantic_settings import BaseSettings
 from functools import lru_cache
+from typing import Literal
 from dotenv import load_dotenv
 
 # Load .env explicitly before pydantic-settings reads it
@@ -163,6 +164,7 @@ class Settings(BaseSettings):
     # BM25 prototype: the prototype's numbers do not transfer automatically,
     # because Postgres full-text ranking is not BM25.
     hybrid_retrieval_enabled: bool = False
+    hybrid_keyword_rpc: Literal['search_legal_chunks_keyword', 'search_legal_chunks_keyword_v2'] = 'search_legal_chunks_keyword'
     # Vector candidates fed into fusion come from a deeper, looser list than
     # the dense-only path uses; each list contributes this many.
     hybrid_candidates: int = 30

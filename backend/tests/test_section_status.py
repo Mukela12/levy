@@ -44,7 +44,9 @@ class SectionNotes(Base):
     def test_a_repealed_section_of_a_live_act(self):
         rows = [{"document_id": ACT, "section": "24"}]
         law_map.annotate(rows)
-        self.assertIn("STILL IN FORCE FOR NOW", rows[0]["status"])
+        self.assertIn("COMMENCEMENT NOT VERIFIED", rows[0]["status"])
+        self.assertIn("not evidence", rows[0]["status"])
+        self.assertNotIn("STILL IN FORCE", rows[0]["status"])
         self.assertTrue(rows[0]["section_status"].startswith("SECTION 24 IS REPEALED"))
         self.assertIn("No. 19 of 2016", rows[0]["section_status"])
 
