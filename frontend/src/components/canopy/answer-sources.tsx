@@ -26,9 +26,29 @@ function ReviewSeal({ size = 22 }: { size?: number }) {
   return <img className="cp-status-art" src="/canopy/status-review.png" width={size} height={size} alt="" aria-hidden="true" />
 }
 
+/** Cited sections the answer relies on without saying they are dead. */
+function unnamedDead(row: SourceRow) {
+  return row.deadSections.filter((d) => !d.acknowledged)
+}
+
+/** "Section 24 repealed" / "Sections 24 and 31 no longer law" */
+function deadLabel(row: SourceRow): string {
+  const dead = unnamedDead(row)
+  if (dead.length === 1) return `Section ${dead[0].section} ${dead[0].status}`
+  return 'Sections no longer law'
+}
+
+/** "Section 24 repealed · by the Immigration and Deportation (Amendment) Act, 2016 (No. 19 of 2016)" */
+function deadSectionText(d: SourceRow['deadSections'][number]): string {
+  return d.status === 'repealed'
+    ? `Section ${d.section} repealed · by the ${d.by}`
+    : `Section ${d.section} replaced · the current wording is in the ${d.by}`
+}
+
 function badgeLabel(row: SourceRow): string {
   if (row.verification === 'verified') return 'Verified'
   if (row.lawStatus === 'repealed') return 'Repealed'
+  if (unnamedDead(row).length) return deadLabel(row)
   if (row.foreign) return 'Foreign authority'
   if (row.conflict) return 'Check citation'
   if (row.documentId) return 'Check result'
@@ -52,6 +72,9 @@ function verdictHeading(row: SourceRow): string {
   if (row.verification === 'verified') return 'Authority matched in the library'
   if (row.verification === 'noted') return 'Named in the answer as repealed'
   if (row.lawStatus === 'repealed' && !row.conflict) return 'This Act has been repealed'
+  if (unnamedDead(row).length && !row.conflict) {
+    return unnamedDead(row).length === 1 ? 'A cited section is no longer law' : 'Cited sections are no longer law'
+  }
   if (row.foreign) return 'Foreign authority · check the original report'
   if (row.conflict) return 'Citation details need review'
   if (row.type === 'web') return 'A web link is not a verified citation'
@@ -70,6 +93,14 @@ function verdictText(row: SourceRow): string {
   }
   if (row.lawStatus === 'repealed' && !row.conflict) {
     return `The answer cites this Act, but ${by || 'a later Act'} repealed it. Unless the question is about what the law used to be, check the answer against the Act that replaced it.`
+  }
+  const dead = unnamedDead(row)
+  if (dead.length && !row.conflict) {
+    const d = dead[0]
+    const which = dead.length === 1 ? `section ${d.section}` : `sections ${dead.map((x) => x.section).join(', ')}`
+    return d.status === 'repealed' && dead.every((x) => x.status === 'repealed')
+      ? `The Act is still law, but the answer relies on ${which}, which the ${d.by} repealed. Check the answer against the law in force before relying on it.`
+      : `The Act is still law, but ${which} has been repealed or replaced since the wording the answer uses (${d.by}). Check the current text before relying on it.`
   }
   if (row.foreign) return 'This authority was identified as outside the Zambian library. Check its original report and its relevance to the Zambian question.'
   if (row.conflict) return 'The number or year in the answer differs from the library record. Check which instrument was intended.'
@@ -183,6 +214,9 @@ export function AnswerSources({ citations, webSources, blocks, onOpenPassage, on
                   {row.lawStatus && (
                     <div className={'cp-source-law' + (row.verification === 'noted' ? ' is-noted' : row.lawStatus === 'repealed' ? ' is-repealed' : ' is-pending')}>{lawStatusText(row)}</div>
                   )}
+                  {row.deadSections.map((d) => (
+                    <div key={d.section} className={'cp-source-law' + (d.acknowledged ? ' is-noted' : ' is-repealed')}>{deadSectionText(d)}</div>
+                  ))}
                   <div className="cp-source-context">
                     {row.passages.length ? (
                       <>
@@ -262,9 +296,12 @@ export function AnswerSources({ citations, webSources, blocks, onOpenPassage, on
                     ? v.replaced_by?.length ? `Repealed by ${theActs(v.replaced_by)}` : 'Repealed'
                     : v.replaced_by?.length ? `In force until ${theActs(v.replaced_by)} starts` : 'In force, replacement passed'}</dd></div>
                 )}
+                {v.section_status?.map((d) => (
+                  <div key={d.section}><dt>Section {d.section}</dt><dd>{d.status === 'repealed' ? `Repealed by the ${d.by}` : `Replaced by the ${d.by}`}</dd></div>
+                ))}
               </dl>
             ))}
-            <div className="cp-verify-boundary"><Info size={17} /><span>Library matching does not check subsequent treatment, exact quotations or whether a passage supports the answer. Repeal flags cover only the Acts the library records as repealed.</span></div>
+            <div className="cp-verify-boundary"><Info size={17} /><span>Library matching does not check subsequent treatment, exact quotations or whether a passage supports the answer. Repeal flags cover only the Acts and sections the library records as repealed.</span></div>
             {(detail.documentId || detail.passages.length > 0) && (
               <button type="button" className="cp-btn primary" style={{ marginTop: 16 }} onClick={() => { const row = detail; setDetail(null); open(row) }}>
                 Open the document <ArrowUpRight size={15} />

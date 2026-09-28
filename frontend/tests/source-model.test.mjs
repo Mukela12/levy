@@ -74,3 +74,32 @@ test('an acknowledged repeal with a number conflict still needs review', () => {
   const value = model({ ...verdict, title: 'Example Act No. 4 of 2019', law_status: 'repealed', acknowledged: true })
   assert.equal(value.rows[0].verification, 'review')
 })
+
+// A live Act can carry a dead section: section 24 of the Immigration and
+// Deportation Act 2010, repealed in 2016 while the Act stayed in force.
+const deadSection = { section: '24', status: 'repealed', by: 'Immigration and Deportation (Amendment) Act, 2016 (No. 19 of 2016)' }
+test('an answer relying on a repealed section is not verified', () => {
+  const value = model({ ...verdict, section_status: [{ ...deadSection, acknowledged: false }] })
+  assert.equal(value.verified, 0)
+  assert.equal(value.review, 1)
+  assert.equal(value.rows[0].deadSections.length, 1)
+  assert.equal(value.rows[0].deadSections[0].section, '24')
+})
+test('an answer that says the section was repealed keeps its badge', () => {
+  const value = model({ ...verdict, section_status: [{ ...deadSection, acknowledged: true }] })
+  assert.equal(value.verified, 1)
+  assert.equal(value.rows[0].deadSections[0].acknowledged, true)
+})
+test('one unqualified mention of a dead section is enough to need review', () => {
+  // The same Act cited two ways lands on one row; one of them is unqualified.
+  const v1 = { ...verdict, text: 'Example Act, 2019', section_status: [{ ...deadSection, acknowledged: true }] }
+  const v2 = { ...verdict, section_status: [{ ...deadSection, acknowledged: false }] }
+  const value = sourceModel({ citations: [passage], blocks: [{ kind: 'citation_audit', citations: [v1, v2] }] })
+  assert.equal(value.rows[0].deadSections.length, 1)
+  assert.equal(value.rows[0].deadSections[0].acknowledged, false)
+  assert.equal(value.rows[0].verification, 'review')
+})
+test('a not-found citation never carries a dead section', () => {
+  const value = model({ ...verdict, status: 'not_found', section_status: [deadSection] })
+  assert.equal(value.rows[0].deadSections.length, 0)
+})

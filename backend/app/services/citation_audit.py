@@ -648,6 +648,48 @@ def _law_status(c: dict, row: dict, index: list[dict]) -> dict:
     return {"law_status": status, "replaced_by": list(dict.fromkeys(b for b in by if b))[:3]}
 
 
+# "section 24 of the Immigration and Deportation Act" and Levy's own
+# "[Employment Code Act No. 3 of 2019, Section 77]".
+_SEC_BEFORE = re.compile(r"(?:section|s\.)\s*(\d{1,3}[A-Z]{0,2})(?:\s*\([^)]*\))*\s+of\s+(?:the\s+)?$", re.I)
+_SEC_AFTER = re.compile(r"^[\s,\]\)]{0,3}(?:section|s\.)\s*(\d{1,3}[A-Z]{0,2})", re.I)
+
+
+def _cited_sections(answer: str, cited: str) -> list[str]:
+    """Section numbers the answer attaches to this Act citation."""
+    out: list[str] = []
+    for m in re.finditer(re.escape(cited), answer):
+        for rx, window in ((_SEC_BEFORE, answer[max(0, m.start() - 60):m.start()]),
+                           (_SEC_AFTER, answer[m.end():m.end() + 30])):
+            hit = rx.search(window)
+            if hit and hit.group(1).upper() not in out:
+                out.append(hit.group(1).upper())
+    return out
+
+
+def _dead_sections(answer: str, cited: str, row: dict) -> list[dict]:
+    """Cited sections of this Act that have been repealed or replaced.
+
+    Amended sections are left out: a badge on every amended section would be
+    noise, and the model is told about those before it writes.
+    """
+    from . import law_map
+    out = []
+    for sec in _cited_sections(answer, cited):
+        st = law_map.section_state(row["id"], sec)
+        if not st or st.get("current") not in ("repealed", "replaced"):
+            continue
+        last = [h for h in st.get("history") or [] if h["op"] == st["current"]][-1]
+        out.append({
+            "section": st["section"],
+            "status": st["current"],
+            "by": law_map._amender(last),
+            # "section 24 ... was repealed in 2016" is the answer getting it
+            # right; the flag then confirms rather than contradicts.
+            "acknowledged": _acknowledged(answer, f"section {st['section']}"),
+        })
+    return out
+
+
 def audit_answer(text: str) -> list[dict]:
     """Return per-citation verdicts for an answer. Never raises."""
     try:
@@ -670,6 +712,11 @@ def audit_answer(text: str) -> list[dict]:
                     verdict.update(_law_status(c, row, index))
                     if verdict.get("law_status") == "repealed" and _acknowledged(text, c["text"]):
                         verdict["acknowledged"] = True
+                    # The Act can be in force while the section cited from it
+                    # is not.
+                    dead = _dead_sections(text, c["text"], row)
+                    if dead:
+                        verdict["section_status"] = dead
                 out.append(verdict)
             else:
                 verdict = {"text": c["text"], "kind": c["kind"], "status": "not_found"}

@@ -262,6 +262,14 @@ async def _search_corpus(
             "Some matches are from REPEALED Acts (see each match's status). Answer from the Act in "
             "force, name the repealing Act, and say plainly that the old one no longer applies."
         )
+    if law_map.has_dead_section(results):
+        # A live Act can carry a dead section. The Act-level status alone
+        # said "still in force" for the Immigration and Deportation Act 2010
+        # while section 24 of it had been repealed since 2016.
+        result["section_warning"] = (
+            "Some matches are SECTIONS THAT HAVE BEEN REPEALED even though their Act is in force "
+            "(see each match's section_status). Do not quote them as current law."
+        )
     # Judge the miss on live law only. A strong match to a dead Act means the
     # Act in force still has to be found, which is what a miss sends the model
     # to do.
@@ -287,6 +295,60 @@ async def _search_corpus(
         "db_sources": db_sources,
         "web_sources": [],
     }
+
+
+# ─── check_provision_status ──────────────────────────────────────────────────
+
+
+async def _check_provision_status(act: str, section: str | None = None) -> dict:
+    """Is this Act, or this section of it, still law — and what changed it?
+
+    A search only tells the model about a repeal when the repealed text
+    happens to be among the matches. This lets it ask directly before it
+    quotes, which is what a lawyer does: check the section is still in force.
+    """
+    from . import citation_audit as ca
+    act = (act or "").strip()
+    if not act:
+        return {"result": {"error": "Name the Act, e.g. 'Immigration and Deportation Act 2010'."}}
+    parsed = ca.extract_citations(act)
+    c = next((x for x in parsed if x.get("kind") == "statute"), None) or {
+        "kind": "statute", "name": act, "text": act}
+    index = await asyncio.to_thread(ca._load_index)
+    cands = ca._statute_candidates(c, index)
+    if not cands:
+        return {"result": {
+            "found": False,
+            "act": act,
+            "next_step": (
+                "The library holds no Act by that name, so its status cannot be checked here. "
+                "Use gov_search on parliament.gov.zm for the Act and its amendment Acts, open the "
+                "primary source, and say plainly if the current position could not be confirmed."),
+        }, "db_sources": [], "web_sources": []}
+    best = ca._match_statute(c, index) or cands[0]
+    # The same name often covers several Acts (the 1965 and 2010 Immigration
+    # Acts, the 1994 and 2017 Companies Acts). Show each with its own status,
+    # best match first, so the model does not read one's section numbers as
+    # the other's.
+    base = ca._base(best.get("title") or "")
+    same = [r for r in cands if r["id"] != best["id"] and ca._base(r.get("title") or "") == base
+            and r.get("document_type") == "act"][:3]
+    reports = [law_map.provision_report(best["id"], section)]
+    reports += [law_map.provision_report(r["id"], section) for r in same]
+    for rep, row in zip(reports, [best] + same):
+        rep["title_in_library"] = row.get("title")
+        rep["year"] = ca._doc_year(row)
+    result: dict = {"found": True, "matches": reports}
+    first = reports[0].get("section") or {}
+    if first.get("current") == "repealed":
+        result["answer_rule"] = (
+            "This section is repealed. Do not quote or apply it as current law; say it was repealed, "
+            "name the repealing Act, and answer from the law in force.")
+    elif first.get("current") == "replaced":
+        result["answer_rule"] = (
+            "This section was replaced. Quote the new wording from the replacing Act "
+            "(read_pdf_pages on its document_id), not the original.")
+    return {"result": result, "db_sources": [], "web_sources": []}
 
 
 # ─── search_case_law ─────────────────────────────────────────────────────────
@@ -3358,6 +3420,35 @@ def build_tool_registry(
                 "required": ["query"],
             },
             handler=_scoped_search,
+        ),
+        "check_provision_status": ToolDefinition(
+            name="check_provision_status",
+            description=(
+                "Check whether a Zambian Act, or one section of it, is still law. Returns the Act's "
+                "status (in force / repealed / repeal pending) and, for a section, whether it has been "
+                "repealed, repealed and replaced, or amended, by which amending Act and year, with the "
+                "clause that did it. Use it BEFORE you quote or apply a specific section as current "
+                "law, whenever the user asks if something is still in force or has been repealed, and "
+                "whenever a match's status says the Act has been amended. A repealed section of a live "
+                "Act is dead law even though its Act is in force."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "act": {
+                        "type": "string",
+                        "description": "The Act's name, with its year or number if known, e.g. "
+                                       "'Immigration and Deportation Act 2010' or 'Employment Code Act'.",
+                    },
+                    "section": {
+                        "type": "string",
+                        "description": "Optional section number, e.g. '24', '64A' or 's. 77(1)'. "
+                                       "Omit it to get every repealed and replaced section of the Act.",
+                    },
+                },
+                "required": ["act"],
+            },
+            handler=_check_provision_status,
         ),
         "search_case_law": ToolDefinition(
             name="search_case_law",

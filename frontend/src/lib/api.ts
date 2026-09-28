@@ -43,6 +43,21 @@ export interface CitationVerdict {
   replaced_by?: string[]
   /** The answer itself already calls this Act repealed wherever it names it. */
   acknowledged?: boolean
+  /**
+   * Sections the answer cites from this Act that have been repealed or
+   * replaced, though the Act itself may be in force (section 24 of the
+   * Immigration and Deportation Act 2010, repealed in 2016).
+   */
+  section_status?: DeadSection[]
+}
+
+export interface DeadSection {
+  section: string
+  status: 'repealed' | 'replaced'
+  /** The amending Act, e.g. "Immigration and Deportation (Amendment) Act, 2016 (No. 19 of 2016)". */
+  by: string
+  /** The answer already says so in the section's own sentence. */
+  acknowledged?: boolean
 }
 
 interface ChunkUsed {

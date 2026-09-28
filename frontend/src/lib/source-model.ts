@@ -17,7 +17,7 @@
  *    repeal that has passed but not started leaves the badge alone and is
  *    shown as a note.
  */
-import type { ChunkUsed, CitationVerdict, WebSource } from '@/lib/api'
+import type { ChunkUsed, CitationVerdict, DeadSection, WebSource } from '@/lib/api'
 import type { MessageBlock } from '@/components/chat/chat-message'
 
 export type SourceVerification = 'verified' | 'review' | 'noted' | 'none'
@@ -37,7 +37,28 @@ export interface SourceRow {
   foreign: boolean
   lawStatus?: 'repealed' | 'repeal pending'
   replacedBy: string[]
+  /** Cited sections of this Act that are no longer law, one entry per section. */
+  deadSections: DeadSection[]
   verification: SourceVerification
+}
+
+/**
+ * One entry per cited section. A section the answer mentions twice counts as
+ * acknowledged only if every mention says it is dead: one unqualified mention
+ * is enough to mislead.
+ */
+export function deadSectionsOf(verdicts: CitationVerdict[]): DeadSection[] {
+  const bySection = new Map<string, DeadSection>()
+  for (const v of verdicts) {
+    if (v.status !== 'verified') continue
+    for (const d of v.section_status || []) {
+      const prev = bySection.get(d.section)
+      bySection.set(d.section, prev
+        ? { ...prev, acknowledged: Boolean(prev.acknowledged && d.acknowledged) }
+        : { ...d, acknowledged: Boolean(d.acknowledged) })
+    }
+  }
+  return Array.from(bySection.values())
 }
 
 export interface SourceModel {
@@ -102,6 +123,7 @@ export function sourceModel(input: {
         conflict: false,
         foreign: false,
         replacedBy: [],
+        deadSections: [],
         verification: 'none',
       }
       docs.set(key, row)
@@ -130,6 +152,7 @@ export function sourceModel(input: {
         conflict: false,
         foreign: false,
         replacedBy: [],
+        deadSections: [],
         verification: 'none',
       }
       rows.push(row)
@@ -148,10 +171,14 @@ export function sourceModel(input: {
       : flagged.length ? 'repeal pending' : undefined
     row.replacedBy = Array.from(new Set(flagged.filter((c) => c.law_status === row.lawStatus).flatMap((c) => c.replaced_by || [])))
     const repealedNamed = row.lawStatus === 'repealed' && flagged.every((c) => c.law_status !== 'repealed' || c.acknowledged === true)
+    row.deadSections = deadSectionsOf(row.verdicts)
+    // The Act is in the library and in force, but the section the answer
+    // relies on is not. That is not "verified".
+    const unnamedDeadSection = row.deadSections.some((d) => !d.acknowledged)
     row.verification =
       state !== 'complete'
         ? 'none'
-        : row.verdicts.some((c) => c.status !== 'verified' || !c.document_id) || row.conflict || row.foreign
+        : row.verdicts.some((c) => c.status !== 'verified' || !c.document_id) || row.conflict || row.foreign || unnamedDeadSection
           ? 'review'
           : row.lawStatus === 'repealed'
             ? repealedNamed ? 'noted' : 'review'
@@ -178,6 +205,7 @@ export function sourceModel(input: {
       conflict: false,
       foreign: false,
       replacedBy: [],
+      deadSections: [],
       verification: 'none',
     })
   })

@@ -20,6 +20,12 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 MAP_PATH = Path(__file__).resolve().parent.parent / "data" / "law_map.json"
+# Section-level changes read out of the amending Acts by
+# scripts/build_section_map.py. The Act-level status above said "amended by N
+# Acts, check before quoting", and a model quoted section 24 of the Immigration
+# and Deportation Act 2010 anyway, ten years after section 9 of Act No. 19 of
+# 2016 repealed it. A warning has to name the section to be heeded.
+SECTION_MAP_PATH = MAP_PATH.parent / "section_map.json"
 
 
 @lru_cache(maxsize=1)
@@ -47,10 +53,16 @@ def status_note(document_id: str | None) -> str | None:
                 f"replacing Act, and only cite this one for what the law was at the time.")
     if status == "repeal pending":
         by = _titles(e.get("repeal_pending_by") or []) or "a later Act"
+        amended = e.get("amended_by") or []
+        # The Immigration and Deportation Act 2010 is exactly this case, and
+        # this note used to stop at "still in force", so nothing told the
+        # model its section 24 had been repealed in 2016.
+        tail = (f" It has also been amended by {_titles(amended, 3)}: check each section's own "
+                f"status before quoting it as it stands.") if amended else ""
         return (f"STILL IN FORCE FOR NOW: {by} will repeal this Act, but it starts only on a date the "
                 f"Minister appoints by statutory instrument, and no commencement order is recorded. Say "
                 f"that the new Act has been passed and may not be in force yet, and check the official "
-                f"source before relying on either.")
+                f"source before relying on either.{tail}")
     if status == "bill, not yet law":
         return "BILL before Parliament, not yet law."
     if status == "enacted":
@@ -72,12 +84,130 @@ def status_note(document_id: str | None) -> str | None:
 
 
 def annotate(rows: list[dict], key: str = "document_id") -> list[dict]:
-    """Add a `status` line to each row that has one. Rows are edited in place."""
+    """Add `status` (the Act) and `section_status` (the section) lines. Edits rows in place."""
     for r in rows:
         note = status_note(r.get(key))
         if note:
             r["status"] = note
+        sec = section_note(r.get(key), r.get("section"))
+        if sec:
+            r["section_status"] = sec
     return rows
+
+
+@lru_cache(maxsize=1)
+def _sections() -> dict[str, dict]:
+    try:
+        return json.loads(SECTION_MAP_PATH.read_text()).get("principals", {})
+    except Exception:  # noqa: BLE001 — a missing map must never break retrieval
+        logger.exception("section map unavailable")
+        return {}
+
+
+def _amender(h: dict) -> str:
+    """ "The Immigration and Deportation (Amendment)" + "No. 19 of 2016" -> a name a reader can find."""
+    name = display_name(h.get("by_title") or "", h.get("by_year"))
+    number = (h.get("by_number") or "").strip()
+    return f"{name} ({number})" if number and number.lower() not in name.lower() else name
+
+
+def section_state(document_id: str | None, section: str | int | None) -> dict | None:
+    """What the section map records for one section of one Act, or None.
+
+    None means nothing recorded, which is NOT the same as unchanged: some
+    amending Acts could not be read section by section, and amendments the
+    library does not hold are unknown.
+    """
+    from .section_ops import normalise_section
+    ref = normalise_section(section)
+    principal = _sections().get(document_id or "")
+    if not ref or not principal:
+        return None
+    s = (principal.get("sections") or {}).get(ref)
+    return {"section": ref, **s} if s else None
+
+
+def section_note(document_id: str | None, section: str | int | None) -> str | None:
+    """One line about this section, for the model, or None."""
+    s = section_state(document_id, section)
+    if not s:
+        return None
+    history = s.get("history") or []
+    if not history:
+        return None
+    n, current = s["section"], s.get("current")
+    if current == "repealed":
+        last = history[-1]
+        hedge = ("" if last.get("confidence") == "high" else
+                 " The library read this from the amending Act's text; confirm it there before relying on it.")
+        return (f"SECTION {n} IS REPEALED: {_amender(last)} repealed it. It is no longer law. Do not "
+                f"quote or apply it as current; say that it has been repealed, and by which Act.{hedge}")
+    if current == "replaced":
+        repl = [h for h in history if h["op"] == "replaced"][-1]
+        return (f"SECTION {n} WAS REPEALED AND REPLACED by {_amender(repl)}. The wording in this match "
+                f"is the original and is no longer the law; the current section is in that Act. Read it "
+                f"before quoting.")
+    if current == "amended":
+        names = list(dict.fromkeys(_amender(h) for h in history if h["op"] == "amended"))
+        return (f"SECTION {n} HAS BEEN AMENDED by {', '.join(names[-3:])}. The wording in this match may "
+                f"be out of date. Read the amendment before quoting this section as it stands.")
+    if current == "uncertain":
+        return (f"SECTION {n}: the library records it as repealed and later amended, which cannot both "
+                f"be right. Check the official source before relying on it.")
+    return None
+
+
+def has_dead_section(rows: list[dict]) -> bool:
+    return any(str(r.get("section_status") or "").startswith("SECTION") and "IS REPEALED" in r["section_status"]
+               for r in rows)
+
+
+def provision_report(document_id: str, section: str | int | None = None) -> dict:
+    """Everything the map knows about one Act, and one of its sections if asked.
+
+    Backs the check_provision_status tool, so the model can ask "is this still
+    law?" before it quotes, instead of waiting for a search to stumble on it.
+    """
+    e = entry(document_id)
+    out: dict = {
+        "document_id": document_id,
+        "act": display_name(e.get("title") or "", e.get("year")) or e.get("title") or "",
+        "act_status": e.get("status") or "in force",
+        "act_note": status_note(document_id),
+        "amended_by": [{"title": ref_name(x), "document_id": x.get("id")} for x in e.get("amended_by") or []],
+    }
+    principal = _sections().get(document_id) or {}
+    changed = principal.get("sections") or {}
+    if section is not None:
+        s = section_state(document_id, section)
+        if s:
+            out["section"] = {
+                "number": s["section"],
+                "current": s["current"],
+                "note": section_note(document_id, section),
+                "history": [{"op": h["op"], "by": _amender(h), "by_document_id": h.get("by_id"),
+                             "year": h.get("by_year"), "evidence": h.get("evidence")}
+                            for h in s.get("history") or []],
+            }
+        else:
+            from .section_ops import normalise_section
+            out["section"] = {
+                "number": normalise_section(section),
+                "current": "no change recorded",
+                "note": ("No repeal or amendment of this section is recorded in the amending Acts the "
+                         "library holds. That is not proof it is unchanged: some amending Acts could not be "
+                         "read section by section, and amendments the library does not hold are unknown. "
+                         "Confirm against the official source before saying it is unamended."),
+            }
+    else:
+        out["repealed_sections"] = sorted((k for k, v in changed.items() if v.get("current") == "repealed"),
+                                          key=lambda x: x.zfill(6))
+        out["replaced_sections"] = sorted((k for k, v in changed.items() if v.get("current") == "replaced"),
+                                          key=lambda x: x.zfill(6))
+        out["amended_section_count"] = sum(1 for v in changed.values() if v.get("current") == "amended")
+        out["inserted_sections"] = sorted((k for k, v in changed.items() if v.get("current") == "inserted"),
+                                          key=lambda x: x.zfill(6))
+    return out
 
 
 def entry(document_id: str | None) -> dict:
