@@ -126,3 +126,60 @@ class Audit(Base):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ProvisionTool(unittest.IsolatedAsyncioTestCase):
+    """check_provision_status choosing among Acts that share a name."""
+
+    def setUp(self):
+        from app.services import citation_audit as ca
+        self.ca = ca
+        docs = [
+            {"id": "co-old", "title": "REPUBLIC OF ZAMBIA THE COMPANIES ACT", "short_name": "", "document_type": "act", "year": None, "act_number": ""},
+            {"id": "co-2017", "title": "THE COMPANIES ACT, 2017", "short_name": "", "document_type": "act", "year": 2017, "act_number": "No. 10 of 2017"},
+            {"id": "co-amend", "title": "The Companies (Amendment) Act, 2020", "short_name": "", "document_type": "act", "year": 2020, "act_number": ""},
+            {"id": "zda", "title": "The Zambia Development Agency", "short_name": "", "document_type": "act", "year": 2006, "act_number": ""},
+        ]
+        for r in docs:
+            title = ca._with_act(r, r["title"])
+            r["_ntitle"], r["_nshort"] = ca._norm(title), ""
+            r["_btitle"], r["_bshort"] = ca._base(title), ""
+        sections = {"co-old": {"title": "", "parts": {}, "sections": {
+            "378": {"current": "repealed", "history": [{"op": "repealed", **AMENDER}]}}}}
+        entries = {"co-old": {"status": "repealed", "title": "Companies Act"},
+                   "co-2017": {"status": "in force", "title": "Companies Act, 2017", "year": 2017},
+                   "zda": {"status": "in force", "title": "Zambia Development Agency Act", "year": 2006}}
+        for p in (patch.object(ca, "_load_index", lambda: docs),
+                  patch.object(law_map, "_sections", lambda: sections),
+                  patch.object(law_map, "_entries", lambda: entries)):
+            p.start()
+            self.addCleanup(p.stop)
+
+    async def ask(self, act, section=None):
+        from app.services import tools
+        return (await tools._check_provision_status(act, section))["result"]
+
+    async def test_a_named_year_comes_first(self):
+        # By name the 2017 Act is the better match; the user asked for 1994.
+        r = await self.ask("Companies Act 1994", "378")
+        self.assertEqual(r["matches"][0]["section"]["current"], "repealed")
+        self.assertIn("answer_rule", r)
+
+    async def test_no_year_means_the_act_in_force_first(self):
+        r = await self.ask("Companies Act", "378")
+        self.assertEqual(r["matches"][0]["year"], 2017)
+        self.assertTrue(any(m["section"]["current"] == "repealed" for m in r["matches"]))
+
+    async def test_amending_acts_are_not_listed_as_the_same_act(self):
+        r = await self.ask("Companies Act", "378")
+        self.assertFalse(any("Amendment" in (m["title_in_library"] or "") for m in r["matches"]))
+
+    async def test_a_title_that_lost_its_act_is_still_found(self):
+        r = await self.ask("Zambia Development Agency Act", "58")
+        self.assertTrue(r["found"])
+        self.assertEqual(r["matches"][0]["title_in_library"], "The Zambia Development Agency")
+
+    async def test_an_act_not_held_sends_the_model_to_the_source(self):
+        r = await self.ask("Imaginary Widgets Act 2031", "4")
+        self.assertFalse(r["found"])
+        self.assertIn("parliament.gov.zm", r["next_step"])

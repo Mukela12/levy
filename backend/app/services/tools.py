@@ -346,16 +346,41 @@ async def _check_provision_status(act: str, section: str | None = None) -> dict:
                 "primary source, and say plainly if the current position could not be confirmed."),
         }, "db_sources": [], "web_sources": []}
     best = ca._match_statute(c, index) or cands[0]
+
+    def stem(title: str) -> str:
+        # The parser dropped "Act" from some titles ("The Zambia Development
+        # Agency" is the 2006 Act); compare names without it.
+        return re.sub(r"\s+act$", "", ca._base(title))
+
+    # The candidate search needs the whole name inside the title, so an Act
+    # whose stored title lost its "Act" never became a candidate at all.
+    wanted = stem(c.get("name") or act)
+    known = {r["id"] for r in cands}
+
+    def principal(r: dict) -> bool:
+        # _base strips "(Amendment)" as a parenthetical, which would list
+        # every amending Act as another Act of the same name.
+        return r.get("document_type") == "act" and "amendment" not in (r.get("title") or "").lower()
+
+    cands += [r for r in index if r["id"] not in known and principal(r)
+              and stem(r.get("title") or "") == wanted]
+
     # The same name often covers several Acts (the 1965 and 2010 Immigration
     # Acts, the 1994 and 2017 Companies Acts). Show each with its own status,
-    # best match first, so the model does not read one's section numbers as
-    # the other's.
-    base = ca._base(best.get("title") or "")
-    same = [r for r in cands if r["id"] != best["id"] and ca._base(r.get("title") or "") == base
-            and r.get("document_type") == "act"][:3]
-    reports = [law_map.provision_report(best["id"], section)]
-    reports += [law_map.provision_report(r["id"], section) for r in same]
-    for rep, row in zip(reports, [best] + same):
+    # so the model does not read one's section numbers as the other's.
+    base = stem(best.get("title") or "")
+    same = [r for r in cands if r["id"] != best["id"] and stem(r.get("title") or "") == base
+            and principal(r)][:3]
+    rows = [best] + same
+    year = ca._cited_year(c)
+    if year:
+        # "Companies Act 1994" means the 1994 Act, even though the 2017 one is
+        # the better match by name. The asked-for year first, then undated
+        # consolidated editions and older Acts, then the rest.
+        rows.sort(key=lambda r: (0 if ca._doc_year(r) == year
+                                 else 1 if (ca._doc_year(r) or 0) <= year else 2))
+    reports = [law_map.provision_report(r["id"], section) for r in rows]
+    for rep, row in zip(reports, rows):
         rep["title_in_library"] = row.get("title")
         rep["year"] = ca._doc_year(row)
     result: dict = {"found": True, "matches": reports}
