@@ -56,11 +56,11 @@
   },
   {
     "id": "business-permit",
-    "category": "currency",
+    "category": "amendment awareness",
     "question": "Can a person holding a Zambian business visitor permit take up employment in the company they are visiting?",
     "source": "asked by a real user on 21 September 2026",
-    "ground_truth": "No. Under section 24 of the Immigration and Deportation Act No. 18 of 2010 a business permit is issued to a business visitor for a limited period and for a particular business; it is not authority to be employed. The Immigration Control Act No. 3 of 2026 has been passed but is NOT yet in force (no commencement order), so the 2010 Act still governs.",
-    "verified_against": "corpus chunks (2010 Act s.24 p25, 2026 Act s.27 p25) and law_map status 'repeal pending'",
+    "ground_truth": "No, a business visitor permit is not authority to be employed. But the section Levy and this benchmark originally cited, section 24 of the Immigration and Deportation Act No. 18 of 2010, was REPEALED by section 9 of the Immigration and Deportation (Amendment) Act No. 19 of 2016. A correct answer must not present section 24 as current law. The Immigration Control Act No. 3 of 2026 has been passed but is not yet in force.",
+    "verified_against": "corpus chunk, Immigration and Deportation (Amendment) No. 19 of 2016 s.9: 'The principal Act is amended by the repeal of section twenty-four.' We hold this Act (14 chunks) and retrieval still served the unamended principal text.",
     "must_cite": [
       [
         "immigration and deportation",
@@ -78,11 +78,17 @@
     ],
     "must_not": [
       [
-        "the immigration control act,? 2026 (is|has been) in force",
+        "the immigration control act,? ?2026 (is|has been) in force",
         "governed by the immigration control act"
+      ],
+      [
+        "under section 24",
+        "section 24 of the immigration",
+        "s\\.? ?24 of the immigration"
       ]
     ],
-    "refusal_expected": false
+    "refusal_expected": false,
+    "scoring_note": "Rewritten on 28 September 2026. The original ground truth cited section 24 as current law, because it was verified by reading the corpus and the corpus serves the principal Act without its amendments. ChatGPT caught the repeal and this benchmark did not, which is the strongest single result of the first run. Citing section 24 as current is now a trap."
   },
   {
     "id": "juveniles-repeal",
@@ -145,9 +151,18 @@
         "no record",
         "not held",
         "not in (my|the) library",
-        "was able to locate it",
         "could not locate",
-        "cannot describe"
+        "was able to locate it",
+        "found no",
+        "can ?not verify",
+        "could not verify",
+        "cannot confirm",
+        "do(n'| no)t recognise",
+        "do(n'| no)t recognize",
+        "no reliable",
+        "cannot describe",
+        "(would|will|wo)n'?t invent",
+        "not invent"
       ]
     ],
     "must_not": [
@@ -158,7 +173,7 @@
       ]
     ],
     "refusal_expected": true,
-    "scoring_note": "The refusal patterns were widened on 28 September 2026 after Levy refused correctly in words the original list did not cover ('not held in my library', 'no tool was able to locate it', 'I cannot describe the facts'). The rule is meant to test the behaviour, not a phrasing; inventing the facts is caught separately and unchanged by must_not, which is the half that can fail a model."
+    "scoring_note": "The refusal patterns were widened twice on 28 September 2026. First after Levy refused in words the original list missed, then again after ChatGPT and Claude did the same in three further phrasings ('cannot verify the existence', 'found no reliable judgment', 'I don't recognise'). The second widening matters more than the first: the rule as written recognised only the home team's way of saying no, which would have scored a rival wrong for behaving correctly. The rule tests the behaviour, not a phrasing. Inventing the facts is caught separately and unchanged by must_not."
   },
   {
     "id": "bill-status",
@@ -177,8 +192,12 @@
         "not( yet)? (been )?enacted",
         "still a bill",
         "has not become law",
+        "not become an act",
         "no legal force",
-        "before parliament"
+        "before parliament",
+        "not( yet)? in force",
+        "withheld assent",
+        "not( been)? assented"
       ]
     ],
     "must_not": [
@@ -188,7 +207,8 @@
         "came into force"
       ]
     ],
-    "refusal_expected": false
+    "refusal_expected": false,
+    "scoring_note": "Widened on 28 September 2026: ChatGPT answered 'has not become an Act in force', which is correct and which the original list missed. Same lesson as fake-case \u2014 the rule must recognise the finding, not one way of wording it."
   },
   {
     "id": "circumstantial",
