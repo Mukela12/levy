@@ -1,0 +1,2389 @@
+{
+ "summary": {
+  "current law": {
+   "dense": {
+    "act": 0.312,
+    "sec": 0.188,
+    "p": 0.237,
+    "mrr": 0.125,
+    "terms": 0.729,
+    "ms": 634,
+    "p95_ms": 1536
+   },
+   "lexical": {
+    "act": 0.625,
+    "sec": 0.25,
+    "p": 0.313,
+    "mrr": 0.177,
+    "terms": 0.786,
+    "ms": 488,
+    "p95_ms": 783
+   },
+   "hybrid": {
+    "act": 0.625,
+    "sec": 0.312,
+    "p": 0.287,
+    "mrr": 0.188,
+    "terms": 0.807,
+    "ms": null,
+    "p95_ms": null
+   },
+   "prod-off": {
+    "act": 0.312,
+    "sec": 0.188,
+    "p": 0.237,
+    "mrr": 0.125,
+    "terms": 0.729,
+    "ms": 357,
+    "p95_ms": 378
+   },
+   "prod-on": {
+    "act": 0.625,
+    "sec": 0.312,
+    "p": 0.287,
+    "mrr": 0.188,
+    "terms": 0.807,
+    "ms": 582,
+    "p95_ms": 751
+   }
+  },
+  "all, as written": {
+   "dense": {
+    "act": 0.417,
+    "sec": 0.167,
+    "p": 0.208,
+    "mrr": 0.094,
+    "terms": 0.747,
+    "ms": 585,
+    "p95_ms": 849
+   },
+   "lexical": {
+    "act": 0.75,
+    "sec": 0.208,
+    "p": 0.3,
+    "mrr": 0.126,
+    "terms": 0.712,
+    "ms": 468,
+    "p95_ms": 560
+   },
+   "hybrid": {
+    "act": 0.708,
+    "sec": 0.25,
+    "p": 0.258,
+    "mrr": 0.135,
+    "terms": 0.769,
+    "ms": null,
+    "p95_ms": null
+   },
+   "prod-off": {
+    "act": 0.417,
+    "sec": 0.167,
+    "p": 0.208,
+    "mrr": 0.104,
+    "terms": 0.747,
+    "ms": 360,
+    "p95_ms": 378
+   },
+   "prod-on": {
+    "act": 0.708,
+    "sec": 0.25,
+    "p": 0.267,
+    "mrr": 0.135,
+    "terms": 0.769,
+    "ms": 544,
+    "p95_ms": 747
+   }
+  }
+ },
+ "per_question": [
+  {
+   "id": "env-01",
+   "difficulty": "easy",
+   "retrieved_ids": {
+    "dense": [
+     "82d2d4ae-e335-4e14-8999-fb3da570b5d9",
+     "ed9bf1b2-fc0f-407e-9084-a0a3dada152b",
+     "63f7eadd-33a0-408d-9cc4-0b76d15cd7ad",
+     "a629bb92-bd3a-41e7-ada6-c778d510e8aa",
+     "fcdb6bdd-f0a4-425f-ab0d-7455aba12602"
+    ],
+    "lexical": [
+     "7a0a71f6-6a98-44d2-920a-f3ab7843c766",
+     "fc713f69-57fc-4c48-babf-3427b6433e15",
+     "3ad3767b-69d9-4689-bcfd-37d02764afa6",
+     "5b346337-0226-47d8-8ec0-60cd0a6708a5",
+     "3dff72c0-a1c5-4937-9d19-9b273c46a48e"
+    ],
+    "hybrid": [
+     "3ad3767b-69d9-4689-bcfd-37d02764afa6",
+     "82d2d4ae-e335-4e14-8999-fb3da570b5d9",
+     "5b346337-0226-47d8-8ec0-60cd0a6708a5",
+     "8a2c5598-c421-44f5-a350-e0f440e11a62",
+     "fcdb6bdd-f0a4-425f-ab0d-7455aba12602"
+    ],
+    "prod-off": [
+     "82d2d4ae-e335-4e14-8999-fb3da570b5d9",
+     "ed9bf1b2-fc0f-407e-9084-a0a3dada152b",
+     "63f7eadd-33a0-408d-9cc4-0b76d15cd7ad",
+     "a629bb92-bd3a-41e7-ada6-c778d510e8aa",
+     "fcdb6bdd-f0a4-425f-ab0d-7455aba12602"
+    ],
+    "prod-on": [
+     "3ad3767b-69d9-4689-bcfd-37d02764afa6",
+     "82d2d4ae-e335-4e14-8999-fb3da570b5d9",
+     "5b346337-0226-47d8-8ec0-60cd0a6708a5",
+     "8a2c5598-c421-44f5-a350-e0f440e11a62",
+     "fcdb6bdd-f0a4-425f-ab0d-7455aba12602"
+    ]
+   },
+   "diagnostics": {
+    "lexical_error": null,
+    "prod-off": {
+     "keyword_called": false,
+     "keyword_rows": 0,
+     "keyword_error": null
+    },
+    "prod-on": {
+     "keyword_called": true,
+     "keyword_rows": 30,
+     "keyword_error": null
+    }
+   },
+   "dense": {
+    "act": true,
+    "sec": false,
+    "p": 0.8,
+    "mrr": 0.0,
+    "terms": 0.6666666666666666
+   },
+   "lexical": {
+    "act": true,
+    "sec": false,
+    "p": 0.8,
+    "mrr": 0.0,
+    "terms": 0.3333333333333333
+   },
+   "hybrid": {
+    "act": true,
+    "sec": false,
+    "p": 0.6,
+    "mrr": 0.0,
+    "terms": 0.6666666666666666
+   },
+   "prod-off": {
+    "act": true,
+    "sec": false,
+    "p": 0.8,
+    "mrr": 0.0,
+    "terms": 0.6666666666666666
+   },
+   "prod-on": {
+    "act": true,
+    "sec": false,
+    "p": 0.6,
+    "mrr": 0.0,
+    "terms": 0.6666666666666666
+   },
+   "timing_ms": {
+    "dense": 1536,
+    "lexical": 339,
+    "hybrid": null,
+    "prod-off": 357,
+    "prod-on": 751
+   }
+  },
+  {
+   "id": "env-02",
+   "difficulty": "medium",
+   "retrieved_ids": {
+    "dense": [
+     "0de685ea-9f60-4069-8c8d-62ce1de75156",
+     "81f70028-36fb-4e88-a0c5-5c4d2dbad164",
+     "0975d52e-5aa9-4d46-a901-3b90891e5648",
+     "4b5e2137-72a3-45d9-b856-21d0e4d3cdaa",
+     "50060c5d-3366-4e9f-8f4b-5c0214c56fca"
+    ],
+    "lexical": [
+     "2703cf1a-e7c3-4f0e-ba81-ba68bf9048f0",
+     "e0c6b2a0-fce9-49e4-9212-aef4643766fc",
+     "6e941e2f-bce9-4f7d-bf60-1c80922e520a",
+     "6f8e4faa-d81b-4b16-8a9c-e0acfdc4aa4e",
+     "65ca3717-660b-4fc4-9485-71e0a31b743b"
+    ],
+    "hybrid": [
+     "2703cf1a-e7c3-4f0e-ba81-ba68bf9048f0",
+     "3732d7d9-da43-4d29-be31-f4190ddb7311",
+     "e0c6b2a0-fce9-49e4-9212-aef4643766fc",
+     "65ca3717-660b-4fc4-9485-71e0a31b743b",
+     "0975d52e-5aa9-4d46-a901-3b90891e5648"
+    ],
+    "prod-off": [
+     "0de685ea-9f60-4069-8c8d-62ce1de75156",
+     "81f70028-36fb-4e88-a0c5-5c4d2dbad164",
+     "0975d52e-5aa9-4d46-a901-3b90891e5648",
+     "4b5e2137-72a3-45d9-b856-21d0e4d3cdaa",
+     "50060c5d-3366-4e9f-8f4b-5c0214c56fca"
+    ],
+    "prod-on": [
+     "2703cf1a-e7c3-4f0e-ba81-ba68bf9048f0",
+     "3732d7d9-da43-4d29-be31-f4190ddb7311",
+     "e0c6b2a0-fce9-49e4-9212-aef4643766fc",
+     "65ca3717-660b-4fc4-9485-71e0a31b743b",
+     "0975d52e-5aa9-4d46-a901-3b90891e5648"
+    ]
+   },
+   "diagnostics": {
+    "lexical_error": null,
+    "prod-off": {
+     "keyword_called": false,
+     "keyword_rows": 0,
+     "keyword_error": null
+    },
+    "prod-on": {
+     "keyword_called": true,
+     "keyword_rows": 30,
+     "keyword_error": null
+    }
+   },
+   "dense": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "lexical": {
+    "act": true,
+    "sec": false,
+    "p": 0.4,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "hybrid": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-off": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-on": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "timing_ms": {
+    "dense": 668,
+    "lexical": 359,
+    "hybrid": null,
+    "prod-off": 353,
+    "prod-on": 747
+   }
+  },
+  {
+   "id": "env-03",
+   "difficulty": "easy",
+   "retrieved_ids": {
+    "dense": [
+     "5b346337-0226-47d8-8ec0-60cd0a6708a5",
+     "6097f5d7-55ad-493b-9c51-2129f946cf5b",
+     "3e9208f8-39fb-4007-a01b-f8cfe3018096",
+     "843025d8-e0d4-4094-b7c1-cf539db6d36e",
+     "12fddd5d-2124-41f4-bb5d-0e2a95384f95"
+    ],
+    "lexical": [
+     "60a46fd8-4288-4341-a448-d8bb76f95649",
+     "6097f5d7-55ad-493b-9c51-2129f946cf5b",
+     "038c3d7d-7da5-4968-8540-a924ded4104f",
+     "16aebd14-2452-48ae-91f7-d7987abe95a4",
+     "204b9c6b-f085-4cbf-8e83-cc5a837ef49a"
+    ],
+    "hybrid": [
+     "6097f5d7-55ad-493b-9c51-2129f946cf5b",
+     "3e9208f8-39fb-4007-a01b-f8cfe3018096",
+     "90241436-c222-4533-91d1-b93efa48dc31",
+     "843025d8-e0d4-4094-b7c1-cf539db6d36e",
+     "12fddd5d-2124-41f4-bb5d-0e2a95384f95"
+    ],
+    "prod-off": [
+     "5b346337-0226-47d8-8ec0-60cd0a6708a5",
+     "6097f5d7-55ad-493b-9c51-2129f946cf5b",
+     "3e9208f8-39fb-4007-a01b-f8cfe3018096",
+     "843025d8-e0d4-4094-b7c1-cf539db6d36e",
+     "12fddd5d-2124-41f4-bb5d-0e2a95384f95"
+    ],
+    "prod-on": [
+     "6097f5d7-55ad-493b-9c51-2129f946cf5b",
+     "3e9208f8-39fb-4007-a01b-f8cfe3018096",
+     "90241436-c222-4533-91d1-b93efa48dc31",
+     "843025d8-e0d4-4094-b7c1-cf539db6d36e",
+     "12fddd5d-2124-41f4-bb5d-0e2a95384f95"
+    ]
+   },
+   "diagnostics": {
+    "lexical_error": null,
+    "prod-off": {
+     "keyword_called": false,
+     "keyword_rows": 0,
+     "keyword_error": null
+    },
+    "prod-on": {
+     "keyword_called": true,
+     "keyword_rows": 30,
+     "keyword_error": null
+    }
+   },
+   "dense": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.25
+   },
+   "lexical": {
+    "act": true,
+    "sec": true,
+    "p": 0.8,
+    "mrr": 0.3333333333333333,
+    "terms": 0.5
+   },
+   "hybrid": {
+    "act": true,
+    "sec": true,
+    "p": 0.2,
+    "mrr": 0.3333333333333333,
+    "terms": 0.25
+   },
+   "prod-off": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.25
+   },
+   "prod-on": {
+    "act": true,
+    "sec": true,
+    "p": 0.2,
+    "mrr": 0.3333333333333333,
+    "terms": 0.25
+   },
+   "timing_ms": {
+    "dense": 512,
+    "lexical": 340,
+    "hybrid": null,
+    "prod-off": 349,
+    "prod-on": 471
+   }
+  },
+  {
+   "id": "env-04",
+   "difficulty": "medium",
+   "retrieved_ids": {
+    "dense": [
+     "9fd54205-962c-4404-b55b-9b4bb964e5ff",
+     "b0ce05b9-573a-4d8f-bba9-f6de08a8b8a5",
+     "d9a125c1-84fa-4a42-b83e-b0036aa14eee",
+     "2514a392-2d4c-4913-87d1-d6a2368ea19e",
+     "ed99be8f-dfdb-4748-b08d-ed6032f46ab4"
+    ],
+    "lexical": [
+     "db266aee-0f5f-4d97-89e0-f6039aa37b2f",
+     "8926a84c-6495-4a98-b24c-dcb14ef0e651",
+     "e75429f8-fa37-4f23-bc4a-201b66ec4560",
+     "7665f083-a233-4ca4-97d7-a01acc4f56dc",
+     "e21af75c-51cc-43d5-9ba7-4e301865145c"
+    ],
+    "hybrid": [
+     "9fd54205-962c-4404-b55b-9b4bb964e5ff",
+     "db266aee-0f5f-4d97-89e0-f6039aa37b2f",
+     "8926a84c-6495-4a98-b24c-dcb14ef0e651",
+     "d0ede03f-13f1-4bf3-a941-55013a9956f4",
+     "7fe91325-111e-4f56-affc-09069566f728"
+    ],
+    "prod-off": [
+     "9fd54205-962c-4404-b55b-9b4bb964e5ff",
+     "b0ce05b9-573a-4d8f-bba9-f6de08a8b8a5",
+     "d9a125c1-84fa-4a42-b83e-b0036aa14eee",
+     "2514a392-2d4c-4913-87d1-d6a2368ea19e",
+     "ed99be8f-dfdb-4748-b08d-ed6032f46ab4"
+    ],
+    "prod-on": [
+     "9fd54205-962c-4404-b55b-9b4bb964e5ff",
+     "db266aee-0f5f-4d97-89e0-f6039aa37b2f",
+     "8926a84c-6495-4a98-b24c-dcb14ef0e651",
+     "d0ede03f-13f1-4bf3-a941-55013a9956f4",
+     "7fe91325-111e-4f56-affc-09069566f728"
+    ]
+   },
+   "diagnostics": {
+    "lexical_error": null,
+    "prod-off": {
+     "keyword_called": false,
+     "keyword_rows": 0,
+     "keyword_error": null
+    },
+    "prod-on": {
+     "keyword_called": true,
+     "keyword_rows": 30,
+     "keyword_error": null
+    }
+   },
+   "dense": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "lexical": {
+    "act": true,
+    "sec": true,
+    "p": 0.2,
+    "mrr": 0.5,
+    "terms": 0.5
+   },
+   "hybrid": {
+    "act": true,
+    "sec": true,
+    "p": 0.2,
+    "mrr": 0.3333333333333333,
+    "terms": 1.0
+   },
+   "prod-off": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-on": {
+    "act": true,
+    "sec": true,
+    "p": 0.2,
+    "mrr": 0.3333333333333333,
+    "terms": 1.0
+   },
+   "timing_ms": {
+    "dense": 429,
+    "lexical": 358,
+    "hybrid": null,
+    "prod-off": 372,
+    "prod-on": 549
+   }
+  },
+  {
+   "id": "env-05",
+   "difficulty": "medium",
+   "retrieved_ids": {
+    "dense": [],
+    "lexical": [
+     "6c60f862-3421-4521-b3a8-1c58943dd707",
+     "e8aed6e6-fd94-4c3a-8799-212fead5622e",
+     "0fbed5a2-882e-4f20-b0f6-15ce1738481d",
+     "86da612f-5af2-45af-8831-f3f7d3ea6fb7",
+     "6b698172-ac25-4d1c-8a41-2e5ae4773677"
+    ],
+    "hybrid": [
+     "6c60f862-3421-4521-b3a8-1c58943dd707",
+     "0fbed5a2-882e-4f20-b0f6-15ce1738481d",
+     "7233c0d8-2107-4dbd-88fe-4f7de57507cd",
+     "a8862627-aeab-4d61-b25d-686f08c71cc2",
+     "86da612f-5af2-45af-8831-f3f7d3ea6fb7"
+    ],
+    "prod-off": [],
+    "prod-on": [
+     "6c60f862-3421-4521-b3a8-1c58943dd707",
+     "0fbed5a2-882e-4f20-b0f6-15ce1738481d",
+     "7233c0d8-2107-4dbd-88fe-4f7de57507cd",
+     "a8862627-aeab-4d61-b25d-686f08c71cc2",
+     "86da612f-5af2-45af-8831-f3f7d3ea6fb7"
+    ]
+   },
+   "diagnostics": {
+    "lexical_error": null,
+    "prod-off": {
+     "keyword_called": false,
+     "keyword_rows": 0,
+     "keyword_error": null
+    },
+    "prod-on": {
+     "keyword_called": true,
+     "keyword_rows": 30,
+     "keyword_error": null
+    }
+   },
+   "dense": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.0
+   },
+   "lexical": {
+    "act": true,
+    "sec": false,
+    "p": 0.6,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "hybrid": {
+    "act": true,
+    "sec": false,
+    "p": 0.6,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-off": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.0
+   },
+   "prod-on": {
+    "act": true,
+    "sec": false,
+    "p": 0.6,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "timing_ms": {
+    "dense": 577,
+    "lexical": 540,
+    "hybrid": null,
+    "prod-off": 343,
+    "prod-on": 630
+   }
+  },
+  {
+   "id": "env-06",
+   "difficulty": "medium",
+   "retrieved_ids": {
+    "dense": [
+     "55fd5594-1dd1-4c6e-bc96-fe198d317fbc",
+     "3c8caf5e-0b4f-4d19-8cc1-c6a2e896a550",
+     "11a4f0e4-0604-4d3a-8825-7ab85db239c7",
+     "2ef8443f-e2f3-472c-a7d0-83c735091fe7",
+     "745a6b8a-1709-4535-8790-20e7ae034565"
+    ],
+    "lexical": [
+     "7febbab6-9806-436a-971b-6f36e1a2b052",
+     "11a4f0e4-0604-4d3a-8825-7ab85db239c7",
+     "9e9d98d7-6faf-4dc9-a9e2-5b1680a41aea",
+     "222afda7-50ce-48f2-8dd8-3a3437189125",
+     "b2ce2966-5594-4345-838c-1f8d081cb43f"
+    ],
+    "hybrid": [
+     "11a4f0e4-0604-4d3a-8825-7ab85db239c7",
+     "55fd5594-1dd1-4c6e-bc96-fe198d317fbc",
+     "9e9d98d7-6faf-4dc9-a9e2-5b1680a41aea",
+     "2ef8443f-e2f3-472c-a7d0-83c735091fe7",
+     "d8bdff22-c5a1-4628-80a2-ede122d4ca4f"
+    ],
+    "prod-off": [
+     "55fd5594-1dd1-4c6e-bc96-fe198d317fbc",
+     "3c8caf5e-0b4f-4d19-8cc1-c6a2e896a550",
+     "11a4f0e4-0604-4d3a-8825-7ab85db239c7",
+     "2ef8443f-e2f3-472c-a7d0-83c735091fe7",
+     "745a6b8a-1709-4535-8790-20e7ae034565"
+    ],
+    "prod-on": [
+     "11a4f0e4-0604-4d3a-8825-7ab85db239c7",
+     "55fd5594-1dd1-4c6e-bc96-fe198d317fbc",
+     "9e9d98d7-6faf-4dc9-a9e2-5b1680a41aea",
+     "2ef8443f-e2f3-472c-a7d0-83c735091fe7",
+     "d8bdff22-c5a1-4628-80a2-ede122d4ca4f"
+    ]
+   },
+   "diagnostics": {
+    "lexical_error": null,
+    "prod-off": {
+     "keyword_called": false,
+     "keyword_rows": 0,
+     "keyword_error": null
+    },
+    "prod-on": {
+     "keyword_called": true,
+     "keyword_rows": 30,
+     "keyword_error": null
+    }
+   },
+   "dense": {
+    "act": true,
+    "sec": true,
+    "p": 0.6,
+    "mrr": 0.5,
+    "terms": 1.0
+   },
+   "lexical": {
+    "act": true,
+    "sec": false,
+    "p": 0.4,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "hybrid": {
+    "act": true,
+    "sec": false,
+    "p": 0.6,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-off": {
+    "act": true,
+    "sec": true,
+    "p": 0.6,
+    "mrr": 0.5,
+    "terms": 1.0
+   },
+   "prod-on": {
+    "act": true,
+    "sec": false,
+    "p": 0.6,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "timing_ms": {
+    "dense": 369,
+    "lexical": 359,
+    "hybrid": null,
+    "prod-off": 354,
+    "prod-on": 420
+   }
+  },
+  {
+   "id": "env-07",
+   "difficulty": "hard",
+   "retrieved_ids": {
+    "dense": [
+     "6639bcd4-f688-479c-bf88-49d2b0fa4e2c",
+     "fcf72b66-c65e-4ac0-85d4-765d8d92f189",
+     "6ad8a7dc-438d-4e21-88e9-108d6a8342b8",
+     "899e7c3b-b084-46bd-8b88-ad79d2fbc40d",
+     "4bd3b53a-61ac-4f3f-82e0-78043d300bc7"
+    ],
+    "lexical": [
+     "fcf72b66-c65e-4ac0-85d4-765d8d92f189",
+     "6ad8a7dc-438d-4e21-88e9-108d6a8342b8",
+     "6639bcd4-f688-479c-bf88-49d2b0fa4e2c",
+     "e51e6d01-a413-4ea4-a05e-e5ce6bbdaafc",
+     "ece16007-fe0b-411f-b61b-591387d4e348"
+    ],
+    "hybrid": [
+     "fcf72b66-c65e-4ac0-85d4-765d8d92f189",
+     "6639bcd4-f688-479c-bf88-49d2b0fa4e2c",
+     "6ad8a7dc-438d-4e21-88e9-108d6a8342b8",
+     "e51e6d01-a413-4ea4-a05e-e5ce6bbdaafc",
+     "ece16007-fe0b-411f-b61b-591387d4e348"
+    ],
+    "prod-off": [
+     "6639bcd4-f688-479c-bf88-49d2b0fa4e2c",
+     "fcf72b66-c65e-4ac0-85d4-765d8d92f189",
+     "6ad8a7dc-438d-4e21-88e9-108d6a8342b8",
+     "899e7c3b-b084-46bd-8b88-ad79d2fbc40d",
+     "4bd3b53a-61ac-4f3f-82e0-78043d300bc7"
+    ],
+    "prod-on": [
+     "fcf72b66-c65e-4ac0-85d4-765d8d92f189",
+     "6639bcd4-f688-479c-bf88-49d2b0fa4e2c",
+     "6ad8a7dc-438d-4e21-88e9-108d6a8342b8",
+     "e51e6d01-a413-4ea4-a05e-e5ce6bbdaafc",
+     "ece16007-fe0b-411f-b61b-591387d4e348"
+    ]
+   },
+   "diagnostics": {
+    "lexical_error": null,
+    "prod-off": {
+     "keyword_called": false,
+     "keyword_rows": 0,
+     "keyword_error": null
+    },
+    "prod-on": {
+     "keyword_called": true,
+     "keyword_rows": 30,
+     "keyword_error": null
+    }
+   },
+   "dense": {
+    "act": true,
+    "sec": false,
+    "p": 0.6,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "lexical": {
+    "act": true,
+    "sec": false,
+    "p": 0.6,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "hybrid": {
+    "act": true,
+    "sec": false,
+    "p": 0.6,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-off": {
+    "act": true,
+    "sec": false,
+    "p": 0.6,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-on": {
+    "act": true,
+    "sec": false,
+    "p": 0.6,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "timing_ms": {
+    "dense": 642,
+    "lexical": 399,
+    "hybrid": null,
+    "prod-off": 353,
+    "prod-on": 382
+   }
+  },
+  {
+   "id": "emp-01",
+   "difficulty": "easy",
+   "retrieved_ids": {
+    "dense": [
+     "ecf7fab2-edd4-4629-8285-34c3c8bd47ac",
+     "0182852e-bd4d-435f-943a-2f05e9187b0b",
+     "9078fa23-816e-4e10-95e8-6be93e4cdc52",
+     "26577706-ec3c-4274-9436-3c38df4d049b",
+     "b1a82d60-b742-4d28-90ae-6cc5862276a4"
+    ],
+    "lexical": [
+     "79da17d4-daf9-44eb-918c-d6b849a9d148",
+     "918006d6-68b7-4d2d-937a-0623efc35bcb",
+     "1f374dfe-cfa6-4c78-a74e-fb6cc6f10d8f",
+     "fc59bb4d-7360-4015-9702-99be59fff5d0",
+     "57fde269-ad56-4a93-9729-6e51900fd26d"
+    ],
+    "hybrid": [
+     "0182852e-bd4d-435f-943a-2f05e9187b0b",
+     "79da17d4-daf9-44eb-918c-d6b849a9d148",
+     "918006d6-68b7-4d2d-937a-0623efc35bcb",
+     "26577706-ec3c-4274-9436-3c38df4d049b",
+     "3ab481b6-54b8-48a2-b905-1ce1dc895e5a"
+    ],
+    "prod-off": [
+     "26577706-ec3c-4274-9436-3c38df4d049b",
+     "b1a82d60-b742-4d28-90ae-6cc5862276a4",
+     "ecf7fab2-edd4-4629-8285-34c3c8bd47ac",
+     "0182852e-bd4d-435f-943a-2f05e9187b0b",
+     "9078fa23-816e-4e10-95e8-6be93e4cdc52"
+    ],
+    "prod-on": [
+     "0182852e-bd4d-435f-943a-2f05e9187b0b",
+     "79da17d4-daf9-44eb-918c-d6b849a9d148",
+     "918006d6-68b7-4d2d-937a-0623efc35bcb",
+     "26577706-ec3c-4274-9436-3c38df4d049b",
+     "3ab481b6-54b8-48a2-b905-1ce1dc895e5a"
+    ]
+   },
+   "diagnostics": {
+    "lexical_error": null,
+    "prod-off": {
+     "keyword_called": false,
+     "keyword_rows": 0,
+     "keyword_error": null
+    },
+    "prod-on": {
+     "keyword_called": true,
+     "keyword_rows": 30,
+     "keyword_error": null
+    }
+   },
+   "dense": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "lexical": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "hybrid": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-off": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-on": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "timing_ms": {
+    "dense": 849,
+    "lexical": 540,
+    "hybrid": null,
+    "prod-off": 362,
+    "prod-on": 590
+   }
+  },
+  {
+   "id": "emp-02",
+   "difficulty": "medium",
+   "retrieved_ids": {
+    "dense": [
+     "d2edabad-80d1-4b8d-93cd-be4bdadc326a",
+     "3ed22a01-3236-4a30-8fc4-44cc93384597",
+     "fd87b15b-8c34-4d18-b1e0-ad6ce272c894",
+     "1cd93b5a-19c5-4b5a-b02c-46ae2016ebf6",
+     "d0f6a3ed-e163-4fbe-b2fc-63014f41a821"
+    ],
+    "lexical": [
+     "842533d8-359f-47c8-af10-00fb69c4cc73",
+     "6deeb817-a7b0-4dfd-8301-589b0de64d5e",
+     "09b1e01e-54da-4596-9555-188c94a41bcb",
+     "0b816231-c4c4-445f-a60b-e8f943d062a3",
+     "e1e581fd-3fcd-4876-8042-4d4817a0f280"
+    ],
+    "hybrid": [
+     "842533d8-359f-47c8-af10-00fb69c4cc73",
+     "6deeb817-a7b0-4dfd-8301-589b0de64d5e",
+     "09b1e01e-54da-4596-9555-188c94a41bcb",
+     "1cd93b5a-19c5-4b5a-b02c-46ae2016ebf6",
+     "e7537461-e57c-4fc1-84bc-7d9935003b98"
+    ],
+    "prod-off": [
+     "fd87b15b-8c34-4d18-b1e0-ad6ce272c894",
+     "1cd93b5a-19c5-4b5a-b02c-46ae2016ebf6",
+     "d0f6a3ed-e163-4fbe-b2fc-63014f41a821",
+     "d2edabad-80d1-4b8d-93cd-be4bdadc326a",
+     "3ed22a01-3236-4a30-8fc4-44cc93384597"
+    ],
+    "prod-on": [
+     "842533d8-359f-47c8-af10-00fb69c4cc73",
+     "6deeb817-a7b0-4dfd-8301-589b0de64d5e",
+     "09b1e01e-54da-4596-9555-188c94a41bcb",
+     "1cd93b5a-19c5-4b5a-b02c-46ae2016ebf6",
+     "e7537461-e57c-4fc1-84bc-7d9935003b98"
+    ]
+   },
+   "diagnostics": {
+    "lexical_error": null,
+    "prod-off": {
+     "keyword_called": false,
+     "keyword_rows": 0,
+     "keyword_error": null
+    },
+    "prod-on": {
+     "keyword_called": true,
+     "keyword_rows": 30,
+     "keyword_error": null
+    }
+   },
+   "dense": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "lexical": {
+    "act": true,
+    "sec": true,
+    "p": 0.4,
+    "mrr": 1.0,
+    "terms": 0.75
+   },
+   "hybrid": {
+    "act": true,
+    "sec": true,
+    "p": 0.4,
+    "mrr": 1.0,
+    "terms": 0.75
+   },
+   "prod-off": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-on": {
+    "act": true,
+    "sec": true,
+    "p": 0.4,
+    "mrr": 1.0,
+    "terms": 0.75
+   },
+   "timing_ms": {
+    "dense": 560,
+    "lexical": 544,
+    "hybrid": null,
+    "prod-off": 347,
+    "prod-on": 590
+   }
+  },
+  {
+   "id": "emp-03",
+   "difficulty": "medium",
+   "retrieved_ids": {
+    "dense": [
+     "392f6569-3df5-4148-b23c-387dfdb94442",
+     "8fa4c82d-04bd-43f4-8b07-e1d50a66909d",
+     "b1c2ba62-e5fb-42b3-a203-b8fd654bf58c",
+     "b16d3e9e-6b74-43a7-b44c-b2da49f876bb",
+     "c32718c3-5c33-4345-ab38-d3df0f4855d1"
+    ],
+    "lexical": [
+     "b1c2ba62-e5fb-42b3-a203-b8fd654bf58c",
+     "07b069dd-36f6-44ac-a4c6-c5b37e6b6f00",
+     "8fa4c82d-04bd-43f4-8b07-e1d50a66909d",
+     "ddd66108-408b-4908-932b-5d5ea1a32a32",
+     "e25841ca-1a66-440a-a93b-eb7170be0758"
+    ],
+    "hybrid": [
+     "b1c2ba62-e5fb-42b3-a203-b8fd654bf58c",
+     "8fa4c82d-04bd-43f4-8b07-e1d50a66909d",
+     "c32718c3-5c33-4345-ab38-d3df0f4855d1",
+     "e67a28f6-45a2-4dfa-a0bc-139e6a5f662d",
+     "19a860f4-2a7b-421f-b27f-02e6d954a4e8"
+    ],
+    "prod-off": [
+     "392f6569-3df5-4148-b23c-387dfdb94442",
+     "8fa4c82d-04bd-43f4-8b07-e1d50a66909d",
+     "b1c2ba62-e5fb-42b3-a203-b8fd654bf58c",
+     "b16d3e9e-6b74-43a7-b44c-b2da49f876bb",
+     "c32718c3-5c33-4345-ab38-d3df0f4855d1"
+    ],
+    "prod-on": [
+     "b1c2ba62-e5fb-42b3-a203-b8fd654bf58c",
+     "8fa4c82d-04bd-43f4-8b07-e1d50a66909d",
+     "c32718c3-5c33-4345-ab38-d3df0f4855d1",
+     "e67a28f6-45a2-4dfa-a0bc-139e6a5f662d",
+     "19a860f4-2a7b-421f-b27f-02e6d954a4e8"
+    ]
+   },
+   "diagnostics": {
+    "lexical_error": null,
+    "prod-off": {
+     "keyword_called": false,
+     "keyword_rows": 0,
+     "keyword_error": null
+    },
+    "prod-on": {
+     "keyword_called": true,
+     "keyword_rows": 30,
+     "keyword_error": null
+    }
+   },
+   "dense": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "lexical": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "hybrid": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.75
+   },
+   "prod-off": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-on": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.75
+   },
+   "timing_ms": {
+    "dense": 640,
+    "lexical": 508,
+    "hybrid": null,
+    "prod-off": 378,
+    "prod-on": 562
+   }
+  },
+  {
+   "id": "emp-04",
+   "difficulty": "easy",
+   "retrieved_ids": {
+    "dense": [
+     "67c838aa-0792-49eb-9ece-63b9e6edd302",
+     "1c0163ba-b1a1-42c2-b403-5e03c8ee474b",
+     "4eb34774-e26c-4bd1-8059-78fba4c8ff90",
+     "0609e7cf-220f-4208-b430-544cf9050922",
+     "ba3dac60-d4cb-4f4c-aad3-9eca639afdf8"
+    ],
+    "lexical": [
+     "4eb34774-e26c-4bd1-8059-78fba4c8ff90",
+     "d596db1a-370f-481a-8e50-fe67739cc395",
+     "bc689933-297b-4155-8b82-2934c833b41c",
+     "873c82aa-d46f-4ca7-8ec5-e069ca85eafa",
+     "d9240200-52c9-4046-a5ef-5fbf32815a77"
+    ],
+    "hybrid": [
+     "4eb34774-e26c-4bd1-8059-78fba4c8ff90",
+     "11a6aacb-7e6f-4fdf-acbd-b0d67c20e152",
+     "67c838aa-0792-49eb-9ece-63b9e6edd302",
+     "0609e7cf-220f-4208-b430-544cf9050922",
+     "2f517e91-aca2-49cf-96bd-54226de1fa0c"
+    ],
+    "prod-off": [
+     "0609e7cf-220f-4208-b430-544cf9050922",
+     "67c838aa-0792-49eb-9ece-63b9e6edd302",
+     "1c0163ba-b1a1-42c2-b403-5e03c8ee474b",
+     "4eb34774-e26c-4bd1-8059-78fba4c8ff90",
+     "ba3dac60-d4cb-4f4c-aad3-9eca639afdf8"
+    ],
+    "prod-on": [
+     "4eb34774-e26c-4bd1-8059-78fba4c8ff90",
+     "11a6aacb-7e6f-4fdf-acbd-b0d67c20e152",
+     "67c838aa-0792-49eb-9ece-63b9e6edd302",
+     "0609e7cf-220f-4208-b430-544cf9050922",
+     "2f517e91-aca2-49cf-96bd-54226de1fa0c"
+    ]
+   },
+   "diagnostics": {
+    "lexical_error": null,
+    "prod-off": {
+     "keyword_called": false,
+     "keyword_rows": 0,
+     "keyword_error": null
+    },
+    "prod-on": {
+     "keyword_called": true,
+     "keyword_rows": 30,
+     "keyword_error": null
+    }
+   },
+   "dense": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "lexical": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "hybrid": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-off": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-on": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "timing_ms": {
+    "dense": 610,
+    "lexical": 540,
+    "hybrid": null,
+    "prod-off": 371,
+    "prod-on": 589
+   }
+  },
+  {
+   "id": "emp-05",
+   "difficulty": "medium",
+   "retrieved_ids": {
+    "dense": [
+     "6494c3d2-cc34-4bd4-8ee8-c15306226b75",
+     "acb7d1f9-89af-45a4-8ea3-1b94423f1b76",
+     "191ea6b0-d3df-43f1-897c-754e944fc67c",
+     "b795bc81-f617-4775-bb3f-9447cfd0e001",
+     "5e8f43ad-97b2-47a1-a48a-0e136e234f78"
+    ],
+    "lexical": [
+     "735a5600-660a-4300-b3bf-9ded37df29a7",
+     "cb239824-ac57-407d-a48e-d11131fb8137",
+     "b6e85159-58af-4bbf-8c6e-542dac8daedb",
+     "23ceffbf-f66c-4a79-bca9-cea85d042898",
+     "b8d67fcb-1279-4bdd-8ffa-4c373679b9af"
+    ],
+    "hybrid": [
+     "735a5600-660a-4300-b3bf-9ded37df29a7",
+     "cb239824-ac57-407d-a48e-d11131fb8137",
+     "b6e85159-58af-4bbf-8c6e-542dac8daedb",
+     "6494c3d2-cc34-4bd4-8ee8-c15306226b75",
+     "acb7d1f9-89af-45a4-8ea3-1b94423f1b76"
+    ],
+    "prod-off": [
+     "6494c3d2-cc34-4bd4-8ee8-c15306226b75",
+     "acb7d1f9-89af-45a4-8ea3-1b94423f1b76",
+     "191ea6b0-d3df-43f1-897c-754e944fc67c",
+     "b795bc81-f617-4775-bb3f-9447cfd0e001",
+     "5e8f43ad-97b2-47a1-a48a-0e136e234f78"
+    ],
+    "prod-on": [
+     "735a5600-660a-4300-b3bf-9ded37df29a7",
+     "cb239824-ac57-407d-a48e-d11131fb8137",
+     "b6e85159-58af-4bbf-8c6e-542dac8daedb",
+     "6494c3d2-cc34-4bd4-8ee8-c15306226b75",
+     "acb7d1f9-89af-45a4-8ea3-1b94423f1b76"
+    ]
+   },
+   "diagnostics": {
+    "lexical_error": null,
+    "prod-off": {
+     "keyword_called": false,
+     "keyword_rows": 0,
+     "keyword_error": null
+    },
+    "prod-on": {
+     "keyword_called": true,
+     "keyword_rows": 30,
+     "keyword_error": null
+    }
+   },
+   "dense": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.5
+   },
+   "lexical": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.5
+   },
+   "hybrid": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.5
+   },
+   "prod-off": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.5
+   },
+   "prod-on": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.5
+   },
+   "timing_ms": {
+    "dense": 519,
+    "lexical": 535,
+    "hybrid": null,
+    "prod-off": 350,
+    "prod-on": 598
+   }
+  },
+  {
+   "id": "emp-06",
+   "difficulty": "easy",
+   "retrieved_ids": {
+    "dense": [
+     "6473343f-8c54-4719-b072-2849468c6057",
+     "7e7a7f30-27dd-4c1e-8708-a9f03e033882",
+     "1db90c92-d4b1-4503-a8fd-09745a790a4f",
+     "72f1d2ca-593a-4140-b3cc-a42e55f0eb7f",
+     "1d141b68-8187-4a89-8534-50c602857729"
+    ],
+    "lexical": [
+     "7e7a7f30-27dd-4c1e-8708-a9f03e033882",
+     "449ca4db-9e88-4530-b129-036682bb0d90",
+     "53894cf3-b53b-47ba-accd-7dd08d9758c0",
+     "1d1a7796-9571-4cf6-8221-4db9b47cb6c5",
+     "f346c924-8d1d-4a39-8411-f07ca4b459c8"
+    ],
+    "hybrid": [
+     "7e7a7f30-27dd-4c1e-8708-a9f03e033882",
+     "53894cf3-b53b-47ba-accd-7dd08d9758c0",
+     "838638f8-a165-4739-951b-edc52ef7015f",
+     "1d1a7796-9571-4cf6-8221-4db9b47cb6c5",
+     "f346c924-8d1d-4a39-8411-f07ca4b459c8"
+    ],
+    "prod-off": [
+     "6473343f-8c54-4719-b072-2849468c6057",
+     "7e7a7f30-27dd-4c1e-8708-a9f03e033882",
+     "1db90c92-d4b1-4503-a8fd-09745a790a4f",
+     "72f1d2ca-593a-4140-b3cc-a42e55f0eb7f",
+     "1d141b68-8187-4a89-8534-50c602857729"
+    ],
+    "prod-on": [
+     "7e7a7f30-27dd-4c1e-8708-a9f03e033882",
+     "53894cf3-b53b-47ba-accd-7dd08d9758c0",
+     "838638f8-a165-4739-951b-edc52ef7015f",
+     "1d1a7796-9571-4cf6-8221-4db9b47cb6c5",
+     "f346c924-8d1d-4a39-8411-f07ca4b459c8"
+    ]
+   },
+   "diagnostics": {
+    "lexical_error": null,
+    "prod-off": {
+     "keyword_called": false,
+     "keyword_rows": 0,
+     "keyword_error": null
+    },
+    "prod-on": {
+     "keyword_called": true,
+     "keyword_rows": 30,
+     "keyword_error": null
+    }
+   },
+   "dense": {
+    "act": true,
+    "sec": true,
+    "p": 0.8,
+    "mrr": 1.0,
+    "terms": 1.0
+   },
+   "lexical": {
+    "act": true,
+    "sec": true,
+    "p": 0.4,
+    "mrr": 1.0,
+    "terms": 1.0
+   },
+   "hybrid": {
+    "act": true,
+    "sec": true,
+    "p": 0.6,
+    "mrr": 1.0,
+    "terms": 1.0
+   },
+   "prod-off": {
+    "act": true,
+    "sec": true,
+    "p": 0.8,
+    "mrr": 1.0,
+    "terms": 1.0
+   },
+   "prod-on": {
+    "act": true,
+    "sec": true,
+    "p": 0.6,
+    "mrr": 1.0,
+    "terms": 1.0
+   },
+   "timing_ms": {
+    "dense": 743,
+    "lexical": 551,
+    "hybrid": null,
+    "prod-off": 372,
+    "prod-on": 657
+   }
+  },
+  {
+   "id": "emp-07",
+   "difficulty": "hard",
+   "retrieved_ids": {
+    "dense": [
+     "2882a5f3-4197-4854-87e6-ae0519ecb253",
+     "8f8053da-dc5c-4f5d-bb1e-0e356af13683",
+     "a474cbf0-e470-41aa-ab66-42972543afb2",
+     "b90e7588-e534-4311-a395-c30be7cadce4",
+     "746e177f-bde0-406f-8de8-6c5095ecc632"
+    ],
+    "lexical": [
+     "2882a5f3-4197-4854-87e6-ae0519ecb253",
+     "a474cbf0-e470-41aa-ab66-42972543afb2",
+     "eda1067a-a43a-4ffe-b2e3-2e0db0c5db8b",
+     "6b8a6ccd-fb7e-4a8e-aa89-267476e02ec6",
+     "fc59bb4d-7360-4015-9702-99be59fff5d0"
+    ],
+    "hybrid": [
+     "2882a5f3-4197-4854-87e6-ae0519ecb253",
+     "a474cbf0-e470-41aa-ab66-42972543afb2",
+     "51f6bbd9-ed53-4a68-b712-1ce3e7d6e7f1",
+     "6b8a6ccd-fb7e-4a8e-aa89-267476e02ec6",
+     "fc59bb4d-7360-4015-9702-99be59fff5d0"
+    ],
+    "prod-off": [
+     "2882a5f3-4197-4854-87e6-ae0519ecb253",
+     "8f8053da-dc5c-4f5d-bb1e-0e356af13683",
+     "a474cbf0-e470-41aa-ab66-42972543afb2",
+     "b90e7588-e534-4311-a395-c30be7cadce4",
+     "746e177f-bde0-406f-8de8-6c5095ecc632"
+    ],
+    "prod-on": [
+     "2882a5f3-4197-4854-87e6-ae0519ecb253",
+     "a474cbf0-e470-41aa-ab66-42972543afb2",
+     "51f6bbd9-ed53-4a68-b712-1ce3e7d6e7f1",
+     "6b8a6ccd-fb7e-4a8e-aa89-267476e02ec6",
+     "fc59bb4d-7360-4015-9702-99be59fff5d0"
+    ]
+   },
+   "diagnostics": {
+    "lexical_error": null,
+    "prod-off": {
+     "keyword_called": false,
+     "keyword_rows": 0,
+     "keyword_error": null
+    },
+    "prod-on": {
+     "keyword_called": true,
+     "keyword_rows": 30,
+     "keyword_error": null
+    }
+   },
+   "dense": {
+    "act": true,
+    "sec": true,
+    "p": 1.0,
+    "mrr": 0.5,
+    "terms": 0.25
+   },
+   "lexical": {
+    "act": true,
+    "sec": false,
+    "p": 0.4,
+    "mrr": 0.0,
+    "terms": 0.25
+   },
+   "hybrid": {
+    "act": true,
+    "sec": true,
+    "p": 0.6,
+    "mrr": 0.3333333333333333,
+    "terms": 0.25
+   },
+   "prod-off": {
+    "act": true,
+    "sec": true,
+    "p": 1.0,
+    "mrr": 0.5,
+    "terms": 0.25
+   },
+   "prod-on": {
+    "act": true,
+    "sec": true,
+    "p": 0.6,
+    "mrr": 0.3333333333333333,
+    "terms": 0.25
+   },
+   "timing_ms": {
+    "dense": 620,
+    "lexical": 783,
+    "hybrid": null,
+    "prod-off": 343,
+    "prod-on": 571
+   }
+  },
+  {
+   "id": "emp-08",
+   "difficulty": "easy",
+   "retrieved_ids": {
+    "dense": [
+     "3ed22a01-3236-4a30-8fc4-44cc93384597",
+     "d6357f84-1e4d-44be-9cb5-a1f4e9688a73",
+     "0b6e092d-4f1b-4cf3-8890-573f7612923a",
+     "ba3dac60-d4cb-4f4c-aad3-9eca639afdf8",
+     "d0f6a3ed-e163-4fbe-b2fc-63014f41a821"
+    ],
+    "lexical": [
+     "34f79433-b9ff-471f-a343-d82f64c85918",
+     "2cb85cc8-1654-4092-aac9-5778d8ccf892",
+     "fa94882e-42b5-4600-9471-3a4da0bd7f1a",
+     "4e91fa07-95d1-449e-a8b4-c1143976c794",
+     "0ed6981b-0df5-424b-a931-029fa20ed166"
+    ],
+    "hybrid": [
+     "3ed22a01-3236-4a30-8fc4-44cc93384597",
+     "7133e795-0ac4-48cc-b2e2-68ba9aec69fc",
+     "83bdf65c-4bc3-44c9-862f-7e8c9a2609bb",
+     "ba3dac60-d4cb-4f4c-aad3-9eca639afdf8",
+     "4e91fa07-95d1-449e-a8b4-c1143976c794"
+    ],
+    "prod-off": [
+     "3ed22a01-3236-4a30-8fc4-44cc93384597",
+     "ba3dac60-d4cb-4f4c-aad3-9eca639afdf8",
+     "d0f6a3ed-e163-4fbe-b2fc-63014f41a821",
+     "d6357f84-1e4d-44be-9cb5-a1f4e9688a73",
+     "0b6e092d-4f1b-4cf3-8890-573f7612923a"
+    ],
+    "prod-on": [
+     "3ed22a01-3236-4a30-8fc4-44cc93384597",
+     "7133e795-0ac4-48cc-b2e2-68ba9aec69fc",
+     "83bdf65c-4bc3-44c9-862f-7e8c9a2609bb",
+     "4e91fa07-95d1-449e-a8b4-c1143976c794",
+     "ba3dac60-d4cb-4f4c-aad3-9eca639afdf8"
+    ]
+   },
+   "diagnostics": {
+    "lexical_error": null,
+    "prod-off": {
+     "keyword_called": false,
+     "keyword_rows": 0,
+     "keyword_error": null
+    },
+    "prod-on": {
+     "keyword_called": true,
+     "keyword_rows": 30,
+     "keyword_error": null
+    }
+   },
+   "dense": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "lexical": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "hybrid": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-off": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-on": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "timing_ms": {
+    "dense": 404,
+    "lexical": 552,
+    "hybrid": null,
+    "prod-off": 359,
+    "prod-on": 592
+   }
+  },
+  {
+   "id": "mine-01",
+   "difficulty": "easy",
+   "retrieved_ids": {
+    "dense": [
+     "0cb37bf5-04b9-4d49-b945-8b518bdca801",
+     "8717d657-051b-44cd-979e-8d41623754d4",
+     "387ce428-2df1-4ce6-92a1-9980cfc1aaa3",
+     "4e9634fe-5a81-4ab6-99de-2d4906c62a73",
+     "cda2f455-033e-49f7-bc44-4572d56b50ba"
+    ],
+    "lexical": [
+     "b89af284-c5d0-4aaf-a806-c69c781a6f83",
+     "7c42241c-ed4e-4bae-be63-3ea39374d67e",
+     "dfac200f-9d80-45fb-b113-ea5aee739a60",
+     "c40e3d9f-9b0d-4538-b317-9f3f81dfdb66",
+     "00912514-43b0-460f-b821-019260657265"
+    ],
+    "hybrid": [
+     "b89af284-c5d0-4aaf-a806-c69c781a6f83",
+     "7c42241c-ed4e-4bae-be63-3ea39374d67e",
+     "dfac200f-9d80-45fb-b113-ea5aee739a60",
+     "0cb37bf5-04b9-4d49-b945-8b518bdca801",
+     "c40e3d9f-9b0d-4538-b317-9f3f81dfdb66"
+    ],
+    "prod-off": [
+     "0cb37bf5-04b9-4d49-b945-8b518bdca801",
+     "8717d657-051b-44cd-979e-8d41623754d4",
+     "387ce428-2df1-4ce6-92a1-9980cfc1aaa3",
+     "4e9634fe-5a81-4ab6-99de-2d4906c62a73",
+     "cda2f455-033e-49f7-bc44-4572d56b50ba"
+    ],
+    "prod-on": [
+     "b89af284-c5d0-4aaf-a806-c69c781a6f83",
+     "7c42241c-ed4e-4bae-be63-3ea39374d67e",
+     "dfac200f-9d80-45fb-b113-ea5aee739a60",
+     "0cb37bf5-04b9-4d49-b945-8b518bdca801",
+     "c40e3d9f-9b0d-4538-b317-9f3f81dfdb66"
+    ]
+   },
+   "diagnostics": {
+    "lexical_error": null,
+    "prod-off": {
+     "keyword_called": false,
+     "keyword_rows": 0,
+     "keyword_error": null
+    },
+    "prod-on": {
+     "keyword_called": true,
+     "keyword_rows": 30,
+     "keyword_error": null
+    }
+   },
+   "dense": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.8
+   },
+   "lexical": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.2
+   },
+   "hybrid": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.4
+   },
+   "prod-off": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.8
+   },
+   "prod-on": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.4
+   },
+   "timing_ms": {
+    "dense": 586,
+    "lexical": 369,
+    "hybrid": null,
+    "prod-off": 358,
+    "prod-on": 531
+   }
+  },
+  {
+   "id": "mine-02",
+   "difficulty": "medium",
+   "retrieved_ids": {
+    "dense": [
+     "11198a00-f9cb-4df3-a02c-deb264836e16",
+     "6881a60b-fb00-4bca-8b9d-3cfb85d3d5af",
+     "8717d657-051b-44cd-979e-8d41623754d4",
+     "4752400d-3cb5-4ca1-a86a-eb7d55e943fc",
+     "3ecb0f99-837f-4645-9fa6-81700dd941e9"
+    ],
+    "lexical": [
+     "f0d5402d-a268-445c-84aa-5fe0f19f62e7",
+     "bb50f9bf-9a7c-4e5d-819f-0d5c8b56da17",
+     "d6a8ca97-a3b4-4cf3-911b-5495b3f2f682",
+     "0fc1e7ae-61c5-4436-9101-9ec63fc36917",
+     "450aaccd-bbac-43f4-bea2-c5ab1fe9aaa7"
+    ],
+    "hybrid": [
+     "11198a00-f9cb-4df3-a02c-deb264836e16",
+     "f0d5402d-a268-445c-84aa-5fe0f19f62e7",
+     "bb50f9bf-9a7c-4e5d-819f-0d5c8b56da17",
+     "6f0cad39-d5b5-44bd-b3c9-4e970863f43d",
+     "8717d657-051b-44cd-979e-8d41623754d4"
+    ],
+    "prod-off": [
+     "8717d657-051b-44cd-979e-8d41623754d4",
+     "4752400d-3cb5-4ca1-a86a-eb7d55e943fc",
+     "3ecb0f99-837f-4645-9fa6-81700dd941e9",
+     "11198a00-f9cb-4df3-a02c-deb264836e16",
+     "6881a60b-fb00-4bca-8b9d-3cfb85d3d5af"
+    ],
+    "prod-on": [
+     "11198a00-f9cb-4df3-a02c-deb264836e16",
+     "f0d5402d-a268-445c-84aa-5fe0f19f62e7",
+     "bb50f9bf-9a7c-4e5d-819f-0d5c8b56da17",
+     "6f0cad39-d5b5-44bd-b3c9-4e970863f43d",
+     "0fc1e7ae-61c5-4436-9101-9ec63fc36917"
+    ]
+   },
+   "diagnostics": {
+    "lexical_error": null,
+    "prod-off": {
+     "keyword_called": false,
+     "keyword_rows": 0,
+     "keyword_error": null
+    },
+    "prod-on": {
+     "keyword_called": true,
+     "keyword_rows": 30,
+     "keyword_error": null
+    }
+   },
+   "dense": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.8
+   },
+   "lexical": {
+    "act": true,
+    "sec": false,
+    "p": 0.4,
+    "mrr": 0.0,
+    "terms": 0.2
+   },
+   "hybrid": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.8
+   },
+   "prod-off": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.8
+   },
+   "prod-on": {
+    "act": true,
+    "sec": false,
+    "p": 0.4,
+    "mrr": 0.0,
+    "terms": 0.8
+   },
+   "timing_ms": {
+    "dense": 489,
+    "lexical": 560,
+    "hybrid": null,
+    "prod-off": 371,
+    "prod-on": 579
+   }
+  },
+  {
+   "id": "mine-03",
+   "difficulty": "medium",
+   "retrieved_ids": {
+    "dense": [
+     "986648b0-f288-420d-b2be-a688482ed812",
+     "6c60a888-d335-4709-9276-e4ea139da5dc",
+     "65e95951-7661-48fe-acd4-20211d4b19d9",
+     "ef9bb8ff-5c25-46c1-87f9-82adcecbc6ec",
+     "9ea52ae6-7c1f-4d6f-bdc3-50b7084c6b5e"
+    ],
+    "lexical": [
+     "80983465-bff2-4e4f-adc7-af8d4a19eef7",
+     "2dd9564d-49f9-4d3f-9fcb-e979424acc23",
+     "7ec0186e-6239-44c1-840c-44b319e0b2ed",
+     "9ea52ae6-7c1f-4d6f-bdc3-50b7084c6b5e",
+     "099206fd-c580-467c-9cd3-73fe90e6f40a"
+    ],
+    "hybrid": [
+     "80983465-bff2-4e4f-adc7-af8d4a19eef7",
+     "986648b0-f288-420d-b2be-a688482ed812",
+     "2dd9564d-49f9-4d3f-9fcb-e979424acc23",
+     "9ea52ae6-7c1f-4d6f-bdc3-50b7084c6b5e",
+     "099206fd-c580-467c-9cd3-73fe90e6f40a"
+    ],
+    "prod-off": [
+     "6c60a888-d335-4709-9276-e4ea139da5dc",
+     "65e95951-7661-48fe-acd4-20211d4b19d9",
+     "ef9bb8ff-5c25-46c1-87f9-82adcecbc6ec",
+     "9ea52ae6-7c1f-4d6f-bdc3-50b7084c6b5e",
+     "986648b0-f288-420d-b2be-a688482ed812"
+    ],
+    "prod-on": [
+     "80983465-bff2-4e4f-adc7-af8d4a19eef7",
+     "986648b0-f288-420d-b2be-a688482ed812",
+     "2dd9564d-49f9-4d3f-9fcb-e979424acc23",
+     "9ea52ae6-7c1f-4d6f-bdc3-50b7084c6b5e",
+     "099206fd-c580-467c-9cd3-73fe90e6f40a"
+    ]
+   },
+   "diagnostics": {
+    "lexical_error": null,
+    "prod-off": {
+     "keyword_called": false,
+     "keyword_rows": 0,
+     "keyword_error": null
+    },
+    "prod-on": {
+     "keyword_called": true,
+     "keyword_rows": 30,
+     "keyword_error": null
+    }
+   },
+   "dense": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.25
+   },
+   "lexical": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.75
+   },
+   "hybrid": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.25
+   },
+   "prod-off": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.25
+   },
+   "prod-on": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.25
+   },
+   "timing_ms": {
+    "dense": 470,
+    "lexical": 539,
+    "hybrid": null,
+    "prod-off": 351,
+    "prod-on": 571
+   }
+  },
+  {
+   "id": "mine-04",
+   "difficulty": "hard",
+   "retrieved_ids": {
+    "dense": [
+     "a2af4710-cc34-4eb4-9555-f0faaa46049a",
+     "6786d545-83e4-41db-aae5-fafb24d3599d",
+     "d42a9047-7bda-4be2-a096-df7f334caa6f",
+     "79f599a8-33f1-4c46-b9c9-bd607852a11e",
+     "19133009-3f69-4a64-b088-a0f8d183de89"
+    ],
+    "lexical": [
+     "2dc18542-80f0-47ee-91e1-74a151501a58",
+     "5aace964-d260-421d-bcb0-aa5bd09fae58",
+     "272895c6-4faf-4e8f-bac4-97ac7172d4c2",
+     "885bfc7e-bafc-4672-95e1-f49cf1aa8e43",
+     "c8494dd6-ce64-41f4-bea2-130dda45f499"
+    ],
+    "hybrid": [
+     "2dc18542-80f0-47ee-91e1-74a151501a58",
+     "5aace964-d260-421d-bcb0-aa5bd09fae58",
+     "a2af4710-cc34-4eb4-9555-f0faaa46049a",
+     "79f599a8-33f1-4c46-b9c9-bd607852a11e",
+     "19133009-3f69-4a64-b088-a0f8d183de89"
+    ],
+    "prod-off": [
+     "79f599a8-33f1-4c46-b9c9-bd607852a11e",
+     "19133009-3f69-4a64-b088-a0f8d183de89",
+     "a2af4710-cc34-4eb4-9555-f0faaa46049a",
+     "6786d545-83e4-41db-aae5-fafb24d3599d",
+     "d42a9047-7bda-4be2-a096-df7f334caa6f"
+    ],
+    "prod-on": [
+     "2dc18542-80f0-47ee-91e1-74a151501a58",
+     "5aace964-d260-421d-bcb0-aa5bd09fae58",
+     "a2af4710-cc34-4eb4-9555-f0faaa46049a",
+     "79f599a8-33f1-4c46-b9c9-bd607852a11e",
+     "19133009-3f69-4a64-b088-a0f8d183de89"
+    ]
+   },
+   "diagnostics": {
+    "lexical_error": null,
+    "prod-off": {
+     "keyword_called": false,
+     "keyword_rows": 0,
+     "keyword_error": null
+    },
+    "prod-on": {
+     "keyword_called": true,
+     "keyword_rows": 30,
+     "keyword_error": null
+    }
+   },
+   "dense": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "lexical": {
+    "act": true,
+    "sec": false,
+    "p": 0.4,
+    "mrr": 0.0,
+    "terms": 0.5
+   },
+   "hybrid": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.75
+   },
+   "prod-off": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-on": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.75
+   },
+   "timing_ms": {
+    "dense": 608,
+    "lexical": 343,
+    "hybrid": null,
+    "prod-off": 341,
+    "prod-on": 383
+   }
+  },
+  {
+   "id": "mine-05",
+   "difficulty": "hard",
+   "retrieved_ids": {
+    "dense": [
+     "be993e21-6bd8-43ff-a20a-3951d84beaf9",
+     "b408e205-3e4d-4bbd-a2c0-04ea3341e11b",
+     "5fae77e3-eec6-416a-9d28-31efbd3798f2",
+     "09ec970d-6c2a-47fd-92be-691138fe5116",
+     "560d1665-ca64-405e-8fac-75c8c5a54f6b"
+    ],
+    "lexical": [
+     "33446ff7-45d8-4031-bf05-982540691682",
+     "c1a64a8b-272a-43c5-b339-d0ca2a73b396",
+     "21646a4b-940a-4c5c-a604-387ebabdaa4e",
+     "dd043f9e-9f4d-4127-800f-eb554c8a456c",
+     "2a499640-05c6-4860-bb18-80491fb71a95"
+    ],
+    "hybrid": [
+     "be993e21-6bd8-43ff-a20a-3951d84beaf9",
+     "b408e205-3e4d-4bbd-a2c0-04ea3341e11b",
+     "33446ff7-45d8-4031-bf05-982540691682",
+     "2a499640-05c6-4860-bb18-80491fb71a95",
+     "dd043f9e-9f4d-4127-800f-eb554c8a456c"
+    ],
+    "prod-off": [
+     "be993e21-6bd8-43ff-a20a-3951d84beaf9",
+     "09ec970d-6c2a-47fd-92be-691138fe5116",
+     "b408e205-3e4d-4bbd-a2c0-04ea3341e11b",
+     "5fae77e3-eec6-416a-9d28-31efbd3798f2",
+     "560d1665-ca64-405e-8fac-75c8c5a54f6b"
+    ],
+    "prod-on": [
+     "be993e21-6bd8-43ff-a20a-3951d84beaf9",
+     "33446ff7-45d8-4031-bf05-982540691682",
+     "b408e205-3e4d-4bbd-a2c0-04ea3341e11b",
+     "2a499640-05c6-4860-bb18-80491fb71a95",
+     "dd043f9e-9f4d-4127-800f-eb554c8a456c"
+    ]
+   },
+   "diagnostics": {
+    "lexical_error": null,
+    "prod-off": {
+     "keyword_called": false,
+     "keyword_rows": 0,
+     "keyword_error": null
+    },
+    "prod-on": {
+     "keyword_called": true,
+     "keyword_rows": 30,
+     "keyword_error": null
+    }
+   },
+   "dense": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.8
+   },
+   "lexical": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "hybrid": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-off": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.8
+   },
+   "prod-on": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "timing_ms": {
+    "dense": 440,
+    "lexical": 554,
+    "hybrid": null,
+    "prod-off": 349,
+    "prod-on": 570
+   }
+  },
+  {
+   "id": "mine-06",
+   "difficulty": "medium",
+   "retrieved_ids": {
+    "dense": [
+     "e2774a40-e929-4597-946e-5c2564553909",
+     "d5b58b67-52fd-400b-8f18-ac71f0e38109",
+     "f8c3ed64-a2f4-4b77-bda0-4abda23e689b",
+     "974c1657-e7b5-4019-99a6-4c4f6012a1c2",
+     "b84bb112-4a61-40af-8482-d1d4107220be"
+    ],
+    "lexical": [
+     "4a353e46-b3a6-4a3c-add1-fa4e518db589",
+     "9bd283cd-2b9c-4ac8-a0b3-f5fc2ad2f553",
+     "c4c7307d-74f1-4fc4-bec0-74fc109bb7e6",
+     "1392e676-a445-46ab-a27d-8a87d72f47d9",
+     "f888b238-470e-44e0-b1dc-c01228ee794f"
+    ],
+    "hybrid": [
+     "e2774a40-e929-4597-946e-5c2564553909",
+     "4a353e46-b3a6-4a3c-add1-fa4e518db589",
+     "551aa036-5efe-41b5-8abd-003f11a733a2",
+     "974c1657-e7b5-4019-99a6-4c4f6012a1c2",
+     "f888b238-470e-44e0-b1dc-c01228ee794f"
+    ],
+    "prod-off": [
+     "e2774a40-e929-4597-946e-5c2564553909",
+     "974c1657-e7b5-4019-99a6-4c4f6012a1c2",
+     "d5b58b67-52fd-400b-8f18-ac71f0e38109",
+     "f8c3ed64-a2f4-4b77-bda0-4abda23e689b",
+     "b84bb112-4a61-40af-8482-d1d4107220be"
+    ],
+    "prod-on": [
+     "e2774a40-e929-4597-946e-5c2564553909",
+     "4a353e46-b3a6-4a3c-add1-fa4e518db589",
+     "551aa036-5efe-41b5-8abd-003f11a733a2",
+     "974c1657-e7b5-4019-99a6-4c4f6012a1c2",
+     "f888b238-470e-44e0-b1dc-c01228ee794f"
+    ]
+   },
+   "diagnostics": {
+    "lexical_error": null,
+    "prod-off": {
+     "keyword_called": false,
+     "keyword_rows": 0,
+     "keyword_error": null
+    },
+    "prod-on": {
+     "keyword_called": true,
+     "keyword_rows": 30,
+     "keyword_error": null
+    }
+   },
+   "dense": {
+    "act": true,
+    "sec": true,
+    "p": 0.4,
+    "mrr": 0.25,
+    "terms": 1.0
+   },
+   "lexical": {
+    "act": true,
+    "sec": true,
+    "p": 0.4,
+    "mrr": 0.2,
+    "terms": 0.5
+   },
+   "hybrid": {
+    "act": true,
+    "sec": true,
+    "p": 0.4,
+    "mrr": 0.25,
+    "terms": 0.75
+   },
+   "prod-off": {
+    "act": true,
+    "sec": true,
+    "p": 0.4,
+    "mrr": 0.5,
+    "terms": 1.0
+   },
+   "prod-on": {
+    "act": true,
+    "sec": true,
+    "p": 0.4,
+    "mrr": 0.25,
+    "terms": 0.75
+   },
+   "timing_ms": {
+    "dense": 461,
+    "lexical": 341,
+    "hybrid": null,
+    "prod-off": 340,
+    "prod-on": 368
+   }
+  },
+  {
+   "id": "mine-07",
+   "difficulty": "medium",
+   "retrieved_ids": {
+    "dense": [
+     "e9610299-8842-45ad-a082-67bade375f2e",
+     "e582f650-d55b-4886-accb-afa92ed38a8d",
+     "1484d6b8-f7a7-4c50-9013-3ed57e46b965",
+     "4220eb3e-f48d-4751-9a3d-08988d5905e2",
+     "2d14d239-b94e-4577-a3c9-0cbfa4bc684d"
+    ],
+    "lexical": [
+     "2987aa89-21d3-4e40-b37e-92924989dcb1",
+     "4d63b099-eabf-4a6b-9708-e9406c4b8901",
+     "5ea29315-70f3-48cd-9095-5168e82302ab",
+     "e582f650-d55b-4886-accb-afa92ed38a8d",
+     "1484d6b8-f7a7-4c50-9013-3ed57e46b965"
+    ],
+    "hybrid": [
+     "2987aa89-21d3-4e40-b37e-92924989dcb1",
+     "4d63b099-eabf-4a6b-9708-e9406c4b8901",
+     "5ea29315-70f3-48cd-9095-5168e82302ab",
+     "e582f650-d55b-4886-accb-afa92ed38a8d",
+     "1484d6b8-f7a7-4c50-9013-3ed57e46b965"
+    ],
+    "prod-off": [
+     "e9610299-8842-45ad-a082-67bade375f2e",
+     "e582f650-d55b-4886-accb-afa92ed38a8d",
+     "1484d6b8-f7a7-4c50-9013-3ed57e46b965",
+     "4220eb3e-f48d-4751-9a3d-08988d5905e2",
+     "2d14d239-b94e-4577-a3c9-0cbfa4bc684d"
+    ],
+    "prod-on": [
+     "2987aa89-21d3-4e40-b37e-92924989dcb1",
+     "4d63b099-eabf-4a6b-9708-e9406c4b8901",
+     "5ea29315-70f3-48cd-9095-5168e82302ab",
+     "e582f650-d55b-4886-accb-afa92ed38a8d",
+     "1484d6b8-f7a7-4c50-9013-3ed57e46b965"
+    ]
+   },
+   "diagnostics": {
+    "lexical_error": null,
+    "prod-off": {
+     "keyword_called": false,
+     "keyword_rows": 0,
+     "keyword_error": null
+    },
+    "prod-on": {
+     "keyword_called": true,
+     "keyword_rows": 30,
+     "keyword_error": null
+    }
+   },
+   "dense": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.6
+   },
+   "lexical": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.6
+   },
+   "hybrid": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.6
+   },
+   "prod-off": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.6
+   },
+   "prod-on": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.6
+   },
+   "timing_ms": {
+    "dense": 450,
+    "lexical": 358,
+    "hybrid": null,
+    "prod-off": 342,
+    "prod-on": 382
+   }
+  },
+  {
+   "id": "cross-01",
+   "difficulty": "hard",
+   "retrieved_ids": {
+    "dense": [
+     "26fb091e-a41e-4567-bb62-89155aca292a",
+     "11198a00-f9cb-4df3-a02c-deb264836e16",
+     "2585d4cd-f3f6-443b-890f-977ab35d8bfe",
+     "f2cea496-f48a-4d14-95a5-93b9a36f6b54",
+     "58719d53-a0ba-40db-a7ca-c9a500677809"
+    ],
+    "lexical": [
+     "65a932c3-8025-414f-9bb5-3344a24f9178",
+     "94400983-87be-400e-9eed-57b7aa03d897",
+     "16fff4e5-a3ac-481c-b689-c831892cd9bb",
+     "f2bb822e-e215-48a7-88a8-8202ca057811",
+     "f2cea496-f48a-4d14-95a5-93b9a36f6b54"
+    ],
+    "hybrid": [
+     "a4e75116-2d7e-41f8-9f4c-a865e68f4515",
+     "65a932c3-8025-414f-9bb5-3344a24f9178",
+     "94400983-87be-400e-9eed-57b7aa03d897",
+     "f2cea496-f48a-4d14-95a5-93b9a36f6b54",
+     "1ff73204-312f-4424-ae54-b942e80028c4"
+    ],
+    "prod-off": [
+     "2585d4cd-f3f6-443b-890f-977ab35d8bfe",
+     "f2cea496-f48a-4d14-95a5-93b9a36f6b54",
+     "58719d53-a0ba-40db-a7ca-c9a500677809",
+     "26fb091e-a41e-4567-bb62-89155aca292a",
+     "11198a00-f9cb-4df3-a02c-deb264836e16"
+    ],
+    "prod-on": [
+     "a4e75116-2d7e-41f8-9f4c-a865e68f4515",
+     "65a932c3-8025-414f-9bb5-3344a24f9178",
+     "94400983-87be-400e-9eed-57b7aa03d897",
+     "f2cea496-f48a-4d14-95a5-93b9a36f6b54",
+     "1ff73204-312f-4424-ae54-b942e80028c4"
+    ]
+   },
+   "diagnostics": {
+    "lexical_error": null,
+    "prod-off": {
+     "keyword_called": false,
+     "keyword_rows": 0,
+     "keyword_error": null
+    },
+    "prod-on": {
+     "keyword_called": true,
+     "keyword_rows": 30,
+     "keyword_error": null
+    }
+   },
+   "dense": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "lexical": {
+    "act": true,
+    "sec": false,
+    "p": 0.2,
+    "mrr": 0.0,
+    "terms": 0.75
+   },
+   "hybrid": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-off": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "prod-on": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 1.0
+   },
+   "timing_ms": {
+    "dense": 402,
+    "lexical": 359,
+    "hybrid": null,
+    "prod-off": 482,
+    "prod-on": 369
+   }
+  },
+  {
+   "id": "cross-02",
+   "difficulty": "hard",
+   "retrieved_ids": {
+    "dense": [
+     "e9610299-8842-45ad-a082-67bade375f2e"
+    ],
+    "lexical": [
+     "2cc91148-7b03-48cc-9567-e33a91b4dca1",
+     "c9b9b0b3-e515-4f20-aae4-c79315a35ba8",
+     "b9236580-28ad-4ade-8ae6-5217a815b918",
+     "9d7172f3-6397-401a-aad5-cc7708d94f7b",
+     "1ab1a41c-36c0-4e4e-9d6b-b3b492bc2659"
+    ],
+    "hybrid": [
+     "2cc91148-7b03-48cc-9567-e33a91b4dca1",
+     "c9b9b0b3-e515-4f20-aae4-c79315a35ba8",
+     "b9236580-28ad-4ade-8ae6-5217a815b918",
+     "1ff73204-312f-4424-ae54-b942e80028c4",
+     "21ca111d-a5a6-4e49-8efa-5274254ef224"
+    ],
+    "prod-off": [
+     "e9610299-8842-45ad-a082-67bade375f2e"
+    ],
+    "prod-on": [
+     "2cc91148-7b03-48cc-9567-e33a91b4dca1",
+     "c9b9b0b3-e515-4f20-aae4-c79315a35ba8",
+     "b9236580-28ad-4ade-8ae6-5217a815b918",
+     "1ff73204-312f-4424-ae54-b942e80028c4",
+     "21ca111d-a5a6-4e49-8efa-5274254ef224"
+    ]
+   },
+   "diagnostics": {
+    "lexical_error": null,
+    "prod-off": {
+     "keyword_called": false,
+     "keyword_rows": 0,
+     "keyword_error": null
+    },
+    "prod-on": {
+     "keyword_called": true,
+     "keyword_rows": 30,
+     "keyword_error": null
+    }
+   },
+   "dense": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.0
+   },
+   "lexical": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.75
+   },
+   "hybrid": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.75
+   },
+   "prod-off": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.0
+   },
+   "prod-on": {
+    "act": false,
+    "sec": false,
+    "p": 0.0,
+    "mrr": 0.0,
+    "terms": 0.75
+   },
+   "timing_ms": {
+    "dense": 458,
+    "lexical": 558,
+    "hybrid": null,
+    "prod-off": 349,
+    "prod-on": 614
+   }
+  }
+ ],
+ "lexical": "pg",
+ "rerank": null,
+ "keyword_rpc": "search_legal_chunks_keyword_v2",
+ "timing_condition": "one shared query embedding per question; retrieval timings exclude embedding generation",
+ "keyword_errors": 0
+}
