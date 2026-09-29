@@ -159,12 +159,15 @@ class Settings(BaseSettings):
     # RAG config
     retrieval_top_k: int = 5
     similarity_threshold: float = 0.7
-    # Fuse keyword search with vector search (app/services/hybrid.py). Off
-    # until the Postgres keyword function is migrated and measured against the
-    # BM25 prototype: the prototype's numbers do not transfer automatically,
-    # because Postgres full-text ranking is not BM25.
-    hybrid_retrieval_enabled: bool = False
-    hybrid_keyword_rpc: Literal['search_legal_chunks_keyword', 'search_legal_chunks_keyword_v2'] = 'search_legal_chunks_keyword'
+    # Fuse keyword search with vector search (app/services/hybrid.py). On since
+    # 29 September 2026, measured live through _search_corpus on 16 current-law
+    # gold questions: right Act in the top five 31% -> 62%, right section
+    # 19% -> 31%, mean search +225 ms, no failures; on ten held-out user
+    # questions nothing was lost. Set HYBRID_RETRIEVAL_ENABLED=false in Railway
+    # to switch it off without a deploy, or HYBRID_KEYWORD_RPC to the v1
+    # function to roll back the SQL alone.
+    hybrid_retrieval_enabled: bool = True
+    hybrid_keyword_rpc: Literal['search_legal_chunks_keyword', 'search_legal_chunks_keyword_v2'] = 'search_legal_chunks_keyword_v2'
     # Vector candidates fed into fusion come from a deeper, looser list than
     # the dense-only path uses; each list contributes this many.
     hybrid_candidates: int = 30

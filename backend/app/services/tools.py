@@ -291,7 +291,10 @@ async def _search_corpus(
     # the model on its own: the status travels with the match.
     law_map.annotate(results)
     law_map.annotate(db_sources)
-    result: dict = {"matches": results, "count": len(results)}
+    # Which path ran: "fused" (hybrid), "dense" (vectors only), or "derived"
+    # (hybrid was on but keyword search had nothing). Lets a QA run confirm
+    # from outside that production is really fusing, not falling back.
+    result: dict = {"matches": results, "count": len(results), "retrieval": mode}
     if law_map.has_repealed(results):
         result["status_warning"] = (
             "Some matches are from REPEALED Acts (see each match's status). Answer from the Act in "
