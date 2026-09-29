@@ -294,7 +294,10 @@ async def _search_corpus(
     # Which path ran: "fused" (hybrid), "dense" (vectors only), or "derived"
     # (hybrid was on but keyword search had nothing). Lets a QA run confirm
     # from outside that production is really fusing, not falling back.
-    result: dict = {"matches": results, "count": len(results), "retrieval": mode}
+    # Short fields and warnings go first and the matches last: the probe's
+    # debug view keeps only the first 1,500 characters, and the model reads
+    # a warning before the passage it is about.
+    result: dict = {"retrieval": mode, "count": len(results)}
     if law_map.has_repealed(results):
         result["status_warning"] = (
             "Some matches are from REPEALED Acts (see each match's status). Answer from the Act in "
@@ -328,6 +331,7 @@ async def _search_corpus(
             "primary source with web_fetch / fetch_web_pdf / read_pdf_pages -> quote "
             "it and cite the URL. If no official source is found, say so plainly."
         )
+    result["matches"] = results
     return {
         "result": result,
         "db_sources": db_sources,
