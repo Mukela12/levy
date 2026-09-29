@@ -572,12 +572,22 @@ def _match_statute(c: dict, index: list[dict]) -> dict | None:
     return min(cands, key=rank)
 
 
-_ACK = re.compile(r"repeal|no longer (?:in force|appl|govern|the law)|replaced (?:by|it)|superseded", re.I)
+# Historical framing counts too: a correct answer on Penal Code s.69 (29 Sep
+# 2026) said "What Section 69 used to say" and "While it existed, Section 69
+# provided", and the badge flagged it for review regardless.
+_ACK = re.compile(r"repeal|no longer (?:in force|appl|govern|the law)|replaced (?:by|it)|superseded"
+                  r"|abolish|used to (?:say|provide|read|be)|while (?:it|they) (?:existed|w(?:as|ere) (?:in force|law))"
+                  r"|formerly|before (?:the|its) repeal|prior to (?:the|its) repeal", re.I)
 
 
 # A sentence ends at ". " before a capital (not "Cap. 268", "No. 3 of") or a line break.
 _SENT_END = re.compile(r"[.!?](?=\s+[A-Z*#>(\[])|\n")
-_BACK_REF = re.compile(r"^[\s*>\-]*(?:they|it|this act|these|those|both|that act|each)\b", re.I)
+# A mention that itself claims the provision is live ("section 69 still makes
+# it a crime") is not rescued by a neighbouring sentence saying it was
+# repealed: that answer contradicts itself, and the reader must see it.
+_LIVE = re.compile(r"\bstill\b|\bremains?\b|\bcurrently\b|\bcontinues? to\b", re.I)
+_BACK_REF = re.compile(r"^[\s*>\-]*(?:they|it|this act|these|those|both|that act|each"
+                       r"|this provision|that provision|the provision|this section|that section)\b", re.I)
 
 
 def _acknowledged(answer: str, cited: str) -> bool:
@@ -594,16 +604,38 @@ def _acknowledged(answer: str, cited: str) -> bool:
     hits = list(re.finditer(rx, answer, re.I))
     if not hits:
         return False
+    # Sentence ends over the whole answer. Searching only up to a mention cut
+    # the lookahead off before the capital that starts the mention's own
+    # sentence, so the boundary was missed and "The Employment Act was
+    # repealed. Section 69 still applies." read as one sentence with a repeal
+    # in it: a live mention cleared by another Act's repeal.
+    ends = [x.end() for x in _SENT_END.finditer(answer)]
+
+    def sentence(pos: int) -> tuple[int, int]:
+        lo = max((e for e in ends if e <= pos), default=0)
+        hi = min((e for e in ends if e > pos), default=len(answer))
+        return lo, hi
+
     for m in hits:
-        start = max((x.end() for x in _SENT_END.finditer(answer, 0, m.start())), default=0)
-        end_m = _SENT_END.search(answer, m.end())
-        end = end_m.end() if end_m else len(answer)
+        start, end = sentence(m.start())
         if _ACK.search(answer[start:end]):
             continue
-        nxt_m = _SENT_END.search(answer, end)
-        nxt = answer[end:nxt_m.end() if nxt_m else len(answer)]
-        if _BACK_REF.search(nxt) and _ACK.search(nxt):
-            continue
+        if _LIVE.search(answer[start:end]):
+            return False
+        if end < len(answer):
+            n0, n1 = sentence(end)
+            nxt = answer[n0:n1]
+            if _BACK_REF.search(nxt) and _ACK.search(nxt):
+                continue
+        # The sentence before can carry it too ("It was abolished by Act No. 23
+        # of 2022. You cannot be prosecuted under Section 69 today."), but only
+        # if it points back or names the same thing: a repeal of some other
+        # Act nearby must not clear this mention.
+        if start > 0:
+            p0, p1 = sentence(start - 1)
+            prev = answer[p0:p1]
+            if _ACK.search(prev) and (_BACK_REF.search(prev) or re.search(rx, prev, re.I)):
+                continue
         return False
     return True
 

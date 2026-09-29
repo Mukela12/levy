@@ -185,3 +185,37 @@ class ProvisionTool(unittest.IsolatedAsyncioTestCase):
         r = await self.ask("Imaginary Widgets Act 2031", "4")
         self.assertFalse(r["found"])
         self.assertIn("parliament.gov.zm", r["next_step"])
+
+
+class Acknowledged(unittest.TestCase):
+    """When an answer already says a provision is dead, the badge confirms it.
+
+    Found live on 29 September 2026: a correct answer on Penal Code s.69 was
+    flagged for review because it also said "what Section 69 used to say".
+    Fixing that exposed an older fault: sentence boundaries were searched
+    only up to each mention, so the mention's own sentence ran back into the
+    one before, and another Act's repeal there cleared a live mention.
+    """
+
+    def ack(self, text):
+        return citation_audit._acknowledged(text, "section 69")
+
+    def test_historical_framing_counts(self):
+        self.assertTrue(self.ack("Section 69 used to make this a crime. It was abolished by Act No. 23 of "
+                                 "2022. You cannot be prosecuted under Section 69 today."))
+        self.assertTrue(self.ack("While it existed, Section 69 made defaming the President a crime."))
+
+    def test_a_live_mention_is_flagged(self):
+        self.assertFalse(self.ack("Section 69 of the Penal Code makes it an offence to defame the President."))
+
+    def test_another_acts_repeal_does_not_clear_a_mention(self):
+        self.assertFalse(self.ack("The Employment Act was repealed in 2019. Section 69 of the Penal Code applies."))
+
+    def test_an_answer_that_contradicts_itself_is_flagged(self):
+        self.assertFalse(self.ack("Section 69 was repealed in 2022. However, section 69 of the Penal Code "
+                                  "still makes defaming the President a crime."))
+
+    def test_the_act_level_check_shares_the_fix(self):
+        # The same boundary fault applied to whole Acts.
+        text = "The Employment Act was repealed in 2019. The Juveniles Act governs sentencing."
+        self.assertFalse(citation_audit._acknowledged(text, "Juveniles Act"))
