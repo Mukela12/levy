@@ -577,7 +577,11 @@ def _match_statute(c: dict, index: list[dict]) -> dict | None:
 # provided", and the badge flagged it for review regardless.
 _ACK = re.compile(r"repeal|no longer (?:in force|appl|govern|the law)|replaced (?:by|it)|superseded"
                   r"|abolish|used to (?:say|provide|read|be)|while (?:it|they) (?:existed|w(?:as|ere) (?:in force|law))"
-                  r"|formerly|before (?:the|its) repeal|prior to (?:the|its) repeal", re.I)
+                  r"|formerly|before (?:the|its) repeal|prior to (?:the|its) repeal"
+                  # "the 2022 Act (which replaced the older ... Act No. 11 of
+                  # 1997)": the new Act doing the replacing marks the cited one
+                  # as the old. A correct answer on 25 Sep was flagged for this.
+                  r"|replac\w* the (?:older|earlier|former|previous|repealed)", re.I)
 
 
 # A sentence ends at ". " before a capital (not "Cap. 268", "No. 3 of") or a line break.

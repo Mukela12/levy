@@ -219,3 +219,12 @@ class Acknowledged(unittest.TestCase):
         # The same boundary fault applied to whole Acts.
         text = "The Employment Act was repealed in 2019. The Juveniles Act governs sentencing."
         self.assertFalse(citation_audit._acknowledged(text, "Juveniles Act"))
+
+    def test_the_new_act_replacing_the_old_counts(self):
+        text = ("The governing law is the Zambia Institute of Human Resource Management Act, No. 3 of 2022 "
+                "(which replaced the older Zambia Institute of Human Resources Management Act No. 11 of 1997).")
+        self.assertTrue(citation_audit._acknowledged(
+            text, "Zambia Institute of Human Resources Management Act No. 11 of 1997"))
+        # And the narrow form does not clear a live use.
+        self.assertFalse(citation_audit._acknowledged(
+            "The Juveniles Act replaced colonial rules and governs sentencing today.", "Juveniles Act"))
