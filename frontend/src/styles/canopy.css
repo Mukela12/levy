@@ -269,7 +269,10 @@
 .cp-rail .cp-nav-links .cp-nav-active { right: 6px; top: 6px; }
 .cp-rail > .cp-icon-btn:last-child { margin-top: auto; }
 @media (max-height: 780px) { .cp-nav { padding-top: 16px; } .cp-nav-brand { padding-bottom: 16px; } .cp-nav-new { margin-bottom: 17px; } .cp-nav-links a { min-height: 37px; padding-block: 7px; } }
-@media (max-height: 660px) { .cp-nav { overflow: auto; } .cp-nav-history { display: none; } }
+/* Short screens: the sidebar scrolls as a whole and Recent keeps room for a few chats.
+   It used to be display: none here, which hid every past chat on phones and 1366x768
+   laptops; a user reported their chats "gone" on 4 Oct 2026. */
+@media (max-height: 660px) { .cp-nav { overflow: auto; } .cp-nav-history { flex: 1 0 9.5rem; } }
 @media (max-width: 1100px) { .cp-nav { display: none; } }
 
 /* ── Topbar ─────────────────────────────────────────────────────────────── */

@@ -48,3 +48,17 @@ test('the rewritten root counts as the chat route, not a workspace page', () => 
     assert.ok(!/usePathname\(\)/.test(src), f + ' must not branch on the raw path')
   }
 })
+
+test('past chats are never hidden on short screens', () => {
+  // canopy.css hid .cp-nav-history under max-height: 660px from 14 Sep to
+  // 5 Oct 2026. That rule also reached the phone menu, so on most Android
+  // phones and 1366x768 laptops every past chat looked deleted.
+  const css = read('styles/canopy.css').replace(/\/\*[\s\S]*?\*\//g, '')
+  for (const m of css.matchAll(/@media[^{]*\{((?:[^{}]*\{[^}]*\})*)[^{}]*\}/g)) {
+    for (const r of m[1].matchAll(/([^{}]*)\{([^}]*)\}/g)) {
+      if (r[1].includes('cp-nav-history') && !r[1].includes('cp-rail')) {
+        assert.ok(!/display:\s*none/.test(r[2]), `${m[0].slice(0, 60)} hides the chat list`)
+      }
+    }
+  }
+})
