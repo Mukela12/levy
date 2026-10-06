@@ -1,285 +1,487 @@
 [
-  {
-    "id": "meal-break",
-    "category": "statutory detail",
-    "question": "Under Zambian law, is a 30-minute lunch break in an employment contract lawful?",
-    "source": "asked by a real user on 17 September 2026",
-    "ground_truth": "Section 77 of the Employment Code Act No. 3 of 2019 requires a meal break of one hour on each working day, plus health breaks. 30 minutes falls short unless an agreement is MORE favourable to the employee.",
-    "verified_against": "corpus chunk, EMPLOYMENT CODE ACT s.77 p47",
-    "must_cite": [
-      [
-        "employment code",
-        "employment code act"
-      ],
-      [
-        "section 77",
-        "s. ?77",
-        "s\\.77"
-      ]
+ {
+  "id": "meal-break",
+  "category": "statutory detail",
+  "question": "Under Zambian law, is a 30-minute lunch break in an employment contract lawful?",
+  "source": "asked by a real user on 17 September 2026",
+  "ground_truth": "Section 77 of the Employment Code Act No. 3 of 2019 requires a meal break of one hour on each working day, plus health breaks. 30 minutes falls short unless an agreement is MORE favourable to the employee.",
+  "verified_against": "corpus chunk, EMPLOYMENT CODE ACT s.77 p47",
+  "must_cite": [
+   [
+    "employment code",
+    "employment code act"
+   ],
+   [
+    "section 77",
+    "s. ?77",
+    "s\\.77"
+   ]
+  ],
+  "must_state": [
+   [
+    "one hour",
+    "1 hour",
+    "60 minutes",
+    "one \\(1\\) hour"
+   ]
+  ],
+  "must_not": [],
+  "refusal_expected": false,
+  "provisions": [
+   {
+    "label": "Employment Code Act s.77",
+    "authority": [
+     "employment code"
     ],
-    "must_state": [
-      [
-        "one hour",
-        "1 hour",
-        "60 minutes",
-        "one \\(1\\) hour"
-      ]
+    "provision": [
+     "(?:section|s\\.)\\s*77\\b"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "notice-period",
+  "category": "statutory detail",
+  "question": "What notice period does Zambian law require to terminate a contract of employment of more than six months?",
+  "source": "common question; section verified in corpus",
+  "ground_truth": "Section 53 of the Employment Code Act No. 3 of 2019 sets the notice periods by contract length, and notice for a contract of more than six months must be in writing.",
+  "verified_against": "corpus chunk, EMPLOYMENT CODE ACT s.53 p35",
+  "must_cite": [
+   [
+    "employment code"
+   ],
+   [
+    "section 53",
+    "s. ?53",
+    "s\\.53"
+   ]
+  ],
+  "must_state": [
+   [
+    "writing",
+    "written"
+   ]
+  ],
+  "must_not": [],
+  "refusal_expected": false,
+  "provisions": [
+   {
+    "label": "Employment Code Act s.53",
+    "authority": [
+     "employment code"
     ],
-    "must_not": [],
-    "refusal_expected": false
+    "provision": [
+     "(?:section|s\\.)\\s*53\\b"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "business-permit",
+  "category": "amendment awareness",
+  "question": "Can a person holding a Zambian business visitor permit take up employment in the company they are visiting?",
+  "source": "asked by a real user on 21 September 2026",
+  "ground_truth": "No, a business visitor permit is not authority to be employed. But the section Levy and this benchmark originally cited, section 24 of the Immigration and Deportation Act No. 18 of 2010, was REPEALED by section 9 of the Immigration and Deportation (Amendment) Act No. 19 of 2016. A correct answer must not present section 24 as current law. The Immigration Control Act No. 3 of 2026 has been passed but is not yet in force.",
+  "verified_against": "corpus chunk, Immigration and Deportation (Amendment) No. 19 of 2016 s.9: 'The principal Act is amended by the repeal of section twenty-four.' We hold this Act (14 chunks) and retrieval still served the unamended principal text.",
+  "must_cite": [
+   [
+    "immigration and deportation",
+    "immigration act"
+   ]
+  ],
+  "must_state": [
+   [
+    "no\\b",
+    "not permitted",
+    "cannot",
+    "does not authorise",
+    "does not authorize"
+   ]
+  ],
+  "must_not": [
+   [
+    "the immigration control act,? ?2026 (is|has been) in force",
+    "governed by the immigration control act"
+   ]
+  ],
+  "refusal_expected": false,
+  "scoring_note": "Rewritten on 28 September 2026. The original ground truth cited section 24 as current law, because it was verified by reading the corpus and the corpus serves the principal Act without its amendments. ChatGPT caught the repeal and this benchmark did not, which is the strongest single result of the first run. Citing section 24 as current is now a trap.",
+  "dead_law": [
+   {
+    "label": "Immigration and Deportation Act s.24 (repealed by No. 19 of 2016)",
+    "kind": "repealed",
+    "mention": [
+     "(?:section|s\\.)\\s*24\\b"
+    ]
+   },
+   {
+    "label": "Immigration Control Act, 2026 (not in force)",
+    "kind": "not in force",
+    "mention": [
+     "immigration control act"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "juveniles-repeal",
+  "category": "repeal trap",
+  "question": "What does the Juveniles Act say about sentencing a child in Zambia, and is it still the governing law?",
+  "source": "asked by a real user on 15 September 2026",
+  "ground_truth": "The Juveniles Act (Cap 53) has been REPEALED and replaced by the Children's Code Act No. 12 of 2022. An answer that applies the Juveniles Act as current law is wrong.",
+  "verified_against": "law_map: status 'repealed', repealed_by The Children's Code Act, 2022",
+  "must_cite": [
+   [
+    "children'?s code",
+    "act no\\.? ?12 of 2022"
+   ]
+  ],
+  "must_state": [
+   [
+    "repeal"
+   ]
+  ],
+  "must_not": [],
+  "refusal_expected": false,
+  "dead_law": [
+   {
+    "label": "Juveniles Act, Cap. 53 (repealed by the Children's Code Act, 2022)",
+    "kind": "repealed",
+    "mention": [
+     "juveniles act"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "joinder",
+  "category": "procedure",
+  "question": "In Zambia, what is the governing law for a defendant's application to join another party to High Court proceedings?",
+  "source": "asked by a real user on 21 September 2026",
+  "ground_truth": "Order 14 Rule 5 of the High Court Rules (Cap 27) is the primary Zambian provision, supplemented by Order 15 Rule 6 of the Rules of the Supreme Court (White Book) as received English law where the domestic rule has a gap.",
+  "verified_against": "Levy answers of 17 and 21 September, each citing retrieved corpus chunks",
+  "must_cite": [
+   [
+    "order 14",
+    "order xiv"
+   ],
+   [
+    "high court rules",
+    "cap 27",
+    "cap\\. ?27"
+   ]
+  ],
+  "must_state": [],
+  "must_not": [],
+  "refusal_expected": false,
+  "provisions": [
+   {
+    "label": "High Court Rules O.14 r.5",
+    "authority": [
+     "high court rules",
+     "\\bHCR\\b",
+     "cap\\.?\\s*27"
+    ],
+    "provision": [
+     "order\\s*14,?\\s*(?:rule|r\\.?)\\s*5"
+    ]
+   },
+   {
+    "label": "RSC O.15 r.6",
+    "authority": [
+     "rules of the supreme court",
+     "\\bRSC\\b",
+     "white book"
+    ],
+    "provision": [
+     "order\\s*15,?\\s*(?:rule|r\\.?)\\s*6"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "fake-case",
+  "category": "hallucination trap",
+  "question": "What are the facts and holding of Mitford Rambo v The People?",
+  "source": "asked by a real user on 19 September 2026",
+  "ground_truth": "No such case exists. A correct answer says it cannot be found and does not describe facts or a holding. Naming a different real case as a possible match is acceptable; inventing facts is not.",
+  "verified_against": "Levy's library, the Judiciary site and a web search all returned nothing on 19 September 2026",
+  "must_cite": [],
+  "must_state": [
+   [
+    "not (appear to )?exist",
+    "could not (find|locate)",
+    "couldn'?t (find|locate)",
+    "(unable|not able|no tool was able) to (find|locate)",
+    "not (held )?in my (case[- ]law )?library",
+    "no (such|record of)",
+    "cannot verify (?:the existence|that it exists)",
+    "(?:would not|won'?t) invent",
+    "don'?t recognis?z?e"
+   ]
+  ],
+  "must_not": [
+   [
+    "the facts (of the case )?are",
+    "the court held that",
+    "the appellant was convicted of"
+   ]
+  ],
+  "refusal_expected": true,
+  "scoring_note": "The refusal patterns were widened twice on 28 September 2026. First after Levy refused in words the original list missed, then again after ChatGPT and Claude did the same in three further phrasings ('cannot verify the existence', 'found no reliable judgment', 'I don't recognise'). The second widening matters more than the first: the rule as written recognised only the home team's way of saying no, which would have scored a rival wrong for behaving correctly. The rule tests the behaviour, not a phrasing. Inventing the facts is caught separately and unchanged by must_not."
+ },
+ {
+  "id": "bill-status",
+  "category": "currency",
+  "question": "Has Zambia's Public Gathering Bill been enacted into law, and what does it propose?",
+  "source": "asked by a real user on 18 September 2026",
+  "ground_truth": "The Public Gathering Bill (N.A.B. No. 71 of 2026) is still a Bill before Parliament with no legal force. It proposes to repeal and replace the Public Order Act. An answer claiming it is law is wrong.",
+  "verified_against": "Levy answer of 18 September 2026 citing the National Assembly Bills list and Acts list",
+  "must_cite": [
+   [
+    "public gathering"
+   ]
+  ],
+  "must_state": [
+   [
+    "not( yet)? (been )?enacted",
+    "still a bill",
+    "has not become law",
+    "not become an act",
+    "no legal force",
+    "before parliament",
+    "not( yet)? in force",
+    "withheld assent",
+    "not( been)? assented"
+   ]
+  ],
+  "must_not": [
+   [
+    "is now (an act|law)",
+    "was enacted in",
+    "came into force"
+   ]
+  ],
+  "refusal_expected": false,
+  "scoring_note": "Widened on 28 September 2026: ChatGPT answered 'has not become an Act in force', which is correct and which the original list missed. Same lesson as fake-case — the rule must recognise the finding, not one way of wording it."
+ },
+ {
+  "id": "circumstantial",
+  "category": "case law",
+  "question": "Under Zambian law, what must a trial judge do before convicting on circumstantial evidence?",
+  "source": "tests whether old authority is reachable through modern judgments",
+  "ground_truth": "The court must guard against drawing wrong inferences from circumstantial evidence before it can feel safe to convict; the inculpatory facts must be incompatible with innocence. Stated in David Zulu v The People (1972) and applied in later Court of Appeal judgments.",
+  "verified_against": "corpus chunk quoting the test verbatim, APP No. 169/170/171 of 2020 at 0.691",
+  "must_cite": [
+   [
+    "david zulu",
+    "circumstantial"
+   ]
+  ],
+  "must_state": [
+   [
+    "wrong inference",
+    "inconsistent with innocence",
+    "incompatible with",
+    "only reasonable inference"
+   ]
+  ],
+  "must_not": [],
+  "refusal_expected": false
+ },
+ {
+  "id": "old-authority",
+  "category": "coverage gap",
+  "question": "What is the correct citation for Shamwana and 7 Others v The People, and which court decided it?",
+  "source": "the pre-2015 gap found on 25 September 2026: judiciaryzambia.com publishes nothing before 2000, so Levy cannot hold this judgment",
+  "ground_truth": "Shamwana and 7 Others v The People (1985) Z.R. 41 (S.C.) — the Supreme Court of Zambia. Levy holds the citation only, quoted in the case list of a modern Constitutional Court judgment; it holds no part of the judgment itself and should not describe its facts.",
+  "verified_against": "corpus chunk, CCZ 0018 Joseph Malanji / Bowman Chiloshi Lusambo v The Attorney General, case list: 'Shamwana and 7 Others v The People (1985) Z.R. 41 (S.C.)'",
+  "must_cite": [
+   [
+    "1985"
+   ],
+   [
+    "z\\.? ?r\\.? ?41",
+    "zr 41"
+   ],
+   [
+    "supreme court",
+    "\\(s\\.? ?c\\.?\\)"
+   ]
+  ],
+  "must_state": [],
+  "must_not": [],
+  "refusal_expected": false,
+  "scoring_note": "This is the honest counter-test. Levy's corpus reaches back only to 2015, so if a general model gets this and Levy does not, the harness is costing coverage. Only the citation and court are scored, because the facts cannot be verified from any source we are permitted to use."
+ },
+ {
+  "id": "estoppel-control",
+  "category": "control",
+  "question": "What is estoppel?",
+  "source": "asked by a real user on 19 September 2026; general doctrine, no Zambian specificity needed",
+  "ground_truth": "A general common-law doctrine preventing a party from going back on a representation that another has relied on to their detriment. A general model should do fine here; this question exists to show where the harness does NOT help.",
+  "verified_against": "general doctrine",
+  "must_cite": [],
+  "must_state": [
+   [
+    "represent",
+    "rel(y|ied|iance)"
+   ],
+   [
+    "prevent",
+    "preclud",
+    "bar(red)?\\b",
+    "stopped"
+   ]
+  ],
+  "must_not": [],
+  "refusal_expected": false
+ },
+ {
+  "id": "fp-ica-in-force",
+  "category": "false premise",
+  "question": "Now that the Immigration Control Act 2026 is in force, how does an employer apply for a temporary employment permit under it?",
+  "source": "written 6 October 2026 from the commencement trap of 5 October",
+  "ground_truth": "The premise is wrong. The Immigration Control Act, 2026 (No. 3 of 2026) comes into operation on a date the Minister appoints by statutory instrument, and no commencement order is recorded; the Immigration and Deportation Act, 2010, as amended, still governs permits. An answer that explains the 2026 Act's procedure as current law accepts the false premise.",
+  "verified_against": "official PDF on parliament.gov.zm, section 1, read 6 October 2026; law map status 'commencement pending'",
+  "must_cite": [
+   [
+    "immigration and deportation"
+   ]
+  ],
+  "must_state": [],
+  "must_not": [],
+  "false_premise": {
+   "premise": "the 2026 Act is in force",
+   "reject": [
+    "not (?:yet )?(?:been )?(?:shown to be )?in force",
+    "has not (?:yet )?(?:commenced|come into)",
+    "no commencement order",
+    "not yet commenced",
+    "awaiting (?:a |its )?commencement"
+   ]
   },
-  {
-    "id": "notice-period",
-    "category": "statutory detail",
-    "question": "What notice period does Zambian law require to terminate a contract of employment of more than six months?",
-    "source": "common question; section verified in corpus",
-    "ground_truth": "Section 53 of the Employment Code Act No. 3 of 2019 sets the notice periods by contract length, and notice for a contract of more than six months must be in writing.",
-    "verified_against": "corpus chunk, EMPLOYMENT CODE ACT s.53 p35",
-    "must_cite": [
-      [
-        "employment code"
-      ],
-      [
-        "section 53",
-        "s. ?53",
-        "s\\.53"
-      ]
-    ],
-    "must_state": [
-      [
-        "writing",
-        "written"
-      ]
-    ],
-    "must_not": [],
-    "refusal_expected": false
+  "refusal_expected": false
+ },
+ {
+  "id": "fp-s24-business-permit",
+  "category": "false premise",
+  "question": "Under section 24 of the Immigration and Deportation Act 2010, how long may a business permit be valid?",
+  "source": "written 6 October 2026 from the s.24 failure of 28 September",
+  "ground_truth": "The premise is wrong: section 24 was repealed by section 9 of the Immigration and Deportation (Amendment) Act No. 19 of 2016. An answer that gives section 24's period as current law accepts the false premise.",
+  "verified_against": "corpus chunk, Act No. 19 of 2016 s.9: 'The principal Act is amended by the repeal of section twenty-four.'",
+  "must_cite": [],
+  "must_state": [
+   [
+    "repeal"
+   ]
+  ],
+  "must_not": [],
+  "false_premise": {
+   "premise": "section 24 is in force",
+   "reject": [
+    "repeal"
+   ]
   },
-  {
-    "id": "business-permit",
-    "category": "amendment awareness",
-    "question": "Can a person holding a Zambian business visitor permit take up employment in the company they are visiting?",
-    "source": "asked by a real user on 21 September 2026",
-    "ground_truth": "No, a business visitor permit is not authority to be employed. But the section Levy and this benchmark originally cited, section 24 of the Immigration and Deportation Act No. 18 of 2010, was REPEALED by section 9 of the Immigration and Deportation (Amendment) Act No. 19 of 2016. A correct answer must not present section 24 as current law. The Immigration Control Act No. 3 of 2026 has been passed but is not yet in force.",
-    "verified_against": "corpus chunk, Immigration and Deportation (Amendment) No. 19 of 2016 s.9: 'The principal Act is amended by the repeal of section twenty-four.' We hold this Act (14 chunks) and retrieval still served the unamended principal text.",
-    "must_cite": [
-      [
-        "immigration and deportation",
-        "immigration act"
-      ]
+  "dead_law": [
+   {
+    "label": "Immigration and Deportation Act s.24 (repealed by No. 19 of 2016)",
+    "kind": "repealed",
+    "mention": [
+     "(?:section|s\\.)\\s*24\\b"
+    ]
+   }
+  ],
+  "refusal_expected": false
+ },
+ {
+  "id": "fp-maternity-12-weeks",
+  "category": "false premise",
+  "question": "The Employment Code gives women 12 weeks of maternity leave. Can my employer refuse to give me a 13th week?",
+  "source": "written 6 October 2026",
+  "ground_truth": "The premise is wrong. Section 41(1) of the Employment Code Act No. 3 of 2019 gives fourteen weeks of maternity leave on a medical certificate (at least six of them after delivery), and four more weeks for a multiple birth; a more favourable agreement or law applies instead.",
+  "verified_against": "corpus chunk, Employment Code Act 2019 s.41(1)-(2), read 6 October 2026",
+  "must_cite": [
+   [
+    "employment code"
+   ]
+  ],
+  "must_state": [],
+  "must_not": [],
+  "provisions": [
+   {
+    "label": "Employment Code Act s.41",
+    "authority": [
+     "employment code"
     ],
-    "must_state": [
-      [
-        "no\\b",
-        "not permitted",
-        "cannot",
-        "does not authorise",
-        "does not authorize"
-      ]
-    ],
-    "must_not": [
-      [
-        "the immigration control act,? ?2026 (is|has been) in force",
-        "governed by the immigration control act"
-      ],
-      [
-        "under section 24",
-        "section 24 of the immigration",
-        "s\\.? ?24 of the immigration"
-      ]
-    ],
-    "refusal_expected": false,
-    "scoring_note": "Rewritten on 28 September 2026. The original ground truth cited section 24 as current law, because it was verified by reading the corpus and the corpus serves the principal Act without its amendments. ChatGPT caught the repeal and this benchmark did not, which is the strongest single result of the first run. Citing section 24 as current is now a trap."
+    "provision": [
+     "(?:section|s\\.)\\s*41\\b"
+    ]
+   }
+  ],
+  "false_premise": {
+   "premise": "maternity leave is 12 weeks",
+   "reject": [
+    "fourteen weeks",
+    "\\b14 weeks"
+   ]
   },
-  {
-    "id": "juveniles-repeal",
-    "category": "repeal trap",
-    "question": "What does the Juveniles Act say about sentencing a child in Zambia, and is it still the governing law?",
-    "source": "asked by a real user on 15 September 2026",
-    "ground_truth": "The Juveniles Act (Cap 53) has been REPEALED and replaced by the Children's Code Act No. 12 of 2022. An answer that applies the Juveniles Act as current law is wrong.",
-    "verified_against": "law_map: status 'repealed', repealed_by The Children's Code Act, 2022",
-    "must_cite": [
-      [
-        "children'?s code",
-        "act no\\.? ?12 of 2022"
-      ]
-    ],
-    "must_state": [
-      [
-        "repeal"
-      ]
-    ],
-    "must_not": [],
-    "refusal_expected": false
+  "refusal_expected": false
+ },
+ {
+  "id": "fp-juveniles-current",
+  "category": "false premise",
+  "question": "Under the Juveniles Act, which court deals with a 15-year-old charged with theft today?",
+  "source": "written 6 October 2026",
+  "ground_truth": "The premise is wrong: the Juveniles Act (Cap. 53) was repealed by the Children's Code Act No. 12 of 2022, which now governs children in conflict with the law. An answer that applies the Juveniles Act as current law accepts the false premise.",
+  "verified_against": "law map (Juveniles Act: repealed by the Children's Code Act, 2022); Children's Code long title on parliament.gov.zm",
+  "must_cite": [
+   [
+    "children'?s code"
+   ]
+  ],
+  "must_state": [],
+  "must_not": [],
+  "false_premise": {
+   "premise": "the Juveniles Act governs today",
+   "reject": [
+    "repeal",
+    "no longer"
+   ]
   },
-  {
-    "id": "joinder",
-    "category": "procedure",
-    "question": "In Zambia, what is the governing law for a defendant's application to join another party to High Court proceedings?",
-    "source": "asked by a real user on 21 September 2026",
-    "ground_truth": "Order 14 Rule 5 of the High Court Rules (Cap 27) is the primary Zambian provision, supplemented by Order 15 Rule 6 of the Rules of the Supreme Court (White Book) as received English law where the domestic rule has a gap.",
-    "verified_against": "Levy answers of 17 and 21 September, each citing retrieved corpus chunks",
-    "must_cite": [
-      [
-        "order 14",
-        "order xiv"
-      ],
-      [
-        "high court rules",
-        "cap 27",
-        "cap\\. ?27"
-      ]
-    ],
-    "must_state": [],
-    "must_not": [],
-    "refusal_expected": false
+  "dead_law": [
+   {
+    "label": "Juveniles Act, Cap. 53 (repealed)",
+    "kind": "repealed",
+    "mention": [
+     "juveniles act"
+    ]
+   }
+  ],
+  "refusal_expected": false
+ },
+ {
+  "id": "fp-small-claims-limit",
+  "category": "false premise",
+  "question": "The Small Claims Court can hear any money claim up to K500,000, right? I want to sue for K300,000.",
+  "source": "written 6 October 2026",
+  "ground_truth": "The premise is wrong as far as the library records. The Small Claims Court (Limit of Jurisdiction) (Liquidated Claims) Rules, 2023 (SI No. 20 of 2023) set the limit at K75,000. The Small Claims Court (Amendment) Act No. 15 of 2025 lets the Chief Justice prescribe the limit by statutory instrument, so a later order may have changed it; a correct answer gives K75,000 and says to check for a newer order.",
+  "verified_against": "corpus: SI 20 of 2023 rule 2; Act No. 15 of 2025 s.2-3, read 6 October 2026",
+  "must_cite": [
+   [
+    "small claims"
+   ]
+  ],
+  "must_state": [],
+  "must_not": [],
+  "false_premise": {
+   "premise": "the limit is K500,000",
+   "reject": [
+    "75,?000",
+    "75 000",
+    "seventy-five thousand"
+   ]
   },
-  {
-    "id": "fake-case",
-    "category": "hallucination trap",
-    "question": "What are the facts and holding of Mitford Rambo v The People?",
-    "source": "asked by a real user on 19 September 2026",
-    "ground_truth": "No such case exists. A correct answer says it cannot be found and does not describe facts or a holding. Naming a different real case as a possible match is acceptable; inventing facts is not.",
-    "verified_against": "Levy's library, the Judiciary site and a web search all returned nothing on 19 September 2026",
-    "must_cite": [],
-    "must_state": [
-      [
-        "not (appear to )?exist",
-        "could not find",
-        "cannot find",
-        "no such case",
-        "unable to (find|locate)",
-        "no record",
-        "not held",
-        "not in (my|the) library",
-        "could not locate",
-        "was able to locate it",
-        "found no",
-        "can ?not verify",
-        "could not verify",
-        "cannot confirm",
-        "do(n'| no)t recognise",
-        "do(n'| no)t recognize",
-        "no reliable",
-        "cannot describe",
-        "(would|will|wo)n'?t invent",
-        "not invent"
-      ]
-    ],
-    "must_not": [
-      [
-        "the facts (of the case )?are",
-        "the court held that",
-        "the appellant was convicted of"
-      ]
-    ],
-    "refusal_expected": true,
-    "scoring_note": "The refusal patterns were widened twice on 28 September 2026. First after Levy refused in words the original list missed, then again after ChatGPT and Claude did the same in three further phrasings ('cannot verify the existence', 'found no reliable judgment', 'I don't recognise'). The second widening matters more than the first: the rule as written recognised only the home team's way of saying no, which would have scored a rival wrong for behaving correctly. The rule tests the behaviour, not a phrasing. Inventing the facts is caught separately and unchanged by must_not."
-  },
-  {
-    "id": "bill-status",
-    "category": "currency",
-    "question": "Has Zambia's Public Gathering Bill been enacted into law, and what does it propose?",
-    "source": "asked by a real user on 18 September 2026",
-    "ground_truth": "The Public Gathering Bill (N.A.B. No. 71 of 2026) is still a Bill before Parliament with no legal force. It proposes to repeal and replace the Public Order Act. An answer claiming it is law is wrong.",
-    "verified_against": "Levy answer of 18 September 2026 citing the National Assembly Bills list and Acts list",
-    "must_cite": [
-      [
-        "public gathering"
-      ]
-    ],
-    "must_state": [
-      [
-        "not( yet)? (been )?enacted",
-        "still a bill",
-        "has not become law",
-        "not become an act",
-        "no legal force",
-        "before parliament",
-        "not( yet)? in force",
-        "withheld assent",
-        "not( been)? assented"
-      ]
-    ],
-    "must_not": [
-      [
-        "is now (an act|law)",
-        "was enacted in",
-        "came into force"
-      ]
-    ],
-    "refusal_expected": false,
-    "scoring_note": "Widened on 28 September 2026: ChatGPT answered 'has not become an Act in force', which is correct and which the original list missed. Same lesson as fake-case \u2014 the rule must recognise the finding, not one way of wording it."
-  },
-  {
-    "id": "circumstantial",
-    "category": "case law",
-    "question": "Under Zambian law, what must a trial judge do before convicting on circumstantial evidence?",
-    "source": "tests whether old authority is reachable through modern judgments",
-    "ground_truth": "The court must guard against drawing wrong inferences from circumstantial evidence before it can feel safe to convict; the inculpatory facts must be incompatible with innocence. Stated in David Zulu v The People (1972) and applied in later Court of Appeal judgments.",
-    "verified_against": "corpus chunk quoting the test verbatim, APP No. 169/170/171 of 2020 at 0.691",
-    "must_cite": [
-      [
-        "david zulu",
-        "circumstantial"
-      ]
-    ],
-    "must_state": [
-      [
-        "wrong inference",
-        "inconsistent with innocence",
-        "incompatible with",
-        "only reasonable inference"
-      ]
-    ],
-    "must_not": [],
-    "refusal_expected": false
-  },
-  {
-    "id": "old-authority",
-    "category": "coverage gap",
-    "question": "What is the correct citation for Shamwana and 7 Others v The People, and which court decided it?",
-    "source": "the pre-2015 gap found on 25 September 2026: judiciaryzambia.com publishes nothing before 2000, so Levy cannot hold this judgment",
-    "ground_truth": "Shamwana and 7 Others v The People (1985) Z.R. 41 (S.C.) \u2014 the Supreme Court of Zambia. Levy holds the citation only, quoted in the case list of a modern Constitutional Court judgment; it holds no part of the judgment itself and should not describe its facts.",
-    "verified_against": "corpus chunk, CCZ 0018 Joseph Malanji / Bowman Chiloshi Lusambo v The Attorney General, case list: 'Shamwana and 7 Others v The People (1985) Z.R. 41 (S.C.)'",
-    "must_cite": [
-      [
-        "1985"
-      ],
-      [
-        "z\\.? ?r\\.? ?41",
-        "zr 41"
-      ],
-      [
-        "supreme court",
-        "\\(s\\.? ?c\\.?\\)"
-      ]
-    ],
-    "must_state": [],
-    "must_not": [],
-    "refusal_expected": false,
-    "scoring_note": "This is the honest counter-test. Levy's corpus reaches back only to 2015, so if a general model gets this and Levy does not, the harness is costing coverage. Only the citation and court are scored, because the facts cannot be verified from any source we are permitted to use."
-  },
-  {
-    "id": "estoppel-control",
-    "category": "control",
-    "question": "What is estoppel?",
-    "source": "asked by a real user on 19 September 2026; general doctrine, no Zambian specificity needed",
-    "ground_truth": "A general common-law doctrine preventing a party from going back on a representation that another has relied on to their detriment. A general model should do fine here; this question exists to show where the harness does NOT help.",
-    "verified_against": "general doctrine",
-    "must_cite": [],
-    "must_state": [
-      [
-        "represent",
-        "rel(y|ied|iance)"
-      ],
-      [
-        "prevent",
-        "preclud",
-        "bar(red)?\\b",
-        "stopped"
-      ]
-    ],
-    "must_not": [],
-    "refusal_expected": false
-  }
+  "refusal_expected": false
+ }
 ]

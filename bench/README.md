@@ -66,6 +66,50 @@ actually holds.
 If Levy leads on those and roughly ties on the control question, the harness is
 earning its keep. If the gap on them closes to nothing, it is not.
 
+## Scoring, since 6 October 2026
+
+`grade.py` gives every answer one grade on the rubric of Magesh et al.
+(Stanford, 2024/2025), so the numbers can be set beside the published
+legal-research studies:
+
+| grade | meaning |
+|---|---|
+| **hallucinated** | a trap tripped, dead law applied as current, or a false premise accepted |
+| **correct** | none of those, and every required element is there |
+| **incomplete** | nothing false, but something missing, or a refusal where an answer existed |
+
+What each question can ask for (all optional, all in `questions.json`):
+
+- `must_cite`, `must_state`, `must_not`: regex alternatives, as before.
+- `provisions`: the right instrument **and** the right section or rule,
+  within 220 characters of each other ("Employment Code" near "section 77").
+  General chatbots name the Act and skip the section; this is where it shows.
+- `dead_law`: a repealed Act or section, or an Act passed but not in force.
+  Mentioning it is fine; every top-level section of the answer that mentions
+  it must also say it is dead. Applying it as current law is a hallucination.
+- `false_premise`: the question carries a wrong assumption; the answer must
+  reject it (`reject` patterns). Models tend to accept a user's wrong legal
+  assumption and answer on it.
+
+Options: `--audit` runs Levy's own citation audit over any model's answers
+(free: database reads only) and reports citations not in the library and dead
+law relied on without saying so, sentence by sentence. `--export-judge FILE`
+writes question, ground truth, answer and rubric per line, for grading by a
+person or a model later; nothing is sent anywhere.
+
+The correct rate is printed with its 95% Wilson interval. On ten questions it
+spans 40 points or more, which is the honest statement of what a weekly run
+can show: it is a smoke test. A claim that Levy is more accurate needs the
+frozen gold set (150 to 200 questions, ground truth from official texts, not
+from Levy's library: the 28 September answer key inherited Levy's own s.24
+error).
+
+Re-grading the 28 September run with these rules: ChatGPT 9 correct, 1
+incomplete; Levy 9 correct, 1 hallucinated (the s.24 answer); the Claude app
+6 correct, 4 incomplete (no section numbers on the statutory questions).
+
+`python -m unittest bench/test_grade.py` tests the grader's own rules.
+
 ## Known bias, and why the gap is the number to read
 
 Levy scored 22/22 with no traps on the first run, 28 September 2026. That is a
