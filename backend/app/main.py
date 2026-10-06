@@ -249,6 +249,54 @@ async def health_fallback():
         )
 
 
+@app.get("/health/openrouter")
+async def health_openrouter():
+    """Is the last hop of the model chain armed? Reads OpenRouter's account
+    state only, so it costs nothing (no generation).
+
+    OpenRouter answers only after Claude and Kimi have both failed, which is
+    the worst moment to learn the key is wrong or the balance is gone. This
+    endpoint is public, so it reports readiness, not amounts.
+      200 {ok:true, paid_ready, free_ready}    armed; the free router still
+                                               answers once the paid balance is spent
+      200 {ok:false, reason:"not_configured"}  deliberately off, not an error
+      503 {ok:false, reason:...}               key rejected, unreachable, or
+                                               nothing left to answer with
+    """
+    import httpx
+    from .config import get_settings
+    from .services import openrouter
+
+    settings = get_settings()
+    base = {"paid_model": settings.openrouter_fallback_model, "free_model": settings.openrouter_free_model}
+    if not openrouter.is_configured():
+        return {"ok": False, "configured": False, "reason": "not_configured", **base,
+                "detail": "OPENROUTER_API_KEY is unset; the chain ends at Kimi."}
+    headers = {"Authorization": f"Bearer {settings.openrouter_api_key.strip()}"}
+    try:
+        async with httpx.AsyncClient(timeout=15) as http:
+            key = await http.get("https://openrouter.ai/api/v1/key", headers=headers)
+            credits = await http.get("https://openrouter.ai/api/v1/credits", headers=headers)
+    except Exception:  # noqa: BLE001
+        return JSONResponse(status_code=503, content={"ok": False, "configured": True,
+                                                      "reason": "unreachable", **base})
+    if key.status_code in (401, 403):
+        return JSONResponse(status_code=503, content={"ok": False, "configured": True, "reason": "auth", **base})
+    if key.status_code != 200:
+        return JSONResponse(status_code=503, content={"ok": False, "configured": True,
+                                                      "reason": "provider_error", **base})
+    k = key.json().get("data") or {}
+    c = (credits.json().get("data") or {}) if credits.status_code == 200 else {}
+    balance = float(c.get("total_credits") or 0) - float(c.get("total_usage") or 0)
+    cap_left = k.get("limit_remaining")
+    paid_ready = balance >= 0.5 and (cap_left is None or float(cap_left) >= 0.5)
+    free = k.get("free_model_daily_requests") or {}
+    free_ready = free.get("remaining") is None or int(free.get("remaining") or 0) > 0
+    body = {"ok": paid_ready or free_ready, "configured": True, "paid_ready": paid_ready,
+            "free_ready": free_ready, "low_balance": balance < 2.0, **base}
+    return body if body["ok"] else JSONResponse(status_code=503, content={**body, "reason": "exhausted"})
+
+
 @app.get("/health/embeddings")
 def health_embeddings():
     """Synthetic embedding ping for uptime monitoring.
