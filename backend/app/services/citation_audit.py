@@ -589,12 +589,20 @@ _SENT_END = re.compile(r"[.!?](?=\s+[A-Z*#>(\[])|\n")
 # A mention that itself claims the provision is live ("section 69 still makes
 # it a crime") is not rescued by a neighbouring sentence saying it was
 # repealed: that answer contradicts itself, and the reader must see it.
+# The answer already says a passed Act is not law yet ("the 2026 Act has
+# been passed but has not yet commenced"), so the badge confirms, not warns.
+_ACK_PENDING = re.compile(
+    r"not (?:yet )?(?:in force|commenced|operational|been brought into (?:force|operation))"
+    r"|ha(?:s|ve) not (?:yet )?(?:commenced|come into (?:force|operation)|been commenced)"
+    r"|awaiting (?:a |its )?commencement|commencement order|yet to (?:commence|come into)"
+    r"|(?:once|when|until) it (?:commences|comes into (?:force|operation))|passed but", re.I)
+
 _LIVE = re.compile(r"\bstill\b|\bremains?\b|\bcurrently\b|\bcontinues? to\b", re.I)
 _BACK_REF = re.compile(r"^[\s*>\-]*(?:they|it|this act|these|those|both|that act|each"
                        r"|this provision|that provision|the provision|this section|that section)\b", re.I)
 
 
-def _acknowledged(answer: str, cited: str) -> bool:
+def _acknowledged(answer: str, cited: str, ack: re.Pattern = _ACK) -> bool:
     """Every mention of `cited` already says it is dead ("Cap. 268 has been
     repealed and replaced by this Act"). The flag is then a confirmation, not
     something for the reader to chase.
@@ -622,14 +630,14 @@ def _acknowledged(answer: str, cited: str) -> bool:
 
     for m in hits:
         start, end = sentence(m.start())
-        if _ACK.search(answer[start:end]):
+        if ack.search(answer[start:end]):
             continue
         if _LIVE.search(answer[start:end]):
             return False
         if end < len(answer):
             n0, n1 = sentence(end)
             nxt = answer[n0:n1]
-            if _BACK_REF.search(nxt) and _ACK.search(nxt):
+            if _BACK_REF.search(nxt) and ack.search(nxt):
                 continue
         # The sentence before can carry it too ("It was abolished by Act No. 23
         # of 2022. You cannot be prosecuted under Section 69 today."), but only
@@ -638,7 +646,7 @@ def _acknowledged(answer: str, cited: str) -> bool:
         if start > 0:
             p0, p1 = sentence(start - 1)
             prev = answer[p0:p1]
-            if _ACK.search(prev) and (_BACK_REF.search(prev) or re.search(rx, prev, re.I)):
+            if ack.search(prev) and (_BACK_REF.search(prev) or re.search(rx, prev, re.I)):
                 continue
         return False
     return True
@@ -656,6 +664,19 @@ def _law_status(c: dict, row: dict, index: list[dict]) -> dict:
     from . import law_map
     e = law_map.entry(row["id"])
     status = e.get("status")
+    if status == "commencement pending":
+        # Passed, not shown to be in force. "National Pension Scheme Act"
+        # with no year also names Cap. 256, which is the law today, so an
+        # undated citation that another Act of the name could answer is
+        # left alone, as for repeals.
+        year = _cited_year(c)
+        if year and _doc_year(row) and year != _doc_year(row):
+            return {}
+        if not year and any(r["id"] != row["id"] and r.get("document_type") == "act"
+                            and r["_btitle"] == _base(c["name"])
+                            for r in _statute_candidates(c, index)):
+            return {}
+        return {"law_status": "not in force", "still_applies": law_map.distinct_names(e.get("will_repeal") or [])[:3]}
     if status not in ("repealed", "repeal pending"):
         return {}
     key = "repealed_by" if status == "repealed" else "repeal_pending_by"
@@ -747,6 +768,8 @@ def audit_answer(text: str) -> list[dict]:
                     # whether it is still law.
                     verdict.update(_law_status(c, row, index))
                     if verdict.get("law_status") == "repealed" and _acknowledged(text, c["text"]):
+                        verdict["acknowledged"] = True
+                    elif verdict.get("law_status") == "not in force" and _acknowledged(text, c["text"], _ACK_PENDING):
                         verdict["acknowledged"] = True
                     # The Act can be in force while the section cited from it
                     # is not.

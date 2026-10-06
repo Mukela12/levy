@@ -427,7 +427,7 @@ def main() -> int:
     def slot(doc_id: str) -> dict:
         return entry.setdefault(doc_id, {"status": "in force", "repealed_by": [], "repeals": [],
                                          "partially_repealed_by": [], "amended_by": [], "amends": [],
-                                         "enacted_as": [], "repeal_pending_by": []})
+                                         "enacted_as": [], "repeal_pending_by": [], "will_repeal": []})
 
     def add(items: list[dict], item: dict) -> None:
         if not any(x.get("id") == item.get("id") and x.get("title") == item.get("title") for x in items):
@@ -454,6 +454,22 @@ def main() -> int:
         add(slot(a["by"])["amends"], {"title": by_id[a["target"]]["title"], "id": a["target"]})
         if slot(a["by"])["status"] == "in force":
             slot(a["by"])["status"] = "amending Act"
+    # The Act that waits on a commencement order is not law yet either. Its
+    # predecessor was marked "repeal pending" above, but the new Act itself
+    # had no entry, so nothing told the model; on 5 Oct 2026 an answer led
+    # with the uncommenced Immigration Control Act, 2026 before caveating.
+    for d in scan:
+        if d["document_type"] != "act" or not deferred.get(d["id"]):
+            continue
+        if (doc_year(d) or 0) < PENDING_FROM_YEAR or "(amendment)" in d["title"].lower():
+            continue
+        e = slot(d["id"])
+        if e["status"] != "in force":
+            continue    # an amending Act, or a later Act already repealed it
+        e["status"] = "commencement pending"
+        for r in repeals:
+            if r["by"] == d["id"] and r.get("target") and not r.get("partial"):
+                add(e["will_repeal"], {"title": by_id[r["target"]]["title"], "id": r["target"]})
     # A bill whose Act is now in the library has passed. Left alone it would be
     # announced as "not yet law", which is the same error in the other
     # direction.
@@ -508,9 +524,36 @@ def main() -> int:
     losses = []
     if OUT.exists():
         previous = json.loads(OUT.read_text()).get("documents", {})
+        # A repeal read from a document that has since left the library is
+        # still a repeal. Between 21 Sep and 6 Oct 2026 the Dairy Produce
+        # Marketing and Levy (Repeal) Act 2010 and the Traditional Beer
+        # (Repeal) Act 2011 were deleted while the Acts they repealed stayed,
+        # and a rebuild would have turned both dead Acts back into law.
+        carried = []
         for doc_id, old in previous.items():
+            if old.get("status") != "repealed" or doc_id not in by_id:
+                continue
+            if (entry.get(doc_id) or {}).get("status") == "repealed":
+                continue
+            refs = old.get("repealed_by") or []
+            if refs and all(r.get("id") and r["id"] not in by_id for r in refs):
+                t = slot(doc_id)
+                t["status"] = "repealed"
+                for r in refs:
+                    add(t["repealed_by"], {"title": r.get("title", ""), "id": None,
+                                           "evidence": ("carried forward: the repealing document has left "
+                                                        "the library; " + (r.get("evidence") or ""))[:160]})
+                carried.append(old.get("title") or doc_id)
+        if carried:
+            print(f"\nREPEALS CARRIED FORWARD (repealer no longer in the library): {len(carried)}")
+            for title in carried:
+                print(f"  {title[:70]}")
+        for doc_id, old in previous.items():
+            if doc_id not in by_id:
+                continue    # the document itself left the library: nothing to protect
             new_status = (entry.get(doc_id) or {}).get("status")
-            if old.get("status") in ("repealed", "repeal pending") and new_status not in ("repealed", "repeal pending"):
+            if old.get("status") in ("repealed", "repeal pending", "commencement pending") \
+                    and new_status not in ("repealed", "repeal pending", "commencement pending"):
                 losses.append((old.get("title") or doc_id, old["status"], new_status))
             elif old.get("status") == "enacted" and new_status != "enacted":
                 losses.append((old.get("title") or doc_id, old["status"], new_status))

@@ -583,8 +583,11 @@ def get_law_map():
         amended = e.get("amended_by") or []
         if status == "in force" and not amended:
             continue
-        # A pending repeal names the Act that will do it, in the same fields.
-        by = e.get("repealed_by") or [] if status != "repeal pending" else e.get("repeal_pending_by") or []
+        # A pending repeal names the Act that will do it, in the same fields;
+        # an Act awaiting commencement names the Acts it will replace.
+        by = (e.get("repeal_pending_by") or [] if status == "repeal pending"
+              else e.get("will_repeal") or [] if status == "commencement pending"
+              else e.get("repealed_by") or [])
         out[doc_id] = {
             "status": status,
             # "Urban and Regional Planning Act, 2015", not the parsed

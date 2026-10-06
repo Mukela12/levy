@@ -242,15 +242,43 @@ async def _search_corpus(
     # (Cap. 464, dead since 2002) is 1,755 chunks and took all six for a
     # driving-licence question. Live law goes first; at most two repealed
     # matches stay, so the model still sees the warning and the old wording.
-    live = [c for c in candidates if not law_map.is_repealed(c.get("document_id"))]
-    dead = [c for c in candidates if law_map.is_repealed(c.get("document_id"))]
+    # A repealed or replaced SECTION of a live Act is dead law too, and was
+    # ranked like live law: on 5 Oct 2026 the source panel still offered
+    # section 24 of the Immigration and Deportation Act 2010, repealed in
+    # 2016, a week after an answer built on it was caught.
+    def _dead(c: dict) -> bool:
+        return law_map.is_repealed(c.get("document_id")) or law_map.is_dead_section(
+            c.get("document_id"), (c.get("metadata") or {}).get("section_number"))
+
+    live = [c for c in candidates if not _dead(c)]
+    dead = [c for c in candidates if _dead(c)]
     keep_dead = min(len(dead), 2 if live else top_k)
-    chunks = live[: top_k - keep_dead] + dead[:keep_dead]
-    chunks += dead[keep_dead : keep_dead + top_k - len(chunks)]
+    # An Act passed but not in force can fill every slot just as a dead one
+    # can: asked which law governs a work permit, all six matches were the
+    # uncommenced Immigration Control Act, 2026, and the 2010 Act that
+    # governs sat 39th of 43 candidates. Keep up to two slots for the law
+    # actually in force; a question about the new Act still gets the rest.
+    slots = top_k - keep_dead
+    in_force = sum(1 for c in live if not law_map.is_uncommenced(c.get("document_id")))
+    pending_cap = slots - min(2, in_force)
+    picked_live, n_pending = [], 0
+    for c in live:
+        if len(picked_live) == slots:
+            break
+        if law_map.is_uncommenced(c.get("document_id")):
+            if n_pending >= pending_cap:
+                continue
+            n_pending += 1
+        picked_live.append(c)
+    picked_dead = dead[: top_k - len(picked_live)]
     # Fused results are already in their fused order; re-sorting them by
     # cosine would undo the fusion and hand the ranking back to the vectors.
+    # Otherwise sort within each group: one sort over both put a strong
+    # repealed match back in front of the live law it was moved behind.
     if mode != "fused":
-        chunks.sort(key=lambda c: c.get("similarity", 0.0), reverse=True)
+        picked_live.sort(key=lambda c: c.get("similarity", 0.0), reverse=True)
+        picked_dead.sort(key=lambda c: c.get("similarity", 0.0), reverse=True)
+    chunks = picked_live + picked_dead
 
     results = []
     db_sources = []
@@ -308,13 +336,19 @@ async def _search_corpus(
         # said "still in force" for the Immigration and Deportation Act 2010
         # while section 24 of it had been repealed since 2016.
         result["section_warning"] = (
-            "Some matches are SECTIONS THAT HAVE BEEN REPEALED even though their Act is in force "
-            "(see each match's section_status). Do not quote them as current law."
+            "Some matches are SECTIONS THAT HAVE BEEN REPEALED OR REPLACED even though their Act is in "
+            "force (see each match's section_status). Do not quote them as current law."
+        )
+    if law_map.has_uncommenced(results):
+        result["commencement_warning"] = (
+            "Some matches are from Acts PASSED BUT NOT SHOWN TO BE IN FORCE (see each match's status). "
+            "Lead with the law in force; describe these as passed and awaiting a commencement order."
         )
     # Judge the miss on live law only. A strong match to a dead Act means the
     # Act in force still has to be found, which is what a miss sends the model
     # to do.
-    top = max((r["similarity"] for r in results if not law_map.is_repealed(r["document_id"])), default=0.0)
+    top = max((r["similarity"] for r in results if not law_map.is_repealed(r["document_id"])
+               and not law_map.is_dead_section(r["document_id"], r["section"])), default=0.0)
     if not results or top < 0.55:
         # The library is a cache. A miss is a signal to go to the source, not
         # an invitation to answer from memory.

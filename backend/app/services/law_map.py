@@ -63,6 +63,14 @@ def status_note(document_id: str | None) -> str | None:
                 f"The library does not record the required commencement order; that is not evidence "
                 f"that no order exists or that either Act is currently in force. Verify the official "
                 f"commencement instrument and relevant date before relying on either Act.{tail}")
+    if status == "commencement pending":
+        old_acts = _titles(e.get("will_repeal") or [], 3)
+        tail = (f" Until it commences, {old_acts} remains the law, and that is what to answer from."
+                if old_acts else " Until it commences, answer from the law currently in force.")
+        return (f"NOT SHOWN TO BE IN FORCE: this Act has been passed, but it starts on a date appointed "
+                f"by statutory instrument and the library records no commencement order. Do not present "
+                f"it as current law or lead with it; describe it as passed but not yet shown to be in "
+                f"force, and say the Gazette should be checked for a commencement order.{tail}")
     if status == "bill, not yet law":
         return "BILL before Parliament, not yet law."
     if status == "enacted":
@@ -83,15 +91,27 @@ def status_note(document_id: str | None) -> str | None:
             + ". Check the amendments before quoting a section as it stands.") if bits else None
 
 
+# What the reader's badge says, keyed by law-map status. "repeal pending" is
+# the old Act whose replacement awaits commencement: still the law.
+_LAW_STATUS = {"repealed": "repealed", "repeal pending": "repeal pending",
+               "commencement pending": "not in force", "bill, not yet law": "bill"}
+
+
 def annotate(rows: list[dict], key: str = "document_id") -> list[dict]:
-    """Add `status` (the Act) and `section_status` (the section) lines. Edits rows in place."""
+    """Add `status` (the Act) and `section_status` (the section) lines for the
+    model, and `law_status` / `section_state` for the reader's badges. Edits
+    rows in place."""
     for r in rows:
         note = status_note(r.get(key))
         if note:
             r["status"] = note
+        law = _LAW_STATUS.get(entry(r.get(key)).get("status") or "")
+        if law:
+            r["law_status"] = law
         sec = section_note(r.get(key), r.get("section"))
         if sec:
             r["section_status"] = sec
+            r["section_state"] = (section_state(r.get(key), r.get("section")) or {}).get("current")
     return rows
 
 
@@ -157,9 +177,22 @@ def section_note(document_id: str | None, section: str | int | None) -> str | No
     return None
 
 
+def is_dead_section(document_id: str | None, section: str | int | None) -> bool:
+    """The section's own words are no longer law: repealed, or replaced by
+    new wording that lives in the amending Act."""
+    return (section_state(document_id, section) or {}).get("current") in ("repealed", "replaced")
+
+
+def is_uncommenced(document_id: str | None) -> bool:
+    return (_entries().get(document_id or "") or {}).get("status") == "commencement pending"
+
+
+def has_uncommenced(rows: list[dict], key: str = "document_id") -> bool:
+    return any(is_uncommenced(r.get(key)) for r in rows)
+
+
 def has_dead_section(rows: list[dict]) -> bool:
-    return any(str(r.get("section_status") or "").startswith("SECTION") and "IS REPEALED" in r["section_status"]
-               for r in rows)
+    return any(r.get("section_state") in ("repealed", "replaced") for r in rows)
 
 
 def provision_report(document_id: str, section: str | int | None = None) -> dict:
@@ -286,6 +319,42 @@ def repealed_digest() -> str:
             yrs = [y for y in (re.search(r"\b((?:19|20)\d{2})\b", b) for b in same) if y]
             name = f"{name} (the Act before {yrs[0].group(1)})" if yrs else f"{name} (the earlier Act)"
         lines.setdefault(name.lower(), f"- {name}: repealed by {' and '.join(by) or 'a later Act'}")
+    return "\n".join(sorted(lines.values(), key=str.lower))
+
+
+def distinct_names(refs: list[dict]) -> list[str]:
+    """Readable names for law-map refs, each Act once.
+
+    The library can hold two editions of one Act (the Immigration and
+    Deportation Act as consolidated, and as re-enacted in 2010); name it
+    once, by the dated edition.
+    """
+    by_base: dict[str, str] = {}
+    for o in sorted({ref_name(x) for x in refs if x.get("title")}):
+        b = _base(o)
+        if o and (b not in by_base or re.search(r"\b(19|20)\d{2}\b", o)):
+            by_base[b] = o
+    return sorted(by_base.values())
+
+
+def pending_digest() -> str:
+    """One line per library Act passed but not shown to be in force.
+
+    A model trained on 2025-2026 news knows these Acts were passed and will
+    cite them as current law from memory, exactly as it did with repealed
+    ones, so the list goes into the system prompt beside the repealed list.
+    """
+    lines: dict[str, str] = {}
+    for e in _entries().values():
+        if e.get("status") != "commencement pending" or e.get("is_global") is False:
+            continue
+        name = display_name(e.get("title") or "", e.get("year"))
+        if len(name) < 6:
+            continue
+        old_acts = distinct_names(e.get("will_repeal") or [])
+        verb = "applies" if len(old_acts) == 1 else "apply"
+        lines.setdefault(name.lower(), f"- {name}" + (f": {' and '.join(old_acts)} still {verb} until it commences"
+                                                       if old_acts else ""))
     return "\n".join(sorted(lines.values(), key=str.lower))
 
 

@@ -337,6 +337,14 @@ amendments. Read it before you quote.
   as current law, whether or not a search returned it; if you name one, say
   it was repealed and by what:
 {REPEALED_ACTS}
+- PASSED IS NOT THE SAME AS IN FORCE. A `status` line saying NOT SHOWN TO
+  BE IN FORCE marks an Act that has been passed but starts on a date set by
+  statutory instrument, with no commencement order in the library. Answer
+  from the law in force (the status names it) and lead with that; mention
+  the new Act as passed but not yet shown to be in force, and say to check
+  the Gazette for a commencement order. The library records these Acts in
+  that state, whether or not a search returned them:
+{PENDING_ACTS}
 
 NEVER DESCRIBE WHAT YOU HAVE NOT READ.
 - A case's facts, holding, court, year or citation may be stated only if a
@@ -1023,6 +1031,9 @@ from . import law_map as _law_map  # noqa: E402
 AGENT_SYSTEM_SUFFIX = AGENT_SYSTEM_SUFFIX.replace(
     "{REPEALED_ACTS}",
     "\n".join("    " + line for line in _law_map.repealed_digest().splitlines()) or "    (none recorded)",
+).replace(
+    "{PENDING_ACTS}",
+    "\n".join("    " + line for line in _law_map.pending_digest().splitlines()) or "    (none recorded)",
 )
 
 
