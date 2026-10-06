@@ -55,6 +55,44 @@ export interface CitationVerdict {
    * Immigration and Deportation Act 2010, repealed in 2016).
    */
   section_status?: DeadSection[]
+  /** Judgments in the library that cite this case. */
+  cited_by?: number
+  /** A later reversal, departure or per incuriam holding, each confirmed by hand. */
+  treatment?: CaseTreatment[]
+  /** The answer already says the case was reversed or departed from. */
+  treatment_acknowledged?: boolean
+  /** Not held by Levy, but cited by judgments it holds: the case is real. */
+  known?: KnownCase
+  /** Quotations the answer attributes to this authority, compared with its text. */
+  quotes?: QuoteCheck[]
+}
+
+export interface CaseTreatment {
+  treatment: 'reversed' | 'departed from' | 'held per incuriam' | string
+  judgment?: string | null
+  court?: string | null
+  year?: number | null
+  extent?: string | null
+  document_id?: string
+}
+
+export interface KnownCase {
+  name: string
+  cited_by: number
+  /** The report citation the library's judgments use, e.g. "(1982) ZR 172". */
+  citation?: string | null
+  /** The answer's year differs from how those judgments cite the case. */
+  year_conflict?: boolean
+}
+
+export interface QuoteCheck {
+  status: 'verbatim' | 'close' | 'elsewhere' | 'amended' | 'not_found'
+  section?: string
+  /** For "elsewhere": the section that does contain the words. */
+  found_in?: string
+  /** For "amended": the amending Act that contains the words. */
+  amending_act?: string
+  quote: string
 }
 
 export interface DeadSection {

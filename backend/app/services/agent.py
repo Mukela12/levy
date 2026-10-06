@@ -17,6 +17,7 @@ Event shapes emitted to the client:
 
 from __future__ import annotations
 
+import asyncio
 import json
 import re
 import time
@@ -538,6 +539,15 @@ cannot read it, so never say you will fetch it or imply you have its text.
 Do not narrate the plumbing either: a reader does not need to hear that a
 site blocks automated access. Say the judgment is not in the library, give
 the citation and the link, and move on.
+
+CASES ARE CHECKED AGAINST HOW LATER COURTS USE THEM. Before you rely on a
+case for a proposition, and always for a case you know from memory, call
+`case_history`. Use the citation the library's judgments give, check your
+proposition against the sentences in which courts apply the case, and if it
+was reversed, departed from or held per incuriam, say so and state the
+current position. A case no judgment cites and the library does not hold is
+not authority you can describe. When you quote a section or a judgment, quote
+the words the tool returned; quotations are checked against the source.
 
 When the user describes a real legal situation in Zambia and asks for
 help bringing a case, filing an application, or seeking relief from a
@@ -1770,7 +1780,8 @@ async def run_agent(
             getattr(b, "text", "") for b in final_message.content
             if getattr(b, "type", None) == "text"
         ) if final_message is not None else "")
-        _audit = audit_answer(_answer_text)
+        # Off the event loop: the quote check reads section text from the database.
+        _audit = await asyncio.to_thread(audit_answer, _answer_text)
     except Exception:  # noqa: BLE001 — verification must never break an answer
         _audit = []
     if _audit:

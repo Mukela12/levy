@@ -2522,6 +2522,29 @@ def build_tool_registry(
             "entitlement_breakdown": breakdown,
         }
 
+    async def _case_history(case: str, citation: str | None = None):
+        """How the judgments in the library cite and treat a case (services/citator.py)."""
+        from . import citator
+        parts = re.split(r"\s+vs?\.?\s+", case or "", maxsplit=1)
+        if len(parts) != 2:
+            return {"result": {"error": "Give the case as 'Party v Party', e.g. 'Wilson Masauso Zulu v Avondale Housing Project'."}}
+        hit = citator.lookup(parts[0], parts[1], citation or "")
+        if not hit:
+            return {"result": {"found": False, "note": (
+                "No judgment in Levy's library cites a case by that name"
+                + (" with that year" if citation else "") + ". That does not prove it does not exist, "
+                "but do not rely on it, or describe its holding, without a source you have read.")}}
+        record = citator.describe(hit["case"], limit=6)
+        if hit["year_conflict"]:
+            record["year_conflict"] = (f"The judgments in the library cite this case as "
+                                       f"{', '.join(record['citations'][:2]) or record['years']}, not with the year given.")
+        record["found"] = True
+        record["how_to_use"] = (
+            "cited_in shows how courts in the library describe and apply the case: check your proposition "
+            "against it. negative_treatment entries were each read and confirmed in the later judgment; state "
+            "them and the current position. If document_id is set, Levy holds the judgment itself.")
+        return {"result": record, "db_sources": [], "web_sources": []}
+
     tools: dict[str, ToolDefinition] = {
         "pdf_extract_pages": ToolDefinition(
             name="pdf_extract_pages",
@@ -3822,6 +3845,27 @@ def build_tool_registry(
                 "required": ["act"],
             },
             handler=_check_provision_status,
+        ),
+        "case_history": ToolDefinition(
+            name="case_history",
+            description=(
+                "How the Zambian judgments in Levy's library cite and treat a case: the report citation "
+                "they use, how many cite it, the sentences in which courts describe and apply it, and any "
+                "confirmed later reversal, departure or per incuriam holding. Works for leading cases Levy "
+                "does not hold (e.g. Wilson Masauso Zulu v Avondale Housing Project, cited by 129 "
+                "judgments). Call it before relying on a case for a proposition, above all a case you "
+                "know from memory rather than from a tool, and when the user asks whether a case is "
+                "still good law."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "case": {"type": "string", "description": "The case name as 'Party v Party'."},
+                    "citation": {"type": "string", "description": "The citation if you have one, e.g. '(1982) ZR 172' or 'Appeal No. 6 of 2022'."},
+                },
+                "required": ["case"],
+            },
+            handler=_case_history,
         ),
         "search_case_law": ToolDefinition(
             name="search_case_law",

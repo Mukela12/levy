@@ -288,8 +288,8 @@ def _stray_number(party: str) -> bool:
     return False
 
 
-def extract_citations(text: str) -> list[dict]:
-    """Pull the auditable legal citations out of an answer."""
+def extract_citations(text: str, limit: int | None = 20) -> list[dict]:
+    """Pull the auditable legal citations out of an answer (or, uncapped, a judgment)."""
     text = _clean(text)
     out: list[dict] = []
     seen: set[str] = set()
@@ -334,7 +334,7 @@ def extract_citations(text: str) -> list[dict]:
         foreign = bool(_FOREIGN_CITE.search(near)) or (
             bool(ym) and int(ym.group(1)) < 1964 and not _ZM_CITE.search(near + " " + a + " " + b))
         out.append({"kind": "case", "text": display, "a": a, "b": b, "cite": cite,
-                    "foreign": foreign})
+                    "foreign": foreign, "pos": pm.start(), "end": after})
 
     candidates = []
     for m in _ACT.finditer(text):
@@ -391,7 +391,7 @@ def extract_citations(text: str) -> list[dict]:
         foreign = name.startswith(("English ", "UK ", "United Kingdom ", "British ")) or "(UK)" in display
         out.append({"kind": "statute", "text": display, "name": name, "foreign": foreign})
 
-    return out[:20]
+    return out[:limit] if limit else out
 
 
 # ── verification ────────────────────────────────────────────────────────────
@@ -766,19 +766,41 @@ def _dead_sections(answer: str, cited: str, row: dict) -> list[dict]:
     return out
 
 
+# The answer itself says the case was reversed or departed from.
+_NEG_ACK = re.compile(r"revers|overrul|depart|per incuriam|bad law|no longer (?:good )?law|not (?:be )?followed", re.I)
+
+
+def _case_treatment(answer: str, c: dict, case: dict) -> dict:
+    """What the citator knows about a cited case, as verdict fields."""
+    from . import citator
+    out: dict = {"cited_by": case.get("n", 0)}
+    neg = citator.describe(case, limit=0)["negative_treatment"]
+    if neg:
+        out["treatment"] = [{k: n.get(k) for k in ("treatment", "judgment", "court", "year", "extent", "document_id")}
+                            for n in neg]
+        near = answer[max(0, c.get("pos", 0) - 300):c.get("end", c.get("pos", 0)) + 400]
+        if _NEG_ACK.search(near):
+            out["treatment_acknowledged"] = True
+    return out
+
+
 def audit_answer(text: str) -> list[dict]:
     """Return per-citation verdicts for an answer. Never raises."""
     try:
+        from . import citator
+        from .quote_check import check_quotes
         cites = extract_citations(text or "")
         if not cites:
             return []
+        clean = _clean(text or "")
         index = _load_index()
-        out = []
+        out, rows = [], []
         for c in cites:
             foreign = bool(c.get("foreign"))
             row = None
             if not foreign:
                 row = _match_case(c, index) if c["kind"] == "case" else _match_statute(c, index)
+            rows.append(row)
             if row:
                 verdict = {"text": c["text"], "kind": c["kind"], "status": "verified",
                            "document_id": row["id"], "title": row.get("title")}
@@ -795,12 +817,42 @@ def audit_answer(text: str) -> list[dict]:
                     dead = _dead_sections(text, c["text"], row)
                     if dead:
                         verdict["section_status"] = dead
+                else:
+                    case = citator.for_document(row["id"])
+                    if case:
+                        verdict.update(_case_treatment(clean, c, case))
                 out.append(verdict)
             else:
                 verdict = {"text": c["text"], "kind": c["kind"], "status": "not_found"}
                 if foreign:
                     verdict["foreign"] = True
+                if c["kind"] == "case":
+                    # Not held, but perhaps cited by judgments Levy does hold:
+                    # then it is real, and they say how it is cited and used.
+                    hit = citator.lookup(c["a"], c["b"], c.get("cite") or "")
+                    if hit:
+                        case = hit["case"]
+                        known = {"name": case["name"], "cited_by": case.get("n", 0),
+                                 "citation": (case.get("cites") or [None])[0]}
+                        if hit["year_conflict"]:
+                            known["year_conflict"] = True
+                        verdict["known"] = known
+                        verdict.update({k: v for k, v in _case_treatment(clean, c, case).items() if k != "cited_by"})
                 out.append(verdict)
+        # Quotations checked against the section or judgment they are attributed
+        # to. Every citation in the answer takes part in attribution, so a
+        # quotation from the 21st authority is not pinned on an earlier one.
+        everything = extract_citations(text or "", limit=None)
+        keys = {(c["kind"], c["text"]): i for i, c in enumerate(cites)}
+        all_rows = [rows[keys[(c["kind"], c["text"])]] if (c["kind"], c["text"]) in keys else None for c in everything]
+        # An Act matched despite a different year ("Cyber Crimes Act, 2025" to
+        # the 2021 Act) is not the text the answer quoted.
+        all_rows = [None if (r and c["kind"] == "statute" and _cited_year(c) and _doc_year(r)
+                             and _cited_year(c) != _doc_year(r)) else r for c, r in zip(everything, all_rows)]
+        for j, quotes in check_quotes(clean, everything, all_rows).items():
+            i = keys.get((everything[j]["kind"], everything[j]["text"]))
+            if i is not None:
+                out[i].setdefault("quotes", []).extend(quotes)
         return out
     except Exception:  # noqa: BLE001 — the audit must never break an answer
         return []

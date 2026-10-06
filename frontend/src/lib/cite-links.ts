@@ -23,7 +23,9 @@ import type { MessageBlock } from '@/components/chat/chat-message'
  * live Act can carry a dead section (section 24 of the Immigration and
  * Deportation Act 2010, repealed in 2016).
  */
-export type CiteStatus = 'repealed' | 'not-in-force' | 'section-repealed' | 'section-replaced' | 'section-amended'
+export type CiteStatus =
+  | 'repealed' | 'not-in-force' | 'section-repealed' | 'section-replaced' | 'section-amended'
+  | 'quote-not-found' | 'quote-elsewhere' | 'case-reversed' | 'case-departed' | 'case-per-incuriam'
 
 export interface CiteSource {
   documentId: string
@@ -37,13 +39,23 @@ export interface CiteSource {
   law?: 'repealed' | 'not-in-force'
   /** Section key to what the section map records for it. */
   sectionStates: Map<string, 'repealed' | 'replaced' | 'amended'>
+  /** Section key to a quotation the answer attributes to it that the text does not bear out. */
+  quoteStates: Map<string, 'quote-not-found' | 'quote-elsewhere'>
+  /** A judgment later reversed, departed from or held per incuriam, unless the answer says so. */
+  caseFlag?: 'case-reversed' | 'case-departed' | 'case-per-incuriam'
 }
 
 export function citeStatus(source: CiteSource, section?: string): CiteStatus | undefined {
   const key = section ? sectionKey(section) : undefined
   const state = key ? source.sectionStates.get(key) : undefined
   if (state) return `section-${state}` as CiteStatus
-  return source.law
+  const quote = key ? source.quoteStates.get(key) : undefined
+  if (quote) return quote
+  return source.law ?? source.caseFlag
+}
+
+const CASE_FLAG: Record<string, CiteSource['caseFlag']> = {
+  reversed: 'case-reversed', 'departed from': 'case-departed', 'held per incuriam': 'case-per-incuriam',
 }
 
 function noteLaw(source: CiteSource, status?: string) {
@@ -91,7 +103,7 @@ export function buildCiteIndex(input: {
     if (!documentId || !title) return
     let source = byId.get(documentId)
     if (!source) {
-      source = { documentId, title, keys: [], sections: new Map(), sectionStates: new Map() }
+      source = { documentId, title, keys: [], sections: new Map(), sectionStates: new Map(), quoteStates: new Map() }
       byId.set(documentId, source)
     }
     source.keys = [...new Set([...source.keys, ...nameKeys(title)])].sort((a, b) => b.length - a.length)
@@ -121,6 +133,14 @@ export function buildCiteIndex(input: {
       if (source) {
         noteLaw(source, v.law_status)
         for (const d of v.section_status || []) noteSection(source, d.section, d.status)
+        for (const q of v.quotes || []) {
+          const key = sectionKey(q.section || '')
+          if (key && (q.status === 'not_found' || q.status === 'elsewhere')) {
+            source.quoteStates.set(key, q.status === 'not_found' ? 'quote-not-found' : 'quote-elsewhere')
+          }
+        }
+        const t = v.treatment?.[0]
+        if (t && !v.treatment_acknowledged) source.caseFlag = CASE_FLAG[t.treatment] ?? 'case-departed'
       }
     }
   }

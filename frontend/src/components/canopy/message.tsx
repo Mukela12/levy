@@ -43,6 +43,11 @@ const CITE_FLAG: Record<CiteStatus, { label: string; detail: string; tone: 'repe
   'section-repealed': { label: 'Repealed', detail: 'This section has been repealed, although its Act is in force.', tone: 'repealed' },
   'section-replaced': { label: 'Replaced', detail: 'This section was repealed and replaced. The current wording is in the amending Act.', tone: 'repealed' },
   'section-amended': { label: 'Amended', detail: 'This section has been amended. The wording quoted may be out of date.', tone: 'pending' },
+  'quote-not-found': { label: 'Quote not found', detail: 'The words the answer quotes are not in the library\u2019s text of this section. Read the section before relying on the quotation.', tone: 'repealed' },
+  'quote-elsewhere': { label: 'Other section', detail: 'The words the answer quotes are in a neighbouring section, not this one. Open the sources to see which.', tone: 'pending' },
+  'case-reversed': { label: 'Reversed', detail: 'A higher court later reversed this decision. Open the sources for the later judgment.', tone: 'repealed' },
+  'case-departed': { label: 'Departed from', detail: 'The court later departed from this decision, at least in part. Open the sources for the extent.', tone: 'repealed' },
+  'case-per-incuriam': { label: 'Per incuriam', detail: 'A later judgment held this decision was made per incuriam. Open the sources for the extent.', tone: 'repealed' },
 }
 
 /** A citation the prose names, rewritten by rehypeCiteLinks into `cite:<id>`. */
@@ -74,7 +79,7 @@ function kindLabel(toolCalls: ToolCallView[] | undefined): string {
   if ([...names].some((n) => n.startsWith('draft_') || n === 'pdf_generate' || n === 'fill_form')) return 'Working draft'
   if (names.has('calculate_entitlements') || names.has('calculate_payroll')) return 'Calculation'
   if (names.has('generate_quiz') || names.has('make_cheat_sheet')) return 'Study'
-  if (names.has('search_case_law')) return 'Research with authorities'
+  if (names.has('search_case_law') || names.has('case_history')) return 'Research with authorities'
   if (names.size) return 'Research'
   return 'Answer'
 }

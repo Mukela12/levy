@@ -1172,3 +1172,7 @@
 .pay-more ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; line-height: 1.45; }
 .pay-disclaimer { margin: 0; font-size: 11px; color: var(--cp-muted, #9a9aa0); line-height: 1.45; }
 .pay-flag .pay-basis { color: inherit; opacity: .75; }
+
+/* A case Levy does not hold that judgments in its library cite: real, not verified here. */
+.cp-citation-badge.is-known { color: var(--cp-primary); background: var(--cp-tint); border-color: color-mix(in srgb, var(--cp-primary) 22%, transparent); }
+.cp-source-known { display: inline-flex; align-items: center; gap: 6px; color: var(--cp-primary); }

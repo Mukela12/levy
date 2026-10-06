@@ -22,10 +22,10 @@
  *    answer did not cite is still labelled where the reader sees it (the
  *    panel offered a repealed section unmarked on 5 Oct 2026).
  */
-import type { ChunkUsed, CitationVerdict, DeadSection, WebSource } from '@/lib/api'
+import type { CaseTreatment, ChunkUsed, CitationVerdict, DeadSection, KnownCase, QuoteCheck, WebSource } from '@/lib/api'
 import type { MessageBlock } from '@/components/chat/chat-message'
 
-export type SourceVerification = 'verified' | 'review' | 'noted' | 'none'
+export type SourceVerification = 'verified' | 'known' | 'review' | 'noted' | 'none'
 
 export interface SourceRow {
   id: string
@@ -50,6 +50,14 @@ export interface SourceRow {
   passageSections: { section: string; state: 'repealed' | 'replaced' | 'amended' }[]
   /** Cited sections of this Act that are no longer law, one entry per section. */
   deadSections: DeadSection[]
+  /** Quotations whose words are not in the cited section (or are in another one). */
+  quoteIssues: QuoteCheck[]
+  /** Confirmed later reversal or departure of a cited case. */
+  treatment: CaseTreatment[]
+  /** The answer itself says the case was reversed or departed from. */
+  treatmentNamed: boolean
+  /** A case Levy does not hold that judgments in its library cite. */
+  known?: KnownCase
   verification: SourceVerification
 }
 
@@ -76,6 +84,8 @@ export interface SourceModel {
   rows: SourceRow[]
   state: 'complete' | 'unavailable'
   verified: number
+  /** Cases Levy does not hold that judgments in its library cite. */
+  known: number
   review: number
   noted: number
 }
@@ -137,6 +147,9 @@ export function sourceModel(input: {
         stillApplies: [],
         passageSections: [],
         deadSections: [],
+        quoteIssues: [],
+        treatment: [],
+        treatmentNamed: false,
         verification: 'none',
       }
       docs.set(key, row)
@@ -168,6 +181,9 @@ export function sourceModel(input: {
         stillApplies: [],
         passageSections: [],
         deadSections: [],
+        quoteIssues: [],
+        treatment: [],
+        treatmentNamed: false,
         verification: 'none',
       }
       rows.push(row)
@@ -206,19 +222,33 @@ export function sourceModel(input: {
       if (!sections.has(sec) || sections.get(sec) === 'amended') sections.set(sec, st)
     }
     row.passageSections = Array.from(sections, ([section, state]) => ({ section, state }))
+    // A quotation the cited section does not contain, a case later reversed:
+    // the authority exists, but the answer's use of it needs checking.
+    row.quoteIssues = row.verdicts.flatMap((c) => (c.quotes || []).filter((q) => q.status === 'not_found' || q.status === 'elsewhere'))
+    const treatments = new Map<string, CaseTreatment>()
+    for (const c of row.verdicts) for (const t of c.treatment || []) treatments.set(`${t.treatment}|${t.judgment}`, t)
+    row.treatment = Array.from(treatments.values())
+    row.treatmentNamed = row.verdicts.some((c) => c.treatment_acknowledged === true)
+    row.known = row.verdicts.find((c) => c.known)?.known
     // The Act is in the library and in force, but the section the answer
     // relies on is not. That is not "verified".
     const unnamedDeadSection = row.deadSections.some((d) => !d.acknowledged)
+    const unmatched = row.verdicts.some((c) => c.status !== 'verified' || !c.document_id)
+    // Not held, but cited under the same citation by judgments Levy holds.
+    const knownOnly = unmatched && row.verdicts.every((c) => (c.status === 'verified' && c.document_id) || (c.known && !c.known.year_conflict))
+    const misused = row.quoteIssues.length > 0 || (row.treatment.length > 0 && !row.treatmentNamed)
     row.verification =
       state !== 'complete'
         ? 'none'
-        : row.verdicts.some((c) => c.status !== 'verified' || !c.document_id) || row.conflict || row.foreign || unnamedDeadSection
+        : (unmatched && !knownOnly) || row.conflict || row.foreign || unnamedDeadSection || misused
           ? 'review'
           : dead
             ? repealedNamed ? 'noted' : 'review'
-            : row.verdicts.length
-              ? 'verified'
-              : 'none'
+            : knownOnly
+              ? 'known'
+              : row.verdicts.length
+                ? 'verified'
+                : 'none'
   }
 
   const urls = new Set<string>()
@@ -242,6 +272,9 @@ export function sourceModel(input: {
       stillApplies: [],
       passageSections: [],
       deadSections: [],
+      quoteIssues: [],
+      treatment: [],
+      treatmentNamed: false,
       verification: 'none',
     })
   })
@@ -250,6 +283,7 @@ export function sourceModel(input: {
     rows,
     state,
     verified: rows.filter((r) => r.verification === 'verified').length,
+    known: rows.filter((r) => r.verification === 'known').length,
     review: rows.filter((r) => r.verification === 'review').length,
     noted: rows.filter((r) => r.verification === 'noted').length,
   }

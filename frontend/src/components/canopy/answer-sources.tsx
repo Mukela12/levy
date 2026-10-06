@@ -45,8 +45,14 @@ function deadSectionText(d: SourceRow['deadSections'][number]): string {
     : `Section ${d.section} replaced · the current wording is in the ${d.by}`
 }
 
+const TREATMENT_LABEL: Record<string, string> = { reversed: 'Reversed', 'departed from': 'Departed from', 'held per incuriam': 'Per incuriam' }
+
 function badgeLabel(row: SourceRow): string {
   if (row.verification === 'verified') return 'Verified'
+  if (row.verification === 'known') return `Cited in ${row.known?.cited_by ?? 0} judgments`
+  if (row.quoteIssues.length) return 'Check quotation'
+  if (row.treatment.length && !row.treatmentNamed) return TREATMENT_LABEL[row.treatment[0].treatment] || 'Later treatment'
+  if (row.known?.year_conflict) return 'Check citation'
   if (row.lawStatus === 'repealed') return 'Repealed'
   if (row.lawStatus === 'not in force') return 'Not in force yet'
   if (unnamedDead(row).length) return deadLabel(row)
@@ -83,8 +89,33 @@ function passageLawText(row: SourceRow): string | null {
 
 const SECTION_STATE_TEXT = { repealed: 'repealed', replaced: 'repealed and replaced', amended: 'amended since this wording' } as const
 
+const COURT_NAME: Record<string, string> = { SCZ: 'Supreme Court', CCZ: 'Constitutional Court', CAZ: 'Court of Appeal', HC: 'High Court' }
+
+/** "the Court of Appeal in Kingfred Phiri v Life Master Ltd (2024)" */
+function treatmentBy(t: SourceRow['treatment'][number]): string {
+  const court = COURT_NAME[t.court || ''] ? `the ${COURT_NAME[t.court || '']}` : 'a later court'
+  const name = (t.judgment || '').replace(/\s*\((?:APP|Appeal)[^)]*\)\s*$/, '')
+  return `${court}${name ? ` in ${name}` : ''}${t.year ? ` (${t.year})` : ''}`
+}
+
+/** "Court of Appeal, Kingfred Phiri v Life Master Ltd (2024)" */
+function treatmentSource(t: SourceRow['treatment'][number]): string {
+  const name = (t.judgment || '').replace(/\s*\((?:APP|Appeal)[^)]*\)\s*$/, '')
+  return [COURT_NAME[t.court || ''], name].filter(Boolean).join(', ') + (t.year ? ` (${t.year})` : '')
+}
+
+function quoteLine(q: SourceRow['quoteIssues'][number]): string {
+  return q.status === 'elsewhere'
+    ? `Quoted words are in section ${q.found_in}, not section ${q.section}`
+    : `Quoted words not found in section ${q.section ?? ''}`.trim()
+}
+
 function verdictHeading(row: SourceRow): string {
-  if (row.verification === 'verified') return 'Authority matched in the library'
+  if (row.quoteIssues.length) return row.quoteIssues.every((q) => q.status === 'elsewhere') ? 'The quotation is from another section' : 'The quoted words are not in the cited text'
+  if (row.treatment.length && !row.treatmentNamed) return `This case was later ${row.treatment[0].treatment}`
+  if (row.verification === 'verified') return row.treatment.length ? 'Authority matched · later treatment named in the answer' : 'Authority matched in the library'
+  if (row.verification === 'known') return `Not in the library · cited by ${row.known?.cited_by} judgments it holds`
+  if (row.known?.year_conflict) return 'The citation year differs from how courts cite this case'
   if (row.verification === 'noted') return row.lawStatus === 'not in force' ? 'Named in the answer as not yet in force' : 'Named in the answer as repealed'
   if (row.lawStatus === 'repealed' && !row.conflict) return 'This Act has been repealed'
   if (row.lawStatus === 'not in force' && !row.conflict) return 'This Act is not shown to be in force'
@@ -99,6 +130,24 @@ function verdictHeading(row: SourceRow): string {
 
 function verdictText(row: SourceRow): string {
   const by = theActs(row.replacedBy)
+  if (row.quoteIssues.length) {
+    const q = row.quoteIssues[0]
+    return q.status === 'elsewhere'
+      ? `The answer quotes section ${q.section} as saying “${q.quote}”. Those words are in section ${q.found_in}. Check which section the point rests on.`
+      : `The answer quotes ${q.section ? `section ${q.section}` : 'this authority'} as saying “${q.quote}”. The library’s text${q.section ? ' of that section' : ''} does not contain those words. Read the source before relying on the quotation.`
+  }
+  if (row.treatment.length) {
+    const t = row.treatment[0]
+    const said = row.treatmentNamed ? ' The answer says so.' : ' Check the answer against the later decision before relying on it.'
+    const by = treatmentBy(t)
+    return `${by.charAt(0).toUpperCase()}${by.slice(1)} ${t.treatment} this case${t.extent ? `: ${t.extent.replace(/^In so far as/, 'in so far as')}` : '.'}${said}`
+  }
+  if (row.verification === 'known') {
+    return `Levy does not hold this judgment, but ${row.known?.cited_by} judgments in its library cite it${row.known?.citation ? ` as ${row.known.citation}` : ''}. That confirms the case exists and how it is cited, not that it supports the answer.`
+  }
+  if (row.known?.year_conflict) {
+    return `Judgments in Levy’s library cite this case${row.known.citation ? ` as ${row.known.citation}` : ''}, with a different year from the answer. Check the report before relying on the citation.`
+  }
   if (row.verification === 'verified') {
     return row.lawStatus === 'repeal pending'
       ? `The library records a replacement by ${by || 'a new Act'}, but has not verified its commencement. A missing commencement order is not proof that this Act remains in force. Check the official instrument and relevant date before relying on either Act.`
@@ -146,6 +195,14 @@ function Badge({ row, onClick }: { row: SourceRow; onClick: () => void }) {
     )
   }
   const verified = row.verification === 'verified'
+  if (row.verification === 'known') {
+    return (
+      <button type="button" className="cp-citation-badge is-known" onClick={onClick} aria-label={`Not in the library, cited by ${row.known?.cited_by} judgments it holds: ${row.title}`}>
+        <Scale size={14} aria-hidden="true" />
+        <span>{badgeLabel(row)}</span>
+      </button>
+    )
+  }
   return (
     <button type="button" className={'cp-citation-badge' + (verified ? ' is-verified' : ' needs-review')} onClick={onClick} aria-label={`${verified ? 'Verified library match' : 'Review citation'}: ${row.title}`}>
       {verified ? <CitationSeal /> : <ReviewSeal />}
@@ -206,13 +263,19 @@ export function AnswerSources({ citations, webSources, blocks, onOpenPassage, on
             {model.verified} library {model.verified === 1 ? 'match' : 'matches'}
           </span>
         )}
+        {model.known > 0 && (
+          <span className="cp-source-known">
+            <Scale size={16} aria-hidden="true" />
+            {model.known} cited in held judgments
+          </span>
+        )}
         {model.review > 0 && (
           <button type="button" className="cp-source-attention" onClick={() => { setExpanded(true); setDetail(attention[0]) }}>
             <ReviewSeal size={19} />
             {model.review} to review <ArrowRight size={12} />
           </button>
         )}
-        {!model.verified && !model.review && !model.noted && (
+        {!model.verified && !model.known && !model.review && !model.noted && (
           <span>{model.state === 'complete' ? 'No citation verdicts returned' : 'No citation check recorded'}</span>
         )}
       </div>
@@ -238,6 +301,21 @@ export function AnswerSources({ citations, webSources, blocks, onOpenPassage, on
                   )}
                   {!row.lawStatus && row.passageLaw && (
                     <div className={'cp-source-law' + (row.passageLaw === 'repealed' ? ' is-repealed' : ' is-pending')}>{passageLawText(row)}</div>
+                  )}
+                  {row.quoteIssues.map((q, i) => (
+                    <div key={`q-${i}`} className="cp-source-law is-repealed">{quoteLine(q)}</div>
+                  ))}
+                  {row.treatment.map((t, i) => (
+                    <div key={`t-${i}`} className={'cp-source-law' + (row.treatmentNamed ? ' is-noted' : ' is-repealed')}>
+                      {TREATMENT_LABEL[t.treatment] || 'Later treatment'} · {treatmentSource(t)}
+                    </div>
+                  ))}
+                  {row.known && (
+                    <div className={'cp-source-law' + (row.known.year_conflict ? ' is-pending' : ' is-noted')}>
+                      {row.known.year_conflict
+                        ? `Judgments Levy holds cite it as ${row.known.citation || 'a different year'}`
+                        : `Cited in ${row.known.cited_by} judgments Levy holds${row.known.citation ? ` as ${row.known.citation}` : ''}`}
+                    </div>
                   )}
                   {row.deadSections.map((d) => (
                     <div key={d.section} className={'cp-source-law' + (d.acknowledged ? ' is-noted' : ' is-repealed')}>{deadSectionText(d)}</div>
@@ -299,7 +377,8 @@ export function AnswerSources({ citations, webSources, blocks, onOpenPassage, on
             <h3>Matched in Levy’s library.</h3>
           </div>
           <p>The badge means the authority named in the answer matched a document in the library.</p>
-          <p>It does not confirm the exact quotation or that the passage supports the answer.</p>
+          <p>Words the answer quotes from a section or a judgment are compared with the library’s text, and flagged when they are not there. A match still does not prove the passage supports the answer.</p>
+          <p>A case Levy does not hold, but which judgments in its library cite, shows how many cite it and the citation they use. A case a later court reversed or departed from is marked, once that was confirmed in the later judgment.</p>
           <p>An Act the library records as repealed is marked Repealed instead, with the Act that replaced it. An Act passed but not shown to have started is marked Not in force yet.</p>
           <p>The same labels appear next to citations in the answer: Repealed, Replaced, Amended, or Not in force yet.</p>
           <div className="cp-verify-boundary"><Info size={17} /><span>Search relevance scores and web links are separate from citation verification.</span></div>
@@ -334,7 +413,7 @@ export function AnswerSources({ citations, webSources, blocks, onOpenPassage, on
                 ))}
               </dl>
             ))}
-            <div className="cp-verify-boundary"><Info size={17} /><span>Library matching does not check subsequent treatment, exact quotations or whether a passage supports the answer. Repeal flags cover only the Acts and sections the library records as repealed.</span></div>
+            <div className="cp-verify-boundary"><Info size={17} /><span>Quotations are compared with the library’s text, and later reversals are flagged only once confirmed in the later judgment. Neither check proves a passage supports the answer, and repeal flags cover only the Acts and sections the library records as repealed.</span></div>
             {(detail.documentId || detail.passages.length > 0) && (
               <button type="button" className="cp-btn primary" style={{ marginTop: 16 }} onClick={() => { const row = detail; setDetail(null); open(row) }}>
                 Open the document <ArrowUpRight size={15} />

@@ -115,3 +115,21 @@ test('the audit adds what retrieval did not carry, and a repeal outranks an amen
 test('live law gets no pill', () => {
   assert.deepEqual(statuses('The notice period is 30 days [Employment Code Act, Section 53].'), [undefined])
 })
+
+test('a quotation the section does not bear out is flagged on that section only', () => {
+  const srcs = buildCiteIndex({
+    citations: [{ ...employment, section: '75' }],
+    blocks: [{ kind: 'citation_audit', citations: [{ kind: 'statute', status: 'verified', document_id: 'doc-emp', text: 'Employment Code Act',
+      title: 'Employment Code Act, 2019', quotes: [{ status: 'not_found', section: '75', quote: 'x' }, { status: 'close', section: '77', quote: 'y' }] }] }],
+  })
+  assert.deepEqual(statuses('[Employment Code Act, Section 75] and [s. 77]', srcs), ['quote-not-found', undefined])
+})
+
+test('a departed-from judgment carries its flag unless the answer names it', () => {
+  const zubao = { document_id: 'doc-z', act_name: 'APP No. 102 of 2022', section: '', page_start: 3, page_end: 3 }
+  const verdict = { kind: 'case', status: 'verified', document_id: 'doc-z', text: 'Zubao Harry Juma v First Quantum', title: 'APP No. 102 of 2022',
+    treatment: [{ treatment: 'departed from', judgment: 'Kingfred Phiri v Life Master Ltd', court: 'CAZ', year: 2024 }] }
+  const flag = (v) => statuses('[APP No. 102 of 2022, p. 3]', buildCiteIndex({ citations: [zubao], blocks: [{ kind: 'citation_audit', citations: [v] }] }))
+  assert.deepEqual(flag(verdict), ['case-departed'])
+  assert.deepEqual(flag({ ...verdict, treatment_acknowledged: true }), [undefined])
+})

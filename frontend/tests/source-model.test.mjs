@@ -138,3 +138,31 @@ test('a section the audit already lists is not repeated from the passages', () =
   assert.equal(row.deadSections.length, 1)
   assert.equal(row.passageSections.length, 0)
 })
+
+test('a quotation the cited section does not contain needs review', () => {
+  const value = model({ ...verdict, quotes: [{ status: 'not_found', section: '75', quote: 'overtime after 208 hours in a month' }] })
+  assert.equal(value.verified, 0)
+  assert.equal(value.review, 1)
+  assert.equal(value.rows[0].quoteIssues.length, 1)
+})
+test('a matching quotation keeps the library badge', () => {
+  assert.equal(model({ ...verdict, quotes: [{ status: 'close', section: '75', quote: 'one and half times' }] }).verified, 1)
+})
+const caseVerdict = { kind: 'case', text: 'Wilson Masauso Zulu v Avondale Housing Project Limited (1982)', status: 'not_found' }
+test('a case Levy does not hold but its judgments cite is known, not counted for review', () => {
+  const value = sourceModel({ blocks: [{ kind: 'citation_audit', citations: [{ ...caseVerdict, known: { name: 'Wilson Masauso Zulu v Avondale Housing Project Limited', cited_by: 129, citation: '(1982) ZR 172' } }] }] })
+  assert.equal(value.known, 1)
+  assert.equal(value.review, 0)
+  assert.equal(value.verified, 0)
+})
+test('a wrong year on a known case is reviewed', () => {
+  const value = sourceModel({ blocks: [{ kind: 'citation_audit', citations: [{ ...caseVerdict, known: { name: 'x', cited_by: 129, citation: '(1982) ZR 172', year_conflict: true } }] }] })
+  assert.equal(value.known, 0)
+  assert.equal(value.review, 1)
+})
+test('a later departure is reviewed unless the answer names it', () => {
+  const zubao = { kind: 'case', text: 'Zubao Harry Juma v First Quantum', status: 'verified', document_id: 'doc-z', title: 'Zubao', treatment: [{ treatment: 'departed from', judgment: 'Kingfred Phiri v Life Master Ltd', court: 'CAZ', year: 2024 }] }
+  const run = (v) => sourceModel({ blocks: [{ kind: 'citation_audit', citations: [v] }] })
+  assert.equal(run(zubao).review, 1)
+  assert.equal(run({ ...zubao, treatment_acknowledged: true }).verified, 1)
+})
