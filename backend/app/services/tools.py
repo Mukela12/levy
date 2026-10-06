@@ -1060,6 +1060,103 @@ def _parse_service_dates(start_date: str, termination_date: str):
 # ─── Registry ────────────────────────────────────────────────────────────────
 
 
+# ─── search_my_conversations ─────────────────────────────────────────────────
+
+_RECALL_STOP = {
+    "about", "again", "all", "and", "bring", "chat", "chats", "conversation", "conversations", "discuss",
+    "discussed", "talk", "talked", "remember", "remind", "recall", "find", "show", "give", "before",
+    "earlier", "from", "have", "info", "information", "last", "levy", "me", "our", "previous", "said",
+    "that", "the", "this", "told", "up", "us", "week", "what", "when", "where", "which", "with", "you", "your",
+}
+
+
+def _recall_terms(query: str) -> list[str]:
+    """Distinctive words from "bring up our previous chat about misjoinder"."""
+    words = re.findall(r"[a-z][a-z'-]{3,}", (query or "").lower())
+    return list(dict.fromkeys(w for w in words if w not in _RECALL_STOP))[:5]
+
+
+def _rank_conversations(sessions: list[dict], messages: list[dict], terms: list[str], limit: int = 3) -> list[dict]:
+    """The user's earlier chats that mention the most terms, newest first on a tie.
+
+    `sessions`: {id, title, created_at}; `messages`: {session_id, role, content, created_at}.
+    Each result carries the chat's opening question and the passage of Levy's
+    answer where the first matched term appears.
+    """
+    by_session: dict[str, list[dict]] = {}
+    for m in messages:
+        by_session.setdefault(m["session_id"], []).append(m)
+    scored = []
+    for s in sessions:
+        msgs = sorted(by_session.get(s["id"], []), key=lambda m: m.get("created_at") or "")
+        hay_title = (s.get("title") or "").lower()
+        hit_terms = {t for t in terms if t in hay_title or any(t in (m.get("content") or "").lower() for m in msgs)}
+        if not hit_terms:
+            continue
+        scored.append((len(hit_terms), s.get("created_at") or "", s, msgs, hit_terms))
+    scored.sort(key=lambda x: (x[0], x[1]), reverse=True)
+    out = []
+    for n, _, s, msgs, hit_terms in scored[:limit]:
+        question = next((m["content"] for m in msgs if m.get("role") == "user"), "")
+        excerpt = ""
+        for m in msgs:
+            if m.get("role") != "assistant":
+                continue
+            low = (m.get("content") or "").lower()
+            at = min((low.find(t) for t in hit_terms if t in low), default=-1)
+            if at >= 0:
+                start = max(0, at - 300)
+                excerpt = m["content"][start:start + 1500]
+                break
+        out.append({"title": s.get("title") or "Untitled chat", "date": (s.get("created_at") or "")[:10],
+                    "matched": sorted(hit_terms), "question": question[:500], "answer_excerpt": excerpt})
+    return out
+
+
+async def _search_user_conversations(owner_id: str | None, current_session_id: str | None,
+                                     query: str, limit: int = 3) -> dict:
+    if not owner_id:
+        return {"result": {"found": False, "note": "Earlier conversations are only kept for signed-in users. "
+                                                   "Ask the user to paste what they need from the earlier chat."}}
+    terms = _recall_terms(query)
+    if not terms:
+        return {"result": {"found": False, "note": "Say what the earlier chat was about (a topic, a case, a party) "
+                                                   "and search again."}}
+    from ..db.supabase import get_db
+
+    def fetch():
+        db = get_db()
+        sessions = (db.table("chat_sessions").select("id,title,created_at").eq("user_id", owner_id)
+                    .order("created_at", desc=True).limit(200).execute().data or [])
+        sessions = [x for x in sessions if x["id"] != current_session_id]
+        ids = [x["id"] for x in sessions]
+        msgs: dict[str, dict] = {}
+        for i in range(0, len(ids), 100):
+            batch = ids[i:i + 100]
+            for t in terms:
+                for m in (db.table("chat_messages").select("id,session_id,role,content,created_at")
+                          .in_("session_id", batch).ilike("content", f"%{t}%").limit(40).execute().data or []):
+                    msgs[m["id"]] = m
+        # The opening question of each matching chat, for context.
+        hit_ids = list({m["session_id"] for m in msgs.values()} | {x["id"] for x in sessions
+                       if any(t in (x.get("title") or "").lower() for t in terms)})
+        for i in range(0, len(hit_ids), 100):
+            for m in (db.table("chat_messages").select("id,session_id,role,content,created_at")
+                      .in_("session_id", hit_ids[i:i + 100]).eq("role", "user").limit(200).execute().data or []):
+                msgs.setdefault(m["id"], m)
+        return sessions, list(msgs.values())
+
+    sessions, messages = await asyncio.to_thread(fetch)
+    found = _rank_conversations(sessions, messages, terms, max(1, min(int(limit or 3), 5)))
+    if not found:
+        return {"result": {"found": False, "searched_for": terms,
+                           "note": "No earlier conversation of this user mentions these words. Ask the user what "
+                                   "it was about, or to paste the part they need."}}
+    return {"result": {"found": True, "searched_for": terms, "conversations": found,
+                       "note": "These are the user's own earlier chats. Treat Levy's earlier answers as a starting "
+                               "point, not as verified law: re-check any authority before relying on it."}}
+
+
 def build_tool_registry(
     *,
     web_enabled: bool = True,
@@ -1340,6 +1437,9 @@ def build_tool_registry(
             include_appendix=include_appendix,
             owner_id=owner_id,
         )
+
+    async def _recall(query: str, limit: int = 3):
+        return await _search_user_conversations(owner_id, session_id, query, limit)
 
     async def _suggest_templates(query: str | None = None):
         """Return up to 3 of the user's templates relevant to `query`."""
@@ -3521,6 +3621,28 @@ def build_tool_registry(
                 "required": ["query"],
             },
             handler=_scoped_search,
+        ),
+        "search_my_conversations": ToolDefinition(
+            name="search_my_conversations",
+            description=(
+                "Search the signed-in user's OWN earlier conversations with Levy (other chats, not this "
+                "one). Use it whenever the user refers to a previous chat or something Levy told them "
+                "before: 'bring up our previous chat about misjoinder', 'what did you say last week about "
+                "my gratuity'. Returns the matching chats' titles, dates, opening questions and the "
+                "relevant part of Levy's earlier answer. Never tell the user you cannot see earlier "
+                "conversations without calling this first."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string",
+                              "description": "What the earlier chat was about: topic, case, party or Act, "
+                                             "e.g. 'misjoinder manufacturer distributor'."},
+                    "limit": {"type": "integer", "description": "How many chats to return, 1 to 5 (default 3)."},
+                },
+                "required": ["query"],
+            },
+            handler=_recall,
         ),
         "check_provision_status": ToolDefinition(
             name="check_provision_status",
