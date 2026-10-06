@@ -78,6 +78,7 @@ export function ActsDirectory({ acts, children }: { acts: ActSummary[]; children
                   {act.status?.status === 'repealed' && <span className="cp-act-flag is-repealed">Repealed</span>}
                   {act.status?.status === 'bill, not yet law' && <span className="cp-act-flag">Bill</span>}
                   {act.status?.status === 'repeal pending' && <span className="cp-act-flag is-pending">Replacement pending</span>}
+                  {act.status?.status === 'commencement pending' && <span className="cp-act-flag is-pending">Not in force yet</span>}
                 </span>
                 <span className="cp-act-meta">
                   {[act.actNumber, act.year && !act.actNumber?.includes(String(act.year)) ? act.year : null].filter(Boolean).join(' · ') || 'Library text'}

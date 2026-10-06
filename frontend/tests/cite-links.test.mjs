@@ -87,3 +87,31 @@ test('resolveCite reports the section it matched', () => {
   assert.equal(found.link.section, '53')
   assert.equal(found.link.documentId, 'doc-emp')
 })
+
+// Status pills after citations: found by the 5 Oct 2026 re-test, where a
+// repealed section and an Act not yet in force were cited with no mark.
+// Array.from: the module runs in its own VM realm, and strict deep-equal compares prototypes.
+const statuses = (text, srcs) => Array.from(render(text, srcs).filter((n) => n.type === 'element'), (n) => n.properties['data-status'])
+const immigration = (extra = {}) => ({ document_id: 'doc-imm', act_name: 'Immigration and Deportation Act, 2010', section: '24',
+  page_start: 25, page_end: 25, law_status: 'repeal pending', section_state: 'repealed', ...extra })
+const ica = { document_id: 'doc-ica', act_name: 'Immigration Control Act, 2026', section: '16', page_start: 9, page_end: 9, law_status: 'not in force' }
+
+test('a repealed section is flagged where it is cited, though its Act is in force', () => {
+  const srcs = buildCiteIndex({ citations: [immigration(), { ...immigration(), id: 'b', section: '12', section_state: undefined }] })
+  assert.deepEqual(statuses('Permits [Immigration and Deportation Act, Section 24] and visas [s. 12].', srcs), ['section-repealed', undefined])
+})
+test('an Act not in force is flagged on every citation of it', () => {
+  const srcs = buildCiteIndex({ citations: [ica] })
+  assert.deepEqual(statuses('[Immigration Control Act, 2026, Section 16] and [s. 40]', srcs), ['not-in-force', 'not-in-force'])
+})
+test('the audit adds what retrieval did not carry, and a repeal outranks an amendment', () => {
+  const srcs = buildCiteIndex({
+    citations: [immigration({ section: '20', section_state: 'amended', law_status: undefined })],
+    blocks: [{ kind: 'citation_audit', citations: [{ kind: 'statute', status: 'verified', document_id: 'doc-imm', text: 'Immigration and Deportation Act',
+      title: 'Immigration and Deportation Act, 2010', section_status: [{ section: '20', status: 'repealed', by: 'X' }] }] }],
+  })
+  assert.deepEqual(statuses('[Immigration and Deportation Act, Section 20]', srcs), ['section-repealed'])
+})
+test('live law gets no pill', () => {
+  assert.deepEqual(statuses('The notice period is 30 days [Employment Code Act, Section 53].'), [undefined])
+})

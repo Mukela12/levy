@@ -37,10 +37,16 @@ export interface CitationVerdict {
   title?: string
   /** An English or other foreign authority: fairly outside the Zambian library. */
   foreign?: boolean
-  /** Set only when the law map is sure the cited Act is no longer (or soon not) law. */
-  law_status?: 'repealed' | 'repeal pending'
+  /**
+   * Set only when the law map is sure about the cited Act: repealed, its
+   * replacement passed but not shown to commence ("repeal pending"), or
+   * itself passed but not shown to be in force ("not in force").
+   */
+  law_status?: 'repealed' | 'repeal pending' | 'not in force'
   /** Names of the Acts that repealed it, or will. */
   replaced_by?: string[]
+  /** For an Act not in force: the Acts that still apply until it commences. */
+  still_applies?: string[]
   /** The answer itself already calls this Act repealed wherever it names it. */
   acknowledged?: boolean
   /**
@@ -60,6 +66,11 @@ export interface DeadSection {
   acknowledged?: boolean
 }
 
+/** What the law map says about a retrieved passage's Act. */
+export type PassageLawStatus = 'repealed' | 'repeal pending' | 'not in force' | 'bill'
+/** What the section map says about the passage's own section. */
+export type PassageSectionState = 'repealed' | 'replaced' | 'amended' | 'uncertain'
+
 interface ChunkUsed {
   id: string
   document_id?: string
@@ -70,6 +81,8 @@ interface ChunkUsed {
   page_end: number
   similarity: number
   content_preview: string
+  law_status?: PassageLawStatus
+  section_state?: PassageSectionState
 }
 
 interface SearchResult {

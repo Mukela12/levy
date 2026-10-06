@@ -122,6 +122,22 @@ export default async function ActPage({ params }: { params: Promise<{ slug: stri
           </div>
         </div>
       )}
+      {act.status?.status === 'commencement pending' && (
+        // For this status the API's repealedBy lists the Acts it will replace.
+        <div className="cp-act-notice is-pending" role="note">
+          <AlertTriangle size={16} aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} />
+          <div>
+            <strong>Passed, but not shown to be in force.</strong>{' '}
+            It starts on a date the Minister sets by statutory instrument, and no commencement order is recorded here.
+            {replacement ? (
+              <> Until it starts, <Link href={`/acts/${replacement.slug}`}>{replacement.name}</Link> still applies.</>
+            ) : act.status.repealedBy.length ? (
+              <> Until it starts, the {act.status.repealedBy.join(' and the ')} still {act.status.repealedBy.length === 1 ? 'applies' : 'apply'}.</>
+            ) : null}
+            {' '}Check the Gazette before relying on it.
+          </div>
+        </div>
+      )}
       {act.status?.status !== 'repealed' && (act.status?.amendments ?? 0) > 0 && (
         <p className="cp-act-amended">
           In force, and amended by {act.status!.amendments} amendment Act{act.status!.amendments === 1 ? '' : 's'}.

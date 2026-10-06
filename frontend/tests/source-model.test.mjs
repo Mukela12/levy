@@ -109,3 +109,32 @@ test('a not-found citation never carries a dead section', () => {
   const value = model({ ...verdict, status: 'not_found', section_status: [deadSection] })
   assert.equal(value.rows[0].deadSections.length, 0)
 })
+
+// The module runs in its own VM realm; compare plain copies.
+const plain = (x) => JSON.parse(JSON.stringify(x))
+test('an Act cited as law but not in force needs review; said so, it is noted', () => {
+  const v = { ...verdict, law_status: 'not in force', still_applies: ['Old Act, 2010'] }
+  const row = model(v).rows[0]
+  assert.equal(row.lawStatus, 'not in force')
+  assert.equal(row.verification, 'review')
+  assert.deepEqual(plain(row.stillApplies), ['Old Act, 2010'])
+  assert.equal(model({ ...v, acknowledged: true }).rows[0].verification, 'noted')
+})
+test('retrieved passages carry their own labels when nothing was cited', () => {
+  const p = (id, section, extra) => ({ ...passage, id, section, ...extra })
+  const row = sourceModel({ citations: [
+    p('a', '24', { law_status: 'repeal pending', section_state: 'repealed' }),
+    p('b', '20', { section_state: 'amended' }),
+    p('c', '7', {}),
+  ] }).rows[0]
+  assert.equal(row.passageLaw, 'repeal pending')
+  assert.deepEqual(plain(row.passageSections), [{ section: '24', state: 'repealed' }, { section: '20', state: 'amended' }])
+  // A labelled passage is still only retrieved, never verified.
+  assert.equal(row.verification, 'none')
+})
+test('a section the audit already lists is not repeated from the passages', () => {
+  const v = { ...verdict, section_status: [{ section: '24', status: 'repealed', by: 'X' }] }
+  const row = sourceModel({ citations: [{ ...passage, section: '24', section_state: 'repealed' }], blocks: [{ kind: 'citation_audit', citations: [v] }] }).rows[0]
+  assert.equal(row.deadSections.length, 1)
+  assert.equal(row.passageSections.length, 0)
+})

@@ -16,6 +16,11 @@
  *    calls it repealed the row is "noted" (shown, not counted for review). A
  *    repeal whose commencement is unverified leaves the library-identity
  *    badge alone and is shown as an uncertainty note, not proof of currency.
+ *  - An Act passed but not shown to be in force is treated like a repealed
+ *    one: "noted" when the answer says so, "review" when it is cited as law.
+ *  - Retrieved passages carry their own law-map labels, so a dead section the
+ *    answer did not cite is still labelled where the reader sees it (the
+ *    panel offered a repealed section unmarked on 5 Oct 2026).
  */
 import type { ChunkUsed, CitationVerdict, DeadSection, WebSource } from '@/lib/api'
 import type { MessageBlock } from '@/components/chat/chat-message'
@@ -35,8 +40,14 @@ export interface SourceRow {
   preview?: string
   conflict: boolean
   foreign: boolean
-  lawStatus?: 'repealed' | 'repeal pending'
+  lawStatus?: 'repealed' | 'repeal pending' | 'not in force'
   replacedBy: string[]
+  /** For an Act not in force: what still applies until it commences. */
+  stillApplies: string[]
+  /** The Act's status read off retrieved passages, when no verdict gave one. */
+  passageLaw?: 'repealed' | 'repeal pending' | 'not in force'
+  /** Sections of retrieved passages that are dead or amended and not already in deadSections. */
+  passageSections: { section: string; state: 'repealed' | 'replaced' | 'amended' }[]
   /** Cited sections of this Act that are no longer law, one entry per section. */
   deadSections: DeadSection[]
   verification: SourceVerification
@@ -123,6 +134,8 @@ export function sourceModel(input: {
         conflict: false,
         foreign: false,
         replacedBy: [],
+        stillApplies: [],
+        passageSections: [],
         deadSections: [],
         verification: 'none',
       }
@@ -152,6 +165,8 @@ export function sourceModel(input: {
         conflict: false,
         foreign: false,
         replacedBy: [],
+        stillApplies: [],
+        passageSections: [],
         deadSections: [],
         verification: 'none',
       }
@@ -168,10 +183,29 @@ export function sourceModel(input: {
     const flagged = row.verdicts.filter((c) => c.status === 'verified' && c.law_status)
     row.lawStatus = flagged.some((c) => c.law_status === 'repealed')
       ? 'repealed'
-      : flagged.length ? 'repeal pending' : undefined
+      : flagged.some((c) => c.law_status === 'not in force')
+        ? 'not in force'
+        : flagged.length ? 'repeal pending' : undefined
     row.replacedBy = Array.from(new Set(flagged.filter((c) => c.law_status === row.lawStatus).flatMap((c) => c.replaced_by || [])))
-    const repealedNamed = row.lawStatus === 'repealed' && flagged.every((c) => c.law_status !== 'repealed' || c.acknowledged === true)
+    row.stillApplies = Array.from(new Set(flagged.filter((c) => c.law_status === 'not in force').flatMap((c) => c.still_applies || [])))
+    // "Repealed" or "not in force", already said in the answer's own words.
+    const dead = row.lawStatus === 'repealed' || row.lawStatus === 'not in force'
+    const repealedNamed = dead && flagged.every((c) => c.law_status !== row.lawStatus || c.acknowledged === true)
     row.deadSections = deadSectionsOf(row.verdicts)
+    const passageLaws = row.passages.map((p) => p.law_status)
+    row.passageLaw = row.lawStatus ? undefined
+      : passageLaws.includes('repealed') ? 'repealed'
+        : passageLaws.includes('not in force') ? 'not in force'
+          : passageLaws.includes('repeal pending') ? 'repeal pending' : undefined
+    const cited = new Set(row.deadSections.map((d) => d.section.toLowerCase()))
+    const sections = new Map<string, 'repealed' | 'replaced' | 'amended'>()
+    for (const p of row.passages) {
+      const st = p.section_state
+      const sec = String(p.section || '').trim()
+      if (!sec || cited.has(sec.toLowerCase()) || !(st === 'repealed' || st === 'replaced' || st === 'amended')) continue
+      if (!sections.has(sec) || sections.get(sec) === 'amended') sections.set(sec, st)
+    }
+    row.passageSections = Array.from(sections, ([section, state]) => ({ section, state }))
     // The Act is in the library and in force, but the section the answer
     // relies on is not. That is not "verified".
     const unnamedDeadSection = row.deadSections.some((d) => !d.acknowledged)
@@ -180,7 +214,7 @@ export function sourceModel(input: {
         ? 'none'
         : row.verdicts.some((c) => c.status !== 'verified' || !c.document_id) || row.conflict || row.foreign || unnamedDeadSection
           ? 'review'
-          : row.lawStatus === 'repealed'
+          : dead
             ? repealedNamed ? 'noted' : 'review'
             : row.verdicts.length
               ? 'verified'
@@ -205,6 +239,8 @@ export function sourceModel(input: {
       conflict: false,
       foreign: false,
       replacedBy: [],
+      stillApplies: [],
+      passageSections: [],
       deadSections: [],
       verification: 'none',
     })

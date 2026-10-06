@@ -27,9 +27,23 @@ import { AnswerFeedback } from '@/components/chat/answer-feedback'
 import { useBrief } from '@/components/chat/brief-context'
 import type { ChatMessageProps, MessageBlock } from '@/components/chat/chat-message'
 import type { ChunkUsed } from '@/lib/api'
-import { buildCiteIndex, rehypeCiteLinks } from '@/lib/cite-links'
+import { buildCiteIndex, rehypeCiteLinks, type CiteStatus } from '@/lib/cite-links'
 import { AnswerSources } from './answer-sources'
 import { QuestionCard } from './question-card'
+
+/**
+ * The pill after a citation whose law is not what the wording suggests. A
+ * reader acting on a dead section needs to see it where it is cited, not
+ * three screens down in the sources panel (the Lexis "At Risk" pattern).
+ * Never a reason to hide the citation: flagged, it can still be checked.
+ */
+const CITE_FLAG: Record<CiteStatus, { label: string; detail: string; tone: 'repealed' | 'pending' }> = {
+  'repealed': { label: 'Repealed', detail: 'This Act has been repealed. Open the sources to see what replaced it.', tone: 'repealed' },
+  'not-in-force': { label: 'Not in force yet', detail: 'Passed, but no commencement order is recorded. The earlier law still applies until it starts.', tone: 'pending' },
+  'section-repealed': { label: 'Repealed', detail: 'This section has been repealed, although its Act is in force.', tone: 'repealed' },
+  'section-replaced': { label: 'Replaced', detail: 'This section was repealed and replaced. The current wording is in the amending Act.', tone: 'repealed' },
+  'section-amended': { label: 'Amended', detail: 'This section has been amended. The wording quoted may be out of date.', tone: 'pending' },
+}
 
 /** A citation the prose names, rewritten by rehypeCiteLinks into `cite:<id>`. */
 function CiteAnchor({ href, children, open, ...rest }: {
@@ -40,11 +54,15 @@ function CiteAnchor({ href, children, open, ...rest }: {
   const page = Number(rest['data-page'] as string | undefined) || undefined
   const documentId = rest['data-cite'] as string | undefined
   if (documentId) {
+    const flag = CITE_FLAG[rest['data-status'] as CiteStatus]
     return (
-      <button type="button" className="cp-cite" title="Open this source"
-        onClick={() => open(documentId, String(rest['data-title'] ?? 'Source'), page)}>
-        {children}
-      </button>
+      <>
+        <button type="button" className="cp-cite" title="Open this source"
+          onClick={() => open(documentId, String(rest['data-title'] ?? 'Source'), page)}>
+          {children}
+        </button>
+        {flag && <span className={`cp-cite-flag is-${flag.tone}`} title={flag.detail}>{flag.label}</span>}
+      </>
     )
   }
   const external = /^https?:/i.test(href || '')

@@ -18,6 +18,13 @@
 import type { ChunkUsed, CitationVerdict } from '@/lib/api'
 import type { MessageBlock } from '@/components/chat/chat-message'
 
+/**
+ * What the pill after a citation says. Section state wins over the Act's: a
+ * live Act can carry a dead section (section 24 of the Immigration and
+ * Deportation Act 2010, repealed in 2016).
+ */
+export type CiteStatus = 'repealed' | 'not-in-force' | 'section-repealed' | 'section-replaced' | 'section-amended'
+
 export interface CiteSource {
   documentId: string
   title: string
@@ -26,6 +33,30 @@ export interface CiteSource {
   /** Section number (as written in the text) to the passage that carries it. */
   sections: Map<string, ChunkUsed>
   passage?: ChunkUsed
+  /** The Act is repealed, or passed but not shown to be in force. */
+  law?: 'repealed' | 'not-in-force'
+  /** Section key to what the section map records for it. */
+  sectionStates: Map<string, 'repealed' | 'replaced' | 'amended'>
+}
+
+export function citeStatus(source: CiteSource, section?: string): CiteStatus | undefined {
+  const key = section ? sectionKey(section) : undefined
+  const state = key ? source.sectionStates.get(key) : undefined
+  if (state) return `section-${state}` as CiteStatus
+  return source.law
+}
+
+function noteLaw(source: CiteSource, status?: string) {
+  if (status === 'repealed') source.law = 'repealed'
+  else if (status === 'not in force' && source.law !== 'repealed') source.law = 'not-in-force'
+}
+
+function noteSection(source: CiteSource, section: string | undefined, state?: string) {
+  const key = sectionKey(section || '')
+  if (!key || !state || !['repealed', 'replaced', 'amended'].includes(state)) return
+  const prev = source.sectionStates.get(key)
+  // A recorded repeal outranks an amendment recorded elsewhere.
+  if (!prev || prev === 'amended') source.sectionStates.set(key, state as 'repealed' | 'replaced' | 'amended')
 }
 
 const STOP = new Set(['the', 'of', 'and', 'act', 'code', 'rules', 'regulations', 'zambia', 'republic'])
@@ -60,7 +91,7 @@ export function buildCiteIndex(input: {
     if (!documentId || !title) return
     let source = byId.get(documentId)
     if (!source) {
-      source = { documentId, title, keys: [], sections: new Map() }
+      source = { documentId, title, keys: [], sections: new Map(), sectionStates: new Map() }
       byId.set(documentId, source)
     }
     source.keys = [...new Set([...source.keys, ...nameKeys(title)])].sort((a, b) => b.length - a.length)
@@ -70,7 +101,14 @@ export function buildCiteIndex(input: {
       if (key && !source.sections.has(key)) source.sections.set(key, passage)
     }
   }
-  for (const c of input.citations || []) add(c.document_id, c.act_name || '', c)
+  for (const c of input.citations || []) {
+    add(c.document_id, c.act_name || '', c)
+    const source = c.document_id ? byId.get(c.document_id) : undefined
+    if (source) {
+      noteLaw(source, c.law_status)
+      noteSection(source, c.section, c.section_state)
+    }
+  }
   for (const b of input.blocks || []) {
     if (b.kind !== 'citation_audit') continue
     for (const v of (b.citations || []) as CitationVerdict[]) {
@@ -80,6 +118,10 @@ export function buildCiteIndex(input: {
       // what the reader sees, so match on that too.
       const source = byId.get(v.document_id)
       if (source && v.text) source.keys = [...new Set([...source.keys, ...nameKeys(v.text)])].sort((a, b) => b.length - a.length)
+      if (source) {
+        noteLaw(source, v.law_status)
+        for (const d of v.section_status || []) noteSection(source, d.section, d.status)
+      }
     }
   }
   return [...byId.values()]
@@ -193,6 +235,7 @@ export function rehypeCiteLinks(sources: CiteSource[]) {
             'data-cite': resolved.link.documentId,
             'data-page': resolved.link.page ? String(resolved.link.page) : undefined,
             'data-title': resolved.link.title,
+            'data-status': citeStatus(resolved.source, resolved.link.section),
             className: ['cp-cite'],
           },
           children: [{ type: 'text', value: m[0] }],

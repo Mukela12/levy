@@ -48,6 +48,7 @@ function deadSectionText(d: SourceRow['deadSections'][number]): string {
 function badgeLabel(row: SourceRow): string {
   if (row.verification === 'verified') return 'Verified'
   if (row.lawStatus === 'repealed') return 'Repealed'
+  if (row.lawStatus === 'not in force') return 'Not in force yet'
   if (unnamedDead(row).length) return deadLabel(row)
   if (row.foreign) return 'Foreign authority'
   if (row.conflict) return 'Check citation'
@@ -65,13 +66,28 @@ function lawStatusText(row: SourceRow): string | null {
   const by = theActs(row.replacedBy)
   if (row.lawStatus === 'repealed') return by ? `Repealed · replaced by ${by}` : 'Repealed'
   if (row.lawStatus === 'repeal pending') return by ? `Commencement unverified · replacement: ${by}` : 'Commencement unverified · a replacement has been passed'
+  if (row.lawStatus === 'not in force') {
+    const still = theActs(row.stillApplies)
+    return still ? `Not shown to be in force · ${still} still applies` : 'Passed · no commencement order recorded'
+  }
   return null
 }
 
+/** The Act's status as read off retrieved passages the answer did not cite. */
+function passageLawText(row: SourceRow): string | null {
+  if (row.passageLaw === 'repealed') return 'Retrieved from a repealed Act'
+  if (row.passageLaw === 'not in force') return 'Retrieved from an Act passed but not shown to be in force'
+  if (row.passageLaw === 'repeal pending') return 'Commencement unverified · a replacement has been passed'
+  return null
+}
+
+const SECTION_STATE_TEXT = { repealed: 'repealed', replaced: 'repealed and replaced', amended: 'amended since this wording' } as const
+
 function verdictHeading(row: SourceRow): string {
   if (row.verification === 'verified') return 'Authority matched in the library'
-  if (row.verification === 'noted') return 'Named in the answer as repealed'
+  if (row.verification === 'noted') return row.lawStatus === 'not in force' ? 'Named in the answer as not yet in force' : 'Named in the answer as repealed'
   if (row.lawStatus === 'repealed' && !row.conflict) return 'This Act has been repealed'
+  if (row.lawStatus === 'not in force' && !row.conflict) return 'This Act is not shown to be in force'
   if (unnamedDead(row).length && !row.conflict) {
     return unnamedDead(row).length === 1 ? 'A cited section is no longer law' : 'Cited sections are no longer law'
   }
@@ -89,7 +105,13 @@ function verdictText(row: SourceRow): string {
       : 'Check the passage and the document’s current status before relying on the answer.'
   }
   if (row.verification === 'noted') {
-    return `The answer already says this Act is no longer law, and the library agrees: ${by || 'a later Act'} replaced it.`
+    return row.lawStatus === 'not in force'
+      ? 'The answer already says this Act is not yet in force, and the library agrees: it records no commencement order.'
+      : `The answer already says this Act is no longer law, and the library agrees: ${by || 'a later Act'} replaced it.`
+  }
+  if (row.lawStatus === 'not in force' && !row.conflict) {
+    const still = theActs(row.stillApplies)
+    return `The answer cites this Act as law, but it starts on a date set by statutory instrument and the library records no commencement order. ${still ? `Until it starts, ${still} still applies. ` : ''}Check the Gazette before relying on it.`
   }
   if (row.lawStatus === 'repealed' && !row.conflict) {
     return `The answer cites this Act, but ${by || 'a later Act'} repealed it. Unless the question is about what the law used to be, check the answer against the Act that replaced it.`
@@ -117,9 +139,9 @@ function Badge({ row, onClick }: { row: SourceRow; onClick: () => void }) {
   if (row.verification === 'noted') {
     // The answer already calls this Act repealed; the badge only confirms it.
     return (
-      <button type="button" className="cp-citation-badge is-noted" onClick={onClick} aria-label={`Repealed Act, named as such in the answer: ${row.title}`}>
+      <button type="button" className="cp-citation-badge is-noted" onClick={onClick} aria-label={`${row.lawStatus === 'not in force' ? 'Act not yet in force' : 'Repealed Act'}, named as such in the answer: ${row.title}`}>
         <History size={14} aria-hidden="true" />
-        <span>Repealed</span>
+        <span>{row.lawStatus === 'not in force' ? 'Not in force yet' : 'Repealed'}</span>
       </button>
     )
   }
@@ -214,8 +236,16 @@ export function AnswerSources({ citations, webSources, blocks, onOpenPassage, on
                   {row.lawStatus && (
                     <div className={'cp-source-law' + (row.verification === 'noted' ? ' is-noted' : row.lawStatus === 'repealed' ? ' is-repealed' : ' is-pending')}>{lawStatusText(row)}</div>
                   )}
+                  {!row.lawStatus && row.passageLaw && (
+                    <div className={'cp-source-law' + (row.passageLaw === 'repealed' ? ' is-repealed' : ' is-pending')}>{passageLawText(row)}</div>
+                  )}
                   {row.deadSections.map((d) => (
                     <div key={d.section} className={'cp-source-law' + (d.acknowledged ? ' is-noted' : ' is-repealed')}>{deadSectionText(d)}</div>
+                  ))}
+                  {row.passageSections.map((d) => (
+                    <div key={`p-${d.section}`} className={'cp-source-law' + (d.state === 'amended' ? ' is-pending' : ' is-repealed')}>
+                      Retrieved section {d.section} · {SECTION_STATE_TEXT[d.state]}
+                    </div>
                   ))}
                   <div className="cp-source-context">
                     {row.passages.length ? (
@@ -270,7 +300,8 @@ export function AnswerSources({ citations, webSources, blocks, onOpenPassage, on
           </div>
           <p>The badge means the authority named in the answer matched a document in the library.</p>
           <p>It does not confirm the exact quotation or that the passage supports the answer.</p>
-          <p>An Act the library records as repealed is marked Repealed instead, with the Act that replaced it.</p>
+          <p>An Act the library records as repealed is marked Repealed instead, with the Act that replaced it. An Act passed but not shown to have started is marked Not in force yet.</p>
+          <p>The same labels appear next to citations in the answer: Repealed, Replaced, Amended, or Not in force yet.</p>
           <div className="cp-verify-boundary"><Info size={17} /><span>Search relevance scores and web links are separate from citation verification.</span></div>
         </Dialog>
       )}
@@ -294,7 +325,9 @@ export function AnswerSources({ citations, webSources, blocks, onOpenPassage, on
                 {v.law_status && (
                   <div><dt>Status</dt><dd>{v.law_status === 'repealed'
                     ? v.replaced_by?.length ? `Repealed by ${theActs(v.replaced_by)}` : 'Repealed'
-                    : v.replaced_by?.length ? `Commencement unverified: ${theActs(v.replaced_by)}` : 'Commencement unverified'}</dd></div>
+                    : v.law_status === 'not in force'
+                      ? v.still_applies?.length ? `Not shown to be in force; ${theActs(v.still_applies)} still applies` : 'Not shown to be in force'
+                      : v.replaced_by?.length ? `Commencement unverified: ${theActs(v.replaced_by)}` : 'Commencement unverified'}</dd></div>
                 )}
                 {v.section_status?.map((d) => (
                   <div key={d.section}><dt>Section {d.section}</dt><dd>{d.status === 'repealed' ? `Repealed by the ${d.by}` : `Replaced by the ${d.by}`}</dd></div>
