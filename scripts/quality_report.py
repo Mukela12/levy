@@ -28,8 +28,10 @@ sys.path.insert(0, str(REPO / "backend"))
 sys.modules.setdefault("weasyprint", types.SimpleNamespace(HTML=None, CSS=None))
 from app.db.supabase import get_db  # noqa: E402
 
-# Owner, owner's second account (benchmarks), QA probe: not real usage.
-EXCLUDE_PREFIXES = ("0bb36a24", "c391a7a2", "e49f9bea")
+# Owner, owner's second account (benchmarks), QA probe, and two scripted test
+# accounts found in the 6 Oct 2026 corrections review (hard-coded template
+# UUIDs fired repeatedly; prompts beginning "For QA only"): not real usage.
+EXCLUDE_PREFIXES = ("0bb36a24", "c391a7a2", "e49f9bea", "e1b20d71", "ffcdfb84")
 PRIMARY = ("claude-sonnet-5-5", "claude-sonnet-4-6")
 REASK_MINUTES = 5
 REASK_OVERLAP = 0.5
