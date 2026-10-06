@@ -1125,3 +1125,50 @@
   .cp-scene-caption-title { display: block; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .cp-photo-credit { flex: 0 0 auto; white-space: nowrap; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Payroll card (components/chat/payroll-card.tsx). Tokens with fallbacks, so
+   the card also reads on the legacy dark chat, which has no --cp-* tokens.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.pay-card { margin: 12px 0; border: 1px solid var(--cp-line, #ffffff1f); border-radius: var(--cp-radius, 14px); background: var(--cp-surface, #111113); color: var(--cp-text, #f0f0ed); overflow: hidden; font-size: 13px; }
+.pay-head { width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 14px; text-align: left; background: none; border: 0; color: inherit; cursor: pointer; }
+.pay-head:hover { background: color-mix(in srgb, var(--cp-text, #f0f0ed) 4%, transparent); }
+.pay-icon { display: grid; place-items: center; width: 26px; height: 26px; flex-shrink: 0; border-radius: 8px; background: var(--cp-tint, #2a3a2e); color: var(--cp-primary, #b6d7a7); }
+.pay-title { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.pay-kicker { font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--cp-primary, #b6d7a7); }
+.pay-who { font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
+.pay-short { flex-shrink: 0; padding: 2px 8px; border-radius: 999px; font-weight: 600; font-size: 12px; background: #fdecec; color: #a12622; }
+.dark .pay-short { background: #3a1b1a; color: #f0a9a5; }
+.pay-chevron { color: var(--cp-muted, #9a9aa0); }
+.pay-body { padding: 4px 14px 14px; border-top: 1px solid var(--cp-line, #ffffff14); display: grid; gap: 14px; }
+.pay-flags { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
+.pay-flag { display: grid; gap: 2px; padding: 8px 10px; border-radius: var(--cp-small-radius, 8px); line-height: 1.45; border: 1px solid transparent; }
+.pay-flag.is-breach { background: #fdecec; color: #8f211d; border-color: #f3c9c7; }
+.dark .pay-flag.is-breach { background: #3a1b1a; color: #f0a9a5; border-color: #5d2a28; }
+.pay-flag.is-check { background: var(--cp-warn-bg, #3e3422); color: var(--cp-warn, #e5c389); }
+.pay-flag.is-info { background: color-mix(in srgb, var(--cp-text, #f0f0ed) 4%, transparent); color: var(--cp-muted, #9a9aa0); }
+.pay-group { display: grid; gap: 8px; }
+.pay-group h4 { margin: 0; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--cp-muted, #9a9aa0); font-weight: 600; }
+.pay-row, .pay-line { display: grid; gap: 2px; padding-bottom: 8px; border-bottom: 1px solid color-mix(in srgb, var(--cp-line, #ffffff14) 70%, transparent); }
+.pay-row-main { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.pay-item { font-weight: 500; }
+.pay-amount, .pay-compare, .pay-total { font-variant-numeric: tabular-nums; }
+.pay-amount { flex-shrink: 0; }
+.pay-compare { display: flex; gap: 14px; flex-wrap: wrap; color: var(--cp-muted, #9a9aa0); font-size: 12px; }
+.pay-tag { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 999px; font-size: 10.5px; font-weight: 600; line-height: 1.6; white-space: nowrap; background: color-mix(in srgb, var(--cp-text, #f0f0ed) 7%, transparent); color: var(--cp-muted, #9a9aa0); }
+.pay-tag.is-ok { background: var(--cp-tint, #2a3a2e); color: var(--cp-primary, #b6d7a7); }
+.pay-tag.is-underpaid, .pay-tag.is-over_deducted { background: #fdecec; color: #a12622; }
+.dark .pay-tag.is-underpaid, .dark .pay-tag.is-over_deducted { background: #3a1b1a; color: #f0a9a5; }
+.pay-tag.is-check, .pay-tag.is-conditional, .pay-tag.is-needs_input { background: var(--cp-warn-bg, #3e3422); color: var(--cp-warn, #e5c389); }
+.pay-line.is-conditional .pay-amount, .pay-line.is-needs_input .pay-amount { color: var(--cp-muted, #9a9aa0); }
+.pay-formula { font-size: 12px; color: var(--cp-muted, #9a9aa0); font-variant-numeric: tabular-nums; }
+.pay-note { font-size: 12px; line-height: 1.45; }
+.pay-basis { font-size: 11px; color: var(--cp-primary, #b6d7a7); opacity: .85; }
+.pay-total { display: flex; justify-content: space-between; font-weight: 600; }
+.pay-total.is-net { font-size: 14.5px; color: var(--cp-primary, #b6d7a7); }
+.pay-more { font-size: 12px; color: var(--cp-muted, #9a9aa0); }
+.pay-more summary { cursor: pointer; padding: 2px 0; }
+.pay-more > .pay-line { margin-top: 8px; color: var(--cp-text, #f0f0ed); }
+.pay-more ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; line-height: 1.45; }
+.pay-disclaimer { margin: 0; font-size: 11px; color: var(--cp-muted, #9a9aa0); line-height: 1.45; }
+.pay-flag .pay-basis { color: inherit; opacity: .75; }

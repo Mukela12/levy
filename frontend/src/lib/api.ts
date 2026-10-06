@@ -550,7 +550,8 @@ export interface EntitlementLineItem {
   note?: string
 }
 
-export interface EntitlementBreakdown {
+export interface ExitEntitlementBreakdown {
+  kind?: 'exit'
   currency: string
   monthly_basic_pay: number
   years_of_service: number
@@ -563,6 +564,67 @@ export interface EntitlementBreakdown {
   contested: string[]
   assumptions: string[]
   disclaimer: string
+}
+
+/** One line of the payroll calculator (backend services/payroll.py). */
+export interface PayrollLine {
+  item: string
+  status: 'required' | 'contractual' | 'conditional' | 'needs_input' | 'deduction' | 'employer' | 'info'
+  basis: string
+  amount?: number | null
+  formula?: string
+  note?: string
+}
+
+export interface PayrollCheck {
+  item: string
+  paid: number | null
+  required: number | null
+  difference: number | null
+  status: 'ok' | 'underpaid' | 'over_deducted' | 'check'
+  basis?: string
+  note?: string
+}
+
+export interface PayrollFlag {
+  severity: 'breach' | 'check' | 'info'
+  message: string
+  basis?: string
+}
+
+export interface PayrollBreakdown {
+  kind: 'payroll'
+  currency: string
+  employee_type: string
+  wage_order: string
+  wage_order_label: string
+  category: number | null
+  order_applies: 'yes' | 'conditional' | 'no' | 'unknown'
+  minimum_basic: number | null
+  basic_paid: number
+  required_basic: number
+  hourly_rate: number
+  hourly_rate_formula: string
+  overtime_hours: number
+  earnings: PayrollLine[]
+  deductions: PayrollLine[]
+  employer_costs: PayrollLine[]
+  minimum_gross: number
+  total_deductions: number
+  net_pay: number
+  audit: PayrollCheck[]
+  total_underpaid: number
+  flags: PayrollFlag[]
+  needs_input: string[]
+  assumptions: string[]
+  disclaimer: string
+}
+
+/** Both calculators ride the same stream event; `kind` tells them apart. */
+export type EntitlementBreakdown = ExitEntitlementBreakdown | PayrollBreakdown
+
+export function isPayroll(b: EntitlementBreakdown): b is PayrollBreakdown {
+  return (b as PayrollBreakdown).kind === 'payroll'
 }
 
 export interface EntitlementBreakdownEvent {

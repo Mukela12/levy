@@ -10,7 +10,8 @@
 
 import { useState } from 'react'
 import { Calculator, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react'
-import type { EntitlementBreakdown, EntitlementLineItem } from '@/lib/api'
+import { isPayroll, type EntitlementBreakdown, type ExitEntitlementBreakdown, type EntitlementLineItem } from '@/lib/api'
+import { PayrollCard } from './payroll-card'
 
 const REASON_LABEL: Record<string, string> = {
   resignation: 'Resignation',
@@ -40,6 +41,11 @@ function fmt(currency: string, amount?: number | null): string {
 }
 
 export function EntitlementCard({ breakdown }: { breakdown: EntitlementBreakdown }) {
+  if (isPayroll(breakdown)) return <PayrollCard breakdown={breakdown} />
+  return <ExitCard breakdown={breakdown} />
+}
+
+function ExitCard({ breakdown }: { breakdown: ExitEntitlementBreakdown }) {
   const [expanded, setExpanded] = useState(true)
   const b = breakdown
   const reason = REASON_LABEL[b.termination_reason] || b.termination_reason

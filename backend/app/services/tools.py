@@ -42,6 +42,7 @@ from . import hybrid, law_map
 from . import kimi_tools, pdf_tools
 from . import templates as templates_service
 from .entitlements import calculate_entitlements
+from .payroll import calculate_payroll
 
 
 # ─── Zambian news whitelist ──────────────────────────────────────────────────
@@ -2496,6 +2497,31 @@ def build_tool_registry(
             "entitlement_breakdown": breakdown,
         }
 
+    async def _calculate_payroll(monthly_basic_pay: float, **kwargs):
+        """Deterministic monthly pay, deductions and payslip check (services/payroll.py).
+
+        Rides the `entitlement_breakdown` envelope with kind "payroll", so the
+        existing stream, persistence and card plumbing carry it unchanged.
+        """
+        known = {
+            "employee_type", "wage_order", "category", "occupation", "order_exemption",
+            "hours_worked_in_month", "weekly_hours", "overtime_hours", "weekly_overtime_threshold",
+            "rest_day_or_holiday_hours", "night_hours", "accommodation_provided", "lives_beyond_3km",
+            "transport_provided", "free_meals_provided", "provides_own_tools", "other_allowances",
+            "other_earnings", "napsa_ceiling", "payslip",
+        }
+        args = {k: v for k, v in kwargs.items() if k in known and v is not None}
+        try:
+            breakdown = calculate_payroll(monthly_basic_pay=monthly_basic_pay, **args)
+        except Exception as e:  # noqa: BLE001
+            return {"result": {"error": f"could not compute payroll: {e}"}}
+        return {
+            "result": {"breakdown": breakdown, "ok": True},
+            "db_sources": [],
+            "web_sources": [],
+            "entitlement_breakdown": breakdown,
+        }
+
     tools: dict[str, ToolDefinition] = {
         "pdf_extract_pages": ToolDefinition(
             name="pdf_extract_pages",
@@ -3018,6 +3044,84 @@ def build_tool_registry(
                 "required": ["monthly_basic_pay", "termination_reason"],
             },
             handler=_calculate_entitlements,
+        ),
+        "calculate_payroll": ToolDefinition(
+            name="calculate_payroll",
+            description=(
+                "Compute one month's statutory minimum pay for a Zambian employee, and check a "
+                "payslip or timesheet against it: the s.75(4) hourly rate, overtime (s.75(1)/(2), "
+                "counted WEEK BY WEEK over 48 hours, 60 for a guard), public holiday / rest day pay "
+                "(s.75(3)), the minimum wage and allowances of the 2023 wage orders (SI 48 General, "
+                "SI 50 Shop Workers) and the truck/bus driver minimums, the 15% night differential, "
+                "NAPSA (5% of gross earnings), NHIMA (1% of basic) and 2026 PAYE. With `payslip`, "
+                "every line is compared with the law and shortfalls and over-deductions are totalled.\n\n"
+                "Use this for ANY pay arithmetic: hourly or overtime rates, 'is this payslip right', "
+                "'check this timesheet', minimum wage questions, NAPSA/NHIMA/PAYE on a salary, night "
+                "shift pay. Never compute these figures yourself, and never re-run it on a basis the "
+                "law does not allow because a user insists (a monthly 208-hour overtime trigger, "
+                "night work 'paid' in days off, NAPSA on basic only). It serves employers and "
+                "employees alike.\n\n"
+                "Choose `wage_order`: 'shop_workers' for shops, salons, restaurants and bars, "
+                "'general' for the occupations in SI 48 (general workers, cleaners, guards, drivers, "
+                "typists, clerks...), 'truck_driver' / 'bus_driver', 'domestic', or 'none' when no "
+                "order covers the job. Pass the job title as `occupation` (or the category). Pass "
+                "the hours of each week in `weekly_hours` exactly as the user gives them, without "
+                "rest-day or public-holiday hours. Put 0 in `payslip` for a line the payslip lacks. "
+                "Ask for basic pay and job title if missing. The UI renders a payroll card; after it "
+                "runs, explain each breach and what to do about it, and do not restate figures that "
+                "contradict the card."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "monthly_basic_pay": {"type": "number", "description": "Basic pay for the month in ZMW, before allowances. For part-time or casual staff, the basic actually paid for the hours worked."},
+                    "employee_type": {"type": "string", "enum": ["full_time", "guard", "part_time", "casual"], "description": "'guard' for a watchperson or security guard (240-hour divisor, overtime after 60 hours)."},
+                    "wage_order": {"type": "string", "enum": ["general", "shop_workers", "truck_driver", "bus_driver", "domestic", "none"]},
+                    "occupation": {"type": "string", "description": "Job title as the user gave it, e.g. 'waiter', 'cashier', 'security guard'."},
+                    "category": {"type": "integer", "description": "Category number (1 to 7) under the order, if known."},
+                    "order_exemption": {"type": "string", "enum": ["none", "management", "collective_agreement", "civil_service", "local_authority"], "description": "Set when the employee is outside the wage orders."},
+                    "hours_worked_in_month": {"type": "number", "description": "Part-time or casual: ordinary hours worked in the month."},
+                    "weekly_hours": {"type": "array", "items": {"type": "number"}, "description": "Hours actually worked in each week of the month, excluding rest-day and public-holiday hours."},
+                    "overtime_hours": {"type": "number", "description": "Only if weekly hours are unknown: hours already counted as over the weekly limit."},
+                    "weekly_overtime_threshold": {"type": "number", "description": "A LOWER weekly overtime threshold set by the contract or collective agreement. Never above 48 (60 for a guard)."},
+                    "rest_day_or_holiday_hours": {"type": "number", "description": "Hours worked on a public holiday or weekly rest day outside the normal working week."},
+                    "night_hours": {"type": "number", "description": "Hours worked between 18:00 and 06:00 in the month."},
+                    "accommodation_provided": {"type": "boolean", "description": "Does the employer house the employee? (housing allowance)"},
+                    "lives_beyond_3km": {"type": "boolean", "description": "Does the employee live more than 3 km from work? (transport allowance)"},
+                    "transport_provided": {"type": "boolean", "description": "Does the employer provide transport?"},
+                    "free_meals_provided": {"type": "boolean", "description": "Does the employer provide free meals? (lunch allowance)"},
+                    "provides_own_tools": {"type": "boolean"},
+                    "other_allowances": {"type": "number", "description": "Other monthly cash allowances under the contract."},
+                    "other_earnings": {"type": "number", "description": "Bonus, commission or other earnings this month."},
+                    "napsa_ceiling": {"type": "number", "description": "NAPSA's current maximum insurable monthly earnings, only if known from a source."},
+                    "payslip": {
+                        "type": "object",
+                        "description": "What the payslip or the employer actually paid and deducted, to check it. Use 0 for a line the payslip lacks.",
+                        "properties": {
+                            "basic": {"type": "number"},
+                            "overtime": {"type": "number"},
+                            "holiday_pay": {"type": "number"},
+                            "night_differential": {"type": "number"},
+                            "housing_allowance": {"type": "number"},
+                            "transport_allowance": {"type": "number"},
+                            "lunch_allowance": {"type": "number"},
+                            "tool_allowance": {"type": "number"},
+                            "other_earnings": {"type": "number"},
+                            "gross": {"type": "number"},
+                            "napsa": {"type": "number"},
+                            "nhima": {"type": "number"},
+                            "paye": {"type": "number"},
+                            "other_deductions": {
+                                "type": "array",
+                                "items": {"type": "object", "properties": {"label": {"type": "string"}, "amount": {"type": "number"}}},
+                            },
+                            "net": {"type": "number"},
+                        },
+                    },
+                },
+                "required": ["monthly_basic_pay"],
+            },
+            handler=_calculate_payroll,
         ),
         "draft_legal_document": ToolDefinition(
             name="draft_legal_document",

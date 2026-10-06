@@ -53,6 +53,7 @@ const TOOL_LABELS: Record<string, { label: string; verb: string; Icon: typeof Se
   fetch_web_pdf: { label: 'Fetch', verb: 'Fetching the document', Icon: LinkIcon },
   search_case_law: { label: 'Case law', verb: 'Searching case law', Icon: Scale },
   calculate_entitlements: { label: 'Entitlements', verb: 'Calculating entitlements', Icon: Calculator },
+  calculate_payroll: { label: 'Payroll', verb: 'Calculating pay', Icon: Calculator },
   recommend_application: { label: 'Plan', verb: 'Planning the application', Icon: Scale },
   make_cheat_sheet: { label: 'Cheat sheet', verb: 'Generating your cheat sheet', Icon: ScrollText },
   generate_quiz: { label: 'Quiz', verb: 'Generating your quiz', Icon: GraduationCap },

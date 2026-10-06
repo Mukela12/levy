@@ -72,7 +72,7 @@ function CiteAnchor({ href, children, open, ...rest }: {
 function kindLabel(toolCalls: ToolCallView[] | undefined): string {
   const names = new Set((toolCalls || []).map((c) => c.name))
   if ([...names].some((n) => n.startsWith('draft_') || n === 'pdf_generate' || n === 'fill_form')) return 'Working draft'
-  if (names.has('calculate_entitlements')) return 'Calculation'
+  if (names.has('calculate_entitlements') || names.has('calculate_payroll')) return 'Calculation'
   if (names.has('generate_quiz') || names.has('make_cheat_sheet')) return 'Study'
   if (names.has('search_case_law')) return 'Research with authorities'
   if (names.size) return 'Research'
