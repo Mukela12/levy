@@ -96,6 +96,10 @@ class Settings(BaseSettings):
     # A thinking pass before each action is where "is this in the tool results
     # or am I assuming it?" gets asked. 0 disables. Billed as output tokens.
     agent_thinking_budget: int = 2048
+    # Thinking depth on models that think adaptively (Sonnet 5.5 and the 5.x
+    # family), which reject a fixed budget. "medium" is Anthropic's starting
+    # point for multistep tool use. low | medium | high | xhigh | max.
+    agent_effort: str = "medium"
     # Vision: pages of a scanned PDF rendered to images per read_pdf_pages
     # call, and how many of those may be returned as images (the rest as a
     # note). Each page image is roughly 1,500 input tokens.

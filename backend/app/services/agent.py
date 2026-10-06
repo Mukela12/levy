@@ -1078,7 +1078,22 @@ def _render_matter_block(m: dict) -> str:
     return "\n".join(parts)
 
 
-def _thinking_kwargs(settings) -> dict:
+# Models that think adaptively, with depth set by an effort level. A fixed
+# thinking budget is a 400 on Sonnet 5.5 and the 5.x family; Sonnet 4.6 and
+# older still take the budget below, so a fallback to them keeps working.
+_ADAPTIVE_THINKING = re.compile(r"^claude-(?:sonnet-5|opus-5|fable)")
+
+
+class ModelRefused(Exception):
+    """A safety decline: HTTP 200 with stop_reason "refusal", not an API error.
+
+    Sonnet 5.5's classifiers decline in five categories, and "general_harms"
+    can catch benign legal work (a criminal-law or GBV question). Another
+    model in the chain may answer, so it is handled like a failed attempt.
+    """
+
+
+def _thinking_kwargs(settings, model: str = "") -> dict:
     """Extended thinking for every Claude call, when a budget is configured.
 
     The failures that reached users were not knowledge gaps: the model described
@@ -1088,6 +1103,10 @@ def _thinking_kwargs(settings) -> dict:
     calls too, not only before the first one. Budget under 1024 is rejected by
     the API, so anything smaller disables the feature.
     """
+    if _ADAPTIVE_THINKING.match(model or ""):
+        # Interleaved thinking is built in; no beta header.
+        return {"thinking": {"type": "adaptive"},
+                "output_config": {"effort": getattr(settings, "agent_effort", "") or "medium"}}
     budget = int(getattr(settings, "agent_thinking_budget", 0) or 0)
     if budget < 1024:
         return {}
@@ -1406,7 +1425,7 @@ async def run_agent(
                         system=cached_system,
                         messages=compacted_messages,
                         tools=[] if cap_reached else tool_schemas,
-                        **_thinking_kwargs(settings),
+                        **_thinking_kwargs(settings, attempt_model),
                     ) as stream:
                         async for event in stream:
                             etype = getattr(event, "type", None)
@@ -1418,16 +1437,20 @@ async def run_agent(
                                         streamed_any = True
                                         yield {"type": "token", "content": out}
                         final_message = await stream.get_final_message()
+                    if getattr(final_message, "stop_reason", None) == "refusal" and not streamed_any:
+                        details = getattr(final_message, "stop_details", None)
+                        raise ModelRefused(f"{attempt_model} declined ({getattr(details, 'category', None)})")
                 if attempt_idx > 0:
                     # Fell back successfully — stick with this model from now on.
                     model_name = attempt_model
                     print(f"[agent] model fallback engaged -> {attempt_model}")
                 break
-            except (kimi.KimiError, openrouter.OpenRouterError) as e:
+            except (kimi.KimiError, openrouter.OpenRouterError, ModelRefused) as e:
                 # Not anthropic.APIError subclasses, so without this clause a
                 # Kimi failure escaped the loop and ended the run with no
                 # answer and no friendly message.
                 last_error = e
+                final_message = None  # a refusal must not be taken as the answer
                 print(f"[agent] fallback {attempt_model} failed: {e}")
                 if streamed_any:
                     break  # can't safely restart mid-stream

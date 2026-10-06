@@ -49,8 +49,9 @@ def generate_response(
         ],
     )
 
-    # Extract the text content from Claude's response
-    answer = response.content[0].text
+    # Read text blocks by type: Sonnet 5.5 and later can open with a
+    # thinking block, and content[0].text would raise on it.
+    answer = "".join(b.text for b in response.content if getattr(b, "type", None) == "text")
 
     return {
         "answer": answer,

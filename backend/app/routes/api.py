@@ -120,7 +120,7 @@ def chat(request: ChatRequest, uid: str = Depends(require_user)):
     try:
         result = rag.query(
             question=request.query,
-            model=request.model,
+            model=_selectable_model(request.model),
             top_k=request.top_k,
             threshold=request.threshold,
         )
@@ -281,6 +281,17 @@ def _visitor_hash(ip: str) -> str:
 # own test traffic is worse than no metric, because it hides the real visitors
 # inside the noise. QA now identifies itself and is not logged.
 QA_PROBE_HEADER = "x-levy-qa-probe"
+
+
+# The UI never picks a model; the request field exists for QA and model
+# comparisons. Unchecked, any caller could run any model id on Levy's account,
+# including ones priced five to twenty-five times higher, so only models no
+# dearer than the default are honoured and anything else falls back to it.
+_SELECTABLE_MODELS = frozenset({"claude-sonnet-5-5", "claude-sonnet-4-6", "claude-haiku-4-5"})
+
+
+def _selectable_model(model: str | None) -> str | None:
+    return model if model in _SELECTABLE_MODELS else None
 
 
 def _is_qa_probe(http_request: Request | None) -> bool:
@@ -446,7 +457,7 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
         try:
             async for event in run_agent(
                 user_query=request.query,
-                model=request.model,
+                model=_selectable_model(request.model),
                 web_enabled=bool(request.web_search),
                 history=request.history,
                 owner_id=uid,
