@@ -1,10 +1,10 @@
 {
-  "reviewed": "2026-09-21",
-  "expires": "2026-09-28",
+  "reviewed": "2026-10-06",
+  "expires": "2026-11-03",
   "topics": [
     {
       "id": "minimum-wage-2023",
-      "question": "What is the minimum wage and what allowances must an employer pay?",
+      "question": "What minimum wage and conditions does the 2023 general order set for protected employees?",
       "kind": "Statutory instrument",
       "published": "2023",
       "source": "Ministry of Labour and Social Security",
@@ -44,7 +44,7 @@
       "sourceTitle": "The National Pension Scheme Act (Cap. 256)",
       "url": "https://www.parliament.gov.zm/sites/default/files/documents/acts/National%20Pension%20Scheme%20Act.pdf",
       "context": "The Act says who must contribute, who pays it over and what happens when payment is late. The rate itself and the earnings ceiling are set separately by statutory instrument.",
-      "status": "A National Pension Scheme Act, 2026 has been passed but starts on a date the President appoints, and no commencement order is recorded here. Cap. 256 is the law for now."
+      "status": "A National Pension Scheme Act, 2026 (No. 72 of 2026) has been passed but starts on a date the Minister appoints by statutory instrument, and no commencement order is recorded here. Cap. 256 is the law for now."
     },
     {
       "id": "workplace-safety-2025",
@@ -55,7 +55,7 @@
       "sourceTitle": "The Occupational Health and Safety Act, 2025 (No. 16 of 2025)",
       "url": "https://www.parliament.gov.zm/sites/default/files/documents/acts/Occupationa%20Health%20Act.pdf",
       "context": "The 2025 Act replaced the Occupational Health and Safety Act, 2010. It sets the employer's duties, when a workplace needs a health and safety committee, and what an inspector may do.",
-      "status": "Regulations made under the Act can add duties for particular industries. Check for statutory instruments made since 2025."
+      "status": "A 2026 amendment (No. 67 of 2026) changes only who sits on the Institute's Board. Regulations made under the Act can add duties for particular industries, so check for statutory instruments made since 2025."
     },
     {
       "id": "protection-order-gbv",
@@ -66,7 +66,40 @@
       "sourceTitle": "The Anti-Gender-Based Violence Act, 2011 (No. 1 of 2011)",
       "url": "https://www.mcdss.gov.zm/wp-content/uploads/2021/12/Anti-Gender-Based-Violence-Act.pdf",
       "context": "Section 10 lets a victim apply to a court for a protection order against a respondent, an associated respondent, or both, and the Act sets out what the court can order.",
-      "status": "Court practice, forms and fees differ between courts. If you are in danger now, contact the police Victim Support Unit or a One Stop Centre first."
+      "status": "A 2026 amendment (No. 28 of 2026) changes only who sits on the Committee, not protection orders. Court practice, forms and fees differ between courts. If you are in danger now, contact the police Victim Support Unit or a One Stop Centre first."
+    },
+    {
+      "id": "small-claims-court",
+      "question": "What claims can the Small Claims Court hear, and what is the most I can claim there?",
+      "kind": "Act",
+      "published": "2025",
+      "source": "National Assembly",
+      "sourceTitle": "The Small Claims Court (Amendment) Act, 2025 (No. 15 of 2025)",
+      "url": "https://www.parliament.gov.zm/sites/default/files/documents/acts/Act%20No.%2015%20The%20Small%20Claims%20Court%20%20%28Amendment%29%20Act.pdf",
+      "context": "The 2025 amendment limits the court to claims for a fixed sum of money up to an amount the Chief Justice sets by statutory instrument, and lists claims it can hear, such as debts and rent that are due. Rules made in 2023 (SI No. 20 of 2023) set that amount at K75,000.",
+      "status": "The K75,000 figure comes from rules made before the 2025 amendment. Check for a newer statutory instrument from the Chief Justice before filing."
+    },
+    {
+      "id": "data-protection-rights",
+      "question": "What rights does the Data Protection Act give me over my personal data, and where can I complain?",
+      "kind": "Act",
+      "published": "2021",
+      "source": "National Assembly",
+      "sourceTitle": "The Data Protection Act, 2021 (No. 3 of 2021)",
+      "url": "https://www.parliament.gov.zm/sites/default/files/documents/acts/Act%20No.%203%20The%20Data%20Protection%20Act%202021_0.pdf",
+      "context": "Part IX sets out a data subject's rights, including the right to have personal data erased (section 60), and section 68 lets you complain to the Data Protection Commissioner.",
+      "status": "The Act starts on a date the Minister appoints by statutory instrument. Regulations were made under it in 2021, but no commencement order is recorded here, so confirm with the Office of the Data Protection Commissioner."
+    },
+    {
+      "id": "maternity-leave-2019",
+      "question": "How much maternity leave does the Employment Code give, and when must it be taken?",
+      "kind": "Act",
+      "published": "2019",
+      "source": "National Assembly",
+      "sourceTitle": "The Employment Code Act, 2019 (No. 3 of 2019)",
+      "url": "https://www.parliament.gov.zm/sites/default/files/documents/acts/The%20Employment%20Code%20Act%20No.%203%20of%202019.pdf",
+      "context": "Section 41 gives a female employee fourteen weeks of maternity leave on a medical certificate, with at least six weeks taken after the birth, and four more weeks for a multiple birth.",
+      "status": "An agreement or another law that is more favourable to the employee applies instead. No amendment to section 41 is recorded here; check for one before relying on it."
     }
   ]
 }
