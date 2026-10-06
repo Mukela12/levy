@@ -185,6 +185,22 @@ class ToolCallRecord:
 # ─── search_corpus ───────────────────────────────────────────────────────────
 
 
+async def _query_embedding_or_none(query: str) -> dict | None:
+    """The query's vector and space, or None when every embedding route is down.
+
+    OpenAI credit has run out three times since August 2026, and each time it
+    took ALL grounded search down while chat kept answering, which is how
+    ungrounded answers happen. The keyword index (legal_chunk_lexemes) covers
+    the whole corpus and needs no vector, so a caller that gets None can still
+    ground the answer by keyword match alone.
+    """
+    try:
+        return await asyncio.to_thread(get_query_embedding_ex, query)
+    except Exception as e:  # noqa: BLE001 — embeddings down is a degraded mode, not a crash
+        print(f"[search] embeddings unavailable ({type(e).__name__}); keyword-only retrieval")
+        return None
+
+
 async def _search_corpus(
     query: str,
     top_k: int = 5,
@@ -196,13 +212,21 @@ async def _search_corpus(
     """Vector search across the ingested Zambian-law corpus, scoped by caller."""
     settings = get_settings()
     threshold = threshold if threshold is not None else settings.similarity_threshold
-    emb = await asyncio.to_thread(get_query_embedding_ex, query)
+    emb = await _query_embedding_or_none(query)
     # "dense": the normal query; "fused": hybrid ranking; "derived": the normal
-    # result read off the hybrid path's vector list.
+    # result read off the hybrid path's vector list; "keyword_only": every
+    # embedding route is down and ranking is keyword match alone.
     mode = "dense"
+    if emb is None:
+        mode = "keyword_only"
+        candidates = await asyncio.to_thread(
+            search_keyword, query, None, max(top_k * 3, getattr(settings, "hybrid_candidates", 30)),
+            caller_user_id=caller_user_id, attached_doc_ids=attached_doc_ids,
+            rpc_name=getattr(settings, "hybrid_keyword_rpc", "search_legal_chunks_keyword"),
+        )
     # Hybrid only in the primary (OpenAI) space: the keyword function scores
     # its hits against that column, and the Gemini fallback path is rare.
-    if getattr(settings, "hybrid_retrieval_enabled", False) and emb["space"] == "openai":
+    elif getattr(settings, "hybrid_retrieval_enabled", False) and emb["space"] == "openai":
         n = settings.hybrid_candidates
         dense, keyword = await asyncio.gather(
             asyncio.to_thread(
@@ -275,7 +299,8 @@ async def _search_corpus(
     # cosine would undo the fusion and hand the ranking back to the vectors.
     # Otherwise sort within each group: one sort over both put a strong
     # repealed match back in front of the live law it was moved behind.
-    if mode != "fused":
+    if mode not in ("fused", "keyword_only"):
+        # Keyword-only rows are already in rank order and carry no similarity.
         picked_live.sort(key=lambda c: c.get("similarity", 0.0), reverse=True)
         picked_dead.sort(key=lambda c: c.get("similarity", 0.0), reverse=True)
     chunks = picked_live + picked_dead
@@ -297,7 +322,7 @@ async def _search_corpus(
                 "part": part,
                 "page_start": c.get("page_start"),
                 "page_end": c.get("page_end"),
-                "similarity": round(c.get("similarity", 0.0), 4),
+                "similarity": round(c.get("similarity") or 0.0, 4),
                 "content": c.get("content", ""),
             }
         )
@@ -310,7 +335,7 @@ async def _search_corpus(
                 "part": part,
                 "page_start": c.get("page_start"),
                 "page_end": c.get("page_end"),
-                "similarity": round(c.get("similarity", 0.0), 4),
+                "similarity": round(c.get("similarity") or 0.0, 4),
                 "content_preview": (c.get("content") or "")[:240],
             }
         )
@@ -344,6 +369,21 @@ async def _search_corpus(
             "Some matches are from Acts PASSED BUT NOT SHOWN TO BE IN FORCE (see each match's status). "
             "Lead with the law in force; describe these as passed and awaiting a commencement order."
         )
+    if mode == "keyword_only":
+        result["retrieval_warning"] = (
+            "MEANING-BASED SEARCH IS DOWN (embeddings unavailable): these matches are ranked by "
+            "keyword overlap alone and carry no similarity scores. If they look off, search again "
+            "with the statute's own words (the Act's name, section numbers, statutory terms)."
+        )
+        if not results:
+            result["library_miss"] = True
+            result["next_step"] = (
+                "Embeddings are down and keyword search found nothing. Retry search_corpus with "
+                "distinctive statutory words, or escalate: gov_search -> open the primary source -> "
+                "quote it and cite the URL. Do not answer from memory."
+            )
+        result["matches"] = results
+        return {"result": result, "db_sources": db_sources, "web_sources": []}
     # Judge the miss on live law only. A strong match to a dead Act means the
     # Act in force still has to be found, which is what a miss sends the model
     # to do.
@@ -469,10 +509,16 @@ async def _search_case_law(
     hit per case (highest-scoring chunk), and enriches with court/year/area
     from legal_documents. Returns structured precedent the UI renders as cards.
     """
-    emb = await asyncio.to_thread(get_query_embedding_ex, query)
+    emb = await _query_embedding_or_none(query)
     # Over-fetch broadly (judgments are a minority of chunks) at a low threshold.
-    chunks = await asyncio.to_thread(search_chunks, emb["vector"], top_k=80,
-                                     threshold=0.2, space=emb["space"])
+    if emb is None:
+        # Embeddings down: keyword match over the same corpus, no vector needed.
+        chunks = await asyncio.to_thread(
+            search_keyword, query, None, 80,
+            rpc_name=getattr(get_settings(), "hybrid_keyword_rpc", "search_legal_chunks_keyword"))
+    else:
+        chunks = await asyncio.to_thread(search_chunks, emb["vector"], top_k=80,
+                                         threshold=0.2, space=emb["space"])
 
     # Keep judgment chunks, dedupe by document (first = highest similarity).
     best: dict[str, dict] = {}
@@ -531,7 +577,7 @@ async def _search_case_law(
             "year": year_v,
             "page_count": doc.get("pdf_page_count"),
             "holding": (c.get("content") or "")[:320].strip(),
-            "similarity": round(c.get("similarity", 0.0), 4),
+            "similarity": round(c.get("similarity") or 0.0, 4),
         })
         db_sources.append({
             "id": c.get("id"),
@@ -541,7 +587,7 @@ async def _search_case_law(
             "part": "",
             "page_start": c.get("page_start"),
             "page_end": c.get("page_end"),
-            "similarity": round(c.get("similarity", 0.0), 4),
+            "similarity": round(c.get("similarity") or 0.0, 4),
             "content_preview": (c.get("content") or "")[:240],
         })
         if len(matches) >= max_results:

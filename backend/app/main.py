@@ -297,6 +297,64 @@ async def health_openrouter():
     return body if body["ok"] else JSONResponse(status_code=503, content={**body, "reason": "exhausted"})
 
 
+@app.get("/health/zen")
+def health_zen():
+    """Is the Zen free-compute path armed? Tiny generation, dev only."""
+    from .config import get_settings
+    from .providers import zen_provider
+
+    settings = get_settings()
+    if not zen_provider.is_configured():
+        return {"ok": False, "configured": False, "reason": "not_configured",
+                "detail": "ZEN_API_KEY is unset; RAG is Claude-only."}
+    try:
+        r = zen_provider.generate_response(
+            system_prompt="Reply with the single word: ok",
+            user_message="ping",
+            model=settings.zen_chat_model or None,
+            max_tokens=16,
+        )
+        return {"ok": True, "configured": True, "model": r["model"]}
+    except Exception as e:  # noqa: BLE001
+        msg = str(e)
+        low = msg.lower()
+        reason = ("rate_limited" if "429" in msg or "free usage" in low
+                  else "auth" if ("401" in msg or "unauthorized" in low)
+                  else "provider_error")
+        return JSONResponse(
+            status_code=503,
+            content={"ok": False, "configured": True,
+                     "model": settings.zen_chat_model, "reason": reason},
+        )
+
+
+_GEMINI_COVERAGE: dict = {"at": 0.0, "value": None}
+
+
+def _gemini_coverage() -> float | None:
+    """Fraction of chunks holding a Gemini-space vector, cached for an hour.
+
+    Planned (planner-estimate) counts keep the ping cheap enough for an
+    uptime monitor; the number steers a yes/no, not a report.
+    """
+    import time as _t
+
+    if _GEMINI_COVERAGE["value"] is not None and _t.monotonic() - _GEMINI_COVERAGE["at"] < 3600:
+        return _GEMINI_COVERAGE["value"]
+    try:
+        from .db.supabase import get_db
+
+        db = get_db()
+        total = db.table("legal_chunks").select("id", count="planned").limit(1).execute().count or 0
+        missing = (db.table("legal_chunks").select("id", count="planned")
+                   .is_("embedding_gemini", "null").limit(1).execute().count or 0)
+        value = max(0.0, 1.0 - missing / total) if total else 0.0
+    except Exception:  # noqa: BLE001 — the ping must answer even if the count cannot
+        return None
+    _GEMINI_COVERAGE.update(at=_t.monotonic(), value=value)
+    return value
+
+
 @app.get("/health/embeddings")
 def health_embeddings():
     """Synthetic embedding ping for uptime monitoring.
@@ -313,14 +371,21 @@ def health_embeddings():
 
         settings = get_settings()
         vec = get_query_embedding("ping")
+        cov = _gemini_coverage()
         return {
             "ok": True,
             "provider": settings.embedding_provider,
             "dims": len(vec),
             # same-model second key (identical vectors, instant failover)
             "fallback_ready": bool(settings.openai_api_key_fallback),
-            # independent-vendor second space (Gemini column; needs backfill)
-            "gemini_space_ready": bool(settings.gemini_api_key),
+            # Independent-vendor second space. The KEY being set is not a
+            # fallback: on 6 Oct 2026 the key was set while 99.7% of chunks
+            # had no Gemini vector, so "ready" was false comfort. Ready means
+            # the key AND at least 95% of the corpus backfilled.
+            "gemini_space_ready": bool(settings.gemini_api_key) and (cov or 0.0) >= 0.95,
+            "gemini_coverage": None if cov is None else round(cov, 3),
+            # Keyword index: grounded search with no embeddings at all.
+            "keyword_fallback_ready": bool(getattr(settings, "hybrid_retrieval_enabled", False)),
         }
     except Exception as e:
         from .config import get_settings
