@@ -145,6 +145,21 @@ class Audit(Base):
                          "so the 2010 Act still governs permits.", "Immigration Control")
         self.assertTrue(v.get("acknowledged"))
 
+    def test_the_explanation_under_its_own_heading_counts(self):
+        # The live answer of 6 Oct 2026, abridged: right in substance, and
+        # the audit called it "to review".
+        answer = ("**No.** A business visitor permit does not authorise employment.\n\n---\n\n"
+                  "## 3. What About the New Immigration Control Act, 2026?\n\n"
+                  "The **Immigration Control Act, No. 3 of 2026** has been passed by the National Assembly. "
+                  "Its Section 28 similarly provides for a temporary employment permit. **However, this Act has "
+                  "not been shown to be in force**, and the 2010 Act remains the law.\n\n---\n\n## Summary\n")
+        self.assertTrue(self.verdict(answer, "Immigration Control").get("acknowledged"))
+
+    def test_a_block_that_relies_on_it_is_still_flagged(self):
+        answer = ("## Permits\n\nUnder the Immigration Control Act, 2026 the Director issues permits.\n\n"
+                  "## Older law\n\nThe Pensions Act is not yet in force.\n")
+        self.assertFalse(self.verdict(answer, "Immigration Control").get("acknowledged"))
+
     def test_an_undated_name_shared_with_the_law_in_force_is_not_flagged(self):
         # "National Pension Scheme Act" is also Cap. 256, which is the law.
         for v in citation_audit.audit_answer("Under the National Pension Scheme Act, employers contribute monthly."):

@@ -593,9 +593,28 @@ _SENT_END = re.compile(r"[.!?](?=\s+[A-Z*#>(\[])|\n")
 # been passed but has not yet commenced"), so the badge confirms, not warns.
 _ACK_PENDING = re.compile(
     r"not (?:yet )?(?:in force|commenced|operational|been brought into (?:force|operation))"
+    r"|not (?:yet )?(?:been )?shown to (?:be in force|have commenced)|no commencement order"
     r"|ha(?:s|ve) not (?:yet )?(?:commenced|come into (?:force|operation)|been commenced)"
     r"|awaiting (?:a |its )?commencement|commencement order|yet to (?:commence|come into)"
     r"|(?:once|when|until) it (?:commences|comes into (?:force|operation))|passed but", re.I)
+
+def _acknowledged_pending(answer: str, cited: str) -> bool:
+    """Every mention of a not-yet-in-force Act sits in a block that says so.
+
+    An answer explains a new Act over a few sentences under its own heading
+    ("What about the new Immigration Control Act, 2026? ... It has been
+    passed ... However, this Act has not been shown to be in force"), so the
+    sentence rule used for repeals missed a correct answer on 6 Oct 2026.
+    The scope is the block between headings or rules, which is where that
+    explanation lives.
+    """
+    if _acknowledged(answer, cited, _ACK_PENDING):
+        return True
+    rx = r"\s+".join(re.escape(w) for w in cited.split())
+    blocks = re.split(r"\n(?=#{1,6}\s)|\n\s*(?:-{3,}|\*{3,})\s*\n", answer)
+    mentioned = [b for b in blocks if re.search(rx, b, re.I)]
+    return bool(mentioned) and all(_ACK_PENDING.search(b) for b in mentioned)
+
 
 _LIVE = re.compile(r"\bstill\b|\bremains?\b|\bcurrently\b|\bcontinues? to\b", re.I)
 _BACK_REF = re.compile(r"^[\s*>\-]*(?:they|it|this act|these|those|both|that act|each"
@@ -769,7 +788,7 @@ def audit_answer(text: str) -> list[dict]:
                     verdict.update(_law_status(c, row, index))
                     if verdict.get("law_status") == "repealed" and _acknowledged(text, c["text"]):
                         verdict["acknowledged"] = True
-                    elif verdict.get("law_status") == "not in force" and _acknowledged(text, c["text"], _ACK_PENDING):
+                    elif verdict.get("law_status") == "not in force" and _acknowledged_pending(text, c["text"]):
                         verdict["acknowledged"] = True
                     # The Act can be in force while the section cited from it
                     # is not.
