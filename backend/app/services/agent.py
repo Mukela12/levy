@@ -25,6 +25,7 @@ from typing import AsyncIterator
 import anthropic
 
 from . import kimi
+from . import openrouter
 
 from ..config import get_settings
 from ..prompts.legal_qa import SYSTEM_PROMPT
@@ -89,7 +90,7 @@ def _is_retryable(e: Exception) -> bool:
     Not retryable: a genuinely malformed request (a bad tool schema, an
     invalid parameter). That fails the same way everywhere.
     """
-    if isinstance(e, kimi.KimiError):
+    if isinstance(e, (kimi.KimiError, openrouter.OpenRouterError)):
         return True
     if isinstance(e, (anthropic.RateLimitError, anthropic.InternalServerError,
                       anthropic.APIConnectionError)):
@@ -1361,11 +1362,19 @@ async def run_agent(
         # behaviour is exactly as before.
         if kimi.is_configured():
             model_attempts.append(settings.kimi_fallback_model)
+        # OpenRouter last: billed apart from the Anthropic account, so it
+        # answers when that balance is empty. Paid Claude first, then the free
+        # router. Once a fallback has answered, model_name is that model, so
+        # dedupe rather than try it twice.
+        model_attempts += openrouter.chain()
+        model_attempts = list(dict.fromkeys(model_attempts))
 
         for attempt_idx, attempt_model in enumerate(model_attempts):
             try:
-                if kimi.is_kimi_model(attempt_model):
-                    async for ev in kimi.stream_kimi(
+                via_openrouter = openrouter.is_openrouter_model(attempt_model)
+                if via_openrouter or kimi.is_kimi_model(attempt_model):
+                    stream_fn = openrouter.stream_openrouter if via_openrouter else kimi.stream_kimi
+                    async for ev in stream_fn(
                         model=attempt_model,
                         system=cached_system,
                         messages=compacted_messages,
@@ -1403,6 +1412,16 @@ async def run_agent(
                     model_name = attempt_model
                     print(f"[agent] model fallback engaged -> {attempt_model}")
                 break
+            except (kimi.KimiError, openrouter.OpenRouterError) as e:
+                # Not anthropic.APIError subclasses, so without this clause a
+                # Kimi failure escaped the loop and ended the run with no
+                # answer and no friendly message.
+                last_error = e
+                print(f"[agent] fallback {attempt_model} failed: {e}")
+                if streamed_any:
+                    break  # can't safely restart mid-stream
+                gate = _NarrationGate()  # held text belongs to the dead attempt
+                continue
             except anthropic.NotFoundError as e:  # model id retired/unknown
                 last_error = e
                 print(f"[agent] model {attempt_model} not found (404); trying fallback")

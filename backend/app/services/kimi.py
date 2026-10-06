@@ -43,6 +43,7 @@ INTEGRATION NOTES
 
 from __future__ import annotations
 
+import asyncio
 import json
 from types import SimpleNamespace
 from typing import Any, AsyncIterator
@@ -148,6 +149,8 @@ def _messages_to_openai(messages: list[dict]) -> list[dict]:
                     "tool_call_id": get("tool_use_id"),
                     "content": raw if isinstance(raw, str) else json.dumps(raw),
                 })
+                if get("cache_control"):
+                    tool_results[-1]["_cache"] = True
 
         if role == "assistant":
             msg: dict = {"role": "assistant", "content": "\n".join(p for p in text_parts if p)}
@@ -214,30 +217,38 @@ class KimiError(RuntimeError):
     """Any Kimi-side failure, so the agent can treat it like an APIError."""
 
 
-async def stream_kimi(
+def chat_body(
     *,
     model: str,
     system: Any,
     messages: list[dict],
     tools: list[dict],
     max_tokens: int,
-) -> AsyncIterator[dict]:
-    """Run one Kimi turn, yielding token events then a final message.
+    cache: bool = False,
+) -> dict:
+    """An OpenAI-shaped chat request built from Levy's Anthropic-shaped one.
 
-    Yields `{"type": "token", "content": str}` for streamed text, and finally
-    `{"type": "final", "message": <Anthropic-shaped object>}`.
+    `cache=True` is for Claude served through an OpenAI-shaped API
+    (OpenRouter): Anthropic's cache markers are carried over as content parts,
+    one on the system prompt and one on the newest tool result, the same two
+    places the agent puts them for the direct API. Other providers cache on
+    their own and would reject the parts, so the flag stays off for them.
     """
-    settings = get_settings()
-    key = (settings.moonshot_api_key or "").strip()
-    if not key:
-        raise KimiError("Moonshot API key is not configured")
-
+    msgs = _messages_to_openai(messages)
+    for m in msgs:
+        marked = m.pop("_cache", False)
+        if cache and marked:
+            m["content"] = [{"type": "text", "text": m["content"],
+                             "cache_control": {"type": "ephemeral"}}]
+    if system:
+        text = _system_to_text(system)
+        sys_msg = {"role": "system", "content": (
+            [{"type": "text", "text": text, "cache_control": {"type": "ephemeral"}}]
+            if cache else text)}
+        msgs = [sys_msg] + msgs
     body = {
         "model": model,
-        "messages": (
-            ([{"role": "system", "content": _system_to_text(system)}] if system else [])
-            + _messages_to_openai(messages)
-        ),
+        "messages": msgs,
         "max_tokens": max_tokens,
         "stream": True,
         "stream_options": {"include_usage": True},
@@ -245,68 +256,107 @@ async def stream_kimi(
     }
     if tools:
         body["tools"] = _tools_to_openai(tools)
+    return body
 
+
+async def stream_chat(
+    *,
+    url: str,
+    headers: dict,
+    body: dict,
+    error: type[Exception] = KimiError,
+    label: str = "Kimi",
+    retries: int = 0,
+    retry_statuses: frozenset[int] = frozenset(),
+    backoff: float = 2.0,
+) -> AsyncIterator[dict]:
+    """Stream one OpenAI-shaped chat completion, yielding token events then a
+    final Anthropic-shaped message. Every failure is raised as `error`.
+
+    A status in `retry_statuses` is retried up to `retries` times, waiting
+    `backoff`, then twice that, and so on. That only happens before the first
+    byte of the answer, so nothing streamed is ever repeated.
+    """
     text_acc = ""
     tool_acc: dict[int, dict] = {}
     usage: dict = {}
     finish_reason: str | None = None
-    model_name = model
+    model_name = body.get("model")
+    provider = None
 
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(300.0, connect=15.0)) as http:
-            async with http.stream(
-                "POST", BASE_URL,
-                headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
-                json=body,
-            ) as resp:
-                if resp.status_code != 200:
-                    detail = (await resp.aread()).decode(errors="replace")[:400]
-                    raise KimiError(f"Kimi HTTP {resp.status_code}: {detail}")
+            for attempt in range(retries + 1):
+                async with http.stream(
+                    "POST", url,
+                    headers={**headers, "Content-Type": "application/json"},
+                    json=body,
+                ) as resp:
+                    if resp.status_code != 200:
+                        detail = (await resp.aread()).decode(errors="replace")[:400]
+                        if resp.status_code in retry_statuses and attempt < retries:
+                            print(f"[{label}] HTTP {resp.status_code}, retry {attempt + 1} of {retries}")
+                            await asyncio.sleep(backoff * (2 ** attempt))
+                            continue
+                        raise error(f"{label} HTTP {resp.status_code}: {detail}")
 
-                async for line in resp.aiter_lines():
-                    if not line.startswith("data:"):
-                        continue
-                    data = line[5:].strip()
-                    if not data or data == "[DONE]":
-                        continue
-                    try:
-                        chunk = json.loads(data)
-                    except json.JSONDecodeError:
-                        continue
+                    async for line in resp.aiter_lines():
+                        if not line.startswith("data:"):
+                            continue
+                        data = line[5:].strip()
+                        if not data or data == "[DONE]":
+                            continue
+                        try:
+                            chunk = json.loads(data)
+                        except json.JSONDecodeError:
+                            continue
 
-                    if chunk.get("usage"):
-                        usage = chunk["usage"]
-                    if chunk.get("model"):
-                        model_name = chunk["model"]
+                        # A provider that fails after the stream opened says
+                        # so inside it, with HTTP 200 already sent.
+                        if chunk.get("error"):
+                            err = chunk["error"]
+                            msg = err.get("message") if isinstance(err, dict) else err
+                            raise error(f"{label} stream error: {str(msg)[:300]}")
+                        if chunk.get("usage"):
+                            usage = chunk["usage"]
+                        if chunk.get("model"):
+                            model_name = chunk["model"]
+                        if chunk.get("provider"):
+                            provider = chunk["provider"]
 
-                    for choice in chunk.get("choices") or []:
-                        if choice.get("finish_reason"):
-                            finish_reason = choice["finish_reason"]
-                        delta = choice.get("delta") or {}
+                        for choice in chunk.get("choices") or []:
+                            if choice.get("finish_reason"):
+                                finish_reason = choice["finish_reason"]
+                            delta = choice.get("delta") or {}
 
-                        piece = delta.get("content")
-                        if piece:
-                            text_acc += piece
-                            yield {"type": "token", "content": piece}
+                            piece = delta.get("content")
+                            if piece:
+                                text_acc += piece
+                                yield {"type": "token", "content": piece}
 
-                        # Tool calls stream in fragments keyed by index; the name
-                        # arrives once and the arguments accumulate.
-                        for tc in delta.get("tool_calls") or []:
-                            idx = tc.get("index", 0)
-                            slot = tool_acc.setdefault(
-                                idx, {"id": None, "function": {"name": None, "arguments": ""}})
-                            if tc.get("id"):
-                                slot["id"] = tc["id"]
-                            fn = tc.get("function") or {}
-                            if fn.get("name"):
-                                slot["function"]["name"] = fn["name"]
-                            if fn.get("arguments"):
-                                slot["function"]["arguments"] += fn["arguments"]
-    except KimiError:
+                            # Tool calls stream in fragments keyed by index; the
+                            # name arrives once and the arguments accumulate.
+                            for tc in delta.get("tool_calls") or []:
+                                idx = tc.get("index", 0)
+                                slot = tool_acc.setdefault(
+                                    idx, {"id": None, "function": {"name": None, "arguments": ""}})
+                                if tc.get("id"):
+                                    slot["id"] = tc["id"]
+                                fn = tc.get("function") or {}
+                                if fn.get("name"):
+                                    slot["function"]["name"] = fn["name"]
+                                if fn.get("arguments"):
+                                    slot["function"]["arguments"] += fn["arguments"]
+                    break
+    except error:
         raise
     except Exception as e:  # noqa: BLE001 — network/parse: surface as one error type
-        raise KimiError(f"Kimi request failed: {type(e).__name__}: {e}") from e
+        raise error(f"{label} request failed: {type(e).__name__}: {e}") from e
 
+    if usage.get("cost") is not None or provider:
+        print(f"[{label}] {model_name} via {provider}: {usage.get('prompt_tokens')} in "
+              f"({(usage.get('prompt_tokens_details') or {}).get('cached_tokens', 0)} cached), "
+              f"{usage.get('completion_tokens')} out, ${usage.get('cost')}")
     payload = {
         "model": model_name,
         "usage": usage,
@@ -323,3 +373,26 @@ async def stream_kimi(
         }],
     }
     yield {"type": "final", "message": _to_final_message(payload)}
+
+
+async def stream_kimi(
+    *,
+    model: str,
+    system: Any,
+    messages: list[dict],
+    tools: list[dict],
+    max_tokens: int,
+) -> AsyncIterator[dict]:
+    """Run one Kimi turn, yielding token events then a final message.
+
+    Yields `{"type": "token", "content": str}` for streamed text, and finally
+    `{"type": "final", "message": <Anthropic-shaped object>}`.
+    """
+    key = (get_settings().moonshot_api_key or "").strip()
+    if not key:
+        raise KimiError("Moonshot API key is not configured")
+    body = chat_body(model=model, system=system, messages=messages,
+                     tools=tools, max_tokens=max_tokens)
+    async for ev in stream_chat(url=BASE_URL, headers={"Authorization": f"Bearer {key}"},
+                                body=body):
+        yield ev

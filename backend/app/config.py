@@ -119,6 +119,18 @@ class Settings(BaseSettings):
     # measurements. Billed per successful call ($0.002 fetch, $0.003 search).
     kimi_tools_enabled: bool = True
 
+    # OpenRouter, the last hop of the chain (after Claude and Kimi). Billed
+    # apart from Levy's Anthropic account, so it still answers when that
+    # balance is empty. The paid model is tried first; once the OpenRouter
+    # balance is spent it returns 402 and the free router takes over. Every
+    # request is restricted to zero-retention endpoints. Empty key = never
+    # attempted. See services/openrouter.py.
+    openrouter_api_key: str = ""
+    openrouter_fallback_model: str = "anthropic/claude-sonnet-5.5"
+    openrouter_free_model: str = "openrouter/free"
+    # Retries on 429/502/503 per model, before any text streams (2 s, then 4 s).
+    openrouter_retries: int = 2
+
     # Primary agent model, env-overridable so the cheaper tier can be A/B'd
     # against the answer-feedback signal without a code change. Empty = the
     # default in agent.py.
