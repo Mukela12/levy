@@ -47,7 +47,10 @@ def probe_token() -> str:
     return r.json()["access_token"]
 
 
-def ask(token: str, question: str) -> tuple[str, float, int]:
+ANSWERED_BY: list = []
+
+
+def ask(token: str, question: str, model: str | None = None) -> tuple[str, float, int]:
     """Return (answer, seconds, tool_calls). Each question starts a fresh thread."""
     headers = {
         "Authorization": f"Bearer {token}",
@@ -57,6 +60,9 @@ def ask(token: str, question: str) -> tuple[str, float, int]:
         "Content-Type": "application/json",
     }
     body = {"query": question, "web_search": True}
+    if model:
+        # Honoured by the API only for Sonnet 5.5, Sonnet 4.6 and Haiku 4.5.
+        body["model"] = model
     started = time.time()
     out, tools = [], 0
     with httpx.Client(timeout=httpx.Timeout(600, read=600)) as c:
@@ -72,6 +78,8 @@ def ask(token: str, question: str) -> tuple[str, float, int]:
                     event = json.loads(payload)
                 except json.JSONDecodeError:
                     continue
+                if event.get("type") == "done":
+                    ANSWERED_BY.append(event.get("model"))
                 if event.get("type") == "token":
                     out.append(event.get("content") or "")
                 elif event.get("type") == "tool_call":
@@ -83,13 +91,14 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--only", action="append", help="question id; repeatable")
     ap.add_argument("--out", type=Path)
+    ap.add_argument("--model", help="claude-sonnet-5-5 | claude-sonnet-4-6 | claude-haiku-4-5")
     args = ap.parse_args()
 
     questions = json.loads((ROOT / "questions.json").read_text())
     if args.only:
         questions = [q for q in questions if q["id"] in set(args.only)]
     date = dt.date.today().isoformat()
-    out_path = args.out or ROOT / "results" / f"{date}-levy.json"
+    out_path = args.out or ROOT / "results" / f"{date}-levy{'-' + args.model if args.model else ''}.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
     token = probe_token()
@@ -103,7 +112,7 @@ def main() -> int:
         text = ""
         for attempt in (1, 2, 3):
             try:
-                text, secs, tools = ask(token, q["question"])
+                text, secs, tools = ask(token, q["question"], args.model)
                 break
             except Exception as e:  # noqa: BLE001 — one bad question must not lose the run
                 print(f"    attempt {attempt} failed: {str(e)[:80]}", flush=True)
@@ -113,10 +122,11 @@ def main() -> int:
         if not text:
             continue
         print(f"    {len(text)} chars, {secs}s, {tools} tool calls", flush=True)
-        answers.append({"id": q["id"], "answer": text, "seconds": secs, "tool_calls": tools})
+        answers.append({"id": q["id"], "answer": text, "seconds": secs, "tool_calls": tools,
+                        "answered_by": ANSWERED_BY[-1] if ANSWERED_BY else None})
 
     out_path.write_text(json.dumps(
-        {"model": "levy", "date": date, "api": API, "answers": answers}, indent=1))
+        {"model": f"levy-{args.model}" if args.model else "levy", "date": date, "api": API, "answers": answers}, indent=1))
     print(f"\nwrote {out_path}")
     return 0
 

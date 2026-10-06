@@ -53,7 +53,12 @@ import time as _time
 # to move the default, but it is more than enough to be worth measuring. Flip
 # AGENT_MODEL to claude-haiku-4-5 for a period, watch the thumbs-up rate from
 # message_feedback, and let the data decide.
-DEFAULT_MODEL = get_settings().agent_model or "claude-sonnet-4-6"
+# Sonnet 5.5 since 6 Oct 2026. On five hard benchmark questions in production
+# it answered in 16-29 s against Sonnet 4.6's 44-52 s (three of whose streams
+# dropped), at about a third less per answer, and flagged amended sections 4.6
+# quoted as current. Its one slip, a holding credited to the wrong case in
+# the same judgment, is what the attribution rule in the prompt is for.
+DEFAULT_MODEL = get_settings().agent_model or "claude-sonnet-5-5"
 
 # If the primary model is unavailable (e.g. Anthropic retires a snapshot and
 # the configured id starts returning 404), the agent transparently retries the
@@ -65,7 +70,9 @@ DEFAULT_MODEL = get_settings().agent_model or "claude-sonnet-4-6"
 # was Opus-priced, so a failover would have cost MORE per token, not less.
 # Haiku 4.5 is current, is the cheapest tier, and caps at 64K output (above our
 # 32K ceiling), so a last-resort answer stays cheap and still fits.
-FALLBACK_MODELS = ["claude-sonnet-4-5", "claude-haiku-4-5"]
+# Sonnet 4.6 replaced 4.5 as the first hop when Sonnet 5.5 became primary: it
+# was the primary until then, so it is the known-good answer.
+FALLBACK_MODELS = ["claude-sonnet-4-6", "claude-haiku-4-5"]
 
 
 def _is_retryable(e: Exception) -> bool:
@@ -359,6 +366,12 @@ NEVER DESCRIBE WHAT YOU HAVE NOT READ.
   renewal procedure to practitioners running live matters.
 - Neutral citations ([2018] ZMSC 378, SCZ No. 9 of 2019) are copied from
   retrieved text, never composed.
+- When a judgment reports what an earlier case held, credit the holding to
+  the case the passage names in that sentence. Appearing in the judgment's
+  list of authorities, or in a party's argument, does not mean a case
+  decided the point: an answer once credited the "gap in Order 14 Rule 5"
+  to Mweemba v Kasongo, case 1 on the list, when the passage gave it to
+  Hotelier Ltd v Odys Works.
 - Keep what the source says apart from what you infer, and label the
   inference ("on those words, it follows that...").
 
@@ -1104,9 +1117,15 @@ def _thinking_kwargs(settings, model: str = "") -> dict:
     the API, so anything smaller disables the feature.
     """
     if _ADAPTIVE_THINKING.match(model or ""):
-        # Interleaved thinking is built in; no beta header.
-        return {"thinking": {"type": "adaptive"},
-                "output_config": {"effort": getattr(settings, "agent_effort", "") or "medium"}}
+        # Interleaved thinking is built in. Sonnet 5.5 binds each thinking
+        # block to the conversation that produced it and rejects (400) one
+        # replayed after an earlier message changed, which compaction does on
+        # a long chat. drop_block drops the stale blocks instead. Moving the
+        # cache marker between rounds does not count as a change (tested
+        # 6 Oct 2026: no mismatch reported).
+        return {"thinking": {"type": "adaptive", "block_binding": {"prefix_mismatch_behavior": "drop_block"}},
+                "output_config": {"effort": getattr(settings, "agent_effort", "") or "medium"},
+                "extra_headers": {"anthropic-beta": "thinking-binding-controls-2026-08-01"}}
     budget = int(getattr(settings, "agent_thinking_budget", 0) or 0)
     if budget < 1024:
         return {}

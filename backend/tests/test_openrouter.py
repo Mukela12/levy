@@ -178,7 +178,8 @@ class AgentChain(Keyed, unittest.IsolatedAsyncioTestCase):
 
     async def test_out_of_anthropic_credit_answers_through_openrouter(self):
         client, events = await self.ask(Server((200, answer("Yes, under section 77."))))
-        self.assertEqual(client.models, ["claude-sonnet-4-6", "claude-sonnet-4-5", "claude-haiku-4-5"])
+        # The primary (code default or AGENT_MODEL), then the Claude fallbacks.
+        self.assertEqual(client.models, list(dict.fromkeys([agent.DEFAULT_MODEL, *agent.FALLBACK_MODELS])))
         text = "".join(e["content"] for e in events if e["type"] == "token")
         self.assertIn("section 77", text)
         self.assertFalse([e for e in events if e["type"] == "error"])

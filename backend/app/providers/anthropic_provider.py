@@ -18,7 +18,7 @@ from ..config import get_settings
 # imports this one) could report a model that no longer served anybody — a
 # healthcheck that lies is worse than none, and stale duplicated model
 # constants are what caused the June 2026 outage in the first place.
-DEFAULT_MODEL = get_settings().agent_model or "claude-sonnet-4-6"
+DEFAULT_MODEL = get_settings().agent_model or "claude-sonnet-5-5"
 
 
 def generate_response(

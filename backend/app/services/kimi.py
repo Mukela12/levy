@@ -56,7 +56,7 @@ BASE_URL = "https://api.moonshot.ai/v1/chat/completions"
 
 # Default cross-vendor fallback. k2.6 is the general-purpose model; k2.7-code is
 # tuned for agentic coding and is a poorer fit for legal Q&A.
-DEFAULT_KIMI_MODEL = "kimi-k2.6"
+DEFAULT_KIMI_MODEL = "kimi-k3"
 
 # Model ids we recognise as Kimi, so the agent can route them here.
 KIMI_MODELS = {"kimi-k2.6", "kimi-k2.7-code", "kimi-k3"}

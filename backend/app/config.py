@@ -116,7 +116,11 @@ class Settings(BaseSettings):
     # workload Kimi came out dearer per turn than Claude (see services/kimi.py
     # for the numbers and why the sticker price misleads).
     moonshot_api_key: str = ""
-    kimi_fallback_model: str = "kimi-k2.6"
+    # kimi-k3 since 6 Oct 2026: on two benchmark questions it caught the
+    # repealed section, the amended one and the right case where k2.6 cited
+    # the repealed section as authority. About $0.11 an answer against $0.055,
+    # and 95-105 s against 35-60 s; it only answers when Claude cannot.
+    kimi_fallback_model: str = "kimi-k3"
     # Moonshot's search/fetch REST tools, used only where ours come back
     # empty: OCR for a scanned web PDF, a page we cannot read at all, and a
     # gov search that found nothing. See services/kimi_tools.py for the

@@ -22,10 +22,19 @@ from tests.test_openrouter import NoCredit, Server, answer  # noqa: E402
 class Thinking(unittest.TestCase):
     def test_sonnet_5_5_thinks_adaptively_at_an_effort_level(self):
         kw = agent._thinking_kwargs(get_settings(), "claude-sonnet-5-5")
-        self.assertEqual(kw["thinking"], {"type": "adaptive"})
+        self.assertEqual(kw["thinking"]["type"], "adaptive")
         self.assertIn(kw["output_config"]["effort"], ("low", "medium", "high", "xhigh", "max"))
-        self.assertNotIn("extra_headers", kw)
         self.assertNotIn("budget_tokens", kw["thinking"])
+
+    def test_the_drop_block_safeguard_travels_with_its_header(self):
+        kw = agent._thinking_kwargs(get_settings(), "claude-sonnet-5-5")
+        self.assertEqual(kw["thinking"]["block_binding"], {"prefix_mismatch_behavior": "drop_block"})
+        self.assertEqual(kw["extra_headers"]["anthropic-beta"], "thinking-binding-controls-2026-08-01")
+
+    def test_the_default_is_sonnet_5_5_with_4_6_first_behind_it(self):
+        if not get_settings().agent_model:
+            self.assertEqual(agent.DEFAULT_MODEL, "claude-sonnet-5-5")
+        self.assertEqual(agent.FALLBACK_MODELS[0], "claude-sonnet-4-6")
 
     def test_older_models_keep_the_budget(self):
         for model in ("claude-sonnet-4-6", "claude-sonnet-4-5", "claude-haiku-4-5"):
@@ -51,9 +60,9 @@ class Chain(unittest.IsolatedAsyncioTestCase):
         client = NoCredit()
         server = Server((500, b'{"error":"down"}'), (402, b"{}"), (200, answer("Yes.", model="some/free")))
         events = await self.run_chain(client, server)
-        self.assertEqual(client.models, ["claude-sonnet-5-5", "claude-sonnet-4-5", "claude-haiku-4-5"])
+        self.assertEqual(client.models, ["claude-sonnet-5-5", "claude-sonnet-4-6", "claude-haiku-4-5"])
         self.assertEqual([r["model"] for r in server.requests],
-                         ["kimi-k2.6", "anthropic/claude-sonnet-5.5", "openrouter/free"])
+                         ["kimi-k3", "anthropic/claude-sonnet-5.5", "openrouter/free"])
         self.assertIn("Yes.", "".join(e.get("content", "") for e in events if e["type"] == "token"))
 
 
@@ -99,7 +108,7 @@ class Refusal(unittest.IsolatedAsyncioTestCase):
                 patch.object(get_settings(), "openrouter_api_key", ""), \
                 patch("app.services.citation_audit.audit_answer", lambda text: []):
             events = [ev async for ev in agent.run_agent(user_query="q", model="claude-sonnet-5-5")]
-        self.assertEqual(client.models[:2], ["claude-sonnet-5-5", "claude-sonnet-4-5"])
+        self.assertEqual(client.models[:2], ["claude-sonnet-5-5", "claude-sonnet-4-6"])
         self.assertIn("Section 77", "".join(e.get("content", "") for e in events if e["type"] == "token"))
         self.assertFalse([e for e in events if e["type"] == "error"])
 
