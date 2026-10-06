@@ -1,22 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { FileText, Download, Loader2, Layers, Scissors, Globe, Copy, Check, ChevronDown } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { FileText, Download, Loader2, Layers, Scissors, Globe, Copy, Check, ChevronDown, Share2 } from 'lucide-react'
 import { LevyLogo } from '@/components/ui/levy-logo'
 import { authHeaders, type ArtifactView } from '@/lib/api'
+import { filenameFor, isFresh, isInAppBrowser, withDownloadParam, type CachedLink } from '@/lib/download'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
-
-/** Ask Supabase Storage to serve the file as an attachment, not inline. */
-function withDownloadParam(url: string, filename: string): string {
-  try {
-    const u = new URL(url)
-    u.searchParams.set('download', filename)
-    return u.toString()
-  } catch {
-    return url
-  }
-}
 
 
 interface ArtifactCardProps {
@@ -52,6 +42,14 @@ export function ArtifactCard({ artifact, onOpen }: ArtifactCardProps) {
   const [text, setText] = useState<string | null>(null)
   const [textState, setTextState] = useState<'idle' | 'loading' | 'error'>('idle')
   const [downloadFailed, setDownloadFailed] = useState(false)
+  const [links, setLinks] = useState<{ pdf?: CachedLink; docx?: CachedLink }>({})
+  const [hint, setHint] = useState<string | null>(null)
+  const [inApp, setInApp] = useState(false)
+  const [canShareFiles, setCanShareFiles] = useState(false)
+  const [shareState, setShareState] = useState<'idle' | 'loading' | 'again'>('idle')
+  const shareFile = useRef<File | null>(null)
+  const hintTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const cardRef = useRef<HTMLDivElement | null>(null)
   const meta = SOURCE_META[artifact.source] ?? SOURCE_META.uploaded
   const Icon = meta.Icon
   const sizeLabel = formatBytes(artifact.size_bytes)
@@ -72,41 +70,125 @@ export function ArtifactCard({ artifact, onOpen }: ArtifactCardProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pdfFailed])
 
-  async function handleDownload(fmt: 'pdf' | 'docx') {
-    if (busy) return
-    setBusy(fmt)
+  // Browser capabilities are read after mount so server and client render alike.
+  useEffect(() => {
+    const embedded = isInAppBrowser(navigator.userAgent)
+    setInApp(embedded)
     try {
-      // MUST send the bearer token. These artifacts are owner-scoped, so an
-      // unauthenticated GET is a 403 — which is exactly what shipped: every
-      // Download on a signed-in user's own document failed, silently. It
-      // survived testing because anonymous-demo artifacts have owner_id NULL
-      // and are served by capability, so the logged-out path looked fine.
-      const r = await fetch(`${API_URL}/api/artifacts/${artifact.id}/${fmt}`, {
-        headers: await authHeaders(),
-      })
-      if (!r.ok) throw new Error(`download ${r.status}`)
-      const j = await r.json()
-      const a = document.createElement('a')
-      // `a.download` is ignored on cross-origin URLs, so on mobile (most of
-      // Levy's traffic) the file would just open in a tab. Supabase honours a
-      // `download` query param by setting Content-Disposition: attachment,
-      // which makes it a real save on both mobile and desktop.
-      a.href = withDownloadParam(j.signed_url, `${artifact.title}.${fmt}`)
-      a.download = `${artifact.title}.${fmt}`
-      a.target = '_blank'
-      a.rel = 'noopener noreferrer'
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
+      const probe = new File([new Blob(['x'])], 'x.pdf', { type: 'application/pdf' })
+      setCanShareFiles(Boolean(navigator.canShare?.({ files: [probe] })))
     } catch {
-      // A dead button that reports nothing is worse than an error: the user
-      // who hit this clicked Download, saw nothing happen, and left for
-      // ChatGPT mid-emergency. Say something and offer the text instead.
-      setDownloadFailed(true)
+      setCanShareFiles(false)
+    }
+    if (embedded && canWord) {
+      // This browser probably cannot save files: lead with the text.
       setShowText(true)
       void ensureText()
+    }
+    return () => { if (hintTimer.current) clearTimeout(hintTimer.current) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Fetch the PDF's signed link once the card is on screen, so the PDF button
+  // can be a real link the user taps. A small JSON request; the file itself is
+  // only fetched if they download or share it.
+  useEffect(() => {
+    if (pdfFailed || !cardRef.current || typeof IntersectionObserver === 'undefined') return
+    const node = cardRef.current
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) {
+        io.disconnect()
+        void fetchLink('pdf').catch(() => undefined)
+      }
+    })
+    io.observe(node)
+    return () => io.disconnect()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pdfFailed, artifact.id])
+
+  // MUST send the bearer token. These artifacts are owner-scoped, so an
+  // unauthenticated GET is a 403 — which is exactly what shipped once: every
+  // Download on a signed-in user's own document failed, silently. It survived
+  // testing because anonymous-demo artifacts have owner_id NULL and are served
+  // by capability, so the logged-out path looked fine.
+  async function fetchLink(fmt: 'pdf' | 'docx'): Promise<string> {
+    const cached = links[fmt]
+    if (isFresh(cached, Date.now())) return cached.url
+    const r = await fetch(`${API_URL}/api/artifacts/${artifact.id}/${fmt}`, { headers: await authHeaders() })
+    if (!r.ok) throw new Error(`download ${r.status}`)
+    const j = await r.json()
+    if (!j.signed_url) throw new Error('no signed url')
+    const link = { url: j.signed_url as string, at: Date.now() }
+    setLinks((prev) => ({ ...prev, [fmt]: link }))
+    return link.url
+  }
+
+  function noteStarted() {
+    setHint(inApp
+      ? 'This app\u2019s browser may not save files. If nothing appears, open Levy in Chrome or Safari, or copy the text.'
+      : 'Saving to your device. If nothing appears, use Copy or View text.')
+    if (hintTimer.current) clearTimeout(hintTimer.current)
+    hintTimer.current = setTimeout(() => setHint(null), 9000)
+  }
+
+  function failed() {
+    // A dead button that reports nothing is worse than an error: the user who
+    // hit this tapped Download, saw nothing happen, and left for ChatGPT
+    // mid-emergency. Say something and offer the text instead.
+    setDownloadFailed(true)
+    setShowText(true)
+    void ensureText()
+  }
+
+  async function handleDownload(fmt: 'pdf' | 'docx') {
+    if (busy) return
+    const name = filenameFor(artifact.title, fmt)
+    const cached = links[fmt]
+    if (isFresh(cached, Date.now())) {
+      // Same tab: the attachment header makes it a save, and a navigation is
+      // never blocked as a popup, so it survives the await-free path too.
+      window.location.assign(withDownloadParam(cached.url, name))
+      noteStarted()
+      return
+    }
+    setBusy(fmt)
+    try {
+      const url = await fetchLink(fmt)
+      // After an await the tap no longer counts as a gesture; a new tab would
+      // be popup-blocked without an error. Same-tab navigation is not.
+      window.location.assign(withDownloadParam(url, name))
+      noteStarted()
+    } catch {
+      failed()
     } finally {
       setBusy(null)
+    }
+  }
+
+  async function handleShare() {
+    if (shareState === 'loading') return
+    try {
+      let file = shareFile.current
+      if (!file) {
+        setShareState('loading')
+        const url = await fetchLink('pdf')
+        const r = await fetch(url)
+        if (!r.ok) throw new Error(`file ${r.status}`)
+        file = new File([await r.blob()], filenameFor(artifact.title, 'pdf'), { type: 'application/pdf' })
+        shareFile.current = file
+      }
+      await navigator.share({ files: [file], title: artifact.title })
+      setShareState('idle')
+    } catch (e) {
+      const name = (e as { name?: string } | null)?.name
+      if (name === 'AbortError') {
+        setShareState('idle')            // the user closed the share sheet
+      } else if (name === 'NotAllowedError' && shareFile.current) {
+        setShareState('again')           // the fetch outlived the tap; one more tap shares it
+      } else {
+        setShareState('idle')
+        failed()
+      }
     }
   }
 
@@ -150,8 +232,12 @@ export function ArtifactCard({ artifact, onOpen }: ArtifactCardProps) {
     if (next) await ensureText()
   }
 
+  const pdfName = filenameFor(artifact.title, 'pdf')
+  const pdfLink = isFresh(links.pdf, Date.now()) ? withDownloadParam(links.pdf.url, pdfName) : null
+
   return (
     <div
+      ref={cardRef}
       className="rounded-xl overflow-hidden"
       style={{
         background:
@@ -206,7 +292,20 @@ export function ArtifactCard({ artifact, onOpen }: ArtifactCardProps) {
             Open in viewer →
           </button>
         )}
-        {!pdfFailed && (
+        {!pdfFailed && pdfLink && (
+          // A real link the user taps: the surest download on every phone.
+          <a
+            href={pdfLink}
+            download={pdfName}
+            onClick={noteStarted}
+            className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-white/70 transition-colors"
+            aria-label="Download PDF"
+          >
+            <Download className="size-3.5" />
+            <span>PDF</span>
+          </a>
+        )}
+        {!pdfFailed && !pdfLink && (
           <button
             type="button"
             onClick={() => handleDownload('pdf')}
@@ -216,6 +315,19 @@ export function ArtifactCard({ artifact, onOpen }: ArtifactCardProps) {
           >
             {busy === 'pdf' ? <Loader2 className="size-3.5 animate-spin" /> : <Download className="size-3.5" />}
             <span>PDF</span>
+          </button>
+        )}
+        {!pdfFailed && canShareFiles && (
+          <button
+            type="button"
+            onClick={handleShare}
+            disabled={shareState === 'loading'}
+            className={'flex items-center gap-1.5 text-[11px] transition-colors disabled:opacity-50 '
+              + (shareState === 'again' ? 'text-emerald-400' : 'text-white/40 hover:text-white/70')}
+            aria-label={shareState === 'again' ? 'Ready: tap to share the PDF' : 'Share the PDF'}
+          >
+            {shareState === 'loading' ? <Loader2 className="size-3.5 animate-spin" /> : <Share2 className="size-3.5" />}
+            <span>{shareState === 'again' ? 'Tap to share' : 'Share'}</span>
           </button>
         )}
         {canWord && (
@@ -243,8 +355,20 @@ export function ArtifactCard({ artifact, onOpen }: ArtifactCardProps) {
           </button>
         )}
       </div>
+      {inApp && (
+        <div className="border-t border-amber-500/15 bg-amber-500/5 px-4 py-2 text-[12px] text-amber-300/80" role="note">
+          {canWord
+            ? 'This app\u2019s built-in browser often can\u2019t save files. Open Levy in Chrome or Safari (menu \u22ef, Open in browser), or copy the text below.'
+            : 'This app\u2019s built-in browser often can\u2019t save files. Open Levy in Chrome or Safari (menu \u22ef, Open in browser) to download.'}
+        </div>
+      )}
+      {hint && !downloadFailed && (
+        <div className="border-t border-emerald-500/10 px-4 py-2 text-[12px] text-white/55" role="status">
+          {hint}
+        </div>
+      )}
       {downloadFailed && (
-        <div className="border-t border-amber-500/15 bg-amber-500/5 px-4 py-2 text-[12px] text-amber-300/80">
+        <div className="border-t border-amber-500/15 bg-amber-500/5 px-4 py-2 text-[12px] text-amber-300/80" role="alert">
           {canWord
             ? 'The download didn\u2019t go through. The full text is below, ready to copy.'
             : 'The download didn\u2019t go through. Please try again.'}
