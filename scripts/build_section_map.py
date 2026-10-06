@@ -202,6 +202,8 @@ def main() -> int:
     if OUT.exists():
         prev = json.loads(OUT.read_text()).get("principals", {})
         for pid, p in prev.items():
+            if pid not in lm:
+                continue    # the principal itself left the library: nothing to protect
             for ref, s in p.get("sections", {}).items():
                 now = (((principals_out.get(pid) or {}).get("sections") or {}).get(ref) or {}).get("current")
                 if s.get("current") == "repealed" and now != "repealed":

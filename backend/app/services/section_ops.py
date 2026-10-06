@@ -217,19 +217,32 @@ _REPEAL = re.compile(r"repeal\s*of\s*(sections?|parts?)\b", re.I)
 _SUBSTITUTED = re.compile(
     r"substitution\s*therefor|substituted\s*therefor|repeal\s*and\s*replacement|"
     r"repealed\s*and\s*replaced|replacement\s*of\s*(?:section|part)", re.I)
+# "Section 6(1) of the principal Act is amended", "Section 23 (2)(c) of ...":
+# the subsection sits between the number and "of". Most 2021-2026 amending
+# Acts are drafted this way, and 24 of them read as changing nothing.
+_SUBREF = r"(?P<sub>(?:\s*\(\s*[0-9a-z]{1,4}\s*\))*)"
 _AMENDED = re.compile(
     r"\bsections?\s+(?P<ref>(?:[a-z]+[\s-]+){0,5}?[a-z]+-?|\d{1,3}[A-Z]{0,2})"
-    r"(?P<suf>\s+[A-H])?\s+of\s+the\s+principal\s+act\s+(?:is|are)\s+(?:hereby\s+)?amended", re.I)
+    r"(?P<suf>\s+[A-H])?" + _SUBREF + r"\s+of\s+the\s+principal\s+act\s+(?:is|are)\s+(?:hereby\s+)?amended", re.I)
 # "4. Section ninety-seven is amended": bare form, only right after an
 # amending section's own number, so a consequential "section 5 of the
 # Companies Act is amended" inside the text is not taken for the principal.
 _AMENDED_BARE = re.compile(
     r"\d+\.\s+sections?\s+(?P<ref>(?:[a-z]+[\s-]+){0,5}?[a-z]+-?|\d{1,3}[A-Z]{0,2})"
-    r"(?P<suf>\s+[A-H])?\s+(?:is|are)\s+(?:hereby\s+)?amended", re.I)
+    r"(?P<suf>\s+[A-H])?" + _SUBREF + r"\s+(?:is|are)\s+(?:hereby\s+)?amended", re.I)
 _REPEALED_FORM = re.compile(
     r"\bsections?\s+(?P<ref>(?:[a-z]+[\s-]+){0,5}?[a-z]+-?|\d{1,3}[A-Z]{0,2}(?:\s*(?:,|and)\s*\d{1,3}[A-Z]{0,2})*)"
-    r"\s+of\s+the\s+principal\s+act\s+(?:is|are)\s+(?:hereby\s+)?repealed(?P<rep>\s+and\s+replaced)?", re.I)
-_AMENDED_SQUASHED = re.compile(r"section([a-z-]+?|\d{1,3}[a-z]?)oftheprincipalact(?:is|are)amended")
+    + _SUBREF + r"\s+of\s+the\s+principal\s+act\s+(?:is|are)\s+(?:hereby\s+)?repealed(?P<rep>\s+and\s+replaced)?", re.I)
+_AMENDED_SQUASHED = re.compile(r"section([a-z-]+?|\d{1,3}[a-z]?)(?:\([0-9a-z]{1,4}\))*oftheprincipalact(?:is|are)amended")
+# "The principal Act is amended by the deletion of section 7": a repeal in
+# other words, or a replacement when new wording is substituted.
+# Only when the clause ends at the number or goes on to substitute: the OCR
+# splices the margin note into the sentence, so "is amended by the deletion
+# of subsection (2)" arrives as "... deletion of section 14 of subsection (2)",
+# and four live sections were read as repealed that way.
+_DELETION = re.compile(
+    r"principal\s+act\s+is\s+(?:hereby\s+)?amended\s+by\s+the\s+deletion\s+of\s+sections?\s+"
+    r"(?P<ref>\d{1,3}[A-Z]{0,2})(?=\s*(?:[.;:]|and\s+the\s+substitution|and\s+substituting))", re.I)
 _INSERTED = re.compile(
     r"insertion[^.]{0,120}?(?:new\s+)?sections?\s*(\d{1,3}[A-Z]{1,2})\b|"
     r"insertion\s+of\s+sections?\s*(\d{1,3}[A-Z]{1,2})\b", re.I)
@@ -290,6 +303,10 @@ def extract_ops(text: str) -> list[dict]:
     for m in _REPEALED_FORM.finditer(t):
         clause = re.split(r"\s\d+\.\s+(?:The|Section)\b", t[m.end():m.end() + 400])[0]
         op = "replaced" if (m.group("rep") or _SUBSTITUTED.search(clause)) else "repealed"
+        if m.group("sub").strip():
+            # "Section 7(1) ... is repealed" kills a subsection: the section
+            # lives on, amended.
+            op = "amended"
         refs, _ = read_refs(m.group("ref"))
         for ref in refs:
             conf = "high" if ref.upper() in margins_all else "medium"
@@ -317,6 +334,12 @@ def extract_ops(text: str) -> list[dict]:
                 continue
             ref = str(n)
         add("amended", "section", ref, "medium", m.group(0)[:160])
+
+    for m in _DELETION.finditer(t):
+        clause = re.split(r"\s\d+\.\s+(?:The|Section)\b", t[m.end():m.end() + 400])[0]
+        op = "replaced" if _SUBSTITUTED.search(clause) else "repealed"
+        ref = m.group("ref").upper()
+        add(op, "section", ref, "high" if ref in margins_all else "medium", t[m.start():m.start() + 160])
 
     for m in _INSERTED.finditer(t):
         ref = (m.group(1) or m.group(2) or "").upper()

@@ -129,3 +129,34 @@ class Normalise(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SubsectionForms(unittest.TestCase):
+    """Most 2021-2026 amending Acts write "Section 6(1) of the principal Act
+    is amended"; 24 of them read as changing nothing until 6 Oct 2026."""
+
+    def ops(self, text):
+        from app.services.section_ops import extract_ops
+        return [(o["op"], o["target"]) for o in extract_ops(text)]
+
+    def test_a_subsection_amendment_amends_the_section(self):
+        self.assertEqual(self.ops("2. Section 6(1) of the principal Act is amended by the deletion of paragraph (a)"), [("amended", "6")])
+        self.assertEqual(self.ops("2. Section 6 (1)(c) of the principal Act is amended by the deletion of the word"), [("amended", "6")])
+        self.assertEqual(self.ops("3. Section23(3)oftheprincipal Act is amended bythedeleti on of"), [("amended", "23")])
+
+    def test_a_repealed_subsection_does_not_kill_the_section(self):
+        self.assertEqual(self.ops("4. Section 7(1) of the principal Act is repealed."), [("amended", "7")])
+        self.assertEqual(self.ops("9. Section 24 of the principal Act is repealed."), [("repealed", "24")])
+
+    def test_deleting_a_section_repeals_or_replaces_it(self):
+        self.assertEqual(self.ops("5. The principal Act is amended by the deletion of section 12."), [("repealed", "12")])
+        self.assertEqual(self.ops("2. (1) The principal Act is amended by the deletion of section 7 and the substitution "
+                                  "therefor of the following:"), [("replaced", "7")])
+        # Deleting part of a section is an amendment, read by the other patterns.
+        self.assertNotIn(("repealed", "7"), self.ops("The principal Act is amended by the deletion of section 7(2)."))
+
+    def test_a_spliced_margin_note_is_not_a_whole_section_deletion(self):
+        # OCR puts the margin "Amendment of section 14" inside the sentence.
+        for text in ("Section 14 of the principal Act is amended by the deletion of section 14 of subsection (2).",
+                     "Section 8(4) of the principal Act is amended by the deletion of section 8 of the word eight"):
+            self.assertFalse([o for o in self.ops(text) if o[0] == "repealed"], text)
