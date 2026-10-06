@@ -1390,6 +1390,7 @@ async def upload_document(
 
     from pypdf import PdfReader
     from ..db.supabase import get_db
+    from ..services.attachments import looks_scanned
 
     if not file.filename or not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are supported")
@@ -1488,6 +1489,11 @@ async def upload_document(
                 "chunks_created": 0,
                 "tier": "inline",
                 "page_count": page_count,
+                # A scan or photo has no text layer. Twice a user attached one
+                # and the model only admitted later that nothing had come
+                # through; the client can now say so at upload.
+                "text_chars": len(text),
+                "needs_ocr": looks_scanned(text, page_count),
             }
 
         # ── RAG tier (>5 pages) ────────────────────────────────────────────
@@ -1519,6 +1525,7 @@ async def upload_document(
             "chunks_created": result.get("chunks_created", 0),
             "tier": "rag",
             "page_count": page_count,
+            "needs_ocr": not (result.get("chunks_created") or 0),
         }
     except HTTPException:
         raise

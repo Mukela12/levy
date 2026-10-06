@@ -137,6 +137,8 @@ export default function NewChatPage() {
   const [promoting, setPromoting] = useState<Set<string>>(new Set())
   const [promoted, setPromoted] = useState<Set<string>>(new Set())
   const [promotionSuggested, setPromotionSuggested] = useState<Set<string>>(new Set())
+  // Uploads with no text layer (scans, photos), flagged on their chip.
+  const [scanned, setScanned] = useState<Set<string>>(new Set())
   const pdf = usePdfViewer()
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -198,6 +200,9 @@ export default function NewChatPage() {
     const res = await uploadDocument(file, session?.access_token, user.id)
     if (res.suggest_promotion) {
       setPromotionSuggested((prev) => new Set(prev).add(res.document_id))
+    }
+    if (res.needs_ocr) {
+      setScanned((prev) => new Set(prev).add(res.document_id))
     }
     setStagedAttachments((prev) => [
       ...prev,
@@ -681,6 +686,9 @@ export default function NewChatPage() {
                           <span key={d.id} className="cp-chip">
                             <Paperclip size={11} />
                             <span className="cp-chip-title">{d.title}</span>
+                            {scanned.has(d.id) && (
+                              <span className="cp-chip-flag" title="No text layer: this looks like a scan or photo. Levy reads its pages as images, which is slower, and will tell you if it cannot read it.">Scan</span>
+                            )}
                             {!isPromoted && (
                               <button
                                 type="button"

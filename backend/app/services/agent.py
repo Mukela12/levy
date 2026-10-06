@@ -1261,51 +1261,21 @@ async def run_agent(
                 or []
             )
             if rows:
-                INLINE_MAX_CHARS = 30_000  # per attachment hard cap
-                INLINE_TOTAL_CAP = 60_000  # across all inline docs in one turn
-                lines: list[str] = []
-                inline_sections: list[str] = []
-                inline_used = 0
+                from .attachments import attachment_block
+                texts: dict[str, str] = {}
                 for r in rows:
-                    name = (r.get("short_name") or r.get("title") or "untitled").strip()
-                    pages = r.get("pdf_page_count")
-                    is_inline = (r.get("total_chunks") or 0) == 0
-                    tier_label = "inline" if is_inline else "RAG (searchable)"
-                    lines.append(
-                        f'  - "{name}"' + (f" ({pages} pages, {tier_label})" if pages else f" ({tier_label})")
-                    )
-                    if is_inline and inline_used < INLINE_TOTAL_CAP:
-                        try:
-                            blob = db.storage.from_("legal-docs").download(f"{r['id']}.txt")
-                            text = blob.decode("utf-8", errors="ignore") if isinstance(blob, (bytes, bytearray)) else ""
-                            if text:
-                                budget = min(INLINE_MAX_CHARS, INLINE_TOTAL_CAP - inline_used)
-                                snippet = text[:budget]
-                                truncated = "\n\n[truncated]" if len(text) > budget else ""
-                                inline_sections.append(
-                                    f"### Attachment: {name}\n{snippet}{truncated}"
-                                )
-                                inline_used += len(snippet)
-                        except Exception:
-                            pass
-                attachments_block = (
-                    "\n\n## User attachments for this conversation\n"
-                    "The user has attached these documents to this chat:\n"
-                    + "\n".join(lines)
-                    + "\n\nREAD THE ATTACHMENTS FIRST. For RAG attachments, your first "
-                    "tool call must be `search_corpus` with a query drawn from the user's "
-                    "question; the results will include those attachments. For inline "
-                    "attachments, the full text is provided below — read it directly and "
-                    "do NOT search for it. Do not call gov_search / web_search / "
-                    "news_search until you have read the attachments. Cite attachments "
-                    "by name when you quote them."
-                )
-                if inline_sections:
-                    attachments_block += (
-                        "\n\n## Inline attachment contents\n"
-                        "These are the FULL texts of the small attachments listed above.\n\n"
-                        + "\n\n---\n\n".join(inline_sections)
-                    )
+                    # Only small (unchunked, five pages at most) attachments
+                    # have a stored text file. Fetch every one, so a document
+                    # past the turn's budget is not mistaken for a scan.
+                    if (r.get("total_chunks") or 0) > 0:
+                        continue
+                    try:
+                        blob = db.storage.from_("legal-docs").download(f"{r['id']}.txt")
+                        if isinstance(blob, (bytes, bytearray)):
+                            texts[r["id"]] = blob.decode("utf-8", errors="ignore")
+                    except Exception:
+                        pass  # no text file: a scan, and the block says so
+                attachments_block = attachment_block(rows, texts)
         except Exception:
             attachments_block = ""
 
@@ -1387,6 +1357,8 @@ async def run_agent(
     total_output_tokens = 0
     iterations = 0
     auto_nudges = 0      # times we've prodded the model past a "I'll draft" stall
+    continuations = 0    # times an answer cut off by the output limit was resumed
+    continued_text = ""  # answer text from rounds before a continuation, for the audit
     asked_user = False   # the model handed the turn back with an ask_user question
 
     while True:
@@ -1559,6 +1531,25 @@ async def run_agent(
                 getattr(b, "text", "") for b in final_message.content
                 if getattr(b, "type", None) == "text"
             )
+            # Cut off by the output limit mid-answer ("You stopped?", "the
+            # closing address isn't complete"): resume it, so the user does
+            # not have to notice and ask. Only a text turn: a half-written
+            # tool call cannot be continued.
+            if (final_message.stop_reason == "max_tokens" and continuations < 2
+                    and final_text.strip()
+                    and not any(getattr(b, "type", None) == "tool_use" for b in final_message.content)):
+                continuations += 1
+                continued_text += final_text
+                print(f"[agent] answer hit the output limit; continuing ({continuations}/2)")
+                messages.append({
+                    "role": "user",
+                    "content": (
+                        "Your reply was cut off by the length limit. Continue exactly where it stopped, "
+                        "mid-sentence if need be. Do not repeat anything already written, do not "
+                        "apologise, and do not restart the document."
+                    ),
+                })
+                continue
             if auto_nudges < 2 and _is_stalled_draft_promise(final_text):
                 auto_nudges += 1
                 messages.append({
@@ -1761,10 +1752,10 @@ async def run_agent(
     # unmatched ones are shown honestly as not in the library.
     try:
         from .citation_audit import audit_answer
-        _answer_text = "".join(
+        _answer_text = continued_text + ("".join(
             getattr(b, "text", "") for b in final_message.content
             if getattr(b, "type", None) == "text"
-        ) if final_message is not None else ""
+        ) if final_message is not None else "")
         _audit = audit_answer(_answer_text)
     except Exception:  # noqa: BLE001 — verification must never break an answer
         _audit = []

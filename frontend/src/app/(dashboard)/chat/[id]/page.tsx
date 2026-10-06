@@ -39,6 +39,8 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
   const [promoting, setPromoting] = useState<Set<string>>(new Set())
   const [promoted, setPromoted] = useState<Set<string>>(new Set())
   const [promotionSuggested, setPromotionSuggested] = useState<Set<string>>(new Set())
+  // Uploads with no text layer (scans, photos), flagged on their chip.
+  const [scanned, setScanned] = useState<Set<string>>(new Set())
 
   const canopy = useUiVariant().variant === 'canopy'
   const sess = sessions[id]
@@ -100,6 +102,9 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
     if (res.suggest_promotion) {
       setPromotionSuggested((prev) => new Set(prev).add(res.document_id))
     }
+    if (res.needs_ocr) {
+      setScanned((prev) => new Set(prev).add(res.document_id))
+    }
     await attachments.attach(res.document_id)
   }
 
@@ -148,6 +153,9 @@ export default function ChatSessionPage({ params }: { params: Promise<{ id: stri
               <span key={d.id} className="cp-chip">
                 <Paperclip size={11} />
                 <span className="cp-chip-title">{d.title}</span>
+                {scanned.has(d.id) && (
+                  <span className="cp-chip-flag" title="No text layer: this looks like a scan or photo. Levy reads its pages as images, which is slower, and will tell you if it cannot read it.">Scan</span>
+                )}
                 {!isPromoted && (
                   <button type="button" onClick={() => handlePromote(d.id)} disabled={isPromoting} title={suggested ? "You've used this file before. Save it to your library for cross-chat search" : 'Save to library for cross-chat search'} aria-label="Save to library">
                     {isPromoting ? <Loader2 size={11} className="animate-spin" /> : <ArrowUpToLine size={11} />}

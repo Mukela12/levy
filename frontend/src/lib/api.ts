@@ -439,6 +439,9 @@ export async function uploadDocument(
   tier?: 'inline' | 'rag'
   page_count?: number
   suggest_promotion?: boolean
+  /** No text layer (a scan or photo): the model must read its pages as images. */
+  needs_ocr?: boolean
+  text_chars?: number
 }> {
   const headers: Record<string, string> = token
     ? { Authorization: `Bearer ${token}` }
