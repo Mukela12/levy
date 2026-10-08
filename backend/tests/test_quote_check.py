@@ -130,5 +130,42 @@ class SharedNumbers(unittest.TestCase):
                                                 amending=lambda d: [])["status"], "verbatim")
 
 
+
+class Layout(unittest.TestCase):
+    """Two quotations from production answers of 8 Oct 2026 that went unchecked."""
+
+    def run_check(self, text):
+        cites = [{"kind": "statute", "name": "Employment Code Act", "text": "Employment Code Act"}]
+        return qc.check_quotes(text, cites, [{"id": "ec"}], fetch_sections=fetch_sections,
+                               fetch_document=fetch_document, amending=amending)
+
+    def test_a_quotation_over_several_lines(self):
+        text = ('Section 75. Over time\n\n"(1) Subject to subsection (2), an employer shall pay an employee who works in '
+                "excess of forty-eight hours in a week, one and half times the employee's hourly rate of pay.\n(4) An "
+                "employer shall, in calculating the hourly rate of pay in a month, divide the actual amount received by "
+                'the employee in basic wages for that month"\n[Employment Code Act No. 3 of 2019, Section 75] (p. 46)')
+        out = self.run_check(text)
+        self.assertEqual(out[0][0]["section"], "75")
+        self.assertIn(out[0][0]["status"], ("verbatim", "close"))
+
+    def test_subsections_quoted_across_blank_lines(self):
+        text = ('"(1) Subject to subsection (2), an employer shall pay an employee who works in excess of forty-eight '
+                "hours in a week, one and half times the employee's hourly rate of pay.\n\n(4) An employer shall, in "
+                'calculating the hourly rate of pay in a month, divide the actual amount received by the employee in basic '
+                'wages for that month"\n[Employment Code Act No. 3 of 2019, Section 75] (p. 46)')
+        self.assertIn(self.run_check(text)[0][0]["status"], ("verbatim", "close"))
+
+    def test_a_blockquote_after_a_colon_and_a_blank_line(self):
+        text = ('[Employment Code Act, Section 75] (Page 46):\n\n> "an employee who works in excess of forty-eight hours '
+                'in a week, one and half times the employee\'s hourly rate of pay"')
+        out = self.run_check(text)
+        self.assertEqual(out[0][0]["status"], "verbatim")
+
+    def test_a_blank_line_without_a_colon_still_breaks_the_tie(self):
+        text = ('The Employment Code Act covers this.\n\n"an employer is only required to pay overtime once the employee '
+                'has worked more than two hundred and eight hours in a month"')
+        self.assertEqual(self.run_check(text), {})
+
+
 if __name__ == "__main__":
     unittest.main()

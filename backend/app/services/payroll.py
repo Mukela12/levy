@@ -212,6 +212,7 @@ class PayrollResult:
     net_pay: float = 0.0
     audit: list[dict] = field(default_factory=list)
     total_underpaid: float = 0.0
+    total_if_unpaid: float = 0.0   # also counting required lines the payslip does not show
     flags: list[dict] = field(default_factory=list)
     needs_input: list[str] = field(default_factory=list)
     assumptions: list[str] = field(default_factory=list)
@@ -594,11 +595,12 @@ def calculate_payroll(
     # 7) Payslip check.
     audit: list[Check] = []
     underpaid = 0.0
+    unconfirmed: list[tuple[str, float]] = []   # required lines the payslip passed over
     if slip:
         req = {li.item: li for li in earnings}
 
         def compare(label, slip_key, line_name):
-            nonlocal underpaid
+            nonlocal underpaid, unconfirmed
             li = req.get(line_name)
             paid = slip.get(slip_key)
             if li is None and paid is None:
@@ -612,6 +614,8 @@ def calculate_payroll(
                 # Absent from what was passed is not the same as K0 on the payslip.
                 status, note, diff = "check", (f"Not on the payslip given. If it was not paid, "
                                                f"{_k(need or 0)} is owed."), None
+                if need:
+                    unconfirmed.append((label, need))
             elif diff < -TOLERANCE:
                 status, note = "underpaid", f"Short by {_k(-diff)}."
                 underpaid += -diff
@@ -685,9 +689,18 @@ def calculate_payroll(
                                _money(float(slip["net"]) - (gross - total_ded)),
                                "ok" if float(slip["net"]) + TOLERANCE >= gross - total_ded else "check",
                                "", "Follows from the lines above."))
+        if unconfirmed:
+            # QA 8 Oct 2026: a payslip with no overtime or night line was passed
+            # without zeros, and the answer led with the confirmed K155.78 when
+            # K826 was owed. Give the whole figure alongside the confirmed one.
+            extra = sum(v for _, v in unconfirmed)
+            flags.insert(0, Flag("check", (
+                f"Lines not on the payslip ({', '.join(n.lower() for n, _ in unconfirmed)}) are owed if they were not "
+                f"paid: {_k(extra)} more, {_k(underpaid + extra)} in all for the month."), f"{EC}, Part IV"))
         if underpaid > TOLERANCE:
             flags.insert(0, Flag("breach", f"This payslip is {_k(underpaid)} short of what the law requires "
-                                 "for the month (underpayments plus over-deductions).", f"{EC}, Part IV"))
+                                 "for the month (underpayments plus over-deductions)" +
+                                 (", before the lines it does not show." if unconfirmed else "."), f"{EC}, Part IV"))
 
     # 8) Standing notes.
     assumptions += [
@@ -710,6 +723,7 @@ def calculate_payroll(
     res.net_pay = _money(gross - total_ded)
     res.audit = [asdict(c) for c in audit]
     res.total_underpaid = _money(underpaid)
+    res.total_if_unpaid = _money(underpaid + sum(v for _, v in unconfirmed))
     order_rank = {"breach": 0, "check": 1, "info": 2}
     res.flags = [asdict(f) for f in sorted(flags, key=lambda f: order_rank.get(f.severity, 3))]
     res.needs_input = needs

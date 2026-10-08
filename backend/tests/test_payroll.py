@@ -173,6 +173,14 @@ class PayslipCheck(unittest.TestCase):
         self.assertEqual(check(r, "Overtime")["status"], "check")
         self.assertEqual(r["total_underpaid"], 0.0)
 
+    def test_lines_left_out_still_give_the_whole_figure(self):
+        # The production QA case: basic, transport and lunch given; overtime,
+        # night pay and housing left out rather than passed as 0.
+        r = self.run_slip(basic=1650, transport_allowance=200, lunch_allowance=180, nhima=20.3)
+        self.assertEqual(r["total_underpaid"], 155.78)                  # 151.98 basic + 3.80 NHIMA
+        self.assertEqual(r["total_if_unpaid"], 826.32)                  # + 77.97 + 51.98 + 540.59
+        self.assertTrue(any("826.32" in f["message"] for f in r["flags"]))
+
     def test_unauthorised_deductions_are_flagged_with_s68(self):
         r = self.run_slip(basic=1801.98, other_deductions=[{"label": "Breakages", "amount": 50}])
         self.assertEqual(check(r, "Breakages")["status"], "check")

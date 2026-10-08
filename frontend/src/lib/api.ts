@@ -652,6 +652,8 @@ export interface PayrollBreakdown {
   net_pay: number
   audit: PayrollCheck[]
   total_underpaid: number
+  /** Also counting required lines the payslip does not show. */
+  total_if_unpaid?: number
   flags: PayrollFlag[]
   needs_input: string[]
   assumptions: string[]

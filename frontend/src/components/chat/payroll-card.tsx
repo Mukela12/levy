@@ -60,7 +60,9 @@ export function PayrollCard({ breakdown: b }: { breakdown: PayrollBreakdown }) {
           <span className="pay-kicker">{audited ? 'Payslip check' : 'Pay calculation'}</span>
           <span className="pay-who">{who}</span>
         </span>
-        {b.total_underpaid > 0 && <span className="pay-short">Short {kwacha(b.total_underpaid)}</span>}
+        {(b.total_if_unpaid ?? 0) > b.total_underpaid + 1 ? (
+          <span className="pay-short">Short up to {kwacha(b.total_if_unpaid)}</span>
+        ) : b.total_underpaid > 0 && <span className="pay-short">Short {kwacha(b.total_underpaid)}</span>}
         <span className="pay-chevron">{expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}</span>
       </button>
 

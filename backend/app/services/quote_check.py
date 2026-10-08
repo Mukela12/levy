@@ -36,7 +36,12 @@ GRAM = 8
 # An opening quote follows a space, bracket, colon or line start and touches
 # the first word; a closing one touches the last word. Pairing any two straight
 # quotes read the text BETWEEN two quotations as one (measured on real answers).
-_QUOTE = re.compile(r"(?:(?<=^)|(?<=[\s(\[:>—-]))[“\"](?=\S)([^“”\"\n]{30,1500}?)(?<=\S)[”\"](?=[\s.,;:)\]!?—-]|$)", re.M)
+# A quotation may run over line breaks when a section is quoted subsection by
+# subsection, even across a blank line, but only when the next line opens a
+# subsection: "(2) An employer ...". Any other blank line ends it.
+_QUOTE = re.compile(r"(?:(?<=^)|(?<=[\s(\[:>—-]))[“\"](?=\S)((?:[^“”\"\n]|\n(?!\s*\n)|\n\s*\n(?=\s*\(\w{1,4}\)))"
+                    r"{30,2500}?)(?<=\S)[”\"]"
+                    r"(?=[\s.,;:)\]!?—-]|$)", re.M)
 # Words that introduce a quotation of the authority just named.
 _CUE = re.compile(r"\b(?:provides?|provided|states?|stated|reads?|says?|said|held|holds|holding|defines?|defined|means?|"
                   r"as follows|in these terms|in the following terms|put it|observed|noted|declares?|declared|"
@@ -122,7 +127,10 @@ def _attribute(text: str, qs: int, qe: int, cites: list[dict], usable: list[bool
     elif before:
         _, i, ms, me = before
         between = text[me:qs]
-        if re.search(r"\n\s*\n|^\s*-{3,}", between, re.M) or not _CUE.search(between):
+        # Markdown needs a blank line before a blockquote: "... Section 27]
+        # (Page 13):" then "> ...". A colon ending the line still ties them.
+        introduced = re.search(r":\s*\n\s*\n\s*(?:>\s*)?$", between) and between.count("\n\n") == 1
+        if (re.search(r"\n\s*\n|^\s*-{3,}", between, re.M) and not introduced) or not _CUE.search(between):
             return None
         lo, hi = max(0, ms - 60), qs
     else:

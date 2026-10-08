@@ -3119,7 +3119,11 @@ def build_tool_registry(
                     "napsa_ceiling": {"type": "number", "description": "NAPSA's current maximum insurable monthly earnings, only if known from a source."},
                     "payslip": {
                         "type": "object",
-                        "description": "What the payslip or the employer actually paid and deducted, to check it. Use 0 for a line the payslip lacks.",
+                        "description": ("What the payslip or the employer actually paid and deducted, to check it. "
+                                        "Put 0 for every line the payslip lacks or the user says is not paid "
+                                        "(\"no overtime\", \"no night pay\", no housing allowance): a line left out is "
+                                        "treated as unknown, not as unpaid. When you report the result, lead with "
+                                        "total_if_unpaid if lines were left out."),
                         "properties": {
                             "basic": {"type": "number"},
                             "overtime": {"type": "number"},
