@@ -127,6 +127,16 @@ class Normalise(unittest.TestCase):
         self.assertIsNone(normalise_section(None))
 
 
+
+class SplicedSectionNumber(unittest.TestCase):
+    def test_the_amending_acts_own_number_is_not_a_listed_section(self):
+        from app.services.section_ops import _list_refs
+        self.assertEqual(_list_refs(" 11, 6. The principal Act is amended by the repeal of sections 11, 12 and 13"), [])
+        self.assertEqual(_list_refs(" 11, 12, 6. The principal Act"), ["11", "12"])
+        self.assertEqual(_list_refs(" 11, 12 and 13. The principal Act is amended"), ["11", "12", "13"])
+        self.assertEqual(_list_refs(" 303, 304, 305 and 306 and the substitution"), ["303", "304", "305", "306"])
+
+
 if __name__ == "__main__":
     unittest.main()
 

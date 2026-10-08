@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-06T11:39:29+00:00",
+ "generated_at": "2026-10-08T04:59:29+00:00",
  "documents": {
   "42d7a79f-db67-4d29-9371-49a8556b952f": {
    "status": "repealed",
@@ -196,7 +196,7 @@
     {
      "title": "The Mental Health Act, 2019",
      "id": "0670e07b-be43-4fa1-acef-24125f49e928",
-     "evidence": "The Mental Disorders Act,1949,is repealed"
+     "evidence": "The Mental Disorders Act, 1949, is repealed"
     }
    ],
    "repeals": [],
@@ -283,7 +283,7 @@
     {
      "title": "The Electricity Act, 2019",
      "id": "0a7810de-681c-45a2-935d-a6302bac4a44",
-     "evidence": "The Electricity Act,1995,is repealed"
+     "evidence": "The Electricity Act, 1995, is repealed"
     }
    ],
    "repeals": [],
@@ -476,6 +476,47 @@
    "year": null,
    "is_global": true
   },
+  "3ffc9f21-c077-4d57-a3fc-2bb0bb4247ce": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "The Traditional Beer (Repeal) Act, 2011",
+     "id": "165a62ba-fd81-4916-b16c-01bf20295093",
+     "evidence": "The Traditional Beer Act, 1930, is hereby repealed"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Traditional Beer Act",
+   "short_name": "Traditional Beer Act",
+   "year": null,
+   "is_global": true
+  },
+  "165a62ba-fd81-4916-b16c-01bf20295093": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "The Traditional Beer Act",
+     "id": "3ffc9f21-c077-4d57-a3fc-2bb0bb4247ce"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Traditional Beer (Repeal) Act, 2011",
+   "short_name": "The Traditional Beer (Repeal) Act, 2011 (No. 17 of 2011)",
+   "year": 2011,
+   "is_global": true
+  },
   "1744a1cc-411d-4a09-9139-b83894972471": {
    "status": "repealed",
    "repealed_by": [
@@ -665,7 +706,7 @@
     {
      "title": "The Refugees",
      "id": "1fe228a9-3238-4c91-a8fc-9cb806491cd5",
-     "evidence": "The Refugees(Control)Act,1970,is repealed"
+     "evidence": "The Refugees (Control) Act, 1970, is repealed"
     }
    ],
    "repeals": [],
@@ -706,7 +747,7 @@
     {
      "title": "The Anti-Terrorism and Non-Proliferation Act, 2018",
      "id": "22abb9d1-5671-4141-af73-24d9645709a1",
-     "evidence": "The Anti-Terrorism Act,2007is repealed"
+     "evidence": "The Anti-Terrorism Act, 2007 is repealed"
     }
    ],
    "repeals": [],
@@ -1327,7 +1368,7 @@
     {
      "title": "The Food and Nutrition Act, 2020",
      "id": "31b338dc-c41c-4396-93c6-6589bc708b10",
-     "evidence": "repeal and replace the National Food and Nutrition Commission Act"
+     "evidence": "The Food and Nutrition Commission Act, is repealed"
     }
    ],
    "repeals": [],
@@ -1558,7 +1599,7 @@
     {
      "title": "The Public Procurement Act, 2020",
      "id": "fb279a19-d572-4f18-b2fc-63a965bbb0cb",
-     "evidence": "The Public Procurement Act,2008 is repealed"
+     "evidence": "The Public Procurement Act, 2008 is repealed"
     }
    ],
    "repeals": [
@@ -1820,7 +1861,7 @@
     {
      "title": "The Patents and Companies Registration Agency Act, 2020",
      "id": "49ef6221-27c0-416a-a5f9-e29e3c883f21",
-     "evidence": "repeal and replace the Patents and Companies Registration Agency Act"
+     "evidence": "The Patents and Companies Registration Act, is repealed"
     }
    ],
    "repeals": [],
@@ -2127,7 +2168,7 @@
     {
      "title": "The Energy Regulation Act, 2019",
      "id": "57b24226-ea66-419b-8888-00859c6bb066",
-     "evidence": "The Energy Regulation Act,1995is repealed"
+     "evidence": "The Energy Regulation Act, 1995 is repealed"
     }
    ],
    "repeals": [],
@@ -2424,7 +2465,7 @@
     {
      "title": "The Rating Act, 2018",
      "id": "61747398-3ceb-4953-af27-5f1c2ab557e8",
-     "evidence": "The Rating Act,1997,is repealed"
+     "evidence": "The Rating Act, 1997, is repealed"
     }
    ],
    "repeals": [],
@@ -2469,7 +2510,7 @@
     {
      "title": "The Rating Act, 2018",
      "id": "61747398-3ceb-4953-af27-5f1c2ab557e8",
-     "evidence": "The Rating Act,1997,is repealed"
+     "evidence": "The Rating Act, 1997, is repealed"
     }
    ],
    "repeals": [],
@@ -2531,7 +2572,7 @@
     {
      "title": "The Metrology",
      "id": "65dd452c-210f-4425-b1d4-22e97bea28b5",
-     "evidence": "The Weights and Measures Act,1994, is repealed"
+     "evidence": "The Weights and Measures Act, 1994, is repealed"
     }
    ],
    "repeals": [],
@@ -2582,7 +2623,7 @@
     {
      "title": "The Border Management and Trade Facilitation Act, 2018",
      "id": "66ada4bc-3018-4b6d-a698-a55da5e87caf",
-     "evidence": "The One-stop Border Control Act,2009is repealed"
+     "evidence": "The One-stop Border Control Act, 2009 is repealed"
     }
    ],
    "repeals": [],
@@ -2792,7 +2833,7 @@
     {
      "title": "THE COMPANIES ACT, 2017",
      "id": "7279308e-8514-4c90-b9bd-bc9ba6880ac0",
-     "evidence": "The Companies Act, 1994is repealed"
+     "evidence": "The Companies Act, 1994 is repealed"
     },
     {
      "title": "REPUBLIC OF ZAMBIA THE COMPANIES ACT",
@@ -2856,7 +2897,7 @@
     {
      "title": "THE COMPANIES ACT, 2017",
      "id": "7279308e-8514-4c90-b9bd-bc9ba6880ac0",
-     "evidence": "The Companies Act, 1994is repealed"
+     "evidence": "The Companies Act, 1994 is repealed"
     }
    ],
    "repeals": [
@@ -3312,7 +3353,7 @@
     {
      "title": "The Local Government Act, 2019",
      "id": "9b02fbfb-0c4d-4448-a787-0009feaeece7",
-     "evidence": "The Local Government Act,1991,is repealed"
+     "evidence": "The Local Government Act, 1991, is repealed"
     }
    ],
    "repeals": [],
@@ -3433,7 +3474,7 @@
     {
      "title": "The Food Safety Act, 2019",
      "id": "a93cec7b-1c48-406a-8110-b4bdfb2010ca",
-     "evidence": "The Foodand Drugs Act,1972andsections79and83 Repealof Act No 22 of the Public Health Act,1972are repealed"
+     "evidence": "The Food and Drugs Act, 1972 and sections Act No 22 of the Public Health Act, 1972 are repealed"
     }
    ],
    "amended_by": [],
@@ -3561,6 +3602,140 @@
    "title": "THE CYBER SECURITY AND CYBER CRIMES ACT, 2021",
    "short_name": "CYBER SECURITY AND CYBER CRIMES ACT",
    "year": 2021,
+   "is_global": true
+  },
+  "2a683a50-273f-407a-ad84-5c1bf4d77c7a": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "The Zambia Development Agency Act, 2006",
+     "id": "a9087d11-abba-4323-8d86-af52125566b5",
+     "evidence": "Subject to the Fourth Schedule, the Export Development 385 Act, the Export Processing Zones Act, the Investment Act and the Act No 7 of Small Enterprises Develo"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "REPUBLIC OF ZAMBIA THE INVESTMENT ACT",
+   "short_name": "REPUBLIC OF ZAMBIA THE INVESTMENT ACT",
+   "year": 1996,
+   "is_global": true
+  },
+  "a9087d11-abba-4323-8d86-af52125566b5": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "THE ZAMBIA DEVELOPMENT AGENCY ACT, 2022",
+     "id": "eb5a83a0-d03c-42c7-a971-6b61d010f8e7",
+     "evidence": "repeal and replace the Zambia Development Agency Act"
+    }
+   ],
+   "repeals": [
+    {
+     "title": "REPUBLIC OF ZAMBIA THE INVESTMENT ACT",
+     "id": "2a683a50-273f-407a-ad84-5c1bf4d77c7a"
+    },
+    {
+     "title": "The Small Enterprises Development Act",
+     "id": "133c4b6f-7f96-4d9c-a6f4-352b64545819"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Zambia Development Agency (Amendment) Act 2012",
+     "id": "6cb3073c-b532-4afa-b3a0-5745d723d216"
+    },
+    {
+     "title": "The Zambia Development Agency (Amendment) Act (2011)",
+     "id": "738ec06d-2fd2-4482-86c8-ed0705298621"
+    },
+    {
+     "title": "The Zambia Development Agency (Amendment)",
+     "id": "b6ea9be4-4ec5-41af-97fe-a95fb5c0b1ac"
+    },
+    {
+     "title": "The Zambia Development Agency (Amendment) Act, 2021",
+     "id": "d05854d5-6e74-46b9-b742-4b03206703cb"
+    },
+    {
+     "title": "The Zambia Development Agency (Amendment)",
+     "id": "da178bab-06bd-499a-bc67-fdd9ca354263"
+    }
+   ],
+   "amends": [],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Zambia Development Agency Act, 2006",
+   "short_name": "The Zambia Development Agency Act, 2006 (No. 11 of 2006)",
+   "year": 2006,
+   "is_global": true
+  },
+  "133c4b6f-7f96-4d9c-a6f4-352b64545819": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "The Zambia Development Agency Act, 2006",
+     "id": "a9087d11-abba-4323-8d86-af52125566b5",
+     "evidence": "Subject to the Fourth Schedule, the Export Development 385 Act, the Export Processing Zones Act, the Investment Act and the Act No 7 of Small Enterprises Develo"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Small Enterprises Development Act",
+   "short_name": "Small Enterprises Development Act",
+   "year": null,
+   "is_global": true
+  },
+  "a5a2b3ff-7b40-4ff6-aaa5-c0dbfbdc7d7d": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "The Food Safety Act, 2019",
+     "id": "a93cec7b-1c48-406a-8110-b4bdfb2010ca",
+     "evidence": "The Food and Drugs Act, 1972 and sections Act No 22 of the Public Health Act, 1972 are repealed"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "REPUBLIC OF ZAMBIA THE FOOD AND DRUGS ACT",
+   "short_name": "REPUBLIC OF ZAMBIA THE FOOD AND DRUGS ACT",
+   "year": null,
+   "is_global": true
+  },
+  "a93cec7b-1c48-406a-8110-b4bdfb2010ca": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "REPUBLIC OF ZAMBIA THE FOOD AND DRUGS ACT",
+     "id": "a5a2b3ff-7b40-4ff6-aaa5-c0dbfbdc7d7d"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Food Safety Act, 2019",
+   "short_name": "Food Safety Act, 2019 (No. 7 of 2019)",
+   "year": 2019,
    "is_global": true
   },
   "4b626d0a-514f-44dc-b39e-026a4fd559bf": {
@@ -3737,6 +3912,47 @@
    "year": 2016,
    "is_global": true
   },
+  "9ceaf02f-4ccb-4f03-bd53-1c8dea0ed5ad": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "The Dairy Produce Marketing and Levy (Repeal) Act, 2010",
+     "id": "b9d1337b-6f05-4bdd-a32d-74247d550ebc",
+     "evidence": "The Dairy Produce Marketing and Levy Act, 1962, is hereby repealed"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "REPUBLIC OF ZAMBIA THE DAIRY PRODUCE MARKETING AND LEVY ACT",
+   "short_name": "REPUBLIC OF ZAMBIA THE DAIRY PRODUCE MARKETING AND LEVY ACT",
+   "year": null,
+   "is_global": true
+  },
+  "b9d1337b-6f05-4bdd-a32d-74247d550ebc": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "REPUBLIC OF ZAMBIA THE DAIRY PRODUCE MARKETING AND LEVY ACT",
+     "id": "9ceaf02f-4ccb-4f03-bd53-1c8dea0ed5ad"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Dairy Produce Marketing and Levy (Repeal) Act, 2010",
+   "short_name": "The Dairy Produce Marketing and Levy (Repeal) Act, 2010 (No. 10 of 2010)",
+   "year": 2010,
+   "is_global": true
+  },
   "44722517-3681-4446-b795-64a08a1d64a2": {
    "status": "repealed",
    "repealed_by": [
@@ -3776,6 +3992,72 @@
    "title": "THE ZAMBIA CORRECTIONAL SERVICE ACT, 2021",
    "short_name": "ZAMBIA CORRECTIONAL SERVICE ACT",
    "year": 2021,
+   "is_global": true
+  },
+  "071aefc3-2ddc-43de-9243-5e4ff06f998f": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "The Statistics Act",
+     "id": "c898070e-419b-4271-8179-4bc629c209eb",
+     "evidence": "The Census and Statistics Act, 1955 and the Agricultural Statistics Act, 1964 are repealed"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "REPUBLIC OF ZAMBIA THE CENSUS AND STATISTICS ACT",
+   "short_name": "REPUBLIC OF ZAMBIA THE CENSUS AND STATISTICS ACT",
+   "year": 1994,
+   "is_global": true
+  },
+  "c898070e-419b-4271-8179-4bc629c209eb": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "REPUBLIC OF ZAMBIA THE CENSUS AND STATISTICS ACT",
+     "id": "071aefc3-2ddc-43de-9243-5e4ff06f998f"
+    },
+    {
+     "title": "REPUBLIC OF ZAMBIA THE AGRICULTURAL STATISTICS ACT",
+     "id": "d23f5bf3-c6ab-4b20-ba3a-738549eec8ef"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Statistics Act",
+   "short_name": "Statistics Act (No. 13 of 2018)",
+   "year": 2018,
+   "is_global": true
+  },
+  "d23f5bf3-c6ab-4b20-ba3a-738549eec8ef": {
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "The Statistics Act",
+     "id": "c898070e-419b-4271-8179-4bc629c209eb",
+     "evidence": "The Census and Statistics Act, 1955 and the Agricultural Statistics Act, 1964 are repealed"
+    }
+   ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "REPUBLIC OF ZAMBIA THE AGRICULTURAL STATISTICS ACT",
+   "short_name": "REPUBLIC OF ZAMBIA THE AGRICULTURAL STATISTICS ACT",
+   "year": null,
    "is_global": true
   },
   "243d1cba-6153-4ac4-9556-14bb60bb0695": {
@@ -4068,6 +4350,31 @@
    "title": "The Self-Management Enterprises Act",
    "short_name": "Self-Management Enterprises Act",
    "year": null,
+   "is_global": true
+  },
+  "eb5a83a0-d03c-42c7-a971-6b61d010f8e7": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "The Zambia Development Agency Act, 2006",
+     "id": "a9087d11-abba-4323-8d86-af52125566b5"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Zambia Development Agency (Amendment) Act, 2026",
+     "id": "1323e0ed-d228-4d2d-89ff-9833d80cb8c6"
+    }
+   ],
+   "amends": [],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "THE ZAMBIA DEVELOPMENT AGENCY ACT, 2022",
+   "short_name": "Zambia Development Agency Act, 2022 (No. 17 of 2022)",
+   "year": 2022,
    "is_global": true
   },
   "bc9ffad0-966b-457a-8dba-d2406e6b4481": {
@@ -4494,12 +4801,16 @@
     {
      "title": "THE EMPLOYMENT CODE ACT, 2019",
      "id": "fe976ae2-a240-43e3-bdb0-36448febe68f",
-     "evidence": "The Employment Act,1965,the Employment(Special Repealof Provisions) Act, 1966, the Employment of Young Persons and Children Act, 1933, and the Minimum Wages and"
+     "evidence": "The Employment Act, 1965, the Employment (Special Provisions) Act, 1966, the Employment of Young Persons and Children Act, 1933, and the Minimum Wages and Condi"
     }
    ],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [
+    {
+     "title": "The Employment (Amendment) Act, 2015",
+     "id": "e1468eac-9a94-4456-b39b-94bdedca53c1"
+    },
     {
      "title": "The Employment (Amendment)",
      "id": "f4f819eb-baa1-42a2-9b7a-c151fa53bc61"
@@ -4552,7 +4863,7 @@
     {
      "title": "THE EMPLOYMENT CODE ACT, 2019",
      "id": "fe976ae2-a240-43e3-bdb0-36448febe68f",
-     "evidence": "The Employment Act,1965,the Employment(Special Repealof Provisions) Act, 1966, the Employment of Young Persons and Children Act, 1933, and the Minimum Wages and"
+     "evidence": "The Employment Act, 1965, the Employment (Special Provisions) Act, 1966, the Employment of Young Persons and Children Act, 1933, and the Minimum Wages and Condi"
     }
    ],
    "repeals": [],
@@ -4573,7 +4884,7 @@
     {
      "title": "THE EMPLOYMENT CODE ACT, 2019",
      "id": "fe976ae2-a240-43e3-bdb0-36448febe68f",
-     "evidence": "The Employment Act,1965,the Employment(Special Repealof Provisions) Act, 1966, the Employment of Young Persons and Children Act, 1933, and the Minimum Wages and"
+     "evidence": "The Employment Act, 1965, the Employment (Special Provisions) Act, 1966, the Employment of Young Persons and Children Act, 1933, and the Minimum Wages and Condi"
     }
    ],
    "repeals": [],
@@ -4594,7 +4905,7 @@
     {
      "title": "THE EMPLOYMENT CODE ACT, 2019",
      "id": "fe976ae2-a240-43e3-bdb0-36448febe68f",
-     "evidence": "The Employment Act,1965,the Employment(Special Repealof Provisions) Act, 1966, the Employment of Young Persons and Children Act, 1933, and the Minimum Wages and"
+     "evidence": "The Employment Act, 1965, the Employment (Special Provisions) Act, 1966, the Employment of Young Persons and Children Act, 1933, and the Minimum Wages and Condi"
     }
    ],
    "repeals": [],
@@ -4615,7 +4926,7 @@
     {
      "title": "The Nurses and Midwives Act 2019",
      "id": "ffc4fb9d-8f68-4552-a994-c1051a1b9430",
-     "evidence": "repeal and replace the Nurses and Midwives Act"
+     "evidence": "The Nurses and Midwives Act, 1997, is repealed"
     }
    ],
    "repeals": [],
@@ -4969,6 +5280,10 @@
      "id": "936846a0-5a7b-4a17-ba43-12b5c9bd4285"
     },
     {
+     "title": "The Income Tax (Amendment) Act, 2009",
+     "id": "9e02c94e-cd0a-4a43-834d-a51b3060fd81"
+    },
+    {
      "title": "The Income Tax (Amendment) Act, 2015",
      "id": "be180ba3-7938-4059-8aa8-585cbbb4b398"
     },
@@ -4987,6 +5302,10 @@
     {
      "title": "The Income Tax (Amendment) 2013",
      "id": "decf5edf-7db5-4ec5-b3de-fdf324e60e1d"
+    },
+    {
+     "title": "The Income Tax (Amendment) Act, 2010",
+     "id": "e6855c72-c1b4-491f-bc8f-9f7fa9416a6b"
     },
     {
      "title": "The Income Tax (Amendment) Act, 2019",
@@ -5061,6 +5380,10 @@
      "id": "2ad0ea57-6076-481a-9e13-a316dc8a05c2"
     },
     {
+     "title": "The Value Added Tax (Amendment) Act, 2010",
+     "id": "32debe4b-a9f2-44d3-b451-e30bc27bd799"
+    },
+    {
      "title": "The Value Added Tax (Amendment) Act, 2016",
      "id": "3d6b1ad8-ebbc-4157-a972-b0b7e5533c72"
     },
@@ -5071,6 +5394,10 @@
     {
      "title": "The Value Added Tax (Amendment) Act, 2019",
      "id": "5000a7b9-3fcb-47c9-8663-a9676ba6202d"
+    },
+    {
+     "title": "The Value Added Tax (Amendment) Act, 2009",
+     "id": "541bfa4c-8e0a-4124-a8cf-702a20b944ba"
     },
     {
      "title": "The Value Added Tax (Amendment) Act, 2023",
@@ -5097,6 +5424,10 @@
      "id": "b65294ca-a870-4400-9f40-69062027f23a"
     },
     {
+     "title": "The Value Added Tax (Amendment) (No. 2) Act, 2009",
+     "id": "b94df129-7e76-42db-998d-abfc178d1aff"
+    },
+    {
      "title": "The Value Added Tax (Amendment) Act (2011)",
      "id": "c5624fc5-18c3-4fb9-b033-5f6e72fe9511"
     },
@@ -5111,6 +5442,10 @@
     {
      "title": "The Value Added Tax (Amendment) Act, 2024",
      "id": "ecb6b4c3-a7d0-4f40-ba76-0fd46dd1962b"
+    },
+    {
+     "title": "The Value Added Tax (Amendment) Act, 2015",
+     "id": "f1988801-7446-4d92-a586-58c077d63aff"
     }
    ],
    "amends": [],
@@ -5269,8 +5604,16 @@
      "id": "3996d28e-6038-4ab5-b6d9-3e20c269915b"
     },
     {
+     "title": "The Customs and Excise (Amendment) (No. 2) Act, 2001",
+     "id": "57107a71-a1f5-42f8-8627-7b1208d4bdcd"
+    },
+    {
      "title": "The Customs and Excise (Amendment)",
      "id": "6c5b6229-8994-42f8-9c2c-ab2139c6b8ff"
+    },
+    {
+     "title": "The Customs and Excise (Amendment) Act, 2010",
+     "id": "83ed1884-84b0-4d87-af50-f93f65b5234e"
     },
     {
      "title": "The Customs and Excise (Amendment) Act, 2022",
@@ -5355,6 +5698,10 @@
     {
      "title": "Criminal Procedure Code (Amendment) Act, 2026",
      "id": "adcc84ca-ca06-434e-a0fc-a8cdfb1bcca7"
+    },
+    {
+     "title": "The Criminal Procedure Code (Amendment) Act, 1997",
+     "id": "db68c975-9427-4b17-bcea-7d1091d8a437"
     }
    ],
    "amends": [],
@@ -5600,26 +5947,6 @@
    "title": "The Zambia National Public Health Institute (Amendment) Act, 2024",
    "short_name": "Zambia National Public Health Institute (Amendment) Act, 2024 (No. 15 of 2024)",
    "year": 2024,
-   "is_global": true
-  },
-  "eb5a83a0-d03c-42c7-a971-6b61d010f8e7": {
-   "status": "in force",
-   "repealed_by": [],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [
-    {
-     "title": "The Zambia Development Agency (Amendment) Act, 2026",
-     "id": "1323e0ed-d228-4d2d-89ff-9833d80cb8c6"
-    }
-   ],
-   "amends": [],
-   "enacted_as": [],
-   "repeal_pending_by": [],
-   "will_repeal": [],
-   "title": "THE ZAMBIA DEVELOPMENT AGENCY ACT, 2022",
-   "short_name": "Zambia Development Agency Act, 2022 (No. 17 of 2022)",
-   "year": 2022,
    "is_global": true
   },
   "1323e0ed-d228-4d2d-89ff-9833d80cb8c6": {
@@ -5981,6 +6308,10 @@
      "id": "d41cd6ef-dbb5-4f46-88ba-d6843e7dfefa"
     },
     {
+     "title": "The High Court (Amendment) Act, 2016",
+     "id": "dbbd8224-6c54-42a9-a1b4-5296a1593d6a"
+    },
+    {
      "title": "The High Court (Amendment) Rules, 2020",
      "id": "e4518554-0a35-46ba-a28a-489384161173"
     },
@@ -6047,6 +6378,10 @@
     {
      "title": "The High Court (Amendment)",
      "id": "d41cd6ef-dbb5-4f46-88ba-d6843e7dfefa"
+    },
+    {
+     "title": "The High Court (Amendment) Act, 2016",
+     "id": "dbbd8224-6c54-42a9-a1b4-5296a1593d6a"
     },
     {
      "title": "The High Court (Amendment) Rules, 2020",
@@ -6207,6 +6542,10 @@
     {
      "title": "The Supreme Court of Zambia (Amendment) Rules, 2000",
      "id": "77999cbd-2d3d-492a-86dd-4e7b4107a8c7"
+    },
+    {
+     "title": "The Supreme Court (Amendment) Act, 2011",
+     "id": "8c3f1767-c37f-4fa6-a15d-818faebe7954"
     },
     {
      "title": "The Supreme Court of Zambia (Amendment) Rules, 2012",
@@ -6684,6 +7023,26 @@
    "title": "The National HIV/STI/TB Council (Amendment)Act,2026",
    "short_name": "National HIV/STI/TB Council (Amendment)Act,2026 (No. 50 of 2026)",
    "year": 2026,
+   "is_global": true
+  },
+  "32debe4b-a9f2-44d3-b451-e30bc27bd799": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "The Value Added Tax Act",
+     "id": "c8d5a6bc-e1d1-44cf-bac2-5919907e2133"
+    }
+   ],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Value Added Tax (Amendment) Act, 2010",
+   "short_name": "The Value Added Tax (Amendment) Act, 2010 (No. 48 of 2010)",
+   "year": 2010,
    "is_global": true
   },
   "d24e5053-cd4b-4754-ba87-4c7b884f0b90": {
@@ -7261,6 +7620,10 @@
      "id": "452f059d-8d81-4fe6-855c-64001fb29666"
     },
     {
+     "title": "The Property Transfer Tax (Amendment) Act, 2010",
+     "id": "59d70d5b-5ef4-4390-8669-1b50199cc729"
+    },
+    {
      "title": "The Property Transfer Tax (Amendment), 2020",
      "id": "7b80a2f8-9010-4463-80d8-6c59f44cb766"
     },
@@ -7279,6 +7642,14 @@
     {
      "title": "The Property Transfer Tax (Amendment) Act, 2019",
      "id": "a8c54007-4f49-4ae2-bb5f-f4d9b36e344c"
+    },
+    {
+     "title": "The Property Transfer Tax (Amendment) Act, 2015",
+     "id": "c8823822-e161-4034-8b86-a3684551a028"
+    },
+    {
+     "title": "The Property Transfer Tax (Amendment) Act, 2009",
+     "id": "e0e63717-061d-43d4-87f1-39020488b0e4"
     },
     {
      "title": "The Property Transfer Tax (Amendment) 2013",
@@ -7694,6 +8065,46 @@
    "year": 2024,
    "is_global": true
   },
+  "9688fd3b-938d-4c9b-b003-585751735d6e": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Zambia Tanzania Pipeline (Amendment) Act, 2009",
+     "id": "4eca1c29-a19a-4839-aabd-4b7f8871f55b"
+    }
+   ],
+   "amends": [],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Zambia Tanzania Pipeline Act",
+   "short_name": "Zambia Tanzania Pipeline Act",
+   "year": null,
+   "is_global": true
+  },
+  "4eca1c29-a19a-4839-aabd-4b7f8871f55b": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "The Zambia Tanzania Pipeline Act",
+     "id": "9688fd3b-938d-4c9b-b003-585751735d6e"
+    }
+   ],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Zambia Tanzania Pipeline (Amendment) Act, 2009",
+   "short_name": "The Zambia Tanzania Pipeline (Amendment) Act, 2009 (No. 25 of 2009)",
+   "year": 2009,
+   "is_global": true
+  },
   "4f3afd1a-c3dc-48cc-a650-be157c0cc99f": {
    "status": "amending Act",
    "repealed_by": [],
@@ -7818,6 +8229,26 @@
    "year": 2025,
    "is_global": true
   },
+  "541bfa4c-8e0a-4124-a8cf-702a20b944ba": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "The Value Added Tax Act",
+     "id": "c8d5a6bc-e1d1-44cf-bac2-5919907e2133"
+    }
+   ],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Value Added Tax (Amendment) Act, 2009",
+   "short_name": "The Value Added Tax (Amendment) Act, 2009 (No. 3 of 2009)",
+   "year": 2009,
+   "is_global": true
+  },
   "f6ad35a7-6e55-4c84-91b4-00d97a79fa3b": {
    "status": "in force",
    "repealed_by": [],
@@ -7839,6 +8270,10 @@
     {
      "title": "The Penal Code (Amendment) Act, 2023",
      "id": "dcdf251f-97e6-49e8-b711-eb017c317800"
+    },
+    {
+     "title": "The Penal Code (Amendment) (No. 2) Act, 2000",
+     "id": "f0d1c6c1-f905-45ce-ae17-d15397003576"
     },
     {
      "title": "The Penal Code (Amendment) Act, 2026",
@@ -7938,6 +8373,26 @@
    "year": 2026,
    "is_global": true
   },
+  "57107a71-a1f5-42f8-8627-7b1208d4bdcd": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "REPUBLIC OF ZAMBIA THE CUSTOMS AND EXCISE ACT",
+     "id": "8b04815e-558b-488f-b296-1f72bb241561"
+    }
+   ],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Customs and Excise (Amendment) (No. 2) Act, 2001",
+   "short_name": "The Customs and Excise (Amendment) (No. 2) Act, 2001 (No. 9 of 2001)",
+   "year": 2001,
+   "is_global": true
+  },
   "59cbdd0c-66c1-4014-ab19-f317f2796e1e": {
    "status": "amending Act",
    "repealed_by": [],
@@ -7960,6 +8415,26 @@
    "title": "The High Court (Amendment) Rules, 2005",
    "short_name": "High Court (Amendment) Rules 2005 (SI No. 68 of 2005)",
    "year": 2005,
+   "is_global": true
+  },
+  "59d70d5b-5ef4-4390-8669-1b50199cc729": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "The Property Transfer Tax Act",
+     "id": "cf86bd50-252c-4d30-b2b1-86beb03989ce"
+    }
+   ],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Property Transfer Tax (Amendment) Act, 2010",
+   "short_name": "The Property Transfer Tax (Amendment) Act, 2010 (No. 50 of 2010)",
+   "year": 2010,
    "is_global": true
   },
   "5a55fe81-a81a-4bc5-922c-515cb3355891": {
@@ -8678,6 +9153,26 @@
    "year": 2022,
    "is_global": true
   },
+  "6cb3073c-b532-4afa-b3a0-5745d723d216": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "The Zambia Development Agency Act, 2006",
+     "id": "a9087d11-abba-4323-8d86-af52125566b5"
+    }
+   ],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Zambia Development Agency (Amendment) Act 2012",
+   "short_name": "The Zambia Development Agency (Amendment) Act 2012 (Act No. 15 of 2012)",
+   "year": 2012,
+   "is_global": true
+  },
   "7908e3a5-6f84-4a8c-a752-a40c9f4ce89f": {
    "status": "in force",
    "repealed_by": [],
@@ -8960,6 +9455,26 @@
    "title": "The Probation of Offenders (Amendment) Act, 2022",
    "short_name": "Probation of Offenders (Amendment) Act, 2022 (No. 14 of 2022)",
    "year": 2022,
+   "is_global": true
+  },
+  "738ec06d-2fd2-4482-86c8-ed0705298621": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "The Zambia Development Agency Act, 2006",
+     "id": "a9087d11-abba-4323-8d86-af52125566b5"
+    }
+   ],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Zambia Development Agency (Amendment) Act (2011)",
+   "short_name": "Zambia Development Agency (Amendment) Act (2011) (No. 29 of 2011)",
+   "year": 2011,
    "is_global": true
   },
   "742b9374-a853-43c2-a515-59e3d958874f": {
@@ -9378,6 +9893,26 @@
    "year": 2015,
    "is_global": true
   },
+  "83ed1884-84b0-4d87-af50-f93f65b5234e": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "REPUBLIC OF ZAMBIA THE CUSTOMS AND EXCISE ACT",
+     "id": "8b04815e-558b-488f-b296-1f72bb241561"
+    }
+   ],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Customs and Excise (Amendment) Act, 2010",
+   "short_name": "The Customs and Excise (Amendment) Act, 2010 (No. 47 of 2010)",
+   "year": 2010,
+   "is_global": true
+  },
   "84ed1398-127e-437b-8b6d-22901a9ec5de": {
    "status": "amending Act",
    "repealed_by": [],
@@ -9640,6 +10175,26 @@
    "title": "The Health Professions (Amendment) Act, 2026",
    "short_name": "Health Professions (Amendment) Act, 2026 (No. 33 of 2026)",
    "year": 2026,
+   "is_global": true
+  },
+  "8c3f1767-c37f-4fa6-a15d-818faebe7954": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "The Supreme Court of Zambia Act",
+     "id": "77585d6f-2d66-4aa0-8c45-a83f3f91cd8f"
+    }
+   ],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Supreme Court (Amendment) Act, 2011",
+   "short_name": "The Supreme Court (Amendment) Act, 2011 (No. 8 of 2011)",
+   "year": 2011,
    "is_global": true
   },
   "8ea70e0f-729f-405e-9178-d99e4c259707": {
@@ -10104,6 +10659,26 @@
    "title": "The Professional Boxing and Wrestling Control (Amendment) 2010",
    "short_name": "Professional Boxing and Wrestling Control (Amendment) 2010 (No. 33 of 2010)",
    "year": 2010,
+   "is_global": true
+  },
+  "9e02c94e-cd0a-4a43-834d-a51b3060fd81": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "REPUBLIC OF ZAMBIA THE INCOME TAX ACT",
+     "id": "881305d4-ef28-4b88-b3b0-00fb864fed40"
+    }
+   ],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Income Tax (Amendment) Act, 2009",
+   "short_name": "The Income Tax (Amendment) Act, 2009 (No. 1 of 2009)",
+   "year": 2009,
    "is_global": true
   },
   "9ee2ec5b-41c1-435d-ba20-45854c4750a9": {
@@ -10782,6 +11357,46 @@
    "year": 2015,
    "is_global": true
   },
+  "b6ea9be4-4ec5-41af-97fe-a95fb5c0b1ac": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "The Zambia Development Agency Act, 2006",
+     "id": "a9087d11-abba-4323-8d86-af52125566b5"
+    }
+   ],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Zambia Development Agency (Amendment)",
+   "short_name": "Zambia Development Agency (Amendment) (No. 5 of 2009)",
+   "year": 2009,
+   "is_global": true
+  },
+  "b94df129-7e76-42db-998d-abfc178d1aff": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "The Value Added Tax Act",
+     "id": "c8d5a6bc-e1d1-44cf-bac2-5919907e2133"
+    }
+   ],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Value Added Tax (Amendment) (No. 2) Act, 2009",
+   "short_name": "The Value Added Tax (Amendment) (No. 2) Act, 2009 (No. 29 of 2009)",
+   "year": 2009,
+   "is_global": true
+  },
   "b9c3ade3-0738-420e-bc98-f7d347874050": {
    "status": "amending Act",
    "repealed_by": [],
@@ -11162,6 +11777,66 @@
    "year": 2017,
    "is_global": true
   },
+  "c8823822-e161-4034-8b86-a3684551a028": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "The Property Transfer Tax Act",
+     "id": "cf86bd50-252c-4d30-b2b1-86beb03989ce"
+    }
+   ],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Property Transfer Tax (Amendment) Act, 2015",
+   "short_name": "The Property Transfer Tax (Amendment) Act, 2015 (No. 16 of 2015)",
+   "year": 2015,
+   "is_global": true
+  },
+  "221e0a85-e25a-424c-b7d3-df64317eb027": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Companies (Certificates Validation) (Amendment) Act, 2010",
+     "id": "ca6297f9-efb2-4c13-9e16-db6d991110af"
+    }
+   ],
+   "amends": [],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Companies (Certificates Validation) Act",
+   "short_name": "Companies (Certificates Validation) Act",
+   "year": null,
+   "is_global": true
+  },
+  "ca6297f9-efb2-4c13-9e16-db6d991110af": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "The Companies (Certificates Validation) Act",
+     "id": "221e0a85-e25a-424c-b7d3-df64317eb027"
+    }
+   ],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Companies (Certificates Validation) (Amendment) Act, 2010",
+   "short_name": "The Companies (Certificates Validation) (Amendment) Act, 2010 (No. 21 of 2010)",
+   "year": 2010,
+   "is_global": true
+  },
   "cbd1a66d-438b-45b1-9e4b-6a922014f888": {
    "status": "amending Act",
    "repealed_by": [],
@@ -11304,6 +11979,26 @@
    "title": "The Penal Code (Amendment) Act, 2022",
    "short_name": "Penal Code (Amendment) Act (No. 23 of 2022)",
    "year": 2022,
+   "is_global": true
+  },
+  "d05854d5-6e74-46b9-b742-4b03206703cb": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "The Zambia Development Agency Act, 2006",
+     "id": "a9087d11-abba-4323-8d86-af52125566b5"
+    }
+   ],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Zambia Development Agency (Amendment) Act, 2021",
+   "short_name": "Zambia Development Agency (Amendment) Act, 2021 (No. 48 of 2021)",
+   "year": 2021,
    "is_global": true
   },
   "d340bb22-d89d-42f9-b8cf-a4f61759abd3": {
@@ -11538,6 +12233,26 @@
    "year": 2021,
    "is_global": true
   },
+  "da178bab-06bd-499a-bc67-fdd9ca354263": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "The Zambia Development Agency Act, 2006",
+     "id": "a9087d11-abba-4323-8d86-af52125566b5"
+    }
+   ],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Zambia Development Agency (Amendment)",
+   "short_name": "The Zambia Development Agency (Amendment) (Act No. 1 of 2010)",
+   "year": 2010,
+   "is_global": true
+  },
   "da64e361-0fc8-41e1-bdfc-6a0121931984": {
    "status": "amending Act",
    "repealed_by": [],
@@ -11556,6 +12271,50 @@
    "title": "The National Heritage Conservation Commission (Amendment) Act, 2021",
    "short_name": "National Heritage Conservation Commission (Amendment) Act, 2021 (No. 19 of 2021)",
    "year": 2021,
+   "is_global": true
+  },
+  "db68c975-9427-4b17-bcea-7d1091d8a437": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "REPUBLIC OF ZAMBIA THE CRIMINAL PROCEDURE CODE ACT",
+     "id": "4ea46d0b-d24a-4ea8-96bd-c226385275a7"
+    }
+   ],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Criminal Procedure Code (Amendment) Act, 1997",
+   "short_name": "The Criminal Procedure Code (Amendment) Act, 1997 (No. 5 of 1997)",
+   "year": 1997,
+   "is_global": true
+  },
+  "dbbd8224-6c54-42a9-a1b4-5296a1593d6a": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "THE HIGH COURT ACT",
+     "id": "efe3190a-2b90-49c1-8c2e-5749a6f0a5a5"
+    },
+    {
+     "title": "REPUBLIC OF ZAMBIA THE HIGH COURT ACT",
+     "id": "fb746a1d-08e7-4313-8f06-7b584ee321ee"
+    }
+   ],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The High Court (Amendment) Act, 2016",
+   "short_name": "The High Court (Amendment) Act, 2016 (No. 21 of 2016)",
+   "year": 2016,
    "is_global": true
   },
   "1a1bb0a8-a9e6-48c5-90b4-ff98630ca6d3": {
@@ -11698,6 +12457,46 @@
    "year": 2013,
    "is_global": true
   },
+  "e0e63717-061d-43d4-87f1-39020488b0e4": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "The Property Transfer Tax Act",
+     "id": "cf86bd50-252c-4d30-b2b1-86beb03989ce"
+    }
+   ],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Property Transfer Tax (Amendment) Act, 2009",
+   "short_name": "The Property Transfer Tax (Amendment) Act, 2009 (No. 4 of 2009)",
+   "year": 2009,
+   "is_global": true
+  },
+  "e1468eac-9a94-4456-b39b-94bdedca53c1": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "REPUBLIC OF ZAMBIA THE EMPLOYMENT ACT",
+     "id": "992415ed-3547-4f91-bb46-3b88bc7480b0"
+    }
+   ],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Employment (Amendment) Act, 2015",
+   "short_name": "The Employment (Amendment) Act, 2015 (No. 15 of 2015)",
+   "year": 2015,
+   "is_global": true
+  },
   "e1bacb62-351d-4972-b9cf-3bf2f6a62040": {
    "status": "amending Act",
    "repealed_by": [],
@@ -11820,6 +12619,26 @@
    "title": "The Zambia Institute of Advanced Legal Education (Amendment) Act 2009",
    "short_name": "Zambia Institute of Advanced Legal Education (Amendment) Act 2009 (No. 19 of 2009)",
    "year": 2009,
+   "is_global": true
+  },
+  "e6855c72-c1b4-491f-bc8f-9f7fa9416a6b": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "REPUBLIC OF ZAMBIA THE INCOME TAX ACT",
+     "id": "881305d4-ef28-4b88-b3b0-00fb864fed40"
+    }
+   ],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Income Tax (Amendment) Act, 2010",
+   "short_name": "The Income Tax (Amendment) Act, 2010 (No. 49 of 2010)",
+   "year": 2010,
    "is_global": true
   },
   "e7cbfbc0-244e-4444-8778-3e8e9ed94b46": {
@@ -12080,6 +12899,46 @@
    "title": "The Property Transfer Tax (Amendment) Act,2025",
    "short_name": "Property Transfer Tax (Amendment) Act,2025 (No. 21 of 2025)",
    "year": 2025,
+   "is_global": true
+  },
+  "f0d1c6c1-f905-45ce-ae17-d15397003576": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "The Penal Code Act",
+     "id": "f6ad35a7-6e55-4c84-91b4-00d97a79fa3b"
+    }
+   ],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Penal Code (Amendment) (No. 2) Act, 2000",
+   "short_name": "The Penal Code (Amendment) (No. 2) Act, 2000 (No. 20 of 2000)",
+   "year": 2000,
+   "is_global": true
+  },
+  "f1988801-7446-4d92-a586-58c077d63aff": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "The Value Added Tax Act",
+     "id": "c8d5a6bc-e1d1-44cf-bac2-5919907e2133"
+    }
+   ],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Value Added Tax (Amendment) Act, 2015",
+   "short_name": "The Value Added Tax (Amendment) Act, 2015 (No. 17 of 2015)",
+   "year": 2015,
    "is_global": true
   },
   "f2b9b2eb-d817-473b-82ba-c8de59d3a7cf": {
@@ -13735,48 +14594,6 @@
    "short_name": "The Zambia Educational Publishing House Foundation (Amendment) Bill, 2026",
    "year": 2026,
    "is_global": true
-  },
-  "9ceaf02f-4ccb-4f03-bd53-1c8dea0ed5ad": {
-   "status": "repealed",
-   "repealed_by": [
-    {
-     "title": "The Dairy Produce Marketing and Levy (Repeal) 2010",
-     "id": null,
-     "evidence": "carried forward: the repealing document has left the library; (Repeal) Act title"
-    }
-   ],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [],
-   "amends": [],
-   "enacted_as": [],
-   "repeal_pending_by": [],
-   "will_repeal": [],
-   "title": "REPUBLIC OF ZAMBIA THE DAIRY PRODUCE MARKETING AND LEVY ACT",
-   "short_name": "REPUBLIC OF ZAMBIA THE DAIRY PRODUCE MARKETING AND LEVY ACT",
-   "year": null,
-   "is_global": true
-  },
-  "3ffc9f21-c077-4d57-a3fc-2bb0bb4247ce": {
-   "status": "repealed",
-   "repealed_by": [
-    {
-     "title": "The Traditional Beer (Repeal) Act 2011",
-     "id": null,
-     "evidence": "carried forward: the repealing document has left the library; (Repeal) Act title"
-    }
-   ],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [],
-   "amends": [],
-   "enacted_as": [],
-   "repeal_pending_by": [],
-   "will_repeal": [],
-   "title": "The Traditional Beer Act",
-   "short_name": "Traditional Beer Act",
-   "year": null,
-   "is_global": true
   }
  },
  "unresolved": [
@@ -14073,22 +14890,32 @@
   {
    "by": "252c40e6-783c-4341-9cd4-43186ad5e60c",
    "name": "Legal Aid Act",
-   "evidence": "The Legal Aid Act,1967is repealed"
+   "evidence": "The Legal Aid Act, 1967 is repealed"
   },
   {
    "by": "252c40e6-783c-4341-9cd4-43186ad5e60c",
    "name": "Legal Aid Act",
-   "evidence": "The Legal Aid Act,1967is repealed"
+   "evidence": "The Legal Aid Act, 1967 is repealed"
   },
   {
    "by": "252c40e6-783c-4341-9cd4-43186ad5e60c",
    "name": "Legal Aid Act",
-   "evidence": "The Legal Aid Act,1967is repealed"
+   "evidence": "The Legal Aid Act, 1967 is repealed"
   },
   {
    "by": "252c40e6-783c-4341-9cd4-43186ad5e60c",
    "name": "Legal Aid Act",
-   "evidence": "The Legal Aid Act,1967is repealed"
+   "evidence": "The Legal Aid Act, 1967 is repealed"
+  },
+  {
+   "by": "252c40e6-783c-4341-9cd4-43186ad5e60c",
+   "name": "Legal Aid Act",
+   "evidence": "repeal and replace the Legal Aid Act"
+  },
+  {
+   "by": "252c40e6-783c-4341-9cd4-43186ad5e60c",
+   "name": "Legal Aid Act",
+   "evidence": "repeal and replace the Legal Aid Act"
   },
   {
    "by": "279273a3-1d44-4239-b531-437afecde316",
@@ -14159,26 +14986,6 @@
    "by": "2f1c2b76-a38b-4e4b-a0f1-cf47d51d9e4c",
    "name": "Section twelve of the Widows and Orphans Pensions Act",
    "evidence": "Section twelve of the Widows and Orphans Pensions Act is hereby repealed"
-  },
-  {
-   "by": "31b338dc-c41c-4396-93c6-6589bc708b10",
-   "name": "Foodand Nutrition Commission Act",
-   "evidence": "The Foodand Nutrition Commission Act,is repealed"
-  },
-  {
-   "by": "31b338dc-c41c-4396-93c6-6589bc708b10",
-   "name": "Foodand Nutrition Commission Act",
-   "evidence": "The Foodand Nutrition Commission Act,is repealed"
-  },
-  {
-   "by": "31b338dc-c41c-4396-93c6-6589bc708b10",
-   "name": "Foodand Nutrition Commission Act",
-   "evidence": "The Foodand Nutrition Commission Act,is repealed"
-  },
-  {
-   "by": "31b338dc-c41c-4396-93c6-6589bc708b10",
-   "name": "Foodand Nutrition Commission Act",
-   "evidence": "The Foodand Nutrition Commission Act,is repealed"
   },
   {
    "by": "33648bd2-14ba-4c4f-be06-f9308fdf6d1d",
@@ -14262,23 +15069,23 @@
   },
   {
    "by": "376d14e7-6b99-4c70-a820-4c8d0e986d8d",
-   "name": "Part IVof the principal Act",
-   "evidence": "Part IVof the principal Act is repealed"
+   "name": "principal Act",
+   "evidence": "Part IV of the principal Act is repealed"
   },
   {
    "by": "376d14e7-6b99-4c70-a820-4c8d0e986d8d",
-   "name": "Part IVof the principal Act",
-   "evidence": "Part IVof the principal Act is repealed"
+   "name": "principal Act",
+   "evidence": "Part IV of the principal Act is repealed"
   },
   {
    "by": "376d14e7-6b99-4c70-a820-4c8d0e986d8d",
-   "name": "Part IVof the principal Act",
-   "evidence": "Part IVof the principal Act is repealed"
+   "name": "principal Act",
+   "evidence": "Part IV of the principal Act is repealed"
   },
   {
    "by": "376d14e7-6b99-4c70-a820-4c8d0e986d8d",
-   "name": "Part IVof the principal Act",
-   "evidence": "Part IVof the principal Act is repealed"
+   "name": "principal Act",
+   "evidence": "Part IV of the principal Act is repealed"
   },
   {
    "by": "3862733d-0bd4-44f9-9980-dda9beeb7c85",
@@ -14774,6 +15581,16 @@
    "by": "6bff760f-03d4-45d6-989d-5c4786f0535e",
    "name": "Zambia Institute of Purchasing and Supply Act",
    "evidence": "repeal and replace the Zambia Institute of Purchasing and Supply Act"
+  },
+  {
+   "by": "6eb0bb5d-6813-4106-ade9-3b26850fd670",
+   "name": "former Act",
+   "evidence": "The provisions of the former Act are hereby repealed"
+  },
+  {
+   "by": "6eb0bb5d-6813-4106-ade9-3b26850fd670",
+   "name": "former Act",
+   "evidence": "The provisions of the former Act are hereby repealed"
   },
   {
    "by": "6eb0bb5d-6813-4106-ade9-3b26850fd670",

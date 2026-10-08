@@ -1359,11 +1359,12 @@ def _extract_pdf_text(pdf_path: str) -> str:
     """Concatenate all pages' text. Used for the inline tier (small docs)."""
     import pdfplumber
 
+    from ..services.parser import page_text
+
     parts: list[str] = []
     with pdfplumber.open(pdf_path) as pdf:
         for page in pdf.pages:
-            t = page.extract_text() or ""
-            parts.append(t)
+            parts.append(page_text(page))
     return "\n\n".join(parts).strip()
 
 

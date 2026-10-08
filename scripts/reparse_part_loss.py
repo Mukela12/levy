@@ -66,6 +66,12 @@ def body_lines(chunks: list[str]) -> list[str]:
     return out
 
 
+def glued_rate(chunks: list[str]) -> float:
+    """Share of 16+ letter words: pdfplumber's glued reading of tight PDFs."""
+    words = re.findall(r"[A-Za-z]+", " ".join(chunks))
+    return sum(1 for w in words if len(w) >= 16) / len(words) if len(words) >= 20 else 0.0
+
+
 def compare(old_chunks: list[str], new_chunks: list[str]) -> dict:
     old, new = body_lines(old_chunks), body_lines(new_chunks)
     old_set, new_set = set(old), set(new)
@@ -112,7 +118,8 @@ def _prepare(db, work: Path, doc_id: str, parser_files: dict[str, str]) -> dict:
             "job": {"id": doc_id, "pdf": pdf, "act_meta": act_meta}}
 
 
-def stage(work: Path, ids: list[str], parser_files: dict[str, str], workers: int, min_gain: int) -> None:
+def stage(work: Path, ids: list[str], parser_files: dict[str, str], workers: int, min_gain: int,
+          respace: bool = False) -> None:
     import os
     import threading
 
@@ -154,9 +161,16 @@ def stage(work: Path, ids: list[str], parser_files: dict[str, str], workers: int
                     c["metadata"].update(p["extra"])
                 old_chunks = json.loads((work / "old" / f"{res['id']}.json").read_text())
                 cmp = compare(old_chunks, [c["content"] for c in res["chunks"]])
+                cmp["glued_old"] = round(glued_rate(old_chunks), 4)
+                cmp["glued_new"] = round(glued_rate([c["content"] for c in res["chunks"]]), 4)
+                # --respace: the same text with its words kept apart. Spacing is
+                # invisible to the line comparison (it compares letters only), so
+                # such a document shows no gain; it qualifies instead when glued
+                # words at least halve.
+                respaced = respace and cmp["glued_old"] >= 0.02 and cmp["glued_new"] <= cmp["glued_old"] / 2
                 if not res["chunks"] or cmp["coverage"] < 0.995:
                     status = "mismatch"
-                elif cmp["gain_chars"] < min_gain:
+                elif cmp["gain_chars"] < min_gain and not respaced:
                     status = "unchanged"
                 else:
                     status = "ok"
@@ -219,7 +233,7 @@ def embed_ahead(work: Path, ids: list[str], max_tokens: int) -> None:
     print(f"embedded {count} documents, {spent} tokens (${spent * 0.02 / 1e6:.3f})", flush=True)
 
 
-def execute(work: Path, ids: list[str], max_tokens: int, shard: str) -> None:
+def execute(work: Path, ids: list[str], max_tokens: int, shard: str, run_tag: str = RUN_TAG) -> None:
     """Replace each staged document's chunks; reuse saved vectors when present.
 
     Same order of operations as reparse_split_acts.execute: new rows first,
@@ -261,7 +275,7 @@ def execute(work: Path, ids: list[str], max_tokens: int, shard: str) -> None:
         rows = []
         for c, v in zip(st["chunks"], vectors):
             meta = dict(c["metadata"])
-            meta["ingestion_run"] = RUN_TAG
+            meta["ingestion_run"] = run_tag
             rows.append({"id": str(uuid.uuid4()), "document_id": doc_id, "content": c["content"],
                          "summary": c["summary"], "embedding": v, "metadata": meta,
                          "chunk_index": c["chunk_index"], "page_start": c["page_start"], "page_end": c["page_end"]})
@@ -303,6 +317,9 @@ def main() -> int:
     ap.add_argument("--embed-ahead", action="store_true", help="embed and save vectors for every document not yet replaced")
     ap.add_argument("--max-tokens", type=int, default=24_000_000, help="hard stop per shard; $0.02 per million")
     ap.add_argument("--shard", default="1/1", help="k/n: handle every n-th document starting at k (run n processes)")
+    ap.add_argument("--respace", action="store_true",
+                    help="also accept documents whose re-read only restores spaces between glued words")
+    ap.add_argument("--run-tag", default=RUN_TAG, help="ingestion_run written on the replacement chunks")
     args = ap.parse_args()
     ids = [line.strip() for line in args.ids.read_text().splitlines() if line.strip()]
     if args.embed_ahead:
@@ -310,10 +327,10 @@ def main() -> int:
         embed_ahead(args.work, ids, args.max_tokens)
     elif args.execute:
         base._db()   # loads backend/.env
-        execute(args.work, ids, args.max_tokens, args.shard)
+        execute(args.work, ids, args.max_tokens, args.shard, args.run_tag)
     else:
         parser_files = json.loads(args.parser_files.read_text()) if args.parser_files else {}
-        stage(args.work, ids, parser_files, args.workers, args.min_gain)
+        stage(args.work, ids, parser_files, args.workers, args.min_gain, args.respace)
     return 0
 
 

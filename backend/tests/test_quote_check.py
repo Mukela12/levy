@@ -108,11 +108,27 @@ if __name__ == "__main__":
     unittest.main()
 
 
-class Guards(unittest.TestCase):
-    def test_a_section_number_shared_with_bundled_court_rules_is_not_judged(self):
-        mixed = lambda doc_id, sections: (("27", "IV", "27. Power of courts to transfer cases"),
-                                          ("27", "XI", "27. Where a debtor against whom a composition order has been made "
-                                                       "changes his address, he shall at once give notice to the clerk of the court."))
+
+class SharedNumbers(unittest.TestCase):
+    def test_words_in_no_chunk_numbered_27_are_not_found(self):
+        # Cap. 28 bundles its court rules, so "27" is the arrangement line, the
+        # section and an Order's rule. A quotation found in none of them was
+        # a real catch in production, not an artefact of the bundling.
+        mixed = lambda doc_id, sections: tuple(r for r in (
+            ("27", "IV", "27. Power of courts to transfer cases 27A. Completion of proceedings"),
+            ("27", "IV", "27. Any civil cause or matter may at any time before or after the hearing thereof, "
+                         "either with or without application from any of the parties thereto, be transferred "
+                         "from a court presided over by a magistrate of the first class"),
+            ("27", "XI", "27. Where a debtor against whom a composition order has been made changes his "
+                         "address, he shall at once give notice to the clerk of the court."),
+        ) if r[0] in sections)
         q = "No proceedings which may have been taken previously to such plea in objection shall be in any way affected"
         self.assertEqual(qc.check_statute_quote(q, "sca", "27", fetch_sections=mixed, fetch_document=lambda d: "",
-                                                amending=lambda d: [])["status"], "unchecked")
+                                                amending=lambda d: [])["status"], "not_found")
+        real = "Any civil cause or matter may at any time before or after the hearing thereof, either with or without application"
+        self.assertEqual(qc.check_statute_quote(real, "sca", "27", fetch_sections=mixed, fetch_document=lambda d: "",
+                                                amending=lambda d: [])["status"], "verbatim")
+
+
+if __name__ == "__main__":
+    unittest.main()

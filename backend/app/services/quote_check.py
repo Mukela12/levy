@@ -177,11 +177,10 @@ def check_statute_quote(quote: str, doc_id: str, section: str, fetch_sections=No
     fetch_document = fetch_document or _fetch_document
     amending = amending if amending is not None else _amending
     rows = [r if len(r) == 3 else (r[0], "", r[1]) for r in fetch_sections(doc_id, tuple(_neighbours(section)))]
+    # Every chunk carrying this number counts: the arrangement of sections,
+    # the section itself, and in Acts that bundle their court rules, rule N of
+    # an Order. Words in none of them are not in "section N" of this document.
     cited = "\n".join(t for s, _, t in rows if s == section)
-    # Some library Acts carry their court rules in the same document, so
-    # "section 27" is both the Act's section and rule 27 of an Order. Words
-    # missing from that mixture prove nothing.
-    ambiguous = len({p for s, p, _ in rows if s == section}) > 1
     if len(squash(cited)) >= 120:
         score = match_score(quote, cited)
         if score == 1.0:
@@ -195,8 +194,8 @@ def check_statute_quote(quote: str, doc_id: str, section: str, fetch_sections=No
     for a in amending(doc_id):
         if match_score(quote, fetch_document(a["id"])) >= CLOSE:
             return {"status": "amended", "amending_act": a.get("title")}
-    if len(squash(cited)) < 120 or ambiguous:
-        return {"status": "unchecked"}   # nothing reliable in the library to compare
+    if len(squash(cited)) < 120:
+        return {"status": "unchecked"}   # the section's text is not in the library to compare
     return {"status": "not_found"}
 
 

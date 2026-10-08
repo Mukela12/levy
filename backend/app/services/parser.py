@@ -70,6 +70,53 @@ def fix_concatenated_words(text: str) -> str:
     return text
 
 
+# Words of 16+ letters are almost never real in statute text; a page full of
+# them is pdfplumber gluing words together ("Theprincipal Actisamendedbythe").
+_LONG_WORD = re.compile(r"[A-Za-z]{16,}")
+_WORD = re.compile(r"[A-Za-z]+")
+TIGHT_X_TOLERANCE = 1.5
+
+
+def _glued_rate(text: str) -> float:
+    words = _WORD.findall(text or "")
+    return len(_LONG_WORD.findall(text or "")) / len(words) if len(words) >= 20 else 0.0
+
+
+def _split_rate(text: str) -> float:
+    words = _WORD.findall(text or "")
+    return sum(1 for w in words if len(w) == 1 and w not in ("a", "A", "I")) / max(len(words), 1)
+
+
+def choose_page_text(default: str | None, tight: str | None) -> str:
+    """The better of two readings of one page.
+
+    pdfplumber joins characters into a word when the gap between them is under
+    x_tolerance (3 points by default). The Government Printer's 2017-2021 PDFs
+    set words so tightly that the default reading glues them: 112 library
+    documents, the Employment Code and the Companies Act 2017 among them, had
+    up to a fifth of their words fused, which keyword search cannot match and
+    the law map cannot read. A 1.5-point tolerance reads those pages with
+    their spaces and the same characters, and reads clean PDFs identically.
+    The tighter reading is kept only when it is less glued and does not split
+    more words into single letters.
+    """
+    default, tight = default or "", tight or ""
+    if not tight:
+        return default
+    if _glued_rate(default) >= 0.02 and _glued_rate(tight) < _glued_rate(default) / 2 \
+            and _split_rate(tight) <= _split_rate(default) + 0.005:
+        return tight
+    return default
+
+
+def page_text(page) -> str:
+    """One pdfplumber page as text, with words kept apart (see choose_page_text)."""
+    default = page.extract_text()
+    if _glued_rate(default or "") < 0.02:
+        return default or ""
+    return choose_page_text(default, page.extract_text(x_tolerance=TIGHT_X_TOLERANCE))
+
+
 def extract_text_from_pdf(pdf_path: str) -> list[dict]:
     """
     Extract text from each page of a PDF.
@@ -80,7 +127,7 @@ def extract_text_from_pdf(pdf_path: str) -> list[dict]:
     with pdfplumber.open(pdf_path) as pdf:
         for i, page in enumerate(pdf.pages):
             # Use default mode — layout mode can produce empty results on some PDFs
-            text = page.extract_text()
+            text = page_text(page)
             if text:
                 text = fix_concatenated_words(text)
                 pages.append({

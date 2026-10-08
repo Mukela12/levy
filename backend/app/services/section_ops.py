@@ -201,7 +201,17 @@ def _list_refs(window: str) -> list[str]:
     m = re.match(r"\s*((?:\d{1,3}[A-Z]{0,2})(?:\s*(?:,|and|to)\s*\d{1,3}[A-Z]{0,2})+)", window)
     if not m:
         return []
-    parts = re.findall(r"\d{1,3}[A-Z]{0,2}|to", m.group(1))
+    listed = m.group(1)
+    # "repeal of sections 11, 6. The principal Act is amended by the repeal of
+    # sections 11, 12 and 13": the "6." after a comma is the amending Act's own
+    # next section, spliced in by the margin. A list that really ends there
+    # ends with "and 13." instead. (ZLDC (Amendment) Act 2019, read 8 Oct 2026.)
+    spliced = re.search(r",\s*\d{1,3}[A-Z]{0,2}$", listed)
+    if spliced and re.match(r"\.\s+(?:The|Section)\b", window[m.end():]):
+        listed = listed[:spliced.start()]
+        if not re.search(r"(?:,|and|to)\s*\d", listed):
+            return []
+    parts = re.findall(r"\d{1,3}[A-Z]{0,2}|to", listed)
     out: list[str] = []
     for i, p in enumerate(parts):
         if p == "to" and out and i + 1 < len(parts) and parts[i + 1].isdigit() and out[-1].isdigit():

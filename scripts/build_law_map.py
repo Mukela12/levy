@@ -153,7 +153,12 @@ def norm(name: str) -> str:
 # "sections 79 and 83 of the Public Health Act": OCR glues the words
 # ("andsections79and83"), so no word boundary in front.
 RE_PART_OF = re.compile(r"(?:sub)?sections?\s*\(?\d|paragraphs?\s*\(?\d|parts?\s*[IVX\d]+\b"
-                        r"|schedules?\s*[IVX\d]*\s*to|schedules?\s*[IVX\d]|so\s*much\s*of|provisions\s*of", re.I)
+                        r"|schedules?\s*[IVX\d]*\s*to|schedules?\s*[IVX\d]|so\s*much\s*of|provisions\s*of"
+                        # "and sections Act No 22 of the Public Health Act": a margin
+                        # note spliced between "sections" and its numbers. Read with
+                        # spaces restored (8 Oct 2026), the Food Safety Act's partial
+                        # repeal of the Public Health Act became a whole repeal.
+                        r"|(?:sub)?sections?(?=\s*(?:Act\b|No\.?\s*\d|$))", re.I)
 
 
 def candidate_parts(text: str) -> list[tuple[str, bool]]:

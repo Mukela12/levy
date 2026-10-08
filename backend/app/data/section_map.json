@@ -4,7 +4,9 @@
   "Road Traffic (Amendment)",
   "The Anti-Gender-Based Violence (Amendment) Act, 2026",
   "The Constitutional Offices (Emoluments) (Amendment)",
+  "The Criminal Procedure Code (Amendment) Act, 1997",
   "The Customs and Excise (Amendment)",
+  "The Customs and Excise (Amendment) (No. 2) Act, 2001",
   "The Customs and Excise (Amendment) Act (2011)",
   "The English Law (Extent of Application) (Amendment)",
   "The English Law (Extent of Application) (Amendment) Act (2011)",
@@ -18,10 +20,13 @@
   "The Presidential Emoluments (Amendment)",
   "The Road Traffic (Amendment) Act, 2021",
   "The Roads and Road Traffic (Amendment)",
+  "The Supreme Court (Amendment) Act, 2011",
   "The Supreme Court of Zambia (Amendment) Act, 2002",
-  "The Weights and Measures (Amendment) 2013"
+  "The Value Added Tax (Amendment) Act, 2010",
+  "The Weights and Measures (Amendment) 2013",
+  "The Zambia Tanzania Pipeline (Amendment) Act, 2009"
  ],
- "generated_at": "2026-10-06T12:38:39+00:00",
+ "generated_at": "2026-10-08T05:01:07+00:00",
  "principals": {
   "00387d35-e23a-491b-8dcf-66d44978e786": {
    "parts": {},
@@ -425,7 +430,7 @@
        "by_title": "The Higher Education (Amendment) Act of 2021",
        "by_year": 2021,
        "confidence": "high",
-       "evidence": "repeal of section 11 replacement andthesubstitutionthereforofthefollowing: of section 11 Types of 11. (1) Highereducationinstitutionsshallconsistofthe higher fo",
+       "evidence": "repeal of section 11 replacement and the substitution therefor of the following: of section 11 Types of 11. (1) Higher education institutions shall consist of t",
        "op": "replaced"
       }
      ]
@@ -439,7 +444,7 @@
        "by_title": "The Higher Education (Amendment) Act of 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section12oftheprincipalactisamended",
+       "evidence": "Section 12 of the principal Act is amended in subsection of section 12 (1) by the \u2014 (a) insertion of the words \u201cother than an institute\u201d after the word \u201cinstitu",
        "op": "amended"
       }
      ]
@@ -453,7 +458,7 @@
        "by_title": "The Higher Education (Amendment) Act of 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section14oftheprincipalactisamended",
+       "evidence": "Section 14 of the principal Act is amended\u2014 Amendment 8. Section 14 of the principal Act is amended\u2014 of section 14 (a) in subsection (1), by the insertion of th",
        "op": "amended"
       }
      ]
@@ -467,7 +472,7 @@
        "by_title": "The Higher Education (Amendment) Act of 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section17(1)oftheprincipalactisamended",
+       "evidence": "Section 17(1) of the principal Act is amended\u2014 Amendment 9. Section 17(1) of the principal Act is amended\u2014 Amendment of section (a) by the deletion of paragraph",
        "op": "amended"
       }
      ]
@@ -481,7 +486,7 @@
        "by_title": "The Higher Education (Amendment) Act of 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section19oftheprincipalactisamended",
+       "evidence": "Section 19 of the principal Act is amended by the deletion Amendment 10. Section 19 of the principal Act is amended by the deletion Amendment of subsection (1) ",
        "op": "amended"
       }
      ]
@@ -494,8 +499,8 @@
        "by_number": "No. 23 of 2021",
        "by_title": "The Higher Education (Amendment) Act of 2021",
        "by_year": 2021,
-       "confidence": "medium",
-       "evidence": "section2oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 2 of the principal Act is amended\u2014 Amendment of section 2 (a) by the deletion of the definitions of \u201caided higher education institution\u201d, \u201caffiliated in",
        "op": "amended"
       },
       {
@@ -509,6 +514,20 @@
       }
      ]
     },
+    "20": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "46fe3638-1031-48a9-b7b6-5de796307a77",
+       "by_number": "No. 23 of 2021",
+       "by_title": "The Higher Education (Amendment) Act of 2021",
+       "by_year": 2021,
+       "confidence": "high",
+       "evidence": "repeal of section 20 Repeal and and the substitution therefor of the following: replacement of section 20",
+       "op": "replaced"
+      }
+     ]
+    },
     "20A": {
      "current": "inserted",
      "history": [
@@ -518,7 +537,7 @@
        "by_title": "The Higher Education (Amendment) Act of 2021",
        "by_year": 2021,
        "confidence": "high",
-       "evidence": "insertion of the Insertionof followingnewsectionsimmediatelyaftersection20: sections 20A,20B and20C 20A. The Ministermay,inconsultationwiththe Authority, Establ",
+       "evidence": "insertion of the Insertion of following new sections immediately after section 20: sections 20A, 20B and 20C 20A. The Minister may, in consultation with the Aut",
        "op": "inserted"
       }
      ]
@@ -531,8 +550,8 @@
        "by_number": "No. 23 of 2021",
        "by_title": "The Higher Education (Amendment) Act of 2021",
        "by_year": 2021,
-       "confidence": "medium",
-       "evidence": "section22oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 22 of the principal Act is amended by the insertion Amendment 13. Section 22 of the principal Act is amended by the insertion of section 22 of the words",
        "op": "amended"
       }
      ]
@@ -546,8 +565,22 @@
        "by_title": "The Higher Education (Amendment) Act of 2021",
        "by_year": 2021,
        "confidence": "high",
-       "evidence": "insertion of the section22A followingnewsectionimmediatelyaftersection22: Institutional 22A. (1) Ahighereducationinstitutionregisteredordeclared auditof by stat",
+       "evidence": "insertion of the section 22A following new section immediately after section 22: Institutional 22A. (1) A higher education institution registered or declared au",
        "op": "inserted"
+      }
+     ]
+    },
+    "23": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "46fe3638-1031-48a9-b7b6-5de796307a77",
+       "by_number": "No. 23 of 2021",
+       "by_title": "The Higher Education (Amendment) Act of 2021",
+       "by_year": 2021,
+       "confidence": "high",
+       "evidence": "repeal of section 23 replacement and the substitution therefor of the following: of section 23 Deregistration 23. (1) The Authority shall de-register a private ",
+       "op": "replaced"
       }
      ]
     },
@@ -560,7 +593,7 @@
        "by_title": "The Higher Education (Amendment) Act of 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section24oftheprincipalactisamended",
+       "evidence": "Section 24 of the principal Act is amended by the",
        "op": "amended"
       }
      ]
@@ -574,7 +607,7 @@
        "by_title": "The Higher Education (Amendment) Act of 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section28oftheprincipalactisamended",
+       "evidence": "Section 28 of the principal Act is amended by the insertion Amendment 18. Section 28 of the principal Act is amended by the insertion of of the words \u201cother tha",
        "op": "amended"
       }
      ]
@@ -588,8 +621,22 @@
        "by_title": "The Higher Education (Amendment) Act of 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section29oftheprincipalactisamended",
+       "evidence": "Section 29 of the principal Act is amended by the deletion Amendment 19. Section 29 of the principal Act is amended by the deletion of of subsection (1) and the",
        "op": "amended"
+      }
+     ]
+    },
+    "3": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "46fe3638-1031-48a9-b7b6-5de796307a77",
+       "by_number": "No. 23 of 2021",
+       "by_title": "The Higher Education (Amendment) Act of 2021",
+       "by_year": 2021,
+       "confidence": "high",
+       "evidence": "repeal of section 3 and replacement the substitution therefor of the following: of section 3 Application 3. This Act does not apply to colleges registered under",
+       "op": "replaced"
       }
      ]
     },
@@ -616,7 +663,7 @@
        "by_title": "The Higher Education (Amendment) Act of 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section32oftheprincipalactisamended",
+       "evidence": "Section 32 of the principal Act is amended by the deletion Amendment 21. Section 32 of the principal Act is amended by the deletion Amendment of subsection (2) ",
        "op": "amended"
       }
      ]
@@ -630,7 +677,7 @@
        "by_title": "The Higher Education (Amendment) Act of 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section36oftheprincipalactisamended",
+       "evidence": "Section 36 of the principal Act is amended\u2014 Amendment 22. Section 36 of the principal Act is amended\u2014 Amendment of (a) in subsection (2)\u2014 section 36 (i) under p",
        "op": "amended"
       }
      ]
@@ -644,7 +691,7 @@
        "by_title": "The Higher Education (Amendment) Act of 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "Section 37(2)(a) of the principal Act is amended by the Amendment 23. Section 37(2)(a) of the principal Act is amended by the of insertionoftheword\u201cacademic\u201dbef",
+       "evidence": "Section 37(2)(a) of the principal Act is amended by the Amendment 23. Section 37(2)(a) of the principal Act is amended by the of insertion of the word \u201cacademic",
        "op": "amended"
       }
      ]
@@ -658,7 +705,7 @@
        "by_title": "The Higher Education (Amendment) Act of 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section38(1)(a)oftheprincipalactisamended",
+       "evidence": "Section 38 (1)(a) of the principal Act is amended by the Amendment 24. Section 38 (1)(a) of the principal Act is amended by the of insertion of the word \u201cschool",
        "op": "amended"
       }
      ]
@@ -672,8 +719,36 @@
        "by_title": "The Higher Education (Amendment) Act of 2021",
        "by_year": 2021,
        "confidence": "high",
-       "evidence": "insertionofthe section38A followingnewsectionimmediatelyaftersection38: Establishment 38A. (1) The Authority may, on the recommendation of of the Councilofapriv",
+       "evidence": "insertion of the section 38A following new section immediately after section 38: Establishment 38A. (1) The Authority may, on the recommendation of of the Counc",
        "op": "inserted"
+      }
+     ]
+    },
+    "41": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "46fe3638-1031-48a9-b7b6-5de796307a77",
+       "by_number": "No. 23 of 2021",
+       "by_title": "The Higher Education (Amendment) Act of 2021",
+       "by_year": 2021,
+       "confidence": "high",
+       "evidence": "repeal of section 41 replacement of and the substitution therefor of the following: section 41 Closure of 41. (1) The Authority may close a private higher highe",
+       "op": "replaced"
+      }
+     ]
+    },
+    "46": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "46fe3638-1031-48a9-b7b6-5de796307a77",
+       "by_number": "No. 23 of 2021",
+       "by_title": "The Higher Education (Amendment) Act of 2021",
+       "by_year": 2021,
+       "confidence": "high",
+       "evidence": "repeal of section 46 replacement and the substitution therefor of the following: of section 46",
+       "op": "replaced"
       }
      ]
     },
@@ -686,7 +761,7 @@
        "by_title": "The Higher Education (Amendment) Act of 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section52(2)oftheprincipalactisamended",
+       "evidence": "Section 52(2) of the principal Act is amended\u2014 of (a)by the insertion of the following new paragraph immediately section 52 after paragraph (f): (g) the classif",
        "op": "amended"
       }
      ]
@@ -700,14 +775,23 @@
        "by_title": "The Higher Education (Amendment) Act of 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section6oftheprincipalactisamended",
+       "evidence": "Section 6 of the principal Act is amended in subsection (1) 4. Section 6 of the principal Act is amended in subsection (1) Amendment of (a) by the deletion of p",
        "op": "amended"
       }
      ]
     },
     "7": {
-     "current": "amended",
+     "current": "replaced",
      "history": [
+      {
+       "by_id": "46fe3638-1031-48a9-b7b6-5de796307a77",
+       "by_number": "No. 23 of 2021",
+       "by_title": "The Higher Education (Amendment) Act of 2021",
+       "by_year": 2021,
+       "confidence": "high",
+       "evidence": "repeal of section 7 and replacement the substitution therefor of the following: of section 7",
+       "op": "replaced"
+      },
       {
        "by_id": "5d0a5e5c-2ad2-4c49-9694-e76b8ceb6696",
        "by_number": "No. 21 of 2026",
@@ -807,8 +891,8 @@
        "by_number": "No. 18 of 2017",
        "by_title": "The Independent Broadcasting Authority (Amendment)",
        "by_year": 2017,
-       "confidence": "medium",
-       "evidence": "section2oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 2 of the principal Act is amended by the \u2014 Amendment 2. Section 2 of the principal Act is amended by the \u2014 Amendment of section 2 (a) deletion of the de",
        "op": "amended"
       }
      ]
@@ -822,7 +906,7 @@
        "by_title": "The Independent Broadcasting Authority (Amendment)",
        "by_year": 2017,
        "confidence": "high",
-       "evidence": "insertionofthefollowing section22A newsectionimmediatelyaftersection22: Television 22A. (1) The Authorityshallchargeatelevisionlevyon levy thesubscriptionpaymen",
+       "evidence": "insertion of the following section 22A new section immediately after section 22: Television 22A. (1) The Authority shall charge a television levy on levy the su",
        "op": "inserted"
       }
      ]
@@ -836,7 +920,7 @@
        "by_title": "The Independent Broadcasting Authority (Amendment)",
        "by_year": 2017,
        "confidence": "medium",
-       "evidence": "section39(1)(b)oftheprincipalactisamended",
+       "evidence": "Section 39 (1) (b) of the principal Act is amended by the Amendment 6. Section 39 (1) (b) of the principal Act is amended by the of Section 39 insertion of the ",
        "op": "amended"
       }
      ]
@@ -850,7 +934,7 @@
        "by_title": "The Independent Broadcasting Authority (Amendment)",
        "by_year": 2017,
        "confidence": "medium",
-       "evidence": "section5(2)oftheprincipalactisamended",
+       "evidence": "Section 5(2) of the principal Act is amended by the\u2014 Amendment 3. Section 5(2) of the principal Act is amended by the\u2014 of section 5 (a) insertion of the followi",
        "op": "amended"
       }
      ]
@@ -870,7 +954,7 @@
        "by_title": "The Rent (Amendment) Act, 2018",
        "by_year": 2018,
        "confidence": "medium",
-       "evidence": "section2oftheprincipalactisamended",
+       "evidence": "Section 2 of the principal Act is amended by the deletion of Amendment 2. Section 2 of the principal Act is amended by the deletion of Amendment the definition ",
        "op": "amended"
       }
      ]
@@ -1012,7 +1096,7 @@
        "by_title": "The National Institute of Public Administration (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section23(3)oftheprincipalactisamended",
+       "evidence": "Section 23(3) of the principal Act is amended by the deletion Amendment 3. Section 23(3) of the principal Act is amended by the deletion Amendment of paragraph ",
        "op": "amended"
       }
      ]
@@ -1025,8 +1109,8 @@
        "by_number": "No. 9 of 2021",
        "by_title": "The National Institute of Public Administration (Amendment) Act, 2021",
        "by_year": 2021,
-       "confidence": "medium",
-       "evidence": "section5(1)oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 5(1) of the principal Act is amended by the deletion Amendment 2. Section 5(1) of the principal Act is amended by the deletion Amendment of section 5 of",
        "op": "amended"
       }
      ]
@@ -1750,7 +1834,7 @@
        "by_title": "The National HIV/AIDS/STI/TB Council (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section4oftheprincipalactisamended",
+       "evidence": "Section 4 of the principal Act is amended by the insertion Amendment 2. Section 4 of the principal Act is amended by the insertion Amendment of the following ne",
        "op": "amended"
       }
      ]
@@ -1764,7 +1848,7 @@
        "by_title": "The National HIV/AIDS/STI/TB Council (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section5(1)oftheprincipalactisamended",
+       "evidence": "Section 5(1) of the principal Act is amended by the deletion Amendment 3. Section 5(1) of the principal Act is amended by the deletion Amendment of paragraph (a",
        "op": "amended"
       },
       {
@@ -1852,8 +1936,8 @@
        "by_number": "No. 16 of 2021",
        "by_title": "The Zambia Institute of Advanced Legal Education (Amendment) Act, 2021",
        "by_year": 2021,
-       "confidence": "medium",
-       "evidence": "section4oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 4 of the principal Act is amended by the insertion of Amendment 2. Section 4 of the principal Act is amended by the insertion of Amendment of section 4 ",
        "op": "amended"
       },
       {
@@ -1894,7 +1978,7 @@
        "by_title": "The Zambia Institute of Advanced Legal Education (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section5(1)oftheprincipalactisamended",
+       "evidence": "Section 5(1) of the principal Act is amended by the \u2014 Amendment 3. Section 5(1) of the principal Act is amended by the \u2014 Amendment of (a) deletion of paragraph ",
        "op": "amended"
       }
      ]
@@ -1929,6 +2013,26 @@
     }
    },
    "title": "The Zambia Institute of Advanced Legal Education Act"
+  },
+  "221e0a85-e25a-424c-b7d3-df64317eb027": {
+   "parts": {},
+   "sections": {
+    "2": {
+     "current": "amended",
+     "history": [
+      {
+       "by_id": "ca6297f9-efb2-4c13-9e16-db6d991110af",
+       "by_number": "No. 21 of 2010",
+       "by_title": "The Companies (Certificates Validation) (Amendment) Act, 2010",
+       "by_year": 2010,
+       "confidence": "medium",
+       "evidence": "Section two of the principal Act is amended by the deletion Amendment of the definition of \"Registrar\" and the substitution therefor of the of section 2 followi",
+       "op": "amended"
+      }
+     ]
+    }
+   },
+   "title": "The Companies (Certificates Validation) Act"
   },
   "22367e58-02ca-475b-b93b-fa1341d9936b": {
    "parts": {},
@@ -2315,7 +2419,7 @@
        "by_title": "The Business Regulatory (Amendment) Act, 2018",
        "by_year": 2018,
        "confidence": "medium",
-       "evidence": "repealof Parts III,IV Repealand 4. Theprincipal Actisamendedbytherepealof Parts III,IV replacement and Vandthesubstitutionthereforofthefollowing: of Parts III,I",
+       "evidence": "repeal of Parts III, IV replacement and V and the substitution therefor of the following: of Parts III, IV and V",
        "op": "replaced"
       }
      ]
@@ -2329,7 +2433,7 @@
        "by_title": "The Business Regulatory (Amendment) Act, 2018",
        "by_year": 2018,
        "confidence": "medium",
-       "evidence": "repealof Parts III,IV Repealand 4. Theprincipal Actisamendedbytherepealof Parts III,IV replacement and Vandthesubstitutionthereforofthefollowing: of Parts III,I",
+       "evidence": "repeal of Parts III, IV replacement and V and the substitution therefor of the following: of Parts III, IV and V",
        "op": "replaced"
       }
      ]
@@ -2373,7 +2477,7 @@
        "by_title": "The Business Regulatory (Amendment) Act, 2018",
        "by_year": 2018,
        "confidence": "medium",
-       "evidence": "section2oftheprincipalactisamended",
+       "evidence": "Section 2 of the principal Act is amended by\u2014 Amendment 3. Section 2 of the principal Act is amended by\u2014 Amendment of (a) the deletion of the definition of \u201cCom",
        "op": "amended"
       }
      ]
@@ -3999,8 +4103,8 @@
        "by_number": "No. 19 of 2017",
        "by_title": "The Industrial and Labour Relations (Amendment)",
        "by_year": 2017,
-       "confidence": "medium",
-       "evidence": "section14(1)oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 14 (1) of the principal Act is amended by the insertion Amendment 2. Section 14 (1) of the principal Act is amended by the insertion Amendment of sectio",
        "op": "amended"
       }
      ]
@@ -4014,7 +4118,7 @@
        "by_title": "The Industrial and Labour Relations (Amendment)",
        "by_year": 2017,
        "confidence": "medium",
-       "evidence": "section15(1)oftheprincipalactisamended",
+       "evidence": "Section 15 (1) of the principal Act is amended by the insertion Amendment 3. Section 15 (1) of the principal Act is amended by the insertion Amendment of the wo",
        "op": "amended"
       }
      ]
@@ -4028,7 +4132,7 @@
        "by_title": "The Industrial and Labour Relations (Amendment)",
        "by_year": 2017,
        "confidence": "medium",
-       "evidence": "section36(1)oftheprincipalactisamended",
+       "evidence": "Section 36 (1) of the principal Act is amended by the insertion Amendment 4. Section 36 (1) of the principal Act is amended by the insertion Amendment of the wo",
        "op": "amended"
       }
      ]
@@ -4042,7 +4146,7 @@
        "by_title": "The Industrial and Labour Relations (Amendment)",
        "by_year": 2017,
        "confidence": "medium",
-       "evidence": "section48(2)oftheprincipalactisamended",
+       "evidence": "Section 48 (2) of the principal Act is amended by the insertion Amendment 5. Section 48 (2) of the principal Act is amended by the insertion Amendment of the wo",
        "op": "amended"
       }
      ]
@@ -4056,7 +4160,7 @@
        "by_title": "The Industrial and Labour Relations (Amendment)",
        "by_year": 2017,
        "confidence": "medium",
-       "evidence": "section49(1)oftheprincipalactisamended",
+       "evidence": "Section 49 (1) of the principal Act is amended by the insertion Amendment 6. Section 49 (1) of the principal Act is amended by the insertion Amendment of the wo",
        "op": "amended"
       }
      ]
@@ -4069,8 +4173,8 @@
        "by_number": "No. 19 of 2017",
        "by_title": "The Industrial and Labour Relations (Amendment)",
        "by_year": 2017,
-       "confidence": "medium",
-       "evidence": "section65(3)oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 65 (3) of the principal Act is amended by the insertion Amendment 7. Section 65 (3) of the principal Act is amended by the insertion of section 65 of th",
        "op": "amended"
       }
      ]
@@ -4083,8 +4187,8 @@
        "by_number": "No. 19 of 2017",
        "by_title": "The Industrial and Labour Relations (Amendment)",
        "by_year": 2017,
-       "confidence": "medium",
-       "evidence": "section70(1)oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 70 (1) of the principal Act is amended by the insertion Amendment 8. Section 70 (1) of the principal Act is amended by the insertion of section 70 of th",
        "op": "amended"
       }
      ]
@@ -4097,8 +4201,8 @@
        "by_number": "No. 19 of 2017",
        "by_title": "The Industrial and Labour Relations (Amendment)",
        "by_year": 2017,
-       "confidence": "medium",
-       "evidence": "section73(1)oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 73 (1) of the principal Act is amended by the insertion Amendment 9. Section 73 (1) of the principal Act is amended by the insertion of section 73 of th",
        "op": "amended"
       }
      ]
@@ -4118,7 +4222,7 @@
        "by_title": "The Electoral Commission of Zambia (Amendment) Act, 2019",
        "by_year": 2019,
        "confidence": "medium",
-       "evidence": "section14oftheprincipalactisamended",
+       "evidence": "Section 14 of the principal Act is amended by the deletion Amendment 6. Section 14 of the principal Act is amended by the deletion Amendment of subsection (4) a",
        "op": "amended"
       }
      ]
@@ -4131,8 +4235,8 @@
        "by_number": "No. 5 of 2019",
        "by_title": "The Electoral Commission of Zambia (Amendment) Act, 2019",
        "by_year": 2019,
-       "confidence": "medium",
-       "evidence": "section16oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 16 of the principal Act is amended by the\u2014 Amendment 7. Section 16 of the principal Act is amended by the\u2014 Amendment of section 16 (a) insertion of the ",
        "op": "amended"
       }
      ]
@@ -4145,8 +4249,8 @@
        "by_number": "No. 5 of 2019",
        "by_title": "The Electoral Commission of Zambia (Amendment) Act, 2019",
        "by_year": 2019,
-       "confidence": "medium",
-       "evidence": "section2oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 2 of the principal Act is amended by the insertion Amendment 2. Section 2 of the principal Act is amended by the insertion Amendment of section 2 of the",
        "op": "amended"
       }
      ]
@@ -4160,7 +4264,7 @@
        "by_title": "The Electoral Commission of Zambia (Amendment) Act, 2019",
        "by_year": 2019,
        "confidence": "medium",
-       "evidence": "section4oftheprincipalactisamended",
+       "evidence": "Section 4 of the principal Act is amended by the deletion of Amendment 3. Section 4 of the principal Act is amended by the deletion of Amendment subsection (2) ",
        "op": "amended"
       }
      ]
@@ -4174,7 +4278,7 @@
        "by_title": "The Electoral Commission of Zambia (Amendment) Act, 2019",
        "by_year": 2019,
        "confidence": "medium",
-       "evidence": "section5oftheprincipalactisamended",
+       "evidence": "Section 5 of the principal Act is amended by the deletion of",
        "op": "amended"
       }
      ]
@@ -4188,7 +4292,7 @@
        "by_title": "The Electoral Commission of Zambia (Amendment) Act, 2019",
        "by_year": 2019,
        "confidence": "medium",
-       "evidence": "section6oftheprincipalactisamended",
+       "evidence": "Section 6 of the principal Act is amended by the deletion\u2014 Amendment 5. Section 6 of the principal Act is amended by the deletion\u2014 of section 6 (a) in subsectio",
        "op": "amended"
       }
      ]
@@ -4541,7 +4645,7 @@
        "by_title": "The Skills Development Levy (Amendment)",
        "by_year": 2017,
        "confidence": "medium",
-       "evidence": "Section 6 (1)(c) of the principal Act is amended by the 2. Section 6 (1)(c) of the principal Act is amended by the Amendment insertionoftheword\u201cincome\u201dimmediate",
+       "evidence": "Section 6 (1)(c) of the principal Act is amended by the 2. Section 6 (1)(c) of the principal Act is amended by the Amendment insertion of the word \u201cincome\u201d imme",
        "op": "amended"
       }
      ]
@@ -4800,7 +4904,7 @@
        "by_title": "The National Heritage Conservation Commission (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section5(1)oftheprincipalactisamended",
+       "evidence": "Section 5(1) of the principal Act is amended by the deletion Amendment 2. Section 5(1) of the principal Act is amended by the deletion Amendment of paragraph (b",
        "op": "amended"
       }
      ]
@@ -5189,7 +5293,7 @@
        "by_title": "The Lands (Amendment)",
        "by_year": 2015,
        "confidence": "medium",
-       "evidence": "sectionsixteenoftheprincipalactisamended",
+       "evidence": "Section sixteen of the principal Act is amended in paragraph Amendment 3. Section sixteen of the principal Act is amended in paragraph of section 16 (b) of subs",
        "op": "amended"
       }
      ]
@@ -5216,8 +5320,8 @@
        "by_number": "No. 20 of 2015",
        "by_title": "The Lands (Amendment)",
        "by_year": 2015,
-       "confidence": "medium",
-       "evidence": "sectionfouroftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section four of the principal Act is amended\u2014 Amendment 2. Section four of the principal Act is amended\u2014 Amendment of section 4 (a) by the deletion of subsectio",
        "op": "amended"
       }
      ]
@@ -5319,7 +5423,7 @@
        "by_title": "The Money Lenders (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section3oftheprincipalactisamended",
+       "evidence": "Section 3 of the principal Act is amended by the deletion of Amendment 2. Section 3 of the principal Act is amended by the deletion of Amendment the words \u201cfour",
        "op": "amended"
       }
      ]
@@ -5407,7 +5511,7 @@
        "by_title": "The Banking and Financial Services (Amendment) Act, 2020",
        "by_year": 2020,
        "confidence": "medium",
-       "evidence": "section132oftheprincipalactisamended",
+       "evidence": "Section 132 of the principal Act is amended by the deletion Amendment 12. Section 132 of the principal Act is amended by the deletion of section of subsection (",
        "op": "amended"
       }
      ]
@@ -5421,8 +5525,22 @@
        "by_title": "The Banking and Financial Services (Amendment) Act, 2020",
        "by_year": 2020,
        "confidence": "medium",
-       "evidence": "Section 137(3) of the principal Act is amended by the ofsection deletionofthewords\u201corsetasidebya tribunalonappealorbythe 137 Court\u201d. Amendment 14. Section 140 o",
+       "evidence": "Section 137(3) of the principal Act is amended by the Amendment 13. Section 137(3) of the principal Act is amended by the of section deletion of the words \u201cor s",
        "op": "amended"
+      }
+     ]
+    },
+    "141": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "ab5bcd83-9fcd-4b2c-9a3b-16e4e900265f",
+       "by_number": "No. 7 of 2020",
+       "by_title": "The Banking and Financial Services (Amendment) Act, 2020",
+       "by_year": 2020,
+       "confidence": "high",
+       "evidence": "repeal of section 141 replacement and the substitution therefor of the following: of section 141 Decision of 141. (1) A tribunal may order compensation against ",
+       "op": "replaced"
       }
      ]
     },
@@ -5449,7 +5567,7 @@
        "by_title": "The Banking and Financial Services (Amendment) Act, 2020",
        "by_year": 2020,
        "confidence": "medium",
-       "evidence": "section2oftheprincipalactisamended",
+       "evidence": "Section 2 of the principal Act is amended by the deletion of Amendment 2. Section 2 of the principal Act is amended by the deletion of Amendment the definition ",
        "op": "amended"
       }
      ]
@@ -5463,8 +5581,22 @@
        "by_title": "The Banking and Financial Services (Amendment) Act, 2020",
        "by_year": 2020,
        "confidence": "medium",
-       "evidence": "section21oftheprincipalactisamended",
+       "evidence": "Section 21 of the principal Act is amended by the deletion of section 21 of subsection (2) and the substitution therefor of the following: (2) The Register shal",
        "op": "amended"
+      }
+     ]
+    },
+    "6": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "ab5bcd83-9fcd-4b2c-9a3b-16e4e900265f",
+       "by_number": "No. 7 of 2020",
+       "by_title": "The Banking and Financial Services (Amendment) Act, 2020",
+       "by_year": 2020,
+       "confidence": "high",
+       "evidence": "repeal of section 6 Repeal and 3. (1) The principal Act is amended by the repeal of section 6 Repeal and and the substitution therefor of the following: replace",
+       "op": "replaced"
       }
      ]
     },
@@ -5477,8 +5609,22 @@
        "by_title": "The Banking and Financial Services (Amendment) Act, 2020",
        "by_year": 2020,
        "confidence": "high",
-       "evidence": "insertionofthefollowing section62A newsectionimmediatelyaftersection62: Anti-money 62A. The Bankmayexerciseitsauthorityoverafinancial laundering serviceprovider",
+       "evidence": "insertion of the following section 62A new section immediately after section 62: Anti-money 62A. The Bank may exercise its authority over a financial laundering",
        "op": "inserted"
+      }
+     ]
+    },
+    "72": {
+     "current": "repealed",
+     "history": [
+      {
+       "by_id": "ab5bcd83-9fcd-4b2c-9a3b-16e4e900265f",
+       "by_number": "No. 7 of 2020",
+       "by_title": "The Banking and Financial Services (Amendment) Act, 2020",
+       "by_year": 2020,
+       "confidence": "high",
+       "evidence": "repeal of section 72. Repeal of 7. The principal Act is amended by the repeal of section 72. section 72",
+       "op": "repealed"
       }
      ]
     },
@@ -5491,7 +5637,35 @@
        "by_title": "The Banking and Financial Services (Amendment) Act, 2020",
        "by_year": 2020,
        "confidence": "high",
-       "evidence": "repeal of section 73 replacement andthesubstitutionthereforofthefollowing: ofsection73 Possessionof 73. (1) The Bankshall,wherethe Banktakespossession financial",
+       "evidence": "repeal of section 73 replacement and the substitution therefor of the following: of section 73 Possession of 73. (1) The Bank shall, where the Bank takes posses",
+       "op": "replaced"
+      }
+     ]
+    },
+    "74": {
+     "current": "repealed",
+     "history": [
+      {
+       "by_id": "ab5bcd83-9fcd-4b2c-9a3b-16e4e900265f",
+       "by_number": "No. 7 of 2020",
+       "by_title": "The Banking and Financial Services (Amendment) Act, 2020",
+       "by_year": 2020,
+       "confidence": "high",
+       "evidence": "repeal of section 74. Repeal of 9. The principal Act is amended by the repeal of section 74. Repeal of section 74",
+       "op": "repealed"
+      }
+     ]
+    },
+    "75": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "ab5bcd83-9fcd-4b2c-9a3b-16e4e900265f",
+       "by_number": "No. 7 of 2020",
+       "by_title": "The Banking and Financial Services (Amendment) Act, 2020",
+       "by_year": 2020,
+       "confidence": "high",
+       "evidence": "repeal of section 75 Repeal and replacement and the substitution therefor of the following: of section 75",
        "op": "replaced"
       }
      ]
@@ -5505,7 +5679,7 @@
        "by_title": "The Banking and Financial Services (Amendment) Act, 2020",
        "by_year": 2020,
        "confidence": "medium",
-       "evidence": "section82oftheprincipalactisamended",
+       "evidence": "Section 82 of the principal Act is amended by the deletion Amendment 11. Section 82 of the principal Act is amended by the deletion Amendment of subsection (2) ",
        "op": "amended"
       }
      ]
@@ -5632,7 +5806,7 @@
        "by_title": "The Business Regulatory (Amendment) Act, 2018",
        "by_year": 2018,
        "confidence": "medium",
-       "evidence": "repealof Parts III,IV Repealand 4. Theprincipal Actisamendedbytherepealof Parts III,IV replacement and Vandthesubstitutionthereforofthefollowing: of Parts III,I",
+       "evidence": "repeal of Parts III, IV replacement and V and the substitution therefor of the following: of Parts III, IV and V",
        "op": "replaced"
       }
      ]
@@ -5646,7 +5820,7 @@
        "by_title": "The Business Regulatory (Amendment) Act, 2018",
        "by_year": 2018,
        "confidence": "medium",
-       "evidence": "repealof Parts III,IV Repealand 4. Theprincipal Actisamendedbytherepealof Parts III,IV replacement and Vandthesubstitutionthereforofthefollowing: of Parts III,I",
+       "evidence": "repeal of Parts III, IV replacement and V and the substitution therefor of the following: of Parts III, IV and V",
        "op": "replaced"
       }
      ]
@@ -5690,7 +5864,7 @@
        "by_title": "The Business Regulatory (Amendment) Act, 2018",
        "by_year": 2018,
        "confidence": "medium",
-       "evidence": "section2oftheprincipalactisamended",
+       "evidence": "Section 2 of the principal Act is amended by\u2014 Amendment 3. Section 2 of the principal Act is amended by\u2014 Amendment of (a) the deletion of the definition of \u201cCom",
        "op": "amended"
       }
      ]
@@ -5786,8 +5960,22 @@
        "by_title": "The Metrology (Amendment) Act, 2026",
        "by_year": 2026,
        "confidence": "medium",
-       "evidence": "section2oftheprincipalactisamended",
+       "evidence": "Section 2 of the principal Act is amended by the insertion of Amendment 2. Section 2 of the principal Act is amended by the insertion of Amendment the following",
        "op": "amended"
+      }
+     ]
+    },
+    "7": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "7d978715-0263-4f76-b2be-0a2768865d3b",
+       "by_number": "No. 24 of 2026",
+       "by_title": "The Metrology (Amendment) Act, 2026",
+       "by_year": 2026,
+       "confidence": "high",
+       "evidence": "repeal of section 7 and replacement the substitution therefor of the following: of section 7 Board of 7. (1) There is constituted the Board of the Agency Agency",
+       "op": "replaced"
       }
      ]
     }
@@ -6779,8 +6967,22 @@
        "by_title": "The Minerals Regulation Commission (Amendment) Act,2026",
        "by_year": 2026,
        "confidence": "medium",
-       "evidence": "section2oftheprincipalactisamended",
+       "evidence": "Section 2 of the principal Act is amended by the insertion of Amendment 2. Section 2 of the principal Act is amended by the insertion of Amendment the following",
        "op": "amended"
+      }
+     ]
+    },
+    "7": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "ffba71fe-2855-4ff9-ad4b-fcf79ac3d1b2",
+       "by_number": "No. 40 of 2026",
+       "by_title": "The Minerals Regulation Commission (Amendment) Act,2026",
+       "by_year": 2026,
+       "confidence": "high",
+       "evidence": "repeal of section 7 and Repeal and the substitution therefor of the following: replacement of section 7 Copies of this Statutory Instrument can be obtained from",
+       "op": "replaced"
       }
      ]
     }
@@ -7175,7 +7377,7 @@
        "by_title": "The Zambia Institute of Diplomacy and International Studies (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section6oftheprincipalactisamended",
+       "evidence": "Section 6 of the principal Act is amended by the insertion Amendment 2. Section 6 of the principal Act is amended by the insertion Amendment of\u2014 of Section 6 (a",
        "op": "amended"
       }
      ]
@@ -7189,7 +7391,7 @@
        "by_title": "The Zambia Institute of Diplomacy and International Studies (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section7(1)oftheprincipalactisamended",
+       "evidence": "Section 7(1) of the principal Act is amended by the deletion Amendment 3. Section 7(1) of the principal Act is amended by the deletion of section 7 of\u2014 (a) para",
        "op": "amended"
       }
      ]
@@ -7209,7 +7411,7 @@
        "by_title": "The Compensation Fund (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section2oftheprincipalactisamended",
+       "evidence": "Section 2 of the Principal Act is amended by the deletion of Amendment 2. Section 2 of the Principal Act is amended by the deletion of Amendment the definition ",
        "op": "amended"
       }
      ]
@@ -7223,7 +7425,7 @@
        "by_title": "The Compensation Fund (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section4(2)oftheprincipalactisamended",
+       "evidence": "Section 4 (2) of the principal Act is amended by the deletion Amendment 3. Section 4 (2) of the principal Act is amended by the deletion Amendment of paragraph ",
        "op": "amended"
       }
      ]
@@ -7292,6 +7494,15 @@
      "current": "amended",
      "history": [
       {
+       "by_id": "e6855c72-c1b4-491f-bc8f-9f7fa9416a6b",
+       "by_number": "No. 49 of 2010",
+       "by_title": "The Income Tax (Amendment) Act, 2010",
+       "by_year": 2010,
+       "confidence": "medium",
+       "evidence": "Section one hundred of the principal Act is amended of section by the deletion of subsection (1) and the substitution therefor of the 100 following subsection: ",
+       "op": "amended"
+      },
+      {
        "by_id": "0e8bd894-eb26-403c-8f48-729fb94cb03e",
        "by_number": "Act No. 27 of 2011",
        "by_title": "The Income Tax (Amendment) Act (2011)",
@@ -7306,7 +7517,7 @@
        "by_title": "The Income Tax (Amendment) Act, 2018",
        "by_year": 2018,
        "confidence": "medium",
-       "evidence": "Section 100 (1) (e) of the principal Act is amended by Amendment 12. Section 100 (1) (e) of the principal Act is amended by Amendment section100 the\u2014 (a) insert",
+       "evidence": "Section 100 (1) (e) of the principal Act is amended by Amendment 12. Section 100 (1) (e) of the principal Act is amended by Amendment section 100 the\u2014 (a) inser",
        "op": "amended"
       },
       {
@@ -7416,6 +7627,15 @@
        "op": "amended"
       },
       {
+       "by_id": "e6855c72-c1b4-491f-bc8f-9f7fa9416a6b",
+       "by_number": "No. 49 of 2010",
+       "by_title": "The Income Tax (Amendment) Act, 2010",
+       "by_year": 2010,
+       "confidence": "medium",
+       "evidence": "Section two of the principal Act is amended by the insertion Amendment 2. Section two of the principal Act is amended by the insertion Amendment in the appropri",
+       "op": "amended"
+      },
+      {
        "by_id": "0e8bd894-eb26-403c-8f48-729fb94cb03e",
        "by_number": "Act No. 27 of 2011",
        "by_title": "The Income Tax (Amendment) Act (2011)",
@@ -7447,8 +7667,8 @@
        "by_number": "No. 16 of 2017",
        "by_title": "The Income Tax (Amendment) Act, 2017",
        "by_year": 2017,
-       "confidence": "medium",
-       "evidence": "section2(1)oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 2 (1) of the principal Act is amended by\u2014 Amendment 2. Section 2 (1) of the principal Act is amended by\u2014 Amendment of section 2 (a) the deletion of the ",
        "op": "amended"
       },
       {
@@ -7456,8 +7676,8 @@
        "by_number": "No. 15 of 2019",
        "by_title": "The Income Tax (Amendment) Act, 2019",
        "by_year": 2019,
-       "confidence": "medium",
-       "evidence": "section2(1)oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 2(1) of the principal Act is amended by the\u2014 Amendment 2. Section 2(1) of the principal Act is amended by the\u2014 Amendment of section 2 (a) deletion of th",
        "op": "amended"
       },
       {
@@ -7520,6 +7740,15 @@
      "current": "amended",
      "history": [
       {
+       "by_id": "9e02c94e-cd0a-4a43-834d-a51b3060fd81",
+       "by_number": "No. 1 of 2009",
+       "by_title": "The Income Tax (Amendment) Act, 2009",
+       "by_year": 2009,
+       "confidence": "medium",
+       "evidence": "Section twenty one of the principal Act is amended in Amendment 3. Section twenty one of the principal Act is amended in of section 21 subsection (5) by the del",
+       "op": "amended"
+      },
+      {
        "by_id": "decf5edf-7db5-4ec5-b3de-fdf324e60e1d",
        "by_number": "Act No. of",
        "by_title": "The Income Tax (Amendment) 2013",
@@ -7553,7 +7782,7 @@
        "by_title": "The Income Tax (Amendment) Act, 2018",
        "by_year": 2018,
        "confidence": "medium",
-       "evidence": "section29oftheprincipalactisamended",
+       "evidence": "Section 29 of the principal Act is amended by the\u2014 Amendment 2. Section 29 of the principal Act is amended by the\u2014 Amendment of section (a) deletion of subsecti",
        "op": "amended"
       },
       {
@@ -7598,6 +7827,15 @@
        "op": "amended"
       },
       {
+       "by_id": "9e02c94e-cd0a-4a43-834d-a51b3060fd81",
+       "by_number": "No. 1 of 2009",
+       "by_title": "The Income Tax (Amendment) Act, 2009",
+       "by_year": 2009,
+       "confidence": "medium",
+       "evidence": "Section thirty of the principal Act is amended \u2014 Amendment 4. Section thirty of the principal Act is amended \u2014 of section 30 (a) by the deletion of subsection (",
+       "op": "amended"
+      },
+      {
        "by_id": "900ba737-ba3e-4cff-a82e-7ff3cceb653b",
        "by_number": "22 of 2024",
        "by_title": "Income Tax (Amendment) Act, 2024",
@@ -7635,7 +7873,7 @@
        "by_title": "The Income Tax (Amendment) Act, 2018",
        "by_year": 2018,
        "confidence": "medium",
-       "evidence": "section30aoftheprincipalactisamended",
+       "evidence": "Section 30A of the principal Act is amended by the deletion Amendment 3. Section 30A of the principal Act is amended by the deletion Amendment of section of sub",
        "op": "amended"
       }
      ]
@@ -7690,7 +7928,7 @@
        "by_title": "The Income Tax (Amendment) Act, 2018",
        "by_year": 2018,
        "confidence": "medium",
-       "evidence": "section33oftheprincipalactisamended",
+       "evidence": "Section 33 of the principal Act is amended by the deletion Amendment 4. Section 33 of the principal Act is amended by the deletion Amendment of subsection (3) a",
        "op": "amended"
       }
      ]
@@ -7722,6 +7960,15 @@
      "current": "replaced",
      "history": [
       {
+       "by_id": "9e02c94e-cd0a-4a43-834d-a51b3060fd81",
+       "by_number": "No. 1 of 2009",
+       "by_title": "The Income Tax (Amendment) Act, 2009",
+       "by_year": 2009,
+       "confidence": "high",
+       "evidence": "repeal of section thirty- Repeal and seven and the substitution therefor of the following new section: replacement of section 37",
+       "op": "replaced"
+      },
+      {
        "by_id": "03c3b6c2-d477-4686-a5d5-e427bc4dc40f",
        "by_number": "Act No. 10 of 2012",
        "by_title": "The Income Tax (Amendment) Act (2012)",
@@ -7736,7 +7983,7 @@
        "by_title": "The Income Tax (Amendment) Act, 2017",
        "by_year": 2017,
        "confidence": "high",
-       "evidence": "repeal of section 37 replacement andthesubstitutionthereforofthefollowing: ofsection37 Approved 37. (1) Adeductionshallbeallowedinascertainingthe fund gains or ",
+       "evidence": "repeal of section 37 replacement and the substitution therefor of the following: of section 37 Approved 37. (1) A deduction shall be allowed in ascertaining the",
        "op": "replaced"
       },
       {
@@ -7759,8 +8006,22 @@
        "by_title": "The Income Tax (Amendment) Act, 2017",
        "by_year": 2017,
        "confidence": "medium",
-       "evidence": "section4(3)oftheprincipalactisamended",
+       "evidence": "Section 4 (3) of the principal Act is amended by the deletion Amendment 3. Section 4 (3) of the principal Act is amended by the deletion of Section 4 of paragra",
        "op": "amended"
+      }
+     ]
+    },
+    "41": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "9e02c94e-cd0a-4a43-834d-a51b3060fd81",
+       "by_number": "No. 1 of 2009",
+       "by_title": "The Income Tax (Amendment) Act, 2009",
+       "by_year": 2009,
+       "confidence": "medium",
+       "evidence": "repeal of section forty replacement one and the substitution therefor of the following new section: of section 41 Public 41. (1) Subject to the other provisions",
+       "op": "replaced"
       }
      ]
     },
@@ -7775,6 +8036,34 @@
        "confidence": "high",
        "evidence": "insertion of the following Insertion of new section immediately after section 43A: section 43B 43B. A deduction shall be allowed in ascertaining gains or Deduct",
        "op": "inserted"
+      }
+     ]
+    },
+    "43B": {
+     "current": "repealed",
+     "history": [
+      {
+       "by_id": "4f3afd1a-c3dc-48cc-a650-be157c0cc99f",
+       "by_number": "No. 17 of 2018",
+       "by_title": "The Income Tax (Amendment) Act, 2018",
+       "by_year": 2018,
+       "confidence": "high",
+       "evidence": "repeal of section 43B. Repeal of 5. The principal Act is amended by the repeal of section 43B. section 43B",
+       "op": "repealed"
+      }
+     ]
+    },
+    "43C": {
+     "current": "repealed",
+     "history": [
+      {
+       "by_id": "e6855c72-c1b4-491f-bc8f-9f7fa9416a6b",
+       "by_number": "No. 49 of 2010",
+       "by_title": "The Income Tax (Amendment) Act, 2010",
+       "by_year": 2010,
+       "confidence": "high",
+       "evidence": "repeal of section forty- section 43C three C. Amendment 5. Section fifty-six of the principal Act is amended by\u2014 of section 56 (a) the deletion of subsection (2",
+       "op": "repealed"
       }
      ]
     },
@@ -7825,7 +8114,7 @@
      ]
     },
     "44": {
-     "current": "amended",
+     "current": "replaced",
      "history": [
       {
        "by_id": "81b8fc00-0388-4d03-b2c7-cd9b66d654c2",
@@ -7841,9 +8130,18 @@
        "by_number": "No. 17 of 2018",
        "by_title": "The Income Tax (Amendment) Act, 2018",
        "by_year": 2018,
-       "confidence": "medium",
-       "evidence": "section44oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 44 of the principal Act is amended by the repeal Amendment 6. Section 44 of the principal Act is amended by the repeal of section 44 of paragraph (o) an",
        "op": "amended"
+      },
+      {
+       "by_id": "4f3afd1a-c3dc-48cc-a650-be157c0cc99f",
+       "by_number": "No. 17 of 2018",
+       "by_title": "The Income Tax (Amendment) Act, 2018",
+       "by_year": 2018,
+       "confidence": "high",
+       "evidence": "repeal of section 44 of paragraph (o) and the substitution therefor of the following: (o) provision for a contingent employee cost that is not paid out to the e",
+       "op": "replaced"
       },
       {
        "by_id": "18cd9d24-6b64-4997-945f-4f880b0183b9",
@@ -7883,7 +8181,7 @@
        "by_title": "The Income Tax (Amendment) Act, 2017",
        "by_year": 2017,
        "confidence": "medium",
-       "evidence": "section45b(1)oftheprincipalactisamended",
+       "evidence": "Section 45B (1) of the principal Act is amended in column 6. Section 45B (1) of the principal Act is amended in column Amendment 1 by the deletion of the words ",
        "op": "amended"
       },
       {
@@ -7919,6 +8217,15 @@
        "op": "amended"
       },
       {
+       "by_id": "9e02c94e-cd0a-4a43-834d-a51b3060fd81",
+       "by_number": "No. 1 of 2009",
+       "by_title": "The Income Tax (Amendment) Act, 2009",
+       "by_year": 2009,
+       "confidence": "medium",
+       "evidence": "Section forty-six of the principal Act is amended by the Amendment deletion of subsections (5), (6), (7) and (8). of section 46 Section fifty six of the princip",
+       "op": "amended"
+      },
+      {
        "by_id": "0e8bd894-eb26-403c-8f48-729fb94cb03e",
        "by_number": "Act No. 27 of 2011",
        "by_title": "The Income Tax (Amendment) Act (2011)",
@@ -7933,7 +8240,7 @@
        "by_title": "The Income Tax (Amendment) Act, 2017",
        "by_year": 2017,
        "confidence": "medium",
-       "evidence": "section46(4)oftheprincipalactisamended",
+       "evidence": "Section 46 (4) of the principal Act is amended by the insertion Amendment 7. Section 46 (4) of the principal Act is amended by the insertion Amendment of the fo",
        "op": "amended"
       }
      ]
@@ -7965,7 +8272,7 @@
        "by_title": "The Income Tax (Amendment) Act, 2017",
        "by_year": 2017,
        "confidence": "medium",
-       "evidence": "section46a(3)(a)oftheprincipalactisamended",
+       "evidence": "Section 46A (3)(a) of the principal Act is amended by the Amendment 8. Section 46A (3)(a) of the principal Act is amended by the Amendment of section insertion ",
        "op": "amended"
       },
       {
@@ -8011,7 +8318,7 @@
        "by_title": "The Income Tax (Amendment) Act, 2017",
        "by_year": 2017,
        "confidence": "high",
-       "evidence": "repeal of section 54 Repealand replacement andthesubstitutionthereforofthefollowing: ofsection54",
+       "evidence": "repeal of section 54 Repeal and replacement and the substitution therefor of the following: of section 54",
        "op": "replaced"
       }
      ]
@@ -8034,7 +8341,7 @@
        "by_title": "The Income Tax (Amendment) Act, 2018",
        "by_year": 2018,
        "confidence": "medium",
-       "evidence": "section55oftheprincipalactisamended",
+       "evidence": "Section 55 of the principal Act is amended\u2014 Amendment 7. Section 55 of the principal Act is amended\u2014 of section 55 (a) in subsection (1), by the deletion of the",
        "op": "amended"
       },
       {
@@ -8088,6 +8395,24 @@
     "56": {
      "current": "amended",
      "history": [
+      {
+       "by_id": "9e02c94e-cd0a-4a43-834d-a51b3060fd81",
+       "by_number": "No. 1 of 2009",
+       "by_title": "The Income Tax (Amendment) Act, 2009",
+       "by_year": 2009,
+       "confidence": "high",
+       "evidence": "Section fifty six of the principal Act is amended\u2014 Amendment of section 56 by the insertion immediately after subsection (1) of the following new subsection: (2",
+       "op": "amended"
+      },
+      {
+       "by_id": "e6855c72-c1b4-491f-bc8f-9f7fa9416a6b",
+       "by_number": "No. 49 of 2010",
+       "by_title": "The Income Tax (Amendment) Act, 2010",
+       "by_year": 2010,
+       "confidence": "medium",
+       "evidence": "Section fifty-six of the principal Act is amended by\u2014 of section 56 (a) the deletion of subsection (2); and (b) the re-numbering of subsections (3), (4), (5) an",
+       "op": "amended"
+      },
       {
        "by_id": "858b6860-a5a3-4f8f-ae93-582130c1d8d8",
        "by_number": "No. 22 of 2023",
@@ -8186,7 +8511,7 @@
        "by_title": "The Income Tax (Amendment) Act, 2018",
        "by_year": 2018,
        "confidence": "medium",
-       "evidence": "section64aoftheprincipalactisamended",
+       "evidence": "Section 64A of the principal Act is amended by the\u2014 and other information relating to the business for ten years from the date of the last entry in those books,",
        "op": "amended"
       },
       {
@@ -8236,6 +8561,20 @@
       }
      ]
     },
+    "64B": {
+     "current": "repealed",
+     "history": [
+      {
+       "by_id": "9e02c94e-cd0a-4a43-834d-a51b3060fd81",
+       "by_number": "No. 1 of 2009",
+       "by_title": "The Income Tax (Amendment) Act, 2009",
+       "by_year": 2009,
+       "confidence": "medium",
+       "evidence": "repeal of section sixty Repeal of four B. section 64B Section seventy seven of the principal Act is amended by Amendment the deletion of subsection (1 D). of se",
+       "op": "repealed"
+      }
+     ]
+    },
     "65": {
      "current": "amended",
      "history": [
@@ -8254,7 +8593,7 @@
        "by_title": "The Income Tax (Amendment) Act, 2018",
        "by_year": 2018,
        "confidence": "medium",
-       "evidence": "section65oftheprincipalactisamended",
+       "evidence": "Section 65 of the principal Act is amended by the\u2014 Amendment (4) The Commissioner-General may appoint a person as an agent to withhold turnover tax before makin",
        "op": "amended"
       }
      ]
@@ -8268,7 +8607,7 @@
        "by_title": "The Income Tax (Amendment) Act, 2017",
        "by_year": 2017,
        "confidence": "medium",
-       "evidence": "section7oftheprincipalactisamended",
+       "evidence": "Section 7 of the principal Act is amended by the deletion of Amendment 4. Section 7 of the principal Act is amended by the deletion of of Section 7 subsection (",
        "op": "amended"
       }
      ]
@@ -8300,6 +8639,15 @@
      "current": "amended",
      "history": [
       {
+       "by_id": "9e02c94e-cd0a-4a43-834d-a51b3060fd81",
+       "by_number": "No. 1 of 2009",
+       "by_title": "The Income Tax (Amendment) Act, 2009",
+       "by_year": 2009,
+       "confidence": "medium",
+       "evidence": "Section seventy seven of the principal Act is amended by Amendment the deletion of subsection (1 D). of section 77",
+       "op": "amended"
+      },
+      {
        "by_id": "0e8bd894-eb26-403c-8f48-729fb94cb03e",
        "by_number": "Act No. 27 of 2011",
        "by_title": "The Income Tax (Amendment) Act (2011)",
@@ -8323,7 +8671,7 @@
        "by_title": "The Income Tax (Amendment) Act, 2019",
        "by_year": 2019,
        "confidence": "medium",
-       "evidence": "section77(4)oftheprincipalactisamended",
+       "evidence": "Section 77(4) of the principal Act is amended by the deletion Amendment 3. Section 77(4) of the principal Act is amended by the deletion of section 77 of the wo",
        "op": "amended"
       },
       {
@@ -8340,6 +8688,15 @@
     "78": {
      "current": "amended",
      "history": [
+      {
+       "by_id": "9e02c94e-cd0a-4a43-834d-a51b3060fd81",
+       "by_number": "No. 1 of 2009",
+       "by_title": "The Income Tax (Amendment) Act, 2009",
+       "by_year": 2009,
+       "confidence": "medium",
+       "evidence": "Section seventy eight of the principal Act is amended in Amendment 11. Section seventy eight of the principal Act is amended in Amendment subsection (1)\u2014 of sec",
+       "op": "amended"
+      },
       {
        "by_id": "03c3b6c2-d477-4686-a5d5-e427bc4dc40f",
        "by_number": "Act No. 10 of 2012",
@@ -8373,7 +8730,7 @@
        "by_title": "The Income Tax (Amendment) Act, 2019",
        "by_year": 2019,
        "confidence": "medium",
-       "evidence": "section78oftheprincipalactisamended",
+       "evidence": "Section 78 of the principal Act is amended\u2014 Amendment 4. Section 78 of the principal Act is amended\u2014 of section 78 (a) in subsection (1), by the deletion of the",
        "op": "amended"
       },
       {
@@ -8383,6 +8740,20 @@
        "by_year": 2025,
        "confidence": "high",
        "evidence": "Section 78 of the principal Act is amended by the insertion Amendment 9. Section 78 of the principal Act is amended by the insertion of section 78 of the follow",
+       "op": "amended"
+      }
+     ]
+    },
+    "79A": {
+     "current": "amended",
+     "history": [
+      {
+       "by_id": "9e02c94e-cd0a-4a43-834d-a51b3060fd81",
+       "by_number": "No. 1 of 2009",
+       "by_title": "The Income Tax (Amendment) Act, 2009",
+       "by_year": 2009,
+       "confidence": "medium",
+       "evidence": "Section seventy nine A of the principal Act is amended in Amendment 12. Section seventy nine A of the principal Act is amended in of section subsection (4) by t",
        "op": "amended"
       }
      ]
@@ -8410,7 +8781,7 @@
        "by_title": "The Income Tax (Amendment) Act, 2017",
        "by_year": 2017,
        "confidence": "medium",
-       "evidence": "section81oftheprincipalactisamended",
+       "evidence": "Section 81 of the principal Act is amended by the\u2014 of section 81 (a) deletion in subsection (1) of the words \u201c as if the payment were subject to Part VI, which ",
        "op": "amended"
       },
       {
@@ -8418,8 +8789,8 @@
        "by_number": "No. 15 of 2019",
        "by_title": "The Income Tax (Amendment) Act, 2019",
        "by_year": 2019,
-       "confidence": "medium",
-       "evidence": "section81oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 81 of the principal Act is amended by the insertion Amendment 5. Section 81 of the principal Act is amended by the insertion of section 81 of the follow",
        "op": "amended"
       }
      ]
@@ -8433,7 +8804,7 @@
        "by_title": "The Income Tax (Amendment) Act, 2017",
        "by_year": 2017,
        "confidence": "medium",
-       "evidence": "section81aoftheprincipalactisamended",
+       "evidence": "Section 81A of the principal Act is amended by the\u2014 Amendment 12. Section 81A of the principal Act is amended by the\u2014 Amendment of section (a) deletion in subse",
        "op": "amended"
       },
       {
@@ -8561,7 +8932,7 @@
        "by_title": "The Income Tax (Amendment) Act, 2017",
        "by_year": 2017,
        "confidence": "medium",
-       "evidence": "section82aoftheprincipalactisamended",
+       "evidence": "Section 82A of the principal Act is amended by\u2014 Amendment 13. Section 82A of the principal Act is amended by\u2014 Amendment of section (a) the deletion of subsectio",
        "op": "amended"
       },
       {
@@ -8570,7 +8941,7 @@
        "by_title": "The Income Tax (Amendment) Act, 2019",
        "by_year": 2019,
        "confidence": "medium",
-       "evidence": "section82a(1)(b)oftheprincipalactisamended",
+       "evidence": "Section 82A (1)(b) of the principal Act is amended by the Amendment of 7. Section 82A (1)(b) of the principal Act is amended by the section 82A insertion of the",
        "op": "amended"
       },
       {
@@ -8681,7 +9052,7 @@
      ]
     },
     "92A": {
-     "current": "inserted",
+     "current": "repealed",
      "history": [
       {
        "by_id": "beac8adb-6c47-4cbe-9642-05cadcd16f10",
@@ -8691,6 +9062,15 @@
        "confidence": "high",
        "evidence": "insertion after section Insertion of ninety-two of the following new section: new section 92A 92A. The Minister may, by Statutory Instrument, exempt Reduction i",
        "op": "inserted"
+      },
+      {
+       "by_id": "c5adba87-2a8f-4787-a1df-ac1ea640cc7a",
+       "by_number": "No. 16 of 2017",
+       "by_title": "The Income Tax (Amendment) Act, 2017",
+       "by_year": 2017,
+       "confidence": "high",
+       "evidence": "repeal of section 92A. Repeal of 14. The principal Act is amended by the repeal of section 92A. section 92A",
+       "op": "repealed"
       }
      ]
     },
@@ -8726,7 +9106,7 @@
        "by_title": "The Income Tax (Amendment) Act, 2019",
        "by_year": 2019,
        "confidence": "medium",
-       "evidence": "section97aoftheprincipalactisamended",
+       "evidence": "Section 97A of the principal Act is amended by the\u2014",
        "op": "amended"
       },
       {
@@ -8758,7 +9138,7 @@
        "by_title": "The Income Tax (Amendment) Act, 2018",
        "by_year": 2018,
        "confidence": "medium",
-       "evidence": "repeal of section Repealof 97AA. section 97AA",
+       "evidence": "repeal of section Repeal of 97AA. section 97AA",
        "op": "repealed"
       }
      ]
@@ -8795,7 +9175,7 @@
        "by_title": "The Income Tax (Amendment) Act, 2018",
        "by_year": 2018,
        "confidence": "medium",
-       "evidence": "Section 97C (7) of the principal Act is amended by the Amendment 11. Section 97C (7) of the principal Act is amended by the Amendment ofsection deletionofthewor",
+       "evidence": "Section 97C (7) of the principal Act is amended by the Amendment 11. Section 97C (7) of the principal Act is amended by the Amendment of section deletion of the",
        "op": "amended"
       }
      ]
@@ -9220,6 +9600,20 @@
        "op": "replaced"
       }
      ]
+    },
+    "XIA": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "83ed1884-84b0-4d87-af50-f93f65b5234e",
+       "by_number": "No. 47 of 2010",
+       "by_title": "The Customs and Excise (Amendment) Act, 2010",
+       "by_year": 2010,
+       "confidence": "medium",
+       "evidence": "repeal of Part XIA and replacement the substitution therefor of the following: of Part XIA Customs and Excise (Amendment) {No. 47 of 2010 699",
+       "op": "replaced"
+      }
+     ]
     }
    },
    "sections": {
@@ -9241,7 +9635,7 @@
        "by_title": "The Customs and Excise (Amendment) Act, 2019",
        "by_year": 2019,
        "confidence": "medium",
-       "evidence": "section108oftheprincipalactisamended",
+       "evidence": "Section 108 of the principal Act is amended by the deletion Amendment 6. Section 108 of the principal Act is amended by the deletion ofsection 108 of subsection",
        "op": "amended"
       },
       {
@@ -9343,7 +9737,7 @@
        "by_title": "The Customs and Excise (Amendment) Act, 2019",
        "by_year": 2019,
        "confidence": "medium",
-       "evidence": "section13(1)oftheprincipalactisamended",
+       "evidence": "Section 13(1) of the principal Act is amended by the insertion Amendment 2. Section 13(1) of the principal Act is amended by the insertion Amendment of the foll",
        "op": "amended"
       }
      ]
@@ -9399,7 +9793,7 @@
        "by_title": "The Customs and Excise (Amendment) Act, 2019",
        "by_year": 2019,
        "confidence": "medium",
-       "evidence": "section139doftheprincipalactisamended",
+       "evidence": "Section 139D of the principal Act is amended\u2014 Amendment 7. Section 139D of the principal Act is amended\u2014 of section (a) by the deletion of subsection (2) and th",
        "op": "amended"
       },
       {
@@ -9519,7 +9913,7 @@
        "by_title": "The Customs and Excise (Amendment) Act, 2018",
        "by_year": 2018,
        "confidence": "medium",
-       "evidence": "section155oftheprincipalactisamended",
+       "evidence": "Section 155 of the principal Act is amended by the\u2014 Amendment 9. Section 155 of the principal Act is amended by the\u2014 ofsection155 (a) insertion of the following",
        "op": "amended"
       },
       {
@@ -9541,8 +9935,8 @@
        "by_number": "No. 19 of 2018",
        "by_title": "The Customs and Excise (Amendment) Act, 2018",
        "by_year": 2018,
-       "confidence": "medium",
-       "evidence": "Repealof section 155A",
+       "confidence": "high",
+       "evidence": "repeal of section 155A. Repeal of 10. The principal Act is amended by the repeal of section 155A. Repeal of section 155A",
        "op": "repealed"
       }
      ]
@@ -9570,7 +9964,7 @@
        "by_title": "The Customs and Excise (Amendment) Act, 2019",
        "by_year": 2019,
        "confidence": "medium",
-       "evidence": "Section 17 (1)(b) of the principal Act is amended by the Amendment 3. Section 17 (1)(b) of the principal Act is amended by the Amendment deletionoftheproviso. o",
+       "evidence": "Section 17 (1)(b) of the principal Act is amended by the Amendment 3. Section 17 (1)(b) of the principal Act is amended by the Amendment deletion of the proviso",
        "op": "amended"
       }
      ]
@@ -9649,7 +10043,7 @@
        "by_title": "The Customs and Excise (Amendment) Act, 2017",
        "by_year": 2017,
        "confidence": "medium",
-       "evidence": "section188oftheprincipalactisamended",
+       "evidence": "Section 188 of the principal Act is amended by the \u2014 of section 188 (a) deletion of subsection (5) and the substitution therefor of the following: (5) A person ",
        "op": "amended"
       },
       {
@@ -9695,7 +10089,7 @@
        "by_title": "The Customs and Excise (Amendment) Act, 2018",
        "by_year": 2018,
        "confidence": "medium",
-       "evidence": "Section 191(a) of the principal Act is amended by the Amendment 11. Section 191(a) of the principal Act is amended by the Amendment deletionofthewords\u201ccustomsdu",
+       "evidence": "Section 191(a) of the principal Act is amended by the Amendment 11. Section 191(a) of the principal Act is amended by the Amendment deletion of the words \u201ccusto",
        "op": "amended"
       }
      ]
@@ -9764,7 +10158,7 @@
        "by_title": "The Customs and Excise (Amendment) Act, 2017",
        "by_year": 2017,
        "confidence": "medium",
-       "evidence": "section2oftheprincipalactisamended",
+       "evidence": "Section 2 of the principal Act is amended by the insertion of Amendment 2. Section 2 of the principal Act is amended by the insertion of Amendment the following",
        "op": "amended"
       },
       {
@@ -9773,7 +10167,7 @@
        "by_title": "The Customs and Excise (Amendment) Act, 2018",
        "by_year": 2018,
        "confidence": "medium",
-       "evidence": "section2oftheprincipalactisamended",
+       "evidence": "Section 2 of the principal Act is amended by insertion of the Amendment 2. Section 2 of the principal Act is amended by insertion of the Amendment following def",
        "op": "amended"
       },
       {
@@ -9906,7 +10300,7 @@
        "by_title": "The Customs and Excise (Amendment) Act, 2017",
        "by_year": 2017,
        "confidence": "medium",
-       "evidence": "section3oftheprincipalactisamended",
+       "evidence": "Section 3 of the principal Act is amended by the deletion of Amendment 3. Section 3 of the principal Act is amended by the deletion of Amendment subsection (4).",
        "op": "amended"
       }
      ]
@@ -10025,12 +10419,21 @@
      "current": "amended",
      "history": [
       {
+       "by_id": "83ed1884-84b0-4d87-af50-f93f65b5234e",
+       "by_number": "No. 47 of 2010",
+       "by_title": "The Customs and Excise (Amendment) Act, 2010",
+       "by_year": 2010,
+       "confidence": "medium",
+       "evidence": "Section thirty-four of the principal Act is amended in 3. Section thirty-four of the principal Act is amended in of section 34 paragraph (d) of subsection (2) b",
+       "op": "amended"
+      },
+      {
        "by_id": "df720d1d-0b63-4dae-b385-da037ef1b6ad",
        "by_number": "No. 19 of 2018",
        "by_title": "The Customs and Excise (Amendment) Act, 2018",
        "by_year": 2018,
-       "confidence": "medium",
-       "evidence": "section34(2)oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 34 (2) of the principal Act is amended by the\u2014 Amendment 3. Section 34 (2) of the principal Act is amended by the\u2014 Amendment of section 34 (a) insertion",
        "op": "amended"
       },
       {
@@ -10160,7 +10563,7 @@
        "by_title": "The Customs and Excise (Amendment) Act, 2018",
        "by_year": 2018,
        "confidence": "medium",
-       "evidence": "section72oftheprincipalactisamended",
+       "evidence": "Section 72 of the principal Act is amended by the insertion 4. Section 72 of the principal Act is amended by the insertion Amendment of the words \u201cand used moto",
        "op": "amended"
       }
      ]
@@ -10174,7 +10577,7 @@
        "by_title": "The Customs and Excise (Amendment) Act, 2019",
        "by_year": 2019,
        "confidence": "medium",
-       "evidence": "section72aoftheprincipalactisamended",
+       "evidence": "Section 72A of the principal Act is amended by\u2014 Amendment 4. Section 72A of the principal Act is amended by\u2014 Amendment of Section (a) the insertion of the figur",
        "op": "amended"
       }
      ]
@@ -10248,7 +10651,7 @@
        "by_title": "The Customs and Excise (Amendment) Act, 2018",
        "by_year": 2018,
        "confidence": "medium",
-       "evidence": "section77oftheprincipalactisamended",
+       "evidence": "Section 77 of the principal Act is amended by the\u2014 Amendment 6. Section 77 of the principal Act is amended by the\u2014 of section 77 (a) deletion of the words \u201csubs",
        "op": "amended"
       },
       {
@@ -10312,7 +10715,7 @@
        "by_title": "The Customs and Excise (Amendment) Act, 2017",
        "by_year": 2017,
        "confidence": "medium",
-       "evidence": "section85oftheprincipalactisamended",
+       "evidence": "Section 85 of the principal Act is amended by the\u2014 of section 85 (a) deletion of subsection (3) and the substitution therefor of the following: (3) Despite subs",
        "op": "amended"
       },
       {
@@ -10320,8 +10723,8 @@
        "by_number": "No. 19 of 2018",
        "by_title": "The Customs and Excise (Amendment) Act, 2018",
        "by_year": 2018,
-       "confidence": "medium",
-       "evidence": "section85(3)oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 85 (3) of the principal Act is amended by the insertion Amendment 7. Section 85 (3) of the principal Act is amended by the insertion of section 85 of th",
        "op": "amended"
       }
      ]
@@ -10352,6 +10755,15 @@
     "93": {
      "current": "amended",
      "history": [
+      {
+       "by_id": "3996d28e-6038-4ab5-b6d9-3e20c269915b",
+       "by_number": "No. 16 of 2019",
+       "by_title": "The Customs and Excise (Amendment) Act, 2019",
+       "by_year": 2019,
+       "confidence": "medium",
+       "evidence": "5. Section 93(2) is amended by the insertion of the words \u201cand Amendment 5. Section 93(2) is amended by the insertion of the words \u201cand Amendment a licence to m",
+       "op": "amended"
+      },
       {
        "by_id": "8ea70e0f-729f-405e-9178-d99e4c259707",
        "by_number": "No. 25 of 2022",
@@ -10566,8 +10978,8 @@
        "by_number": "No. 31 of 2026",
        "by_title": "The National Council for Construction (Amendment) Act, 2026",
        "by_year": 2026,
-       "confidence": "medium",
-       "evidence": "section2oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 2 of the principal Act is amended by the\u2014 Amendment 2. Section 2 of the principal Act is amended by the\u2014 Amendment of section 2 (a) deletion of the defi",
        "op": "amended"
       }
      ]
@@ -10581,7 +10993,7 @@
        "by_title": "The National Council for Construction (Amendment) Act, 2026",
        "by_year": 2026,
        "confidence": "medium",
-       "evidence": "section7oftheprincipalactisamended",
+       "evidence": "Section 7 of the principal Act is amended by the deletion of Amendment 3. Section 7 of the principal Act is amended by the deletion of of section 7 subsection (",
        "op": "amended"
       }
      ]
@@ -10649,7 +11061,7 @@
        "by_title": "The Zambia National Public Health Institute (Amendment) Act,2026",
        "by_year": 2026,
        "confidence": "medium",
-       "evidence": "section5oftheprincipalactisamended",
+       "evidence": "Section 5 of the principal Act is amended by the deletion of Amendment 2. Section 5 of the principal Act is amended by the deletion of of section 5 subsection (",
        "op": "amended"
       }
      ]
@@ -10826,6 +11238,20 @@
   "992415ed-3547-4f91-bb46-3b88bc7480b0": {
    "parts": {},
    "sections": {
+    "12A": {
+     "current": "inserted",
+     "history": [
+      {
+       "by_id": "e1468eac-9a94-4456-b39b-94bdedca53c1",
+       "by_number": "No. 15 of 2015",
+       "by_title": "The Employment (Amendment) Act, 2015",
+       "by_year": 2015,
+       "confidence": "high",
+       "evidence": "insertion immediately Insertion of after section twelve of the following new section:\u2014 section 12A 12A. (1) For purposes of this Act and notwithstanding Casuali",
+       "op": "inserted"
+      }
+     ]
+    },
     "25": {
      "current": "amended",
      "history": [
@@ -10835,8 +11261,120 @@
        "by_title": "The Employment (Amendment)",
        "by_year": 2017,
        "confidence": "medium",
-       "evidence": "section25oftheprincipalactisamended",
+       "evidence": "Section 25 of the principal Act is amended by the insertion Amendment 2. Section 25 of the principal Act is amended by the insertion Amendment of section of the",
        "op": "amended"
+      }
+     ]
+    },
+    "28A": {
+     "current": "inserted",
+     "history": [
+      {
+       "by_id": "e1468eac-9a94-4456-b39b-94bdedca53c1",
+       "by_number": "No. 15 of 2015",
+       "by_title": "The Employment (Amendment) Act, 2015",
+       "by_year": 2015,
+       "confidence": "high",
+       "evidence": "insertion of the section 28A, 28B following new sections immediately after section twenty-eight: and 28C Deeming 28A. Where a casual employee continues to be em",
+       "op": "inserted"
+      }
+     ]
+    },
+    "3": {
+     "current": "amended",
+     "history": [
+      {
+       "by_id": "e1468eac-9a94-4456-b39b-94bdedca53c1",
+       "by_number": "No. 15 of 2015",
+       "by_title": "The Employment (Amendment) Act, 2015",
+       "by_year": 2015,
+       "confidence": "high",
+       "evidence": "Section three of the principal Act is amended\u2014 Amendment of section 3 (a) by the deletion of the definitions of \u201ccasual employee\u201d, \u201cemployee\u201d and \u201cemployment ag",
+       "op": "amended"
+      }
+     ]
+    },
+    "36": {
+     "current": "amended",
+     "history": [
+      {
+       "by_id": "e1468eac-9a94-4456-b39b-94bdedca53c1",
+       "by_number": "No. 15 of 2015",
+       "by_title": "The Employment (Amendment) Act, 2015",
+       "by_year": 2015,
+       "confidence": "high",
+       "evidence": "Section thirty-six of the principal Act is amended by the Amendment 5. Section thirty-six of the principal Act is amended by the Amendment of section 36 inserti",
+       "op": "amended"
+      }
+     ]
+    },
+    "56": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "e1468eac-9a94-4456-b39b-94bdedca53c1",
+       "by_number": "No. 15 of 2015",
+       "by_title": "The Employment (Amendment) Act, 2015",
+       "by_year": 2015,
+       "confidence": "medium",
+       "evidence": "repeal of section fifty- Repeal and replacement six and the substitution therefor of the following: of section 56 8 No. 15 of 2015] Employment (Amendment) Prohi",
+       "op": "replaced"
+      }
+     ]
+    },
+    "57": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "e1468eac-9a94-4456-b39b-94bdedca53c1",
+       "by_number": "No. 15 of 2015",
+       "by_title": "The Employment (Amendment) Act, 2015",
+       "by_year": 2015,
+       "confidence": "medium",
+       "evidence": "repeal of section fifty- replacement seven and the substitution therefor of the following: of section 57 Application 57. (1) An application for a permit shall b",
+       "op": "replaced"
+      }
+     ]
+    },
+    "59": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "e1468eac-9a94-4456-b39b-94bdedca53c1",
+       "by_number": "No. 15 of 2015",
+       "by_title": "The Employment (Amendment) Act, 2015",
+       "by_year": 2015,
+       "confidence": "medium",
+       "evidence": "repeal of section fifty- Repeal and replacement nine and the substitution therefor of the following: of section 59",
+       "op": "replaced"
+      }
+     ]
+    },
+    "62": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "e1468eac-9a94-4456-b39b-94bdedca53c1",
+       "by_number": "No. 15 of 2015",
+       "by_title": "The Employment (Amendment) Act, 2015",
+       "by_year": 2015,
+       "confidence": "medium",
+       "evidence": "repeal of section sixty- replacement two and the substitution therefor of the following new section: of section 62",
+       "op": "replaced"
+      }
+     ]
+    },
+    "63": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "e1468eac-9a94-4456-b39b-94bdedca53c1",
+       "by_number": "No. 15 of 2015",
+       "by_title": "The Employment (Amendment) Act, 2015",
+       "by_year": 2015,
+       "confidence": "high",
+       "evidence": "repeal of section sixty- Repeal and three and the substitution therefor of thefollowing: replacement of section 63 63. A person aggrieved with the decision of t",
+       "op": "replaced"
       }
      ]
     }
@@ -10903,7 +11441,7 @@
        "by_title": "The Subordinate Courts (Amendment) Act, 2018",
        "by_year": 2018,
        "confidence": "medium",
-       "evidence": "section20(1)oftheprincipalactisamended",
+       "evidence": "Section 20 (1) of the principal Act is amended by the deletion Amendment 3. Section 20 (1) of the principal Act is amended by the deletion Amendment of\u2014 of Sect",
        "op": "amended"
       },
       {
@@ -10968,7 +11506,7 @@
        "by_title": "The Subordinate Courts (Amendment) Act, 2018",
        "by_year": 2018,
        "confidence": "medium",
-       "evidence": "section3oftheprincipalactisamended",
+       "evidence": "Section 3 of the principal Act is amended by the deletion of Amendment 2. Section 3 of the principal Act is amended by the deletion of Amendment paragraph (a) a",
        "op": "amended"
       }
      ]
@@ -11055,8 +11593,8 @@
        "by_number": "No. 12 of 2021",
        "by_title": "The Service Commissions (Amendment) Act, 2021",
        "by_year": 2021,
-       "confidence": "medium",
-       "evidence": "section5(1)oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 5(1) of the principal Act is amended by the deletion Amendment 2. Section 5(1) of the principal Act is amended by the deletion Amendment of section 5 of",
        "op": "amended"
       }
      ]
@@ -11076,7 +11614,7 @@
        "by_title": "The Public Service Pensions (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section4(1)oftheprincipalactisamended",
+       "evidence": "Section 4(1) of the principal Act is amended by the deletion Amendment 2. Section 4(1) of the principal Act is amended by the deletion Amendment of paragraphs (",
        "op": "amended"
       }
      ]
@@ -11090,7 +11628,7 @@
        "by_title": "The Public Service Pensions (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section7oftheprincipalactisamended",
+       "evidence": "Section 7 of the principal Act is amended by the insertion Amendment 3. Section 7 of the principal Act is amended by the insertion Amendment of\u2014 of section 7 (a",
        "op": "amended"
       }
      ]
@@ -11144,7 +11682,7 @@
        "by_title": "The Health Professions (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section12oftheprincipalactisamended",
+       "evidence": "Section 12 of the principal Act is amended by the deletion of Amendment 4. Section 12 of the principal Act is amended by the deletion of of section 12 subsectio",
        "op": "amended"
       }
      ]
@@ -11157,8 +11695,8 @@
        "by_number": "No. 26 of 2021",
        "by_title": "The Health Professions (Amendment) Act, 2021",
        "by_year": 2021,
-       "confidence": "medium",
-       "evidence": "section2oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 2 of the principal Act is amended by the insertion Amendment 2. Section 2 of the principal Act is amended by the insertion Amendment of section 2 of the",
        "op": "amended"
       }
      ]
@@ -11172,8 +11710,22 @@
        "by_title": "The Health Professions (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section32oftheprincipalactisamended",
+       "evidence": "Section 32 of the principal Act is amended by the deletion of Amendment 5. Section 32 of the principal Act is amended by the deletion of of section 32 subsectio",
        "op": "amended"
+      }
+     ]
+    },
+    "33": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "390ea40f-d39a-46c6-83ba-f71a4a5ae3c1",
+       "by_number": "No. 26 of 2021",
+       "by_title": "The Health Professions (Amendment) Act, 2021",
+       "by_year": 2021,
+       "confidence": "high",
+       "evidence": "repeal of section 33 and replacement the substitution therefor of the following: of section 33 Application 33. (1) A higher education institution that intends t",
+       "op": "replaced"
       }
      ]
     },
@@ -11186,7 +11738,7 @@
        "by_title": "The Health Professions (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section4oftheprincipalactisamended",
+       "evidence": "Section 4 of the principal Act is amended by the insertion of Amendment 2. Section 4 of the principal Act is amended by the insertion of Amendment the following",
        "op": "amended"
       }
      ]
@@ -11200,7 +11752,7 @@
        "by_title": "The Health Professions (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section51oftheprincipalactisamended",
+       "evidence": "Section 51 of the principal Act is amended by the deletion of Amendment 7. Section 51 of the principal Act is amended by the deletion of of section 51 the subse",
        "op": "amended"
       }
      ]
@@ -11214,7 +11766,7 @@
        "by_title": "The Health Professions (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "Section 77(2)(f) of the principal Act is amended by the ofsection77 insertion of the words \u201caccredited and recognised by the Zambia Qualifications Authority\u201dimm",
+       "evidence": "Section 77(2)(f) of the principal Act is amended by the Amendment 8. Section 77(2)(f) of the principal Act is amended by the of section 77 insertion of the word",
        "op": "amended"
       }
      ]
@@ -11227,14 +11779,189 @@
        "by_number": "No. 26 of 2021",
        "by_title": "The Health Professions (Amendment) Act, 2021",
        "by_year": 2021,
-       "confidence": "medium",
-       "evidence": "section8oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 8 of the principal Act is amended by the deletion of Amendment 3. Section 8 of the principal Act is amended by the deletion of Amendment of section 8 su",
        "op": "amended"
       }
      ]
     }
    },
    "title": "THE HEALTH PROFESSIONS ACT, 2009"
+  },
+  "a9087d11-abba-4323-8d86-af52125566b5": {
+   "parts": {
+    "X": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "da178bab-06bd-499a-bc67-fdd9ca354263",
+       "by_number": "Act No. 1 of 2010",
+       "by_title": "The Zambia Development Agency (Amendment)",
+       "by_year": 2010,
+       "confidence": "medium",
+       "evidence": "repeal of Part X and Repeal and the substitution therefor of the following new Part: replacement of Part X",
+       "op": "replaced"
+      }
+     ]
+    }
+   },
+   "sections": {
+    "17": {
+     "current": "amended",
+     "history": [
+      {
+       "by_id": "6cb3073c-b532-4afa-b3a0-5745d723d216",
+       "by_number": "Act No. 15 of 2012",
+       "by_title": "The Zambia Development Agency (Amendment) Act 2012",
+       "by_year": 2012,
+       "confidence": "high",
+       "evidence": "Section seventeen of the principal Act is amended by\u2014 2. Section seventeen of the principal Act is amended by\u2014 (a) the insertion of the figure \"(1)\" between the",
+       "op": "amended"
+      }
+     ]
+    },
+    "18": {
+     "current": "amended",
+     "history": [
+      {
+       "by_id": "b6ea9be4-4ec5-41af-97fe-a95fb5c0b1ac",
+       "by_number": "No. 5 of 2009",
+       "by_title": "The Zambia Development Agency (Amendment)",
+       "by_year": 2009,
+       "confidence": "medium",
+       "evidence": "Section eighteen of the principal Act is amended\u2014 Amendment 4. Section eighteen of the principal Act is amended\u2014 of section 18 in the marginal note by the inser",
+       "op": "amended"
+      }
+     ]
+    },
+    "3": {
+     "current": "amended",
+     "history": [
+      {
+       "by_id": "b6ea9be4-4ec5-41af-97fe-a95fb5c0b1ac",
+       "by_number": "No. 5 of 2009",
+       "by_title": "The Zambia Development Agency (Amendment)",
+       "by_year": 2009,
+       "confidence": "medium",
+       "evidence": "Section three of the principal Act is amended by the insertion Amendment in the appropriate place of the following new definition: of section 3 industrial park ",
+       "op": "amended"
+      }
+     ]
+    },
+    "5": {
+     "current": "amended",
+     "history": [
+      {
+       "by_id": "b6ea9be4-4ec5-41af-97fe-a95fb5c0b1ac",
+       "by_number": "No. 5 of 2009",
+       "by_title": "The Zambia Development Agency (Amendment)",
+       "by_year": 2009,
+       "confidence": "medium",
+       "evidence": "Section five of the principal Act is amended in subsection Amendment (2) \u2014 of section 5 in paragraph (a), by the insertion of the words \" and industrial parks\" ",
+       "op": "amended"
+      }
+     ]
+    },
+    "56": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "d05854d5-6e74-46b9-b742-4b03206703cb",
+       "by_number": "No. 48 of 2021",
+       "by_title": "The Zambia Development Agency (Amendment) Act, 2021",
+       "by_year": 2021,
+       "confidence": "high",
+       "evidence": "repeal of section 56 and Repeal and replacement the substitution therefor of the following: of section 56",
+       "op": "replaced"
+      }
+     ]
+    },
+    "57": {
+     "current": "amended",
+     "history": [
+      {
+       "by_id": "b6ea9be4-4ec5-41af-97fe-a95fb5c0b1ac",
+       "by_number": "No. 5 of 2009",
+       "by_title": "The Zambia Development Agency (Amendment)",
+       "by_year": 2009,
+       "confidence": "medium",
+       "evidence": "Section fifty-seven of the principal Act is amended by the Amendment 5. Section fifty-seven of the principal Act is amended by the Amendment deletion of subsect",
+       "op": "amended"
+      }
+     ]
+    },
+    "58": {
+     "current": "repealed",
+     "history": [
+      {
+       "by_id": "738ec06d-2fd2-4482-86c8-ed0705298621",
+       "by_number": "No. 29 of 2011",
+       "by_title": "The Zambia Development Agency (Amendment) Act (2011)",
+       "by_year": 2011,
+       "confidence": "high",
+       "evidence": "repeal of section fifty- Repeal of eight. section 58 Single copies of this Act may be obtained from the Government Printer, P.O. Box 30136, 10101 Lusaka, Price ",
+       "op": "repealed"
+      }
+     ]
+    },
+    "60": {
+     "current": "amended",
+     "history": [
+      {
+       "by_id": "b6ea9be4-4ec5-41af-97fe-a95fb5c0b1ac",
+       "by_number": "No. 5 of 2009",
+       "by_title": "The Zambia Development Agency (Amendment)",
+       "by_year": 2009,
+       "confidence": "medium",
+       "evidence": "Section sixty of the principal Act is amended by the deletion of section 60 of the words \" Commissioner-General \" and the substitution therefor of the words \" M",
+       "op": "amended"
+      }
+     ]
+    },
+    "69": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "6cb3073c-b532-4afa-b3a0-5745d723d216",
+       "by_number": "Act No. 15 of 2012",
+       "by_title": "The Zambia Development Agency (Amendment) Act 2012",
+       "by_year": 2012,
+       "confidence": "high",
+       "evidence": "repeal of section sixty- replacement of section 69 nine and the substitution therefor of the following: Consideration",
+       "op": "replaced"
+      }
+     ]
+    },
+    "82": {
+     "current": "amended",
+     "history": [
+      {
+       "by_id": "b6ea9be4-4ec5-41af-97fe-a95fb5c0b1ac",
+       "by_number": "No. 5 of 2009",
+       "by_title": "The Zambia Development Agency (Amendment)",
+       "by_year": 2009,
+       "confidence": "medium",
+       "evidence": "Section eighty-two of the principal Act is amended in of section 82 paragraph (b) of subsection (2) by the insertion of the words \" or industrial parks \" after ",
+       "op": "amended"
+      }
+     ]
+    },
+    "83": {
+     "current": "repealed",
+     "history": [
+      {
+       "by_id": "da178bab-06bd-499a-bc67-fdd9ca354263",
+       "by_number": "Act No. 1 of 2010",
+       "by_title": "The Zambia Development Agency (Amendment)",
+       "by_year": 2010,
+       "confidence": "medium",
+       "evidence": "repeal of section eighty- Three",
+       "op": "repealed"
+      }
+     ]
+    }
+   },
+   "title": "The Zambia Development Agency Act, 2006"
   },
   "ad55d615-b0c2-4b7d-99d2-cc94aeccd877": {
    "parts": {
@@ -11297,7 +12024,7 @@
        "by_title": "The Control of Goods (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section4goftheprincipalactisamended",
+       "evidence": "Section 4G of the principal Act is amended by\u2014 Amendment 2. Section 4G of the principal Act is amended by\u2014 Amendment of (a) the deletion of subsection (1) and t",
        "op": "amended"
       }
      ]
@@ -11429,7 +12156,7 @@
        "by_title": "The Engineering Institution of Zambia (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section17oftheprincipalactisamended",
+       "evidence": "Section 17 of the principal Act is amended\u2014 Amendment 4. Section 17 of the principal Act is amended\u2014 of section 17 (a) in subsection (1), by the deletion of par",
        "op": "amended"
       }
      ]
@@ -11443,7 +12170,7 @@
        "by_title": "The Engineering Institution of Zambia (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section2oftheprincipalactisamended",
+       "evidence": "Section 2 of the principal Act is amended by the insertion Amendment 2. Section 2 of the principal Act is amended by the insertion Amendment of the following ne",
        "op": "amended"
       }
      ]
@@ -11456,8 +12183,8 @@
        "by_number": "No. 28 of 2021",
        "by_title": "The Engineering Institution of Zambia (Amendment) Act, 2021",
        "by_year": 2021,
-       "confidence": "medium",
-       "evidence": "section4oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 4 of the principal Act is amended\u2014 Amendment 3. Section 4 of the principal Act is amended\u2014 Amendment of section 4 (a) in subsection (1) by the\u2014 (i) dele",
        "op": "amended"
       }
      ]
@@ -11471,7 +12198,7 @@
        "by_title": "The Engineering Institution of Zambia (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section44oftheprincipalactisamended",
+       "evidence": "Section 44 of the principal Act is amended by the\u2014 Amendment 5. Section 44 of the principal Act is amended by the\u2014 of section 44 (a) deletion of subsection (1);",
        "op": "amended"
       }
      ]
@@ -11485,7 +12212,7 @@
        "by_title": "The Engineering Institution of Zambia (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section62(2)oftheprincipalactisamended",
+       "evidence": "Section 62 (2) of the principal Act is amended\u2014 Amendment 6. Section 62 (2) of the principal Act is amended\u2014 of section 62 (a) in paragraph (f), by the insertio",
        "op": "amended"
       }
      ]
@@ -11598,6 +12325,48 @@
   "b76021ea-b20d-451d-ba2b-1a8fb2cef01f": {
    "parts": {},
    "sections": {
+    "11": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "742b9374-a853-43c2-a515-59e3d958874f",
+       "by_number": "No. 4 of 2019",
+       "by_title": "The Zambia Law Development Commission (Amendment) Act, 2019",
+       "by_year": 2019,
+       "confidence": "high",
+       "evidence": "repeal of sections 11, Repeal and replacement 12 and 13, and the substitution therefor of the following: of sections 11, 12 and 13 Disclosure 11. (1) A person w",
+       "op": "replaced"
+      }
+     ]
+    },
+    "12": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "742b9374-a853-43c2-a515-59e3d958874f",
+       "by_number": "No. 4 of 2019",
+       "by_title": "The Zambia Law Development Commission (Amendment) Act, 2019",
+       "by_year": 2019,
+       "confidence": "medium",
+       "evidence": "repeal of sections 11, Repeal and replacement 12 and 13, and the substitution therefor of the following: of sections 11, 12 and 13 Disclosure 11. (1) A person w",
+       "op": "replaced"
+      }
+     ]
+    },
+    "13": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "742b9374-a853-43c2-a515-59e3d958874f",
+       "by_number": "No. 4 of 2019",
+       "by_title": "The Zambia Law Development Commission (Amendment) Act, 2019",
+       "by_year": 2019,
+       "confidence": "medium",
+       "evidence": "repeal of sections 11, Repeal and replacement 12 and 13, and the substitution therefor of the following: of sections 11, 12 and 13 Disclosure 11. (1) A person w",
+       "op": "replaced"
+      }
+     ]
+    },
     "2": {
      "current": "amended",
      "history": [
@@ -11606,8 +12375,8 @@
        "by_number": "No. 4 of 2019",
        "by_title": "The Zambia Law Development Commission (Amendment) Act, 2019",
        "by_year": 2019,
-       "confidence": "medium",
-       "evidence": "section2oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 2 of the principal Act is amended by the\u2014 Amendment 2. Section 2 of the principal Act is amended by the\u2014 Amendment of section 2 (a) deletion of the defi",
        "op": "amended"
       }
      ]
@@ -11621,7 +12390,7 @@
        "by_title": "The Zambia Law Development Commission (Amendment) Act, 2019",
        "by_year": 2019,
        "confidence": "medium",
-       "evidence": "section4(2)oftheprincipalactisamended",
+       "evidence": "Section 4(2) of the principal Act is amended by the deletion Amendment 3. Section 4(2) of the principal Act is amended by the deletion of section 4 of paragraph",
        "op": "amended"
       },
       {
@@ -11629,22 +12398,31 @@
        "by_number": "No. 17 of 2021",
        "by_title": "The Zambia Law Development Commission (Amendment) Act, 2021",
        "by_year": 2021,
-       "confidence": "medium",
-       "evidence": "section4oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 4 of the principal Act is amended by the insertion of Amendment 2. Section 4 of the principal Act is amended by the insertion of Amendment of section 4 ",
        "op": "amended"
       }
      ]
     },
     "5": {
-     "current": "amended",
+     "current": "replaced",
      "history": [
+      {
+       "by_id": "742b9374-a853-43c2-a515-59e3d958874f",
+       "by_number": "No. 4 of 2019",
+       "by_title": "The Zambia Law Development Commission (Amendment) Act, 2019",
+       "by_year": 2019,
+       "confidence": "high",
+       "evidence": "repeal of section 5 and replacement the substitution therefor of the following: of section 5",
+       "op": "replaced"
+      },
       {
        "by_id": "f5adedb9-2a89-495b-9aaa-05b0e2f1048b",
        "by_number": "No. 17 of 2021",
        "by_title": "The Zambia Law Development Commission (Amendment) Act, 2021",
        "by_year": 2021,
-       "confidence": "medium",
-       "evidence": "section5(1)(b)oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 5(1)(b) of the principal Act is amended by the deletion Amendment 3. Section 5(1)(b) of the principal Act is amended by the deletion Amendment of sectio",
        "op": "amended"
       }
      ]
@@ -11658,7 +12436,7 @@
        "by_title": "The Zambia Law Development Commission (Amendment) Act, 2019",
        "by_year": 2019,
        "confidence": "medium",
-       "evidence": "section6oftheprincipalactisamended",
+       "evidence": "Section 6 of the principal Act is amended by the insertion 5. Section 6 of the principal Act is amended by the insertion Amendment of the following new subsecti",
        "op": "amended"
       }
      ]
@@ -11817,7 +12595,7 @@
        "by_title": "The Financial Intelligence Centre (Amendment) Act, 2020",
        "by_year": 2020,
        "confidence": "medium",
-       "evidence": "Section 11 (1) of the principal Act is amended by the ofsection11 deletionofthewords\u201casitmaydetermine\u201dand the substitution thereforofthewords\u201cthat the Boardmayd",
+       "evidence": "Section 11 (1) of the principal Act is amended by the of section 11 deletion of the words \u201cas it may determine\u201d and the substitution therefor of the words \u201cthat",
        "op": "amended"
       }
      ]
@@ -11837,7 +12615,7 @@
      ]
     },
     "16": {
-     "current": "amended",
+     "current": "replaced",
      "history": [
       {
        "by_id": "a112465b-83bf-4591-8eb2-a8a4fff1dc5a",
@@ -11847,6 +12625,15 @@
        "confidence": "medium",
        "evidence": "Section sixteen of the principal Act is amended\u2014 Amendment 10. Section sixteen of the principal Act is amended\u2014 of section 16 (a) in paragraph (e) of subsection",
        "op": "amended"
+      },
+      {
+       "by_id": "a4b588fc-098b-4618-8a19-8a7b4d6f1b1a",
+       "by_number": "No. 16 of 2020",
+       "by_title": "The Financial Intelligence Centre (Amendment) Act, 2020",
+       "by_year": 2020,
+       "confidence": "high",
+       "evidence": "repeal of section 16 replacement and the substitution therefor of the following: of section 16",
+       "op": "replaced"
       }
      ]
     },
@@ -11868,7 +12655,7 @@
        "by_title": "The Financial Intelligence Centre (Amendment) Act, 2020",
        "by_year": 2020,
        "confidence": "medium",
-       "evidence": "section17oftheprincipalactisamended",
+       "evidence": "Section 17 of the principal Act is amended by the insertion Amendment 6. Section 17 of the principal Act is amended by the insertion of section of the following",
        "op": "amended"
       }
      ]
@@ -11905,7 +12692,7 @@
        "by_title": "The Financial Intelligence Centre (Amendment) Act, 2020",
        "by_year": 2020,
        "confidence": "high",
-       "evidence": "repeal of section 19 replacement andthesubstitutionthereforofthefollowing: ofsection19 Risk 19. (1) A reporting entity shall identify, assess, and management un",
+       "evidence": "repeal of section 19 replacement and the substitution therefor of the following: of section 19 Risk 19. (1) A reporting entity shall identify, assess, and manag",
        "op": "replaced"
       }
      ]
@@ -11927,8 +12714,8 @@
        "by_number": "No. 16 of 2020",
        "by_title": "The Financial Intelligence Centre (Amendment) Act, 2020",
        "by_year": 2020,
-       "confidence": "medium",
-       "evidence": "section2oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 2 of the principal Act is amended by the\u2014 Amendment of section 2 (a) deletion of the definition of \u201cclose associate\u201d, \u201chigh risk customers\u201d, and \u201cimmedi",
        "op": "amended"
       }
      ]
@@ -11965,13 +12752,13 @@
        "by_title": "The Financial Intelligence Centre (Amendment) Act, 2020",
        "by_year": 2020,
        "confidence": "medium",
-       "evidence": "section22oftheprincipalactisamended",
+       "evidence": "Section 22 of the principal Act is amended by the deletion Amendment 8. Section 22 of the principal Act is amended by the deletion of section 22 of subsection (",
        "op": "amended"
       }
      ]
     },
     "23": {
-     "current": "amended",
+     "current": "replaced",
      "history": [
       {
        "by_id": "a112465b-83bf-4591-8eb2-a8a4fff1dc5a",
@@ -11981,6 +12768,29 @@
        "confidence": "medium",
        "evidence": "Section twenty-three of the principal Act is amended by\u2014 Amendment 16. Section twenty-three of the principal Act is amended by\u2014 Amendment of (a) the insertion i",
        "op": "amended"
+      },
+      {
+       "by_id": "a4b588fc-098b-4618-8a19-8a7b4d6f1b1a",
+       "by_number": "No. 16 of 2020",
+       "by_title": "The Financial Intelligence Centre (Amendment) Act, 2020",
+       "by_year": 2020,
+       "confidence": "high",
+       "evidence": "repeal of section 23 Repeal and and the substitution therefor of the following: replacement of section 23",
+       "op": "replaced"
+      }
+     ]
+    },
+    "24": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "a4b588fc-098b-4618-8a19-8a7b4d6f1b1a",
+       "by_number": "No. 16 of 2020",
+       "by_title": "The Financial Intelligence Centre (Amendment) Act, 2020",
+       "by_year": 2020,
+       "confidence": "high",
+       "evidence": "repeal of section 24 Repeal and and the substitution therefor of the following: replacement of section 24",
+       "op": "replaced"
       }
      ]
     },
@@ -11995,6 +12805,34 @@
        "confidence": "medium",
        "evidence": "Section twenty-five of the principal Act is amended in Amendment 17. Section twenty-five of the principal Act is amended in of subsection (1) by\u2014 section 25 (a)",
        "op": "amended"
+      }
+     ]
+    },
+    "26": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "a4b588fc-098b-4618-8a19-8a7b4d6f1b1a",
+       "by_number": "No. 16 of 2020",
+       "by_title": "The Financial Intelligence Centre (Amendment) Act, 2020",
+       "by_year": 2020,
+       "confidence": "high",
+       "evidence": "repeal of section 26 Repeal and replacement and the substitution therefor of the following: of section 26",
+       "op": "replaced"
+      }
+     ]
+    },
+    "27": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "a4b588fc-098b-4618-8a19-8a7b4d6f1b1a",
+       "by_number": "No. 16 of 2020",
+       "by_title": "The Financial Intelligence Centre (Amendment) Act, 2020",
+       "by_year": 2020,
+       "confidence": "high",
+       "evidence": "repeal of section 27 replacement and the substitution therefor of the following: of section 27",
+       "op": "replaced"
       }
      ]
     },
@@ -12015,8 +12853,8 @@
        "by_number": "No. 16 of 2020",
        "by_title": "The Financial Intelligence Centre (Amendment) Act, 2020",
        "by_year": 2020,
-       "confidence": "medium",
-       "evidence": "section29oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 29 of the principal Act is amended\u2014 Amendment 13. Section 29 of the principal Act is amended\u2014 Amendment of section 29 (a) by the deletion of subsection ",
        "op": "amended"
       }
      ]
@@ -12053,7 +12891,7 @@
        "by_title": "The Financial Intelligence Centre (Amendment) Act, 2020",
        "by_year": 2020,
        "confidence": "medium",
-       "evidence": "section36oftheprincipalactisamended",
+       "evidence": "Section 36 of the principal Act is amended\u2014 Amendment 14. Section 36 of the principal Act is amended\u2014 of section 36 (a) in subsection (1) by the insertion of th",
        "op": "amended"
       }
      ]
@@ -12104,7 +12942,7 @@
        "by_title": "The Financial Intelligence Centre (Amendment) Act, 2020",
        "by_year": 2020,
        "confidence": "medium",
-       "evidence": "section45oftheprincipalactisamended",
+       "evidence": "Section 45 of the principal Act is amended by the deletion Amendment 15. Section 45 of the principal Act is amended by the deletion of section 45 of the words \u201c",
        "op": "amended"
       }
      ]
@@ -12137,6 +12975,20 @@
       }
      ]
     },
+    "49B": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "a4b588fc-098b-4618-8a19-8a7b4d6f1b1a",
+       "by_number": "No. 16 of 2020",
+       "by_title": "The Financial Intelligence Centre (Amendment) Act, 2020",
+       "by_year": 2020,
+       "confidence": "high",
+       "evidence": "repeal of section 49B replacement and the substitution therefor of the following: of section 49B Compounding 49B. Subject to the written consent of the Director",
+       "op": "replaced"
+      }
+     ]
+    },
     "49C": {
      "current": "inserted",
      "history": [
@@ -12146,7 +12998,7 @@
        "by_title": "The Financial Intelligence Centre (Amendment) Act, 2020",
        "by_year": 2020,
        "confidence": "high",
-       "evidence": "insertion of the section49C followingsectionimmediatelyaftersection49B: Financial Intelligence Centre (Amendment) [No. 16 of 2020 285 49C. (1) Withoutprejudicet",
+       "evidence": "insertion of the section 49C following section immediately after section 49B: Financial Intelligence Centre (Amendment) [No. 16 of 2020 285 49C. (1) Without pre",
        "op": "inserted"
       }
      ]
@@ -12162,6 +13014,15 @@
        "confidence": "medium",
        "evidence": "repeal of section replacement five and the substitution therefor of the following: of section 5",
        "op": "replaced"
+      },
+      {
+       "by_id": "a4b588fc-098b-4618-8a19-8a7b4d6f1b1a",
+       "by_number": "No. 16 of 2020",
+       "by_title": "The Financial Intelligence Centre (Amendment) Act, 2020",
+       "by_year": 2020,
+       "confidence": "high",
+       "evidence": "repeal of section 5 and Repeal and the substitution therefor of the following: replacement of section 5",
+       "op": "replaced"
       }
      ]
     },
@@ -12174,7 +13035,7 @@
        "by_title": "The Financial Intelligence Centre (Amendment) Act, 2020",
        "by_year": 2020,
        "confidence": "medium",
-       "evidence": "section54oftheprincipalactisamended",
+       "evidence": "Section 54 of the principal Act is amended by the deletion Amendment 18. Section 54 of the principal Act is amended by the deletion of section 54 of subsection ",
        "op": "amended"
       }
      ]
@@ -12188,8 +13049,22 @@
        "by_title": "The Financial Intelligence Centre (Amendment) Act, 2020",
        "by_year": 2020,
        "confidence": "medium",
-       "evidence": "Section 55 (2)(a) of the principal Act is amended by the ofsection55 insertionofthewords\u201corproliferation\u201daftertheword\u201cterrorism\u201d. Repealand 20. Theprincipal Act",
+       "evidence": "Section 55 (2)(a) of the principal Act is amended by the Amendment 19. Section 55 (2)(a) of the principal Act is amended by the of section 55 insertion of the w",
        "op": "amended"
+      }
+     ]
+    },
+    "58": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "a4b588fc-098b-4618-8a19-8a7b4d6f1b1a",
+       "by_number": "No. 16 of 2020",
+       "by_title": "The Financial Intelligence Centre (Amendment) Act, 2020",
+       "by_year": 2020,
+       "confidence": "high",
+       "evidence": "repeal of section 58 replacement and the substitution therefor of the following: of section 58 Regulations 58. (1) The Minister may, by statutory instrument, in",
+       "op": "replaced"
       }
      ]
     },
@@ -12460,12 +13335,21 @@
      "current": "amended",
      "history": [
       {
+       "by_id": "541bfa4c-8e0a-4124-a8cf-702a20b944ba",
+       "by_number": "No. 3 of 2009",
+       "by_title": "The Value Added Tax (Amendment) Act, 2009",
+       "by_year": 2009,
+       "confidence": "medium",
+       "evidence": "Section ten of the principal Act is amended by the insertion Amendment 3. Section ten of the principal Act is amended by the insertion Amendment immediately aft",
+       "op": "amended"
+      },
+      {
        "by_id": "90b45670-f750-4dca-bf95-751c5016b843",
        "by_number": "No. 15 of 2018",
        "by_title": "The Value Added Tax (Amendment) Act, 2018",
        "by_year": 2018,
-       "confidence": "medium",
-       "evidence": "section10oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 10 of the principal Act is amended by the insertion Amendment 3. Section 10 of the principal Act is amended by the insertion of section 10 of the follow",
        "op": "amended"
       }
      ]
@@ -12529,8 +13413,8 @@
        "by_number": "No. 12 of 2017",
        "by_title": "The Value Added Tax (Amendment) Act, 2017",
        "by_year": 2017,
-       "confidence": "medium",
-       "evidence": "section16oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 16 of the principal Act is amended\u2014 Amendment 3. Section 16 of the principal Act is amended\u2014 Amendment of section 16 (a) in subsection 2A by the deletio",
        "op": "amended"
       }
      ]
@@ -12571,6 +13455,15 @@
        "op": "amended"
       },
       {
+       "by_id": "b94df129-7e76-42db-998d-abfc178d1aff",
+       "by_number": "No. 29 of 2009",
+       "by_title": "The Value Added Tax (Amendment) (No. 2) Act, 2009",
+       "by_year": 2009,
+       "confidence": "medium",
+       "evidence": "Section eighteen of the principal Act is amended by\u2014 Amendment (a) the deletion of sub-section (3) and the substitution therefor of section 18 of the following ",
+       "op": "amended"
+      },
+      {
        "by_id": "3d6b1ad8-ebbc-4157-a972-b0b7e5533c72",
        "by_number": "No. 44 of 2016",
        "by_title": "The Value Added Tax (Amendment) Act, 2016",
@@ -12585,7 +13478,7 @@
        "by_title": "The Value Added Tax (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section18(3)(c)oftheprincipalactisamended",
+       "evidence": "Section 18 (3)(c) of the principal Act is amended by the Amendment of 4. Section 18 (3)(c) of the principal Act is amended by the section 18 deletion of the wor",
        "op": "amended"
       },
       {
@@ -12635,7 +13528,7 @@
        "by_title": "The Value Added Tax (Amendment) Act, 2019",
        "by_year": 2019,
        "confidence": "medium",
-       "evidence": "section19oftheprincipalactisamended",
+       "evidence": "Section 19 of the principal Act is amended by the\u2014 Amendment 7. Section 19 of the principal Act is amended by the\u2014 of section 19 (a) insertion of the following ",
        "op": "amended"
       },
       {
@@ -12671,6 +13564,15 @@
        "op": "amended"
       },
       {
+       "by_id": "b94df129-7e76-42db-998d-abfc178d1aff",
+       "by_number": "No. 29 of 2009",
+       "by_title": "The Value Added Tax (Amendment) (No. 2) Act, 2009",
+       "by_year": 2009,
+       "confidence": "medium",
+       "evidence": "Section two of the principal Act is amended by the insertion Amendment 2. Section two of the principal Act is amended by the insertion Amendment in the appropri",
+       "op": "amended"
+      },
+      {
        "by_id": "c5624fc5-18c3-4fb9-b033-5f6e72fe9511",
        "by_number": "No. 30 of 2011",
        "by_title": "The Value Added Tax (Amendment) Act (2011)",
@@ -12680,12 +13582,21 @@
        "op": "amended"
       },
       {
+       "by_id": "f1988801-7446-4d92-a586-58c077d63aff",
+       "by_number": "No. 17 of 2015",
+       "by_title": "The Value Added Tax (Amendment) Act, 2015",
+       "by_year": 2015,
+       "confidence": "medium",
+       "evidence": "Section two of the principal Act is amended by the insertion, Amendment 2. Section two of the principal Act is amended by the insertion, Amendment in the approp",
+       "op": "amended"
+      },
+      {
        "by_id": "90b45670-f750-4dca-bf95-751c5016b843",
        "by_number": "No. 15 of 2018",
        "by_title": "The Value Added Tax (Amendment) Act, 2018",
        "by_year": 2018,
-       "confidence": "medium",
-       "evidence": "section2oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 2 of the principal Act is amended by the\u2014 Amendment 2. Section 2 of the principal Act is amended by the\u2014 Amendment of section 2 (a) deletion of the defi",
        "op": "amended"
       },
       {
@@ -12693,8 +13604,8 @@
        "by_number": "No. 14 of 2019",
        "by_title": "The Value Added Tax (Amendment) Act, 2019",
        "by_year": 2019,
-       "confidence": "medium",
-       "evidence": "section2oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 2 of the principal Act is amended by the insertion of Amendment 2. Section 2 of the principal Act is amended by the insertion of Amendment of section 2 ",
        "op": "amended"
       },
       {
@@ -12853,6 +13764,15 @@
        "confidence": "high",
        "evidence": "Section twenty-nine of the principal Act is amended by the 10. Section twenty-nine of the principal Act is amended by the Amendment of section 29 insertion imme",
        "op": "amended"
+      },
+      {
+       "by_id": "b94df129-7e76-42db-998d-abfc178d1aff",
+       "by_number": "No. 29 of 2009",
+       "by_title": "The Value Added Tax (Amendment) (No. 2) Act, 2009",
+       "by_year": 2009,
+       "confidence": "medium",
+       "evidence": "Section twenty-nine of the principal Act is amended- 5. Section twenty-nine of the principal Act is amended- of section 29 (a) by the renumbering of the paragra",
+       "op": "amended"
       }
      ]
     },
@@ -12865,7 +13785,7 @@
        "by_title": "The Value Added Tax (Amendment) Act, 2017",
        "by_year": 2017,
        "confidence": "high",
-       "evidence": "insertionofthefollowing subsectionimmediately after subsection2A\u2014 2B. Avalueaddedtaxwithholdingagentshall lodgeareturnrelatingtovalueaddedtaxwithheldin the form",
+       "evidence": "insertion of the following subsection immediately after subsection 2A\u2014 2B. A value added tax withholding agent shall lodge a return relating to value added tax ",
        "op": "inserted"
       }
      ]
@@ -12948,9 +13868,23 @@
        "by_number": "No. 12 of 2017",
        "by_title": "The Value Added Tax (Amendment) Act, 2017",
        "by_year": 2017,
-       "confidence": "medium",
-       "evidence": "section37oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 37 of the principal Act is amended by the insertion Amendment 4. Section 37 of the principal Act is amended by the insertion of section 37 of the follow",
        "op": "amended"
+      }
+     ]
+    },
+    "37A": {
+     "current": "inserted",
+     "history": [
+      {
+       "by_id": "f1988801-7446-4d92-a586-58c077d63aff",
+       "by_number": "No. 17 of 2015",
+       "by_title": "The Value Added Tax (Amendment) Act, 2015",
+       "by_year": 2015,
+       "confidence": "high",
+       "evidence": "insertion, immediately section 37A after section thirty-seven, of the following new section: Prohibition of 37A. (1) An authorised officer or other person shall",
+       "op": "inserted"
       }
      ]
     },
@@ -12981,6 +13915,15 @@
      "current": "amended",
      "history": [
       {
+       "by_id": "541bfa4c-8e0a-4124-a8cf-702a20b944ba",
+       "by_number": "No. 3 of 2009",
+       "by_title": "The Value Added Tax (Amendment) Act, 2009",
+       "by_year": 2009,
+       "confidence": "medium",
+       "evidence": "Section forty-two of the principal Act is amended by section 42 the deletion of subsection (1) and the substitution therefor of the following subsection: ( I ) ",
+       "op": "amended"
+      },
+      {
        "by_id": "672d08ef-42c9-434a-b470-c7742e6233f0",
        "by_number": "No. 27 of 2023",
        "by_title": "The Value Added Tax (Amendment) Act, 2023",
@@ -12988,6 +13931,29 @@
        "confidence": "medium",
        "evidence": "Section 42 of the principal Act is amended by the insertion",
        "op": "amended"
+      }
+     ]
+    },
+    "42A": {
+     "current": "repealed",
+     "history": [
+      {
+       "by_id": "f1988801-7446-4d92-a586-58c077d63aff",
+       "by_number": "No. 17 of 2015",
+       "by_title": "The Value Added Tax (Amendment) Act, 2015",
+       "by_year": 2015,
+       "confidence": "high",
+       "evidence": "insertion, immediately section 42A after section forty-two, of the following new section: 15 Fiscal cash 42A. (1) Subject to subsection (2), a taxable supplier ",
+       "op": "inserted"
+      },
+      {
+       "by_id": "5000a7b9-3fcb-47c9-8663-a9676ba6202d",
+       "by_number": "No. 14 of 2019",
+       "by_title": "The Value Added Tax (Amendment) Act, 2019",
+       "by_year": 2019,
+       "confidence": "high",
+       "evidence": "repeal of section 42A. Repeal of 8. The principal Act is amended by the repeal of section 42A. section 42A",
+       "op": "repealed"
       }
      ]
     },
@@ -13069,6 +14035,15 @@
        "op": "amended"
       },
       {
+       "by_id": "f1988801-7446-4d92-a586-58c077d63aff",
+       "by_number": "No. 17 of 2015",
+       "by_title": "The Value Added Tax (Amendment) Act, 2015",
+       "by_year": 2015,
+       "confidence": "medium",
+       "evidence": "Section five of the principal Act is amended by the insertion, Amendment 3. Section five of the principal Act is amended by the insertion, Amendment immediately",
+       "op": "amended"
+      },
+      {
        "by_id": "3d6b1ad8-ebbc-4157-a972-b0b7e5533c72",
        "by_number": "No. 44 of 2016",
        "by_title": "The Value Added Tax (Amendment) Act, 2016",
@@ -13083,12 +14058,21 @@
      "current": "amended",
      "history": [
       {
+       "by_id": "f1988801-7446-4d92-a586-58c077d63aff",
+       "by_number": "No. 17 of 2015",
+       "by_title": "The Value Added Tax (Amendment) Act, 2015",
+       "by_year": 2015,
+       "confidence": "medium",
+       "evidence": "Section fifty-one of the principal Act is amended by the Amendment 6. Section fifty-one of the principal Act is amended by the of section 51 deletion of paragra",
+       "op": "amended"
+      },
+      {
        "by_id": "5000a7b9-3fcb-47c9-8663-a9676ba6202d",
        "by_number": "No. 14 of 2019",
        "by_title": "The Value Added Tax (Amendment) Act, 2019",
        "by_year": 2019,
        "confidence": "medium",
-       "evidence": "section51(2)oftheprincipalactisamended",
+       "evidence": "Section 51(2) of the principal Act is amended in paragraph Amendment 9. Section 51(2) of the principal Act is amended in paragraph of (h) by the insertion of th",
        "op": "amended"
       }
      ]
@@ -13134,7 +14118,7 @@
        "by_title": "The Value Added Tax (Amendment) Act, 2017",
        "by_year": 2017,
        "confidence": "medium",
-       "evidence": "section7oftheprincipalactisamended",
+       "evidence": "Section 7 of the principal Act is amended by the insertion Amendment 2. Section 7 of the principal Act is amended by the insertion Amendment of the following su",
        "op": "amended"
       },
       {
@@ -13143,7 +14127,7 @@
        "by_title": "The Value Added Tax (Amendment) Act, 2019",
        "by_year": 2019,
        "confidence": "medium",
-       "evidence": "section7oftheprincipalactisamended",
+       "evidence": "Section 7 of the principal Act is amended by the deletion of 3. Section 7 of the principal Act is amended by the deletion of subsections (3) and (4) and the sub",
        "op": "amended"
       },
       {
@@ -13152,7 +14136,7 @@
        "by_title": "The Value Added Tax (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section7oftheprincipalactisamended",
+       "evidence": "Section 7 of the principal Act is amended by the deletion of Amendment 2. Section 7 of the principal Act is amended by the deletion of Amendment subsection (5) ",
        "op": "amended"
       }
      ]
@@ -13175,7 +14159,7 @@
        "by_title": "The Value Added Tax (Amendment) Act, 2019",
        "by_year": 2019,
        "confidence": "high",
-       "evidence": "insertionofthefollowing section7A newsectionimmediatelyaftersection7: Record 7A. (1) Ataxable supplier shall use an electronic fiscal ofdailysales devicetorecor",
+       "evidence": "insertion of the following section 7A new section immediately after section 7: Record 7A. (1) A taxable supplier shall use an electronic fiscal of daily sales d",
        "op": "inserted"
       },
       {
@@ -13184,7 +14168,7 @@
        "by_title": "The Value Added Tax (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section7aoftheprincipalactisamended",
+       "evidence": "Section 7A of the principal Act is amended \u2014 Amendment 3. Section 7A of the principal Act is amended \u2014 Amendment of section (a) in subsection (1), by the deleti",
        "op": "amended"
       },
       {
@@ -13211,6 +14195,15 @@
      "current": "replaced",
      "history": [
       {
+       "by_id": "b94df129-7e76-42db-998d-abfc178d1aff",
+       "by_number": "No. 29 of 2009",
+       "by_title": "The Value Added Tax (Amendment) (No. 2) Act, 2009",
+       "by_year": 2009,
+       "confidence": "medium",
+       "evidence": "Section eight of the principal Act is amended in sub-section Amendment 3. Section eight of the principal Act is amended in sub-section Amendment (1) by the dele",
+       "op": "amended"
+      },
+      {
        "by_id": "3d6b1ad8-ebbc-4157-a972-b0b7e5533c72",
        "by_number": "No. 44 of 2016",
        "by_title": "The Value Added Tax (Amendment) Act, 2016",
@@ -13225,7 +14218,7 @@
        "by_title": "The Value Added Tax (Amendment) Act, 2019",
        "by_year": 2019,
        "confidence": "medium",
-       "evidence": "section8oftheprincipalactisamended",
+       "evidence": "Section 8 of the principal Act is amended by the\u2014 Amendment of 5. Section 8 of the principal Act is amended by the\u2014 section8 (a) deletion of sub-sections (5), (",
        "op": "amended"
       },
       {
@@ -13257,7 +14250,7 @@
        "by_title": "The Value Added Tax (Amendment) Act, 2019",
        "by_year": 2019,
        "confidence": "high",
-       "evidence": "insertionofthefollowing Insertion ofsection8A newsectionsimmediatelyaftersection8: and8B 8A. (1) Taxispayable onthe provisionof anelectronic Electronic service ",
+       "evidence": "insertion of the following Insertion of section 8A new sections immediately after section 8: and 8B 8A. (1) Tax is payable on the provision of an electronic Ele",
        "op": "inserted"
       },
       {
@@ -13433,12 +14426,21 @@
        "op": "amended"
       },
       {
+       "by_id": "c8823822-e161-4034-8b86-a3684551a028",
+       "by_number": "No. 16 of 2015",
+       "by_title": "The Property Transfer Tax (Amendment) Act, 2015",
+       "by_year": 2015,
+       "confidence": "high",
+       "evidence": "Section two of the principal Act is amended by the deletion Amendment 2. Section two of the principal Act is amended by the deletion Amendment of section 2 of t",
+       "op": "amended"
+      },
+      {
        "by_id": "a8c54007-4f49-4ae2-bb5f-f4d9b36e344c",
        "by_number": "No. 13 of 2019",
        "by_title": "The Property Transfer Tax (Amendment) Act, 2019",
        "by_year": 2019,
        "confidence": "medium",
-       "evidence": "section2(1)oftheprincipalactisamended",
+       "evidence": "Section 2 (1) of the principal Act is amended by the deletion Amendment 2. Section 2 (1) of the principal Act is amended by the deletion Amendment of the defini",
        "op": "amended"
       },
       {
@@ -13483,6 +14485,15 @@
        "op": "replaced"
       },
       {
+       "by_id": "c8823822-e161-4034-8b86-a3684551a028",
+       "by_number": "No. 16 of 2015",
+       "by_title": "The Property Transfer Tax (Amendment) Act, 2015",
+       "by_year": 2015,
+       "confidence": "high",
+       "evidence": "Section three of the principal Act is amended in subsection Amendment 3. Section three of the principal Act is amended in subsection Amendment of section 3 (2),",
+       "op": "amended"
+      },
+      {
        "by_id": "7b80a2f8-9010-4463-80d8-6c59f44cb766",
        "by_number": "No. 22 of 2020",
        "by_title": "The Property Transfer Tax (Amendment), 2020",
@@ -13496,6 +14507,15 @@
     "4": {
      "current": "amended",
      "history": [
+      {
+       "by_id": "59d70d5b-5ef4-4390-8669-1b50199cc729",
+       "by_number": "No. 50 of 2010",
+       "by_title": "The Property Transfer Tax (Amendment) Act, 2010",
+       "by_year": 2010,
+       "confidence": "medium",
+       "evidence": "Section four of the principal Act is amended in subsection 2. Section four of the principal Act is amended in subsection Amendment of (2) by the deletion of the",
+       "op": "amended"
+      },
       {
        "by_id": "452f059d-8d81-4fe6-855c-64001fb29666",
        "by_number": "Act No. 13 of 2012",
@@ -13512,6 +14532,15 @@
        "by_year": 2013,
        "confidence": "medium",
        "evidence": "Section four of the principal Act is amended by the deletion 2. Section four of the principal Act is amended by the deletion of subsection (2) and the substitut",
+       "op": "amended"
+      },
+      {
+       "by_id": "c8823822-e161-4034-8b86-a3684551a028",
+       "by_number": "No. 16 of 2015",
+       "by_title": "The Property Transfer Tax (Amendment) Act, 2015",
+       "by_year": 2015,
+       "confidence": "high",
+       "evidence": "Section four of the principal Act is amended by the deletion Amendment 4. Section four of the principal Act is amended by the deletion Amendment of section 4 of",
        "op": "amended"
       },
       {
@@ -13556,6 +14585,15 @@
        "op": "amended"
       },
       {
+       "by_id": "e0e63717-061d-43d4-87f1-39020488b0e4",
+       "by_number": "No. 4 of 2009",
+       "by_title": "The Property Transfer Tax (Amendment) Act, 2009",
+       "by_year": 2009,
+       "confidence": "medium",
+       "evidence": "Section five of the principal Act is amended in subsection Amendment of (2) by\u2014 section 5 the deletion of the full stop at the end of that subsection and the su",
+       "op": "amended"
+      },
+      {
        "by_id": "452f059d-8d81-4fe6-855c-64001fb29666",
        "by_number": "Act No. 13 of 2012",
        "by_title": "The Property Transfer Tax (Amendment) Act (2012)",
@@ -13569,8 +14607,8 @@
        "by_number": "No. 13 of 2019",
        "by_title": "The Property Transfer Tax (Amendment) Act, 2019",
        "by_year": 2019,
-       "confidence": "medium",
-       "evidence": "section5oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 5 of the principal Act is amended by the\u2014 Amendment 3. Section 5 of the principal Act is amended by the\u2014 Amendment of section 5 (a) deletion of subsecti",
        "op": "amended"
       },
       {
@@ -13621,6 +14659,15 @@
        "by_year": 2013,
        "confidence": "medium",
        "evidence": "Section six of the principal Act is amended by the deletion, Amendment 3. Section six of the principal Act is amended by the deletion, Amendment in subsection (",
+       "op": "amended"
+      },
+      {
+       "by_id": "c8823822-e161-4034-8b86-a3684551a028",
+       "by_number": "No. 16 of 2015",
+       "by_title": "The Property Transfer Tax (Amendment) Act, 2015",
+       "by_year": 2015,
+       "confidence": "medium",
+       "evidence": "Section six of the principal Act is amended by the deletion Amendment 5. Section six of the principal Act is amended by the deletion of section 6 in subsection ",
        "op": "amended"
       },
       {
@@ -13690,6 +14737,20 @@
        "confidence": "medium",
        "evidence": "Section 9 of the principal Act is amended\u2014 of section 9 (a) in subsection (2)(b), by the deletion of subparagraph (i) and the substitution therefor of the follo",
        "op": "amended"
+      }
+     ]
+    },
+    "9B": {
+     "current": "inserted",
+     "history": [
+      {
+       "by_id": "59d70d5b-5ef4-4390-8669-1b50199cc729",
+       "by_number": "No. 50 of 2010",
+       "by_title": "The Property Transfer Tax (Amendment) Act, 2010",
+       "by_year": 2010,
+       "confidence": "high",
+       "evidence": "insertion immediately Insertion of after section nine A of the following new section: new section 9B 9B. (1) Where the Commissioner-General has reasonable Trans",
+       "op": "inserted"
       }
      ]
     }
@@ -13783,8 +14844,8 @@
        "by_number": "No. 18 of 2017",
        "by_title": "The Independent Broadcasting Authority (Amendment)",
        "by_year": 2017,
-       "confidence": "medium",
-       "evidence": "section2oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 2 of the principal Act is amended by the \u2014 Amendment 2. Section 2 of the principal Act is amended by the \u2014 Amendment of section 2 (a) deletion of the de",
        "op": "amended"
       }
      ]
@@ -13798,7 +14859,7 @@
        "by_title": "The Independent Broadcasting Authority (Amendment)",
        "by_year": 2017,
        "confidence": "high",
-       "evidence": "insertionofthefollowing section22A newsectionimmediatelyaftersection22: Television 22A. (1) The Authorityshallchargeatelevisionlevyon levy thesubscriptionpaymen",
+       "evidence": "insertion of the following section 22A new section immediately after section 22: Television 22A. (1) The Authority shall charge a television levy on levy the su",
        "op": "inserted"
       }
      ]
@@ -13812,7 +14873,7 @@
        "by_title": "The Independent Broadcasting Authority (Amendment)",
        "by_year": 2017,
        "confidence": "medium",
-       "evidence": "section39(1)(b)oftheprincipalactisamended",
+       "evidence": "Section 39 (1) (b) of the principal Act is amended by the Amendment 6. Section 39 (1) (b) of the principal Act is amended by the of Section 39 insertion of the ",
        "op": "amended"
       }
      ]
@@ -13826,7 +14887,7 @@
        "by_title": "The Independent Broadcasting Authority (Amendment)",
        "by_year": 2017,
        "confidence": "medium",
-       "evidence": "section5(2)oftheprincipalactisamended",
+       "evidence": "Section 5(2) of the principal Act is amended by the\u2014 Amendment 3. Section 5(2) of the principal Act is amended by the\u2014 of section 5 (a) insertion of the followi",
        "op": "amended"
       }
      ]
@@ -13846,7 +14907,7 @@
        "by_title": "The Zambia Revenue Authority (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section10(1)oftheprincipalactisamended",
+       "evidence": "Section 10 (1) of the principal Act is amended by the Amendment 2. Section 10 (1) of the principal Act is amended by the Amendment deletion of paragraphs (a) an",
        "op": "amended"
       },
       {
@@ -14033,6 +15094,20 @@
   "d0292b7d-0779-4c24-acec-de0696b75437": {
    "parts": {},
    "sections": {
+    "13": {
+     "current": "repealed",
+     "history": [
+      {
+       "by_id": "9f65190a-7b07-4d54-a3d2-e21c94ee0533",
+       "by_number": "No. 24 of 2021",
+       "by_title": "The Accountants (Amendment) Act, 2021",
+       "by_year": 2021,
+       "confidence": "high",
+       "evidence": "repeal of section 13. Repeal of 3. The principal Act is amended by the repeal of section 13. Repeal of section 13 Single copies of this Act may be obtained from",
+       "op": "repealed"
+      }
+     ]
+    },
     "5": {
      "current": "amended",
      "history": [
@@ -14042,7 +15117,7 @@
        "by_title": "The Accountants (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section5oftheprincipalactisamended",
+       "evidence": "Section 5 of the principal Act is amended\u2014 Amendment 2. Section 5 of the principal Act is amended\u2014 Amendment (a) in subsection (2), by the\u2014 of section 5 (i) del",
        "op": "amended"
       }
      ]
@@ -14062,7 +15137,7 @@
        "by_title": "The Sports Council of Zambia (Amendment) Act,2026",
        "by_year": 2026,
        "confidence": "medium",
-       "evidence": "section13oftheprincipalactisamended",
+       "evidence": "Section 13 of the principal Act is amended by the insertion Amendment 3. Section 13 of the principal Act is amended by the insertion Amendment of the following ",
        "op": "amended"
       }
      ]
@@ -14076,7 +15151,7 @@
        "by_title": "The Sports Council of Zambia (Amendment) Act,2026",
        "by_year": 2026,
        "confidence": "high",
-       "evidence": "repeal of section 16 replacement andthesubstitutionthereforofthefollowing: ofsection16 Composition 16. (1) Thereisconstitutedan Executive Board of Board of the ",
+       "evidence": "repeal of section 16 replacement and the substitution therefor of the following: of section 16 Composition 16. (1) There is constituted an Executive Board of Bo",
        "op": "replaced"
       }
      ]
@@ -14090,7 +15165,7 @@
        "by_title": "The Sports Council of Zambia (Amendment) Act,2026",
        "by_year": 2026,
        "confidence": "high",
-       "evidence": "insertionofthefollowing section16A newsectionimmediatelyaftersection16: Functions 16A. (1) Subjecttotheotherprovisionsofthis of Board Act,the Boardshallprovides",
+       "evidence": "insertion of the following section 16A new section immediately after section 16: Functions 16A. (1) Subject to the other provisions of this of Board Act, the Bo",
        "op": "inserted"
       }
      ]
@@ -14104,7 +15179,7 @@
        "by_title": "The Sports Council of Zambia (Amendment) Act,2026",
        "by_year": 2026,
        "confidence": "high",
-       "evidence": "repeal of section 18 Repealand andthesubstitutionthereforofthefollowing: replacement ofsection18",
+       "evidence": "repeal of section 18 Repeal and and the substitution therefor of the following: replacement of section 18",
        "op": "replaced"
       }
      ]
@@ -14118,7 +15193,7 @@
        "by_title": "The Sports Council of Zambia (Amendment) Act,2026",
        "by_year": 2026,
        "confidence": "medium",
-       "evidence": "section2oftheprincipalactisamended",
+       "evidence": "Section 2 of the principal Act is amended by the insertion of Amendment 2. Section 2 of the principal Act is amended by the insertion of Amendment the following",
        "op": "amended"
       }
      ]
@@ -14132,7 +15207,7 @@
        "by_title": "The Sports Council of Zambia (Amendment) Act,2026",
        "by_year": 2026,
        "confidence": "medium",
-       "evidence": "section21oftheprincipalactisamended",
+       "evidence": "Section 21 of the principal Act is amended by the\u2014 of section 21 (a) deletion of paragraph (b); and (b) renumbering of paragraph (c) as paragraph (b). General 8",
        "op": "amended"
       }
      ]
@@ -14339,7 +15414,7 @@
        "by_title": "The National Institute of Public Administration (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section23(3)oftheprincipalactisamended",
+       "evidence": "Section 23(3) of the principal Act is amended by the deletion Amendment 3. Section 23(3) of the principal Act is amended by the deletion Amendment of paragraph ",
        "op": "amended"
       }
      ]
@@ -14352,8 +15427,8 @@
        "by_number": "No. 9 of 2021",
        "by_title": "The National Institute of Public Administration (Amendment) Act, 2021",
        "by_year": 2021,
-       "confidence": "medium",
-       "evidence": "section5(1)oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 5(1) of the principal Act is amended by the deletion Amendment 2. Section 5(1) of the principal Act is amended by the deletion Amendment of section 5 of",
        "op": "amended"
       }
      ]
@@ -15217,7 +16292,7 @@
        "by_title": "The Tropical Diseases Research Centre (Amendment) Actl, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section5(1)oftheprincipalactisamended",
+       "evidence": "Section 5(1) of the principal Act is amended by the deletion Amendment 2. Section 5(1) of the principal Act is amended by the deletion Amendment of paragraph (b",
        "op": "amended"
       }
      ]
@@ -15528,8 +16603,8 @@
        "by_number": "No. 18 of 2018",
        "by_title": "The Mines and Minerals Development (Amendment) Act, 2018",
        "by_year": 2018,
-       "confidence": "medium",
-       "evidence": "section89oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 89 of the principal Act is amended\u2014 Amendment 2. Section 89 of the principal Act is amended\u2014 Amendment of section 89 (a) in subsection (1) (a), by the i",
        "op": "amended"
       },
       {
@@ -15846,6 +16921,34 @@
        "by_year": 2011,
        "confidence": "medium",
        "evidence": "Section eleven of the principal Act is amended\u2014 Amendment 3. Section eleven of the principal Act is amended\u2014 Amendment of section (a) by the deletion of subsect",
+       "op": "amended"
+      }
+     ]
+    },
+    "3": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "dbbd8224-6c54-42a9-a1b4-5296a1593d6a",
+       "by_number": "No. 21 of 2016",
+       "by_title": "The High Court (Amendment) Act, 2016",
+       "by_year": 2016,
+       "confidence": "high",
+       "evidence": "repeal of section three Repeal and and the substitution therefor of the following: replacement of section 3",
+       "op": "replaced"
+      }
+     ]
+    },
+    "6": {
+     "current": "amended",
+     "history": [
+      {
+       "by_id": "dbbd8224-6c54-42a9-a1b4-5296a1593d6a",
+       "by_number": "No. 21 of 2016",
+       "by_title": "The High Court (Amendment) Act, 2016",
+       "by_year": 2016,
+       "confidence": "medium",
+       "evidence": "Section six of the principal Act is amended by the deletion of section 6 of\u2014 (a) subsection (2) and the substitution therefor of the following: (2) The Judicial",
        "op": "amended"
       }
      ]
@@ -16258,7 +17361,7 @@
        "by_title": "The Petroleum (Exploration and Production) (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section90oftheprincipalactisamended",
+       "evidence": "Section 90 of the principal Act is amended by the deletion Amendment 2. Section 90 of the principal Act is amended by the deletion Amendment of subsection (1) a",
        "op": "amended"
       }
      ]
@@ -16271,8 +17374,8 @@
        "by_number": "No. 10 of 2021",
        "by_title": "The Petroleum (Exploration and Production) (Amendment) Act, 2021",
        "by_year": 2021,
-       "confidence": "medium",
-       "evidence": "section91(1)oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 91(1) of the principal Act is amended by the \u2014 Amendment 3. Section 91(1) of the principal Act is amended by the \u2014 Amendment of section 91 (a) deletion ",
        "op": "amended"
       }
      ]
@@ -16411,6 +17514,20 @@
        "by_year": 2022,
        "confidence": "medium",
        "evidence": "Section 297 (1)(c)(i) of the principal Act is amended by Amendment 16. Section 297 (1)(c)(i) of the principal Act is amended by Amendment the deletion of the wo",
+       "op": "amended"
+      }
+     ]
+    },
+    "30": {
+     "current": "amended",
+     "history": [
+      {
+       "by_id": "f0d1c6c1-f905-45ce-ae17-d15397003576",
+       "by_number": "No. 20 of 2000",
+       "by_title": "The Penal Code (Amendment) (No. 2) Act, 2000",
+       "by_year": 2000,
+       "confidence": "medium",
+       "evidence": "Section thirty of the principal Act is amended\u2014 2. Section thirty of the principal Act is amended\u2014 Amendment (a) by the deletion of the full-stop at the end of ",
        "op": "amended"
       }
      ]
@@ -17020,6 +18137,34 @@
        "op": "amended"
       }
      ]
+    },
+    "3": {
+     "current": "replaced",
+     "history": [
+      {
+       "by_id": "dbbd8224-6c54-42a9-a1b4-5296a1593d6a",
+       "by_number": "No. 21 of 2016",
+       "by_title": "The High Court (Amendment) Act, 2016",
+       "by_year": 2016,
+       "confidence": "high",
+       "evidence": "repeal of section three Repeal and and the substitution therefor of the following: replacement of section 3",
+       "op": "replaced"
+      }
+     ]
+    },
+    "6": {
+     "current": "amended",
+     "history": [
+      {
+       "by_id": "dbbd8224-6c54-42a9-a1b4-5296a1593d6a",
+       "by_number": "No. 21 of 2016",
+       "by_title": "The High Court (Amendment) Act, 2016",
+       "by_year": 2016,
+       "confidence": "medium",
+       "evidence": "Section six of the principal Act is amended by the deletion of section 6 of\u2014 (a) subsection (2) and the substitution therefor of the following: (2) The Judicial",
+       "op": "amended"
+      }
+     ]
     }
    },
    "title": "REPUBLIC OF ZAMBIA THE HIGH COURT ACT"
@@ -17084,7 +18229,7 @@
        "by_title": "The Insurance Premium Levy (Amendment) Act, 2018",
        "by_year": 2018,
        "confidence": "medium",
-       "evidence": "section2oftheprincipalactisamended",
+       "evidence": "Section 2 of the principal Act is amended by the insertion of Amendment 2. Section 2 of the principal Act is amended by the insertion of Amendment the following",
        "op": "amended"
       },
       {
@@ -17107,7 +18252,7 @@
        "by_title": "The Insurance Premium Levy (Amendment)",
        "by_year": 2017,
        "confidence": "medium",
-       "evidence": "section4(1)oftheprincipalactisamended",
+       "evidence": "Section 4 (1) of the principal Act is amended by the insertion Amendment 2. Section 4 (1) of the principal Act is amended by the insertion Amendment immediately",
        "op": "amended"
       },
       {
@@ -17115,8 +18260,8 @@
        "by_number": "No. 16 of 2018",
        "by_title": "The Insurance Premium Levy (Amendment) Act, 2018",
        "by_year": 2018,
-       "confidence": "medium",
-       "evidence": "section4oftheprincipalactisamended",
+       "confidence": "high",
+       "evidence": "Section 4 of the principal Act is amended by the insertion of Amendment 3. Section 4 of the principal Act is amended by the insertion of Amendment of section 4 ",
        "op": "amended"
       },
       {
@@ -17125,7 +18270,7 @@
        "by_title": "The Insurance Premium Levy (Amendment) Act, 2021",
        "by_year": 2021,
        "confidence": "medium",
-       "evidence": "section4(1)oftheprincipalactisamended",
+       "evidence": "Section 4(1) of the principal Act is amended by the deletion Amendment 2. Section 4(1) of the principal Act is amended by the deletion Amendment of the words \u201ct",
        "op": "amended"
       },
       {
@@ -17148,7 +18293,7 @@
        "by_title": "The Insurance Premium Levy (Amendment) Act, 2018",
        "by_year": 2018,
        "confidence": "medium",
-       "evidence": "section5oftheprincipalactisamended",
+       "evidence": "Section 5 of the Principal Act is amended by the deletion of Amendment 4. Section 5 of the Principal Act is amended by the deletion of Amendment the word \u201cfourt",
        "op": "amended"
       }
      ]

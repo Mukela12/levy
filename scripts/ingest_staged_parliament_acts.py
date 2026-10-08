@@ -222,7 +222,9 @@ def _rows_for_chunks(
                 "source_url": item["source_url"],
                 "ingestion_run": run_tag,
                 "text_provenance": (
-                    "Apple Vision OCR with visual QA"
+                    ("OCR: " + ", ".join(item["ocr_engines"]) + " (best reading per page)")
+                    if item.get("ocr_engines")
+                    else "Apple Vision OCR with visual QA"
                     if item.get("parser_file")
                     else "official PDF text"
                 ),
@@ -315,7 +317,7 @@ def _ingest_one(item: dict[str, Any]) -> dict[str, Any]:
     chunks, sections = _prepare(item, document_id)
     print(f"  Prepared {len(chunks)} chunks; embedding before database mutation...")
     embeddings = get_embeddings([chunk.content for chunk in chunks])
-    run_tag = f"parliament-refresh-2026-09-16:{item['key']}"
+    run_tag = f"{item.get('run_tag', 'parliament-refresh-2026-09-16')}:{item['key']}"
     rows = _rows_for_chunks(item, chunks, embeddings, run_tag)
     planned_ids = [row["id"] for row in rows]
 
