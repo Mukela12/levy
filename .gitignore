@@ -53,3 +53,6 @@ frontend/.eslintcache
 scratchpad/
 .harvest_cache.json
 .env*
+branch_structure.json
+temp_auto_push.bat
+temp_interactive_push.bat

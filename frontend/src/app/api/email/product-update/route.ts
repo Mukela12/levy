@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendLevyEmail } from '@/lib/email/resend'
-import { renderCitationUpdateEmail, renderProductUpdateEmail } from '@/lib/email/templates'
+import { renderCitationUpdateEmail, renderProductUpdateEmail, renderOctoberUpdateEmail } from '@/lib/email/templates'
 
 /**
  * Second broadcast to the tester list. Same shape as tester-update, with two
@@ -25,8 +25,9 @@ type ProductUpdateRequest = {
 const EDITIONS = {
   'case-files': renderProductUpdateEmail,
   citations: renderCitationUpdateEmail,
+  'october-2026': renderOctoberUpdateEmail,
 } as const
-const LATEST_EDITION: keyof typeof EDITIONS = 'citations'
+const LATEST_EDITION: keyof typeof EDITIONS = 'october-2026'
 
 // 30 sends at 150ms apart is under 7 a second, comfortably inside Resend's 10.
 const SEND_INTERVAL_MS = 150
