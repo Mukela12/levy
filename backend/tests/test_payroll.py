@@ -181,6 +181,12 @@ class PayslipCheck(unittest.TestCase):
         self.assertEqual(r["total_if_unpaid"], 826.32)                  # + 77.97 + 51.98 + 540.59
         self.assertTrue(any("826.32" in f["message"] for f in r["flags"]))
 
+    def test_a_payslip_that_adds_up_to_its_gross_is_complete(self):
+        # Basic 1,650 + transport 200 + lunch 180 = gross 2,030: nothing else was paid.
+        r = self.run_slip(basic=1650, transport_allowance=200, lunch_allowance=180, gross=2030, nhima=20.3)
+        self.assertEqual(check(r, "Housing allowance")["status"], "underpaid")
+        self.assertEqual(r["total_underpaid"], 826.32)
+
     def test_unauthorised_deductions_are_flagged_with_s68(self):
         r = self.run_slip(basic=1801.98, other_deductions=[{"label": "Breakages", "amount": 50}])
         self.assertEqual(check(r, "Breakages")["status"], "check")

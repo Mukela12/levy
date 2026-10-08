@@ -598,6 +598,14 @@ def calculate_payroll(
     unconfirmed: list[tuple[str, float]] = []   # required lines the payslip passed over
     if slip:
         req = {li.item: li for li in earnings}
+        # A payslip whose listed earnings add up to its own gross is complete:
+        # a required line it does not show was not paid. (QA 8 Oct: the model
+        # passed 0 for overtime and night pay but left housing out, and the
+        # answer led with K285.73 while listing K540.59 of housing as owed.)
+        earning_keys = ("basic", "overtime", "holiday_pay", "night_differential", "housing_allowance",
+                        "transport_allowance", "lunch_allowance", "tool_allowance", "other_earnings")
+        listed = sum(float(slip.get(k) or 0) for k in earning_keys)
+        complete = "gross" in slip and listed > 0 and abs(listed - float(slip["gross"])) <= TOLERANCE
 
         def compare(label, slip_key, line_name):
             nonlocal underpaid, unconfirmed
@@ -605,6 +613,8 @@ def calculate_payroll(
             paid = slip.get(slip_key)
             if li is None and paid is None:
                 return
+            if paid is None and complete:
+                paid = 0.0
             need = li.amount if li else 0.0
             paid_f = float(paid) if paid is not None else 0.0
             diff = _money(paid_f - (need or 0))
