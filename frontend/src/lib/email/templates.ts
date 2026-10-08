@@ -369,6 +369,53 @@ export function renderCitationUpdateEmail({ preview = false }: AnnouncementOptio
   }
 }
 
+/** October 2026 update, using the same shared layout as earlier broadcasts. */
+export function renderOctoberUpdateEmail({ preview = false }: AnnouncementOptions = {}): EmailTemplate {
+  const title = "Levy's October update: payslip checks and stronger sources"
+  const subject = preview ? `Preview | ${title}` : title
+  const unsubscribeHref = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Unsubscribe from Levy updates')}`
+  const updates = [
+    ['Check pay and payslips.', 'Levy now has a payroll calculator for overtime, statutory deductions and pay calculations. It can compare payslip figures with the applicable rules and flag missing or underpaid items.'],
+    ['Warnings about outdated law.', 'Sources and citations now flag repealed provisions and laws whose commencement has not been verified, helping you see when an older text needs further checking.'],
+    ['Stronger checks on legal sources.', 'Levy checks supported quotations against texts in its library and shows available information about how later judgments treat cited cases. Where there is not enough evidence, a result remains unverified.'],
+    ['Easier downloads on phones.', 'Document download links and sharing have improved. Answers cut short by the response limit can resume, and Levy tells you when an attachment has not been read.'],
+    ['More official legislation.', 'We added 22 Acts and amendments from Parliament and improved text extraction across 105 existing documents, including important employment and company law texts.'],
+  ]
+  const intro = 'Your feedback has shaped better pay calculations, clearer source checks and easier document downloads.'
+  const caution = 'These checks help you inspect an answer. They do not prove every legal conclusion is correct. Open the original authority and check its relevance before relying on it in a filing or legal decision.'
+  const feedback = 'If Levy gets something wrong, use the thumbs down under the answer or reply to this email. Tell me what confused you, failed to download or did not seem right. Your reply comes straight to me.'
+  const bodyHtml = `
+    <p style="margin:0 0 18px;font-size:16px;line-height:1.8;color:#244233;">Hi,</p>
+    <p style="margin:0 0 24px;font-size:16px;line-height:1.8;color:#244233;">Since September's update, I have been working on the problems you raised while using Levy for research, drafting and pay calculations. Here is what changed.</p>
+    <div style="background:#f7faf7;border:1px solid #dbe8dd;border-radius:20px;padding:22px 22px 6px;">
+      <div style="font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#0d6b37;margin-bottom:14px;">What is new</div>
+      <div style="font-size:15px;line-height:1.8;color:#224132;">${updates.map(([heading, copy]) => `<p style="margin:0 0 12px;"><strong>${escapeHtml(heading)}</strong> ${escapeHtml(copy)}</p>`).join('')}</div>
+    </div>
+    <div style="background:#f4f7fb;border:1px solid #d5e0ee;border-radius:20px;padding:22px;margin-top:14px;">
+      <div style="font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#1f4f86;margin-bottom:12px;">Keep checking the source</div>
+      <p style="margin:0;font-size:15px;line-height:1.8;color:#22364d;">${escapeHtml(caution)}</p>
+    </div>
+    <div style="background:#fffaf4;border:1px solid #f1dcc2;border-radius:20px;padding:22px;margin-top:14px;">
+      <div style="font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#b7651d;margin-bottom:12px;">Tell me what needs work</div>
+      <p style="margin:0 0 14px;font-size:15px;line-height:1.8;color:#4b3622;">${escapeHtml(feedback)}</p>
+      <p style="margin:0 0 14px;font-size:15px;line-height:1.8;color:#4b3622;">If Levy has been useful, share it with one colleague or classmate who would use it.</p>
+      <p style="margin:0;font-size:15px;line-height:1.8;color:#4b3622;">Levy gives legal information, not legal advice.</p>
+    </div>`
+  return {
+    subject,
+    html: buildHtml({
+      eyebrow: preview ? 'Levy Preview Send' : 'Levy Legal AI',
+      title: 'October at Levy', intro, bodyHtml,
+      primaryCta: { href: SITE_URL, label: 'Open Levy at levylegal.ai' },
+      footerNote: (preview ? 'Preview of Levy&rsquo;s October update.' : 'You are receiving this because you created a Levy account.') +
+        ` &middot; <a href="${unsubscribeHref}" style="color:#708476;text-decoration:underline;">Unsubscribe</a>`,
+    }),
+    text: `${title}\n\nHi,\n\n${intro}\n\nWHAT IS NEW\n` +
+      updates.map(([heading, copy]) => `- ${heading} ${copy}`).join('\n') +
+      `\n\nKEEP CHECKING THE SOURCE\n${caution}\n\n${feedback}\n\nIf Levy has been useful, share it with one colleague or classmate.\n\nLevy gives legal information, not legal advice.\n\nMukela Katungu\nFounder, Levy\n\nOpen Levy: ${SITE_URL}\nUnsubscribe: reply to this email with "unsubscribe".`,
+  }
+}
+
 export function renderTesterAnnouncementEmail({ preview = false }: AnnouncementOptions = {}): EmailTemplate {
   const subject = preview
     ? 'Preview | Levy just got better'
