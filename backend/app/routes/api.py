@@ -89,6 +89,10 @@ class ChatRequest(BaseModel):
     # Why the browser has no token, when it has none: the widget's error code
     # ("300010"), "timeout" or "no_widget". Logged on a failed check only.
     turnstile_error: str | None = None
+    # Signed-out visitors: where the visit came from (UTM tags, referring
+    # domain, landing path; frontend lib/attribution.ts). Logged with the
+    # anonymous question, so a campaign's guests can be counted.
+    source: dict | None = None
 
 
 class SearchRequest(BaseModel):
@@ -234,6 +238,23 @@ _UA_FAMILIES = (
     ("samsung", r"SamsungBrowser"), ("edge", r"Edg/|EdgA/|EdgiOS"), ("opera", r"OPR/|Opera"),
     ("firefox", r"Firefox/|FxiOS"), ("chrome", r"Chrome/|CriOS"), ("safari", r"Safari/"),
 )
+
+
+_SOURCE_KEYS = ("utm_source", "utm_medium", "utm_campaign", "utm_content", "ref_host", "landing", "direct")
+
+
+def _clean_source(source) -> dict | None:
+    """A visitor's source as the browser sent it, kept to known keys and short strings."""
+    if not isinstance(source, dict):
+        return None
+    out = {}
+    for key in _SOURCE_KEYS:
+        value = source.get(key)
+        if isinstance(value, (str, int, float, bool)):
+            text = re.sub(r"[\x00-\x1f]", "", str(value)).strip()[:100]
+            if text:
+                out[key] = text
+    return out or None
 
 
 def _ua_class(ua: str | None) -> dict:
@@ -482,7 +503,7 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
         # 1-based: which of today's free questions this one was.
         anon_trial_number = get_settings().anon_trial_questions - _anon_trial_remaining(ip)
         _log_anon("asked", ip, trial_number=anon_trial_number, http_request=http_request,
-                  meta={"browser": browser})
+                  meta={"browser": browser, **({"source": src} if (src := _clean_source(request.source)) else {})})
 
     # Only honour a session_id the caller actually owns; otherwise ignore it
     # so nobody can read another user's attached documents via the agent.

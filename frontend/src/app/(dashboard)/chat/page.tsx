@@ -31,6 +31,7 @@ import {
 } from 'lucide-react'
 import { LevyLogo } from '@/components/ui/levy-logo'
 import { useTurnstile } from '@/lib/use-turnstile'
+import { sourceSummary } from '@/lib/attribution'
 import { useUiVariant } from '@/lib/ui-variant'
 import { WelcomeScene } from '@/components/canopy/welcome-scene'
 import { CanopyComposer } from '@/components/canopy/composer'
@@ -368,6 +369,7 @@ export default function NewChatPage() {
           turnstileToken,
           anonPass,
           turnstileError: turnstileToken || anonPass ? null : turnstile.lastError(),
+          source: session ? null : sourceSummary(),
         },
         undefined,
         undefined,

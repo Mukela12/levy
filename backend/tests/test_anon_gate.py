@@ -69,6 +69,20 @@ class FailureLog(unittest.TestCase):
         self.assertEqual(db.rows, [{"outcome": "turnstile_failed", "visitor_hash": "h"}])
 
 
+class VisitSource(unittest.TestCase):
+    def test_known_keys_only_and_short(self):
+        got = api._clean_source({"utm_source": "linkedin", "utm_campaign": "final-pay", "email": "a@b.c",
+                                 "ref_host": "x" * 300, "landing": "/chat\x07"})
+        self.assertEqual(set(got), {"utm_source", "utm_campaign", "ref_host", "landing"})
+        self.assertEqual(len(got["ref_host"]), 100)
+        self.assertEqual(got["landing"], "/chat")
+
+    def test_nothing_usable_is_none(self):
+        self.assertIsNone(api._clean_source(None))
+        self.assertIsNone(api._clean_source({"email": "a@b.c"}))
+        self.assertIsNone(api._clean_source("linkedin"))
+
+
 class VerifyDetail(unittest.IsolatedAsyncioTestCase):
     async def test_no_token_says_so(self):
         with patch.object(api, "get_settings", return_value=types.SimpleNamespace(turnstile_secret_key="s")):

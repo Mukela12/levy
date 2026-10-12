@@ -864,6 +864,8 @@ export async function streamQuery(
     anonPass?: string | null
     /** Why there is no token (the widget's error code, "timeout"), for the failure log. */
     turnstileError?: string | null
+    /** Signed-out visitors: where the visit came from (lib/attribution.ts), for the guest funnel. */
+    source?: Record<string, string> | null
   },
   legacyOnChunk?: (text: string) => void,
   legacyOnDone?: (metadata: AgentDoneMetadata) => void,
@@ -887,6 +889,7 @@ export async function streamQuery(
       turnstile_token: options?.turnstileToken ?? undefined,
       anon_pass: options?.anonPass ?? undefined,
       turnstile_error: options?.turnstileError ?? undefined,
+      source: options?.source ?? undefined,
     }),
   })
 

@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
+import { captureAttribution, getAttribution } from '@/lib/attribution'
 import type { User, Session } from '@supabase/supabase-js'
 
 interface AuthContextType {
@@ -19,11 +20,22 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+/** The visit's source for the new account's metadata, when one was kept. */
+function withSource(): { signup_source?: ReturnType<typeof getAttribution> } {
+  const source = getAttribution()
+  return source ? { signup_source: source } : {}
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
   const [supabase] = useState(() => createClient())
+
+  // Where this visit came from (UTM tags, referring site), kept until signup.
+  useEffect(() => {
+    captureAttribution()
+  }, [])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -50,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName } },
+      options: { data: { full_name: fullName, ...withSource() } },
     })
     return {
       error: error as Error | null,
