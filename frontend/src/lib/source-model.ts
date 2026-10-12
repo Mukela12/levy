@@ -41,6 +41,8 @@ export interface SourceRow {
   conflict: boolean
   foreign: boolean
   lawStatus?: 'repealed' | 'repeal pending' | 'not in force'
+  /** The repeal rests on a reported, unverified commencement. */
+  lawReported?: boolean
   replacedBy: string[]
   /** For an Act not in force: what still applies until it commences. */
   stillApplies: string[]
@@ -203,6 +205,7 @@ export function sourceModel(input: {
         ? 'not in force'
         : flagged.length ? 'repeal pending' : undefined
     row.replacedBy = Array.from(new Set(flagged.filter((c) => c.law_status === row.lawStatus).flatMap((c) => c.replaced_by || [])))
+    row.lawReported = row.lawStatus === 'repealed' && flagged.filter((c) => c.law_status === 'repealed').every((c) => c.reported === true)
     row.stillApplies = Array.from(new Set(flagged.filter((c) => c.law_status === 'not in force').flatMap((c) => c.still_applies || [])))
     // "Repealed" or "not in force", already said in the answer's own words.
     const dead = row.lawStatus === 'repealed' || row.lawStatus === 'not in force'

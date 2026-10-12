@@ -777,7 +777,13 @@ def _law_status(c: dict, row: dict, index: list[dict]) -> dict:
         if live and status == "repealed":
             return {}
     by = [law_map.ref_name(x) for x in refs if x.get("title")]
-    return {"law_status": status, "replaced_by": list(dict.fromkeys(b for b in by if b))[:3]}
+    out = {"law_status": status, "replaced_by": list(dict.fromkeys(b for b in by if b))[:3]}
+    # Replaced on a commencement the administering body reports but whose
+    # order is not verified (Cap. 256 and the National Pension Scheme Act,
+    # 2026): the badge says so instead of a flat "Repealed".
+    if status == "repealed" and refs and all(x.get("reported") for x in refs):
+        out["reported"] = True
+    return out
 
 
 # "section 24 of the Immigration and Deportation Act" and Levy's own

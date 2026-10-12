@@ -45,6 +45,8 @@ export interface CitationVerdict {
   law_status?: 'repealed' | 'repeal pending' | 'not in force'
   /** Names of the Acts that repealed it, or will. */
   replaced_by?: string[]
+  /** Repealed on a commencement that is reported but not verified. */
+  reported?: boolean
   /** For an Act not in force: the Acts that still apply until it commences. */
   still_applies?: string[]
   /** The answer itself already calls this Act repealed wherever it names it. */

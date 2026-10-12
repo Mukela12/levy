@@ -70,6 +70,7 @@ function theActs(names: string[]): string {
 /** "Repealed · replaced by the Children's Code Act, 2022" */
 function lawStatusText(row: SourceRow): string | null {
   const by = theActs(row.replacedBy)
+  if (row.lawStatus === 'repealed' && row.lawReported) return by ? `Repeal reported, not verified · ${by}` : 'Repeal reported, not verified'
   if (row.lawStatus === 'repealed') return by ? `Repealed · replaced by ${by}` : 'Repealed'
   if (row.lawStatus === 'repeal pending') return by ? `Commencement unverified · replacement: ${by}` : 'Commencement unverified · a replacement has been passed'
   if (row.lawStatus === 'not in force') {
@@ -297,7 +298,7 @@ export function AnswerSources({ citations, webSources, blocks, onOpenPassage, on
                     <ArrowUpRight size={14} />
                   </button>
                   {row.lawStatus && (
-                    <div className={'cp-source-law' + (row.verification === 'noted' ? ' is-noted' : row.lawStatus === 'repealed' ? ' is-repealed' : ' is-pending')}>{lawStatusText(row)}</div>
+                    <div className={'cp-source-law' + (row.verification === 'noted' ? ' is-noted' : row.lawStatus === 'repealed' && !row.lawReported ? ' is-repealed' : ' is-pending')}>{lawStatusText(row)}</div>
                   )}
                   {!row.lawStatus && row.passageLaw && (
                     <div className={'cp-source-law' + (row.passageLaw === 'repealed' ? ' is-repealed' : ' is-pending')}>{passageLawText(row)}</div>
@@ -402,7 +403,9 @@ export function AnswerSources({ citations, webSources, blocks, onOpenPassage, on
                 <div><dt>Cited in answer</dt><dd>{v.text}</dd></div>
                 {v.title && <div><dt>Matched document</dt><dd>{v.title}</dd></div>}
                 {v.law_status && (
-                  <div><dt>Status</dt><dd>{v.law_status === 'repealed'
+                  <div><dt>Status</dt><dd>{v.law_status === 'repealed' && v.reported
+                    ? `Repeal reported, not verified${v.replaced_by?.length ? `: ${theActs(v.replaced_by)} is reported in force` : ''}`
+                    : v.law_status === 'repealed'
                     ? v.replaced_by?.length ? `Repealed by ${theActs(v.replaced_by)}` : 'Repealed'
                     : v.law_status === 'not in force'
                       ? v.still_applies?.length ? `Not shown to be in force; ${theActs(v.still_applies)} still applies` : 'Not shown to be in force'

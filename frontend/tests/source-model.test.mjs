@@ -166,3 +166,8 @@ test('a later departure is reviewed unless the answer names it', () => {
   assert.equal(run(zubao).review, 1)
   assert.equal(run({ ...zubao, treatment_acknowledged: true }).verified, 1)
 })
+test('a repeal on a reported, unverified commencement is not shown as settled', () => {
+  const repealed = { ...verdict, law_status: 'repealed', replaced_by: ['the National Pension Scheme Act, 2026'] }
+  assert.equal(model({ ...repealed, reported: true }).rows[0].lawReported, true)
+  assert.equal(model(repealed).rows[0].lawReported, false)
+})

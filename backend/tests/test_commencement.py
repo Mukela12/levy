@@ -166,5 +166,29 @@ class Audit(Base):
             self.assertNotEqual(v.get("law_status"), "not in force")
 
 
+class ReportedRepeal(unittest.TestCase):
+    """Cap. 256, replaced by the 2026 Act on a commencement NAPSA reports but
+    nobody has verified in the Gazette: the badge must not say a flat
+    "Repealed" (answers of 9 and 10 Oct 2026 showed it beside "Cap 256 still
+    applies")."""
+
+    def status(self, reported):
+        entries = {"nps-cap": {"status": "repealed", "title": "The National Pension Scheme Act",
+                               "repealed_by": [{"id": "nps-2026", "title": "The National Pension Scheme Act, 2026",
+                                                **({"reported": True} if reported else {})}]}}
+        c = {"text": "National Pension Scheme Act (Cap 256)", "name": "National Pension Scheme Act"}
+        with patch.object(law_map, "_entries", lambda: entries):
+            return citation_audit._law_status(c, {"id": "nps-cap", "title": "The National Pension Scheme Act"}, [])
+
+    def test_a_reported_commencement_is_marked(self):
+        v = self.status(reported=True)
+        self.assertEqual((v.get("law_status"), v.get("reported")), ("repealed", True))
+
+    def test_a_verified_repeal_is_not(self):
+        v = self.status(reported=False)
+        self.assertEqual(v.get("law_status"), "repealed")
+        self.assertNotIn("reported", v)
+
+
 if __name__ == "__main__":
     unittest.main()
