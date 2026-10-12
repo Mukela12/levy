@@ -2582,7 +2582,9 @@ def build_tool_registry(
             "Ask the questions you cannot answer from the conversation (one ask_user, at most), then draft with "
             "draft_legal_document following the outline, keeping each Zambian point and its basis. Adapt the "
             "ready clauses; do not cite a provision this precedent does not give you without reading it first.")},
-            "db_sources": [], "web_sources": []}
+            # A precedent runs to about 19,000 characters; the default cap
+            # would cut its clauses off mid-way.
+            "_model_max_chars": 24_000, "db_sources": [], "web_sources": []}
 
     updates_recorded = [0]
 

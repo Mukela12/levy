@@ -1,0 +1,538 @@
+{
+ "consultancy": {
+  "title": "Consultancy Agreement",
+  "use_when": "An organisation engages an independent expert or firm, in Zambia or abroad, to deliver defined advice or work for a fee, with the consultant deciding how the work is done.",
+  "not_for": "Not where the person will in fact work as staff under the client's instructions, hours and tools (a contract of employment under the Employment Code Act), nor for routine recurring services such as cleaning, security or IT support (use the service agreement).",
+  "questions": [
+   "Who are the parties: the client's legal name and form (company, trust, church, government school) and the consultant's name, address, country of tax residence and whether an individual or firm?",
+   "What will the consultant deliver and by when, and will any work be done in Zambia or all of it remotely?",
+   "What is the fee (amount, currency, fixed or time-based, milestones), are expenses paid, and is the fee net of Zambian withholding tax?",
+   "Will the consultant see personal data (pupils, parents, staff) and where will it be stored or accessed?",
+   "Who should own the reports, materials or software produced, and does the consultant bring pre-existing materials?",
+   "Is the client a public body spending public funds, and who will sign for each party, on paper or electronically?"
+  ],
+  "outline": [
+   {
+    "heading": "Parties",
+    "guidance": "Legal names, forms, addresses, registration numbers; the consultant's country of tax residence. Never call the consultant staff."
+   },
+   {
+    "heading": "Background and appointment",
+    "guidance": "Why the expertise is needed; appointment as an independent contractor for the stated services only."
+   },
+   {
+    "heading": "Conditions precedent",
+    "guidance": "Tax residence certificate and declaration (and any other documents) before the agreement or payment takes effect; a long-stop date."
+   },
+   {
+    "heading": "Services and deliverables",
+    "guidance": "Scope, deliverables and milestones in a schedule, framed as outcomes so the consultant decides how, when and where to work; if it will come to Zambia to work, check permits first."
+   },
+   {
+    "heading": "Term",
+    "guidance": "Fixed dates or completion of deliverables; avoid open-ended renewals, since permanency is a sign of employment."
+   },
+   {
+    "heading": "Independent contractor status",
+    "guidance": "Consultant controls method and hours, uses its own equipment, may work for others and handles its own taxes; practice must match the paper."
+   },
+   {
+    "heading": "Personnel",
+    "guidance": "Key personnel; qualified assistants or substitutes at the consultant's cost with consent."
+   },
+   {
+    "heading": "Fees and invoicing",
+    "guidance": "Amount, currency, milestones; paid net of withholding tax, VAT extra; the client bears any reverse VAT (an importer making only exempt supplies is outside it: ZRA Practice Note No. 1 of 2026, para 53.0)."
+   },
+   {
+    "heading": "Taxes",
+    "guidance": "Client withholds and gives proof; a treaty rate only under a ZRA Limited Deduction Direction."
+   },
+   {
+    "heading": "Data protection",
+    "guidance": "Processing schedule under s.52(3), security, short breach notice, sub-processor consent, Zambian storage under ss.70 and 71, return or deletion; parental consent for pupils' data."
+   },
+   {
+    "heading": "Confidentiality",
+    "guidance": "During and after the engagement; carve-out for disclosure required by law or a court."
+   },
+   {
+    "heading": "Intellectual property",
+    "guidance": "Signed assignment of present and future copyright in deliverables; licence back of pre-existing materials."
+   },
+   {
+    "heading": "Anti-corruption and conflicts",
+    "guidance": "No gratification; disclose conflicts; immediate termination for breach."
+   },
+   {
+    "heading": "Warranties, liability and insurance",
+    "guidance": "Skill and care; liability cap (often the fees) not covering fraud, confidentiality or data protection; professional indemnity cover."
+   },
+   {
+    "heading": "Termination",
+    "guidance": "For convenience on notice, unremedied breach, corruption or insolvency; pay for work done, return property and data."
+   },
+   {
+    "heading": "Dispute resolution",
+    "guidance": "Escalation, then arbitration seated in Lusaka under the Arbitration Act, 2000: one arbitrator, a named appointing authority, English, a carve-out for urgent court relief. Fix the number of arbitrators and the appointment route in the clause; the Act's defaults are not in Levy's library."
+   },
+   {
+    "heading": "Governing law",
+    "guidance": "Laws of Zambia."
+   },
+   {
+    "heading": "General",
+    "guidance": "Notices (including email), entire agreement, written variation, no assignment without consent, severability, counterparts, electronic signature."
+   }
+  ],
+  "zambian_points": [
+   {
+    "point": "An independent contractor is outside the Employment Code Act, but the real relationship decides, not the label: work under the client's instructions and control is employment, and integration, set hours, client tools and dependence on the client's pay are statutory signs of it.",
+    "basis": "Employment Code Act, No. 3 of 2019, s.3 (employee; employment relationship)",
+    "evidence": "but does not include an independent ... contractor or a person engaged to perform piece work ... where work is carried out in accordance with instructions and under the control of an employer",
+    "doc_id": "fe976ae2-a240-43e3-bdb0-36448febe68f"
+   },
+   {
+    "point": "The client must deduct withholding tax from a management or consultancy fee from a Zambian source (including one deemed so by s.18) before paying it, even if it pays outside Zambia. ZRA's 2026 rates: 20% non-resident, 15% resident.",
+    "basis": "Income Tax Act, Cap. 323, s.82A(1)(a) (substituted by Act No. 43 of 2021); ZRA Practice Note No. 1 of 2026, Table 20",
+    "evidence": "irrespective of whether the payment is made outside the Republic, shall, before making any other deduction, deduct tax ... Fees to Residents 15 Management and Consultancy Fees to Non-Residents 20",
+    "doc_id": "b529fa93-e39b-43d5-abdf-6e3005af6125"
+   },
+   {
+    "point": "A fee the payer incurs in producing income or carrying on business in Zambia is deemed Zambian-source, so working remotely abroad does not avoid withholding; a public or non-profit client should confirm with ZRA.",
+    "basis": "Income Tax Act, Cap. 323, s.18(1)(h)",
+    "evidence": "arises from a management or consultant fee incurred in the production of income or in the carrying on of a business in the Republic",
+    "doc_id": "881305d4-ef28-4b88-b3b0-00fb864fed40"
+   },
+   {
+    "point": "A treaty rate needs a double taxation agreement in force with the consultant's country and a ZRA Limited Deduction Direction, sought with the contract, Form WHT 3 and a Tax Residence Certificate; until then, deduct the full rate.",
+    "basis": "Income Tax Act, Cap. 323, ss.74 and 82A(1); ZRA Practice Note No. 1 of 2026, para 50.0",
+    "evidence": "issues a Limited Deduction Direction (LDD) to give effect to the rates agreed in the treaty ... A copy of a Tax Residence Certificate (TRC) of the foreign company from the revenue",
+    "doc_id": "b529fa93-e39b-43d5-abdf-6e3005af6125"
+   },
+   {
+    "point": "A recipient in Zambia of a service from a non-resident supplier, performed in Zambia or for its benefit there, must itself pay VAT on it (reverse VAT), subject to s.8(6), with no input tax credit.",
+    "basis": "Value Added Tax Act, Cap. 331, s.8(5) to (7) (substituted by Act No. 27 of 2023)",
+    "evidence": "“imported service” means a service rendered by a supplier who is resident outside the Republic ... A recipient of an imported service shall pay tax on the importation of that service",
+    "doc_id": "672d08ef-42c9-434a-b470-c7742e6233f0"
+   },
+   {
+    "point": "A processor's work for the client must be governed by a contract stating the subject matter, duration, nature and purpose of processing, data types, categories of data subjects and the controller's rights; sub-processors need written authorisation (s.52(1)).",
+    "basis": "Data Protection Act, No. 3 of 2021, s.52(1) and (3)",
+    "evidence": "Processing by a data processor shall be governed by a contract that sets out the subject matter and duration of the processing, the nature and purpose of the processing",
+    "doc_id": "8d405f04-5cbe-4464-8ab4-a5450996a1e2"
+   },
+   {
+    "point": "A processor must report a security breach to the controller as soon as practicable, and the controller must notify the Data Protection Commissioner within 24 hours, so set a shorter contractual deadline.",
+    "basis": "Data Protection Act, No. 3 of 2021, s.49(1) and (2)",
+    "evidence": "A data controller shall notify the Data Protection ... Commissioner within twenty-four hours of any security breach ... A data processor shall notify the data controller, as soon as",
+    "doc_id": "8d405f04-5cbe-4464-8ab4-a5450996a1e2"
+   },
+   {
+    "point": "Personal data must be processed and stored on a server or data centre in Zambia unless the Minister prescribes otherwise; sensitive personal data (such as health or child abuse data) must be processed and stored in Zambia, subject only to the narrow exceptions in s.71(4).",
+    "basis": "Data Protection Act, No. 3 of 2021, s.70",
+    "evidence": "shall process and store personal data ... on a server or data centre located in the Republic ... sensitive personal data shall be processed and stored in a server or data centre",
+    "doc_id": "8d405f04-5cbe-4464-8ab4-a5450996a1e2"
+   },
+   {
+    "point": "Other personal data may leave Zambia only as s.71 allows: chiefly the data subject's consent plus Commissioner-approved standard contracts (or a ministerial prescription), or the Commissioner's approval for necessity.",
+    "basis": "Data Protection Act, No. 3 of 2021, s.71(1)",
+    "evidence": "may be transferred outside the ... the data subject has consented and ... the transfer is made subject to standard contracts or intragroup schemes that have been approved by the Data Protection",
+    "doc_id": "8d405f04-5cbe-4464-8ab4-a5450996a1e2"
+   },
+   {
+    "point": "A school may process a child's personal data only with the consent of a parent, legal guardian or person with parental responsibility; the consultant must stay within those consents.",
+    "basis": "Data Protection Act, No. 3 of 2021, s.17(2)",
+    "evidence": "A data controller shall not process a child’s or vulnerable person’s personal data unless consent is given by the child’s or vulnerable person’s parent, legal guardian",
+    "doc_id": "8d405f04-5cbe-4464-8ab4-a5450996a1e2"
+   },
+   {
+    "point": "Electronic signing is valid: an electronic signature is not denied effect for being electronic, and if the parties need a signature without fixing its type, any reliable method identifying the signer and showing approval suffices, so name the method.",
+    "basis": "Electronic Communications and Transactions Act, No. 4 of 2021, ss.6(2) and 7(1)",
+    "evidence": "an electronic signature is not without legal force and effect merely on the grounds that it is in electronic form ... a method is used to identify the person and to indicate the",
+    "doc_id": "8d3ee593-9a33-4a46-a408-04adeb6f21e7"
+   },
+   {
+    "point": "Corruptly offering or giving any gratification to the client's employees or officers to influence its dealings is an offence; they are agents under the Act.",
+    "basis": "Anti-Corruption Act, No. 3 of 2012, ss.3 and 23(2)",
+    "evidence": "\"agent\" means a person employed by, or acting for, another ... corruptly gives, promises or offers any gratification to an agent as an inducement or reward",
+    "doc_id": "2ab68f05-d99f-4e94-ae16-3f03123beac2"
+   },
+   {
+    "point": "Copyright in a commissioned work goes first to the commissioner, but a work completed in another convention country follows that country's ownership rules, so take a signed written assignment (future copyright can be assigned).",
+    "basis": "Copyright and Performance Rights Act, Cap. 406, ss.10(3) and (4), 11(3) and (4)",
+    "evidence": "completed in a convention country other than Zambia, the law of that country in relation to first ownership of copyright shall apply ... An assignment of copyright shall be in writing signed by",
+    "doc_id": "d62894e2-08fb-4d2b-9cb4-dbc1bbffa80d"
+   },
+   {
+    "point": "An arbitration clause does not oust the court by itself: a party sued in breach of it must apply for a stay under s.10, and the court will not refer the case on its own motion (Court of Appeal, March 2026).",
+    "basis": "Arbitration Act, No. 19 of 2000, s.10; Cosmas Mulenga v Bright Jangazya, CA Appeal No. 262 of 2024 (4 March 2026)",
+    "evidence": "The ouster contemplated by section 10 of the Arbitration Act is not self-executing; it is triggered only upon a request by a party ... a court cannot decline jurisdiction of its own motion",
+    "doc_id": "1e27783a-56ec-4cda-9443-456d8ebf4d87",
+    "source_url": "https://judiciaryzambia.com/wp-content/uploads/2026/03/App-262-2024-Cosmas-Mulenga-vs-Bright-Jangazya-04-March-2026-Coram-Justice-Siavwapa-JP-Chishimba-Patel-JJA.pdf"
+   },
+   {
+    "point": "An award can be challenged only by an application to set it aside under s.17, and the UNCITRAL Model Law applies through s.8 with limited court intervention, so the clause can make the award final and binding.",
+    "basis": "Arbitration Act, No. 19 of 2000, ss.8 and 17(1), as quoted in Wamulume Kalabo v Howad Mwape, CA Appeal No. 183 of 2023",
+    "evidence": "Recourse to a court against an arbitral award may be made only by an application for setting aside ... applies in this country by virtue of section 8 of the Arbitration Act",
+    "doc_id": "43c27ee6-115f-4f1f-8c47-86464b9556bd",
+    "source_url": "https://judiciaryzambia.com/wp-content/uploads/2025/02/App-183-2023-Wamulume-Kalabo-vs-Howad-Mwape-Coram-Siavwapa-JP-Chishimba-Patel-JJA.pdf"
+   },
+   {
+    "point": "The Immigration Control Act, 2026 starts on a date set by statutory instrument and Levy holds no commencement order, so do not cite it as in force; if the consultant will come to Zambia to work, check permit requirements first.",
+    "basis": "Immigration Control Act, No. 3 of 2026, s.1",
+    "evidence": "This Act may be cited as the Immigration Control Act, 2026 ... shall come into operation on the date that the Minister may, by ... Statutory Instrument, appoint",
+    "doc_id": "9c7a7161-853f-4230-bac8-801ada7c8409"
+   }
+  ],
+  "clauses": {
+   "conditions_precedent": "[X].1 This Agreement, except this clause and clauses [Confidentiality], [Governing law] and [Disputes], takes effect when the Client confirms in writing that it has received: (a) a tax residence certificate for the current year from the tax authority of [COUNTRY], or Part 11 of ZRA Form WHT 3 certified by it; and (b) the Consultant's signed declaration that it is tax resident in [COUNTRY], not resident in Zambia, and will report any change within [10] days.\n[X].2 If these are not received by [LONG-STOP DATE], either party may end this Agreement by notice without liability.\n[X].3 Until ZRA issues a Limited Deduction Direction, the Client withholds tax at the full statutory rate.",
+   "independent_contractor": "The Consultant is an independent contractor, not an employee, partner or agent of the Client. It decides the method, hours and place of work, uses its own equipment, may work for others (subject to clauses [Conflicts] and [Confidentiality]) and may use qualified assistants at its own cost with the Client's consent. Save for tax the Client must withhold, it is responsible for its own taxes, contributions and insurance.",
+   "fees_and_taxes": "[X].1 The Client pays the Fees in [CURRENCY] within [30] days of a correct invoice.\n[X].2 The Client deducts any tax the law requires it to withhold, pays it to ZRA and gives the Consultant proof; there is no gross-up [unless agreed in writing].\n[X].3 The Fees exclude VAT. Any VAT the Client must account for on the Services as an imported service is borne by the Client and not deducted from the Fees.",
+   "data_protection": "[X].1 The Consultant processes Client Personal Data (Schedule [X] states subject matter, duration, nature and purpose, data types and categories of data subjects) only on the Client's documented instructions.\n[X].2 It shall: (a) keep the data confidential and secure, including by encryption; (b) use no other processor without the Client's prior written authorisation; (c) report any security breach to the Client within [12] hours; (d) not copy, store, transfer or process the data (above all sensitive personal data) outside Zambia except as the Data Protection Act, 2021 permits and the Client approves in writing; (e) help the Client answer data subjects; and (f) at the end, return or securely delete the data and confirm in writing.\n[X].3 Each party holds any registration that Act requires.",
+   "intellectual_property": "The Consultant assigns to the Client all copyright and other intellectual property rights in the Deliverables, including future rights, as they arise. The Consultant keeps its pre-existing materials, grants the Client a perpetual, royalty-free, non-exclusive licence to use those included in the Deliverables, and will sign any document needed to record the assignment.",
+   "anti_corruption": "Each party warrants that it has not offered, given, solicited or accepted, and will not offer, give, solicit or accept, any gratification (as defined in the Anti-Corruption Act, 2012) in connection with this Agreement, including to or from the other party's employees or agents. Breach is a material breach allowing immediate termination by notice.",
+   "dispute_resolution": "[X].1 A party claiming a dispute arising out of or in connection with this Agreement (including its validity or termination) shall notify the other in writing; senior representatives shall meet within [10] Business Days to try to settle it.\n[X].2 A dispute not settled within [20] Business Days of the notice shall be finally resolved by arbitration under the Arbitration Act, 2000 (Act No. 19 of 2000) of Zambia.\n[X].3 The seat is Lusaka, Zambia. The tribunal is one arbitrator agreed by the parties or, failing agreement within [14] days of a written request, appointed on either party's application by [APPOINTING AUTHORITY, e.g. the chairperson of a named arbitral institution in Zambia]. The language is English.\n[X].4 The award is final and binding. A party may still seek urgent interim relief from a court.",
+   "governing_law": "This Agreement and any dispute or claim (including a non-contractual one) arising out of or in connection with it are governed by the laws of the Republic of Zambia."
+  },
+  "execution": "Signature blocks with name, title and date. A company client signs by common seal, two authorised signatories, or one director whose signature is witnessed (Companies Act, 2017, s.32(4)); a trust, church or public school signs through the officer its constitution or the law authorises (confirm it). An individual consultant signs personally; a witness is optional but helps prove the signature. Electronic signing is valid if the method is named; allow counterparts. The consultant must sign the IP assignment itself."
+ },
+ "service_agreement": {
+  "title": "Service Agreement",
+  "use_when": "An organisation buys defined or recurring business services from a company or firm (for example IT support, cleaning, security, catering or maintenance), with service levels, acceptance and invoicing.",
+  "not_for": "Not for hiring an individual who will work under the client's control as staff (use an employment contract), for one-off expert advice (use the consultancy agreement), or for buying goods only (use a supply agreement).",
+  "questions": [
+   "Who are the parties (legal names, registration numbers, TPINs), and is the client a public body buying with public funds?",
+   "What services are needed, where and when, and which service levels, response times and reports measure performance?",
+   "What is the price (amount, currency, invoicing period, expenses, price review), and is the supplier VAT-registered?",
+   "How long should it run, can it renew, and what exit or handover help is needed?",
+   "Will the supplier access personal data or the client's systems, and where will data be hosted?",
+   "What liability cap and insurance are acceptable, and who signs for each party?"
+  ],
+  "outline": [
+   {
+    "heading": "Parties",
+    "guidance": "Legal names, registration numbers, TPINs and addresses."
+   },
+   {
+    "heading": "Definitions",
+    "guidance": "Services, Service Levels, Deliverables, Fees, Business Day, Client Data, Personal Data."
+   },
+   {
+    "heading": "Procurement and authority",
+    "guidance": "For a procuring entity, record selection under the Public Procurement Act, 2020 and the signatory's authority."
+   },
+   {
+    "heading": "Term",
+    "guidance": "Start date, initial term, renewal only by written agreement, any transition-in period."
+   },
+   {
+    "heading": "Services",
+    "guidance": "Scope, locations and hours in a schedule; exclusions; how changes are agreed and priced."
+   },
+   {
+    "heading": "Service levels",
+    "guidance": "Measurable targets, reporting, service credits as a price adjustment, termination for persistent failure."
+   },
+   {
+    "heading": "Acceptance",
+    "guidance": "Testing deliverables against agreed criteria, time to accept or reject with reasons, re-testing, deemed acceptance."
+   },
+   {
+    "heading": "Supplier personnel",
+    "guidance": "Supplier employs and pays its staff (wages, PAYE, pension); site and safeguarding rules, essential at a school."
+   },
+   {
+    "heading": "Client responsibilities",
+    "guidance": "Access, information and decisions the supplier needs; relief if not given."
+   },
+   {
+    "heading": "Fees and payment",
+    "guidance": "Fees, VAT, Smart Invoice tax invoices with the client's TPIN, payment period, disputed amounts."
+   },
+   {
+    "heading": "Withholding tax",
+    "guidance": "Technical, managerial, consultative and IT services are consultancy fees: the client withholds and gives proof; say if prices are gross or net."
+   },
+   {
+    "heading": "Data protection and security",
+    "guidance": "s.52(3) processor terms, security, breach notice, sub-processor consent, hosting in Zambia under s.70, return or deletion at exit."
+   },
+   {
+    "heading": "Confidentiality",
+    "guidance": "Mutual, surviving termination; disclosure required by law allowed."
+   },
+   {
+    "heading": "Intellectual property",
+    "guidance": "Client owns bespoke deliverables by signed assignment; supplier keeps its tools and licenses them."
+   },
+   {
+    "heading": "Warranties and liability",
+    "guidance": "Reasonable skill and care; cap per contract year, uncapped for fraud, confidentiality, data protection and personal injury; no indirect loss."
+   },
+   {
+    "heading": "Insurance",
+    "guidance": "Cover suited to the services, with evidence on request."
+   },
+   {
+    "heading": "Anti-corruption",
+    "guidance": "No gratification to the client's staff or officers; immediate termination for breach."
+   },
+   {
+    "heading": "Termination and exit",
+    "guidance": "Unremedied breach, insolvency, corruption, or convenience on notice; pay for work done, return data, exit help. Business rescue can override terms (Corporate Insolvency Act, s.28)."
+   },
+   {
+    "heading": "Disputes and governing law",
+    "guidance": "Escalation, then arbitration seated in Lusaka under the Arbitration Act, 2000: one arbitrator, a named appointing authority, English, a carve-out for urgent court relief. Fix the number of arbitrators and the appointment route in the clause; the Act's defaults are not in Levy's library. A settlement reached at the escalation stage can leave nothing to arbitrate (Group Five v NUCO, CA Appeal No. 217 of 2021). Governing law: Zambia."
+   },
+   {
+    "heading": "General",
+    "guidance": "Force majeure, notices, entire agreement, written variation, assignment and subcontracting with consent, counterparts, electronic signature."
+   }
+  ],
+  "zambian_points": [
+   {
+    "point": "If the client is a procuring entity (a Government Agency or parastatal, or another body mandated by Government to procure with public funds), the Public Procurement Act, 2020 governs how the supplier is chosen; confirm it was followed before signing.",
+    "basis": "Public Procurement Act, No. 8 of 2020, ss.2 and 3(1)",
+    "evidence": "This Act applies to procurement carried out by a procuring entity ... a Government Agency or parastatal body carrying out procurement using public funds or any other funds",
+    "doc_id": "fb279a19-d572-4f18-b2fc-63a965bbb0cb"
+   },
+   {
+    "point": "Payments for administrative, consultative, managerial, technical or similar services, or for installing or maintaining IT solutions, are management or consultancy fees subject to withholding tax.",
+    "basis": "Income Tax Act, Cap. 323, s.2(1) (definition substituted by Act No. 16 of 2017, s.2)",
+    "evidence": "payment in any form, other than an emolument ... administrative, consultative, managerial, technical or other service of a like nature ... maintenance of any information technology solution",
+    "doc_id": "c5adba87-2a8f-4787-a1df-ac1ea640cc7a"
+   },
+   {
+    "point": "The client must deduct withholding tax from a management or consultancy fee from a Zambian source (including one deemed so by s.18) before paying it, even if it pays outside Zambia. ZRA's 2026 rates: 20% non-resident, 15% resident.",
+    "basis": "Income Tax Act, Cap. 323, s.82A(1)(a) (substituted by Act No. 43 of 2021); ZRA Practice Note No. 1 of 2026, Table 20",
+    "evidence": "irrespective of whether the payment is made outside the Republic, shall, before making any other deduction, deduct tax ... Fees to Residents 15 Management and Consultancy Fees to Non-Residents 20",
+    "doc_id": "b529fa93-e39b-43d5-abdf-6e3005af6125"
+   },
+   {
+    "point": "A business must issue every invoice through ZRA's electronic invoicing system (Smart Invoice) unless ZRA exempts it, showing a business or State-institution customer's name, address and TPIN; VAT, where chargeable, is 16%.",
+    "basis": "Income Tax (Electronic Invoicing System) Regulations, 2025 (SI No. 84 of 2025, in operation from 19 December 2025), reg. 4(1) and (2); ZRA Practice Note No. 1 of 2026, para 24.4 and Table 21",
+    "evidence": "shall issue an invoice using an electronic invoicing system to a customer ... shall specify the name, address and taxpayer identification number of the customer ... Category Rate (%) Standard Rate 16%",
+    "doc_id": "b529fa93-e39b-43d5-abdf-6e3005af6125"
+   },
+   {
+    "point": "A processor's work for the client must be governed by a contract stating the subject matter, duration, nature and purpose of processing, data types, categories of data subjects and the controller's rights; sub-processors need written authorisation (s.52(1)).",
+    "basis": "Data Protection Act, No. 3 of 2021, s.52(1) and (3)",
+    "evidence": "Processing by a data processor shall be governed by a contract that sets out the subject matter and duration of the processing, the nature and purpose of the processing",
+    "doc_id": "8d405f04-5cbe-4464-8ab4-a5450996a1e2"
+   },
+   {
+    "point": "The client may use only a processor giving sufficient guarantees of appropriate technical and organisational security measures (such as encryption and pseudonymisation).",
+    "basis": "Data Protection Act, No. 3 of 2021, s.47(2) and (4)",
+    "evidence": "the data controller shall only use processors providing sufficient guarantees to implement appropriate technical and organisational measures",
+    "doc_id": "8d405f04-5cbe-4464-8ab4-a5450996a1e2"
+   },
+   {
+    "point": "A processor must report a security breach to the controller as soon as practicable, and the controller must notify the Data Protection Commissioner within 24 hours, so set a shorter contractual deadline.",
+    "basis": "Data Protection Act, No. 3 of 2021, s.49(1) and (2)",
+    "evidence": "A data controller shall notify the Data Protection ... Commissioner within twenty-four hours of any security breach ... A data processor shall notify the data controller, as soon as",
+    "doc_id": "8d405f04-5cbe-4464-8ab4-a5450996a1e2"
+   },
+   {
+    "point": "Personal data must be processed and stored on a server or data centre in Zambia unless the Minister prescribes otherwise; sensitive personal data (such as health or child abuse data) must be processed and stored in Zambia, subject only to the narrow exceptions in s.71(4).",
+    "basis": "Data Protection Act, No. 3 of 2021, s.70",
+    "evidence": "shall process and store personal data ... on a server or data centre located in the Republic ... sensitive personal data shall be processed and stored in a server or data centre",
+    "doc_id": "8d405f04-5cbe-4464-8ab4-a5450996a1e2"
+   },
+   {
+    "point": "Controlling or processing personal data without registering as a data controller or data processor is an offence, so each party should warrant any registration the Act requires.",
+    "basis": "Data Protection Act, No. 3 of 2021, s.19",
+    "evidence": "A person shall not control or process personal data ... without registering as a data controller or a data processor under",
+    "doc_id": "8d405f04-5cbe-4464-8ab4-a5450996a1e2"
+   },
+   {
+    "point": "Corruptly offering a public officer any gratification for help or influence in obtaining, executing or getting paid under a contract is an offence; with a private client the same applies to its staff as agents (s.23).",
+    "basis": "Anti-Corruption Act, No. 3 of 2012, ss.23(2) and 29(2)",
+    "evidence": "corruptly gives, promises or offers any gratification to any public officer ... giving assistance or using influence in ... the promotion, execution or procurement of",
+    "doc_id": "2ab68f05-d99f-4e94-ae16-3f03123beac2"
+   },
+   {
+    "point": "Copyright in a commissioned work goes first to the commissioner, but rely on an express assignment for deliverables, which must be in writing and signed by the assignor.",
+    "basis": "Copyright and Performance Rights Act, Cap. 406, ss.10(3) and 11(4)",
+    "evidence": "made by the author on the commission of some other person; the employer or the person who commissioned the work shall be the first owner ... An assignment of copyright shall be in writing signed by",
+    "doc_id": "d62894e2-08fb-4d2b-9cb4-dbc1bbffa80d"
+   },
+   {
+    "point": "In a party's business rescue the administrator may, with the court's leave, cancel or suspend provisions of the agreement despite contrary wording, leaving the other party a damages claim only.",
+    "basis": "Corporate Insolvency Act, No. 9 of 2017, s.28(2) and (3)",
+    "evidence": "a business rescue administrator may, with leave of the Court during business rescue proceedings, cancel entirely or partially or ... conditionally suspend a provision of an agreement",
+    "doc_id": "07d0684a-c557-4ce9-9dce-36c8ca5be92d"
+   },
+   {
+    "point": "If a party sues despite the arbitration clause, the court must, on request, stay the case and refer the parties to arbitration unless the agreement is null and void, inoperative or incapable of being performed.",
+    "basis": "Arbitration Act, No. 19 of 2000, s.10(1), as quoted in Group Five Zambia Ltd v NUCO Industrial Services Ltd, CA Appeal No. 217 of 2021",
+    "evidence": "if a party so requests at any stage of the proceedings ... stay those proceedings and refer the parties to arbitration unless it finds that the agreement is null and void",
+    "doc_id": "f3c77fe1-1f65-4bea-b531-e793a9a5be85",
+    "source_url": "https://judiciaryzambia.com/wp-content/uploads/2022/08/CAZ-8-377-2021-APP-217-2021-Group-Five-Zambia-Ltd-vs-NUCO-Industrial-Services-Ltd-Coram-Justice-Chishimba-Siavwapa-Sharpe-Phiri-JJA.pdf"
+   },
+   {
+    "point": "An award can be challenged only by an application to set it aside under s.17, and the UNCITRAL Model Law applies through s.8 with limited court intervention, so the clause can make the award final and binding.",
+    "basis": "Arbitration Act, No. 19 of 2000, ss.8 and 17(1), as quoted in Wamulume Kalabo v Howad Mwape, CA Appeal No. 183 of 2023",
+    "evidence": "Recourse to a court against an arbitral award may be made only by an application for setting aside ... applies in this country by virtue of section 8 of the Arbitration Act",
+    "doc_id": "43c27ee6-115f-4f1f-8c47-86464b9556bd",
+    "source_url": "https://judiciaryzambia.com/wp-content/uploads/2025/02/App-183-2023-Wamulume-Kalabo-vs-Howad-Mwape-Coram-Siavwapa-JP-Chishimba-Patel-JJA.pdf"
+   },
+   {
+    "point": "Electronic signing is valid: an electronic signature is not denied effect for being electronic, and if the parties need a signature without fixing its type, any reliable method identifying the signer and showing approval suffices, so name the method.",
+    "basis": "Electronic Communications and Transactions Act, No. 4 of 2021, ss.6(2) and 7(1)",
+    "evidence": "an electronic signature is not without legal force and effect merely on the grounds that it is in electronic form ... a method is used to identify the person and to indicate the",
+    "doc_id": "8d3ee593-9a33-4a46-a408-04adeb6f21e7"
+   },
+   {
+    "point": "A company signs by common seal, by two authorised signatories, or by one director whose signature is witnessed; the seal is optional.",
+    "basis": "Companies Act, No. 10 of 2017, s.32(4) and (5)",
+    "evidence": "A document or deed shall be validly executed by or on behalf of a company ... the affixing of the common seal ... two authorised signatories; or ... a director whose signature is attested by a witness",
+    "doc_id": "7279308e-8514-4c90-b9bd-bc9ba6880ac0"
+   }
+  ],
+  "clauses": {
+   "fees_invoicing_and_tax": "[X].1 The Client pays the Fees within [30] days of a valid invoice issued through ZRA's electronic invoicing system showing the Client's name, address and TPIN.\n[X].2 The Fees exclude VAT, which the Client pays at the applicable rate on a valid tax invoice if the Supplier is VAT-registered.\n[X].3 The Client may deduct tax the law requires it to withhold and gives the Supplier proof; [the Fees are gross of that tax].\n[X].4 The Client may withhold a disputed amount if it gives reasons before the due date and pays the rest.",
+   "service_levels": "The Supplier shall meet the Service Levels in Schedule [X] and report [monthly]. For each missed Service Level it credits the Service Credit in Schedule [X] against the next invoice; credits are a price adjustment, not the Client's only remedy. If the same Service Level is missed in [3] consecutive months, the Client may terminate by notice.",
+   "data_protection": "Where the Supplier processes personal data for the Client, it shall: (a) act only on the Client's documented instructions and as described in Schedule [X]; (b) apply appropriate security measures, including encryption; (c) use no other processor without the Client's prior written authorisation; (d) report any security breach within [12] hours of becoming aware of it; (e) host and process the data in Zambia unless the Data Protection Act, 2021 permits otherwise and the Client agrees in writing; and (f) at the end, return or securely delete it as directed.",
+   "limitation_of_liability": "[X].1 Neither party is liable for indirect or consequential loss or loss of profit.\n[X].2 Each party's total liability in any contract year is limited to [100]% of the Fees paid and payable in that year.\n[X].3 Nothing limits liability for fraud, death or personal injury caused by negligence, breach of confidentiality or data protection duties, or any liability the law does not allow to be limited.",
+   "termination": "[X].1 Either party may terminate by notice if the other: (a) commits a material breach not remedied within [30] days of notice; (b) becomes insolvent or enters liquidation, receivership or business rescue, so far as the law permits termination; or (c) breaches clause [Anti-corruption].\n[X].2 The Client may terminate for convenience on [60] days' notice.\n[X].3 On termination the Client pays for Services properly performed, and the Supplier returns the Client's property and data and gives reasonable exit help for up to [30] days.",
+   "anti_corruption": "Each party warrants that it has not offered, given, solicited or accepted, and will not offer, give, solicit or accept, any gratification (as defined in the Anti-Corruption Act, 2012) in connection with the procurement, award, performance or payment of this Agreement. Breach allows immediate termination.",
+   "dispute_resolution": "[X].1 A party claiming a dispute arising out of or in connection with this Agreement (including its validity or termination) shall notify the other in writing; senior representatives shall meet within [10] Business Days to try to settle it.\n[X].2 A dispute not settled within [20] Business Days of the notice shall be finally resolved by arbitration under the Arbitration Act, 2000 (Act No. 19 of 2000) of Zambia.\n[X].3 The seat is Lusaka, Zambia. The tribunal is one arbitrator agreed by the parties or, failing agreement within [14] days of a written request, appointed on either party's application by [APPOINTING AUTHORITY, e.g. the chairperson of a named arbitral institution in Zambia]. The language is English.\n[X].4 The award is final and binding. A party may still seek urgent interim relief from a court.",
+   "governing_law": "This Agreement and any dispute or claim (including a non-contractual one) arising out of or in connection with it are governed by the laws of the Republic of Zambia."
+  },
+  "execution": "Signature blocks with name, title and date. A company signs by common seal, two authorised signatories, or one director whose signature is witnessed (Companies Act, 2017, s.32(4)). A public body signs through its authorised officer after procurement approvals; record that authority. Electronic signing is valid if the method is named; allow counterparts. Initial schedule pages when signing on paper."
+ },
+ "nda": {
+  "title": "Non-Disclosure Agreement",
+  "use_when": "Two parties will share confidential information for a specific purpose (a proposed deal, project, tender or engagement) and need a binding duty of confidence before talks start.",
+  "not_for": "Not a substitute for the confidentiality and data-processing terms of the main contract once signed, nor for an employee's confidentiality duties (put those in the employment contract).",
+  "questions": [
+   "Is the NDA one-way or mutual, and who are the parties (legal names and forms)?",
+   "What is the purpose of the sharing, and what kinds of information will be disclosed?",
+   "Will personal data be shared, and will any recipient or adviser be outside Zambia?",
+   "How long should confidentiality last after the last disclosure, and should trade secrets be protected for longer?",
+   "Is either party a public body that may receive access-to-information requests?",
+   "Should disputes go to the Zambian courts or to arbitration, and who signs for each party?"
+  ],
+  "outline": [
+   {
+    "heading": "Parties",
+    "guidance": "Legal names and forms; one-way or mutual."
+   },
+   {
+    "heading": "Purpose",
+    "guidance": "Define it narrowly; any other use is a breach."
+   },
+   {
+    "heading": "Confidential Information",
+    "guidance": "Everything disclosed for the Purpose in any form, marked or not, including the fact of the talks and derived notes and analyses."
+   },
+   {
+    "heading": "Exclusions",
+    "guidance": "Public without breach, lawfully held before, lawfully received from a third party, or independently developed; the recipient proves the exclusion."
+   },
+   {
+    "heading": "Recipient's obligations",
+    "guidance": "Use only for the Purpose, protect with at least reasonable care, share only with representatives who need to know and are bound, and answer for them."
+   },
+   {
+    "heading": "Disclosure required by law",
+    "guidance": "Allowed when law, a court, a regulator or an access-to-information request requires it, limited to what is required, with prompt prior notice where lawful."
+   },
+   {
+    "heading": "Personal data",
+    "guidance": "Share only if needed; the recipient keeps it secure, does not disclose it and keeps it in Zambia unless ss.70 and 71 of the Data Protection Act, 2021 allow otherwise."
+   },
+   {
+    "heading": "Return or destruction",
+    "guidance": "On request or when talks end, return or destroy information and copies, except copies kept by law or in backups, which stay confidential; confirm in writing."
+   },
+   {
+    "heading": "Duration",
+    "guidance": "[2 to 5] years after the last disclosure; trade secrets for as long as they stay secret."
+   },
+   {
+    "heading": "No licence and no warranty",
+    "guidance": "No rights pass; information is given as is."
+   },
+   {
+    "heading": "No commitment",
+    "guidance": "No duty to proceed with any transaction; no partnership or agency."
+   },
+   {
+    "heading": "Remedies",
+    "guidance": "Damages may not be adequate, so the discloser may seek an injunction or specific performance; keep a court carve-out if disputes go to arbitration."
+   },
+   {
+    "heading": "Governing law and disputes",
+    "guidance": "Zambian law; Zambian courts for speed and injunctions, or arbitration seated in Lusaka under the Arbitration Act, 2000 with a carve-out for urgent court relief."
+   },
+   {
+    "heading": "General",
+    "guidance": "Entire agreement on the subject, written variation, no assignment, counterparts, electronic signature."
+   }
+  ],
+  "zambian_points": [
+   {
+    "point": "Personal data received under an NDA stays protected: a person may not disclose collected personal data except as the Data Protection Act provides, and disclosure generally needs the data subject's consent (s.53(2)).",
+    "basis": "Data Protection Act, No. 3 of 2021, s.53(1) and (2)",
+    "evidence": "Except as otherwise provided in this Act, a person ... shall not disclose or otherwise cause any other person to receive ... the content or nature of any personal data that has been collected",
+    "doc_id": "8d405f04-5cbe-4464-8ab4-a5450996a1e2"
+   },
+   {
+    "point": "Whoever holds the personal data must keep it appropriately secure against unauthorised processing, loss, destruction or damage.",
+    "basis": "Data Protection Act, No. 3 of 2021, s.12(1)(g)",
+    "evidence": "processed in a manner that ensures appropriate security of the personal data, including protection against unauthorised or unlawful processing and against any loss, destruction or damage",
+    "doc_id": "8d405f04-5cbe-4464-8ab4-a5450996a1e2"
+   },
+   {
+    "point": "Personal data must be processed and stored on a server or data centre in Zambia unless the Minister prescribes otherwise; sensitive personal data (such as health or child abuse data) must be processed and stored in Zambia, subject only to the narrow exceptions in s.71(4).",
+    "basis": "Data Protection Act, No. 3 of 2021, s.70",
+    "evidence": "shall process and store personal data ... on a server or data centre located in the Republic ... sensitive personal data shall be processed and stored in a server or data centre",
+    "doc_id": "8d405f04-5cbe-4464-8ab4-a5450996a1e2"
+   },
+   {
+    "point": "Other personal data may leave Zambia only as s.71 allows: chiefly the data subject's consent plus Commissioner-approved standard contracts (or a ministerial prescription), or the Commissioner's approval for necessity.",
+    "basis": "Data Protection Act, No. 3 of 2021, s.71(1)",
+    "evidence": "may be transferred outside the ... the data subject has consented and ... the transfer is made subject to standard contracts or intragroup schemes that have been approved by the Data Protection",
+    "doc_id": "8d405f04-5cbe-4464-8ab4-a5450996a1e2"
+   },
+   {
+    "point": "If a party is a public body, the Access to Information Act, 2023 (confirm it has been brought into operation) bars release of trade secrets and of confidential third-party information whose release could harm that third party in negotiations or competition, but not information on spending public funds. An NDA cannot override it, so mark sensitive material confidential and require prompt notice of any request.",
+    "basis": "Access to Information Act, No. 24 of 2023, s.24(1)(c) and (2)(d)",
+    "evidence": "confidential information supplied by a third party the disclosure of which could reasonably be expected to ... information which relates to the expenditure of public",
+    "doc_id": "2ce60d6b-2656-45d6-8047-594afd0f85e1"
+   },
+   {
+    "point": "If the NDA chooses arbitration, a party sued in court must ask for a stay; the court then refers the parties to arbitration unless the agreement is null and void, inoperative or incapable of being performed. Keep an express right to seek urgent injunctions from the court.",
+    "basis": "Arbitration Act, No. 19 of 2000, s.10(1), as quoted in Chulu v Mwitumwa, CA Appeal No. 94 of 2023",
+    "evidence": "if a party so request at any stage of the proceedings ... stay those proceedings and refer the parties to arbitration unless it finds that the agreement is null and void, inoperative",
+    "doc_id": "759dc95a-76a3-43f4-9fa0-7b8add779a88",
+    "source_url": "https://judiciaryzambia.com/wp-content/uploads/2024/04/App-94-2023-Justice-Elliot-Esau-Chulu-5-Others-Vs-David-Kabuku-Mwitumwa-Coram-Chashi-Sichinga-Sharpe-Phiri-JJA-1.pdf"
+   },
+   {
+    "point": "Electronic signing is valid: an electronic signature is not denied effect for being electronic, and if the parties need a signature without fixing its type, any reliable method identifying the signer and showing approval suffices, so name the method.",
+    "basis": "Electronic Communications and Transactions Act, No. 4 of 2021, ss.6(2) and 7(1)",
+    "evidence": "an electronic signature is not without legal force and effect merely on the grounds that it is in electronic form ... a method is used to identify the person and to indicate the",
+    "doc_id": "8d3ee593-9a33-4a46-a408-04adeb6f21e7"
+   },
+   {
+    "point": "A company signs by common seal, by two authorised signatories, or by one director whose signature is witnessed; the seal is optional.",
+    "basis": "Companies Act, No. 10 of 2017, s.32(4) and (5)",
+    "evidence": "A document or deed shall be validly executed by or on behalf of a company ... the affixing of the common seal ... two authorised signatories; or ... a director whose signature is attested by a witness",
+    "doc_id": "7279308e-8514-4c90-b9bd-bc9ba6880ac0"
+   }
+  ],
+  "clauses": {
+   "confidential_information": "\"Confidential Information\" means all information, in any form, that the Discloser or its Representatives disclose to the Recipient or its Representatives in connection with the Purpose, before or after the date of this Agreement and whether or not marked confidential, including the existence and content of the discussions and all notes, analyses and other material containing or derived from it.",
+   "exclusions": "Confidential Information does not include information that the Recipient shows: (a) is or becomes public other than through a breach of this Agreement; (b) was lawfully in its possession free of any duty of confidence before disclosure; (c) is lawfully received from a third party free of any duty of confidence; or (d) was independently developed without use of the Confidential Information.",
+   "permitted_disclosure": "The Recipient may disclose Confidential Information: (a) to Representatives who need it for the Purpose and are bound by duties of confidence at least as strict as this Agreement, the Recipient being responsible for them; and (b) to the extent required by law, a court, a regulator or an access-to-information request, provided that, where lawful, it first gives the Discloser prompt written notice and discloses only what is required.",
+   "personal_data": "If Confidential Information includes personal data, the Recipient shall: (a) process it only for the Purpose; (b) keep it secure with appropriate technical and organisational measures; (c) not disclose it except as this Agreement and the Data Protection Act, 2021 allow; (d) not transfer or store it outside Zambia except as that Act permits and the Discloser agrees in writing; and (e) tell the Discloser without delay of any security breach affecting it.",
+   "return_or_destruction": "Within [10] Business Days of a written request, or when the Purpose ends, the Recipient shall return or destroy all Confidential Information and copies and confirm this in writing, except copies it must keep by law or that remain in automatic backups, which stay subject to this Agreement.",
+   "remedies": "Damages alone may not be an adequate remedy for breach of this Agreement. The Discloser may seek an injunction, specific performance or other equitable relief for any actual or threatened breach, in addition to any other remedy.",
+   "governing_law_and_jurisdiction": "This Agreement and any dispute arising out of or in connection with it are governed by the laws of the Republic of Zambia, and the courts of Zambia have exclusive jurisdiction. [Alternative: the consultancy precedent's arbitration clause, seated in Lusaka under the Arbitration Act, 2000, keeping each party's right to seek urgent injunctive relief from a court.]"
+  },
+  "execution": "Signature blocks with name, title and date. A company signs by common seal, two authorised signatories, or one director whose signature is witnessed (Companies Act, 2017, s.32(4)); other bodies sign through an authorised officer. Sign before any information is shared. Electronic signing is valid if the method is named; counterparts allowed."
+ }
+}

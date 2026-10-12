@@ -1,0 +1,45 @@
+{
+ "description": "Arbitration Act, 2000 (No. 19 of 2000): the missing principal Act behind arbitration clauses in drafts. NOT STAGED on 12 Oct 2026 because no official PDF of the 2000 Act could be obtained: Parliament's site has no node or PDF for it, and its only 'Arbitration Act' download is the repealed Cap. 40, which Levy already holds. 'items' is empty on purpose, so ingest_staged_parliament_acts.py stops with 'No plan items selected'. When an official copy is found, fill in pending_item (original_file, sha256, source_url, node, pages, text_chars_per_page, scan; parser_file and ocr_engines if it is a scan), move it into 'items' and dry-run the script with --plan.",
+ "run_tag": "arbitration-2026-10-12",
+ "items": [],
+ "pending_item": {
+  "key": "the-arbitration-no-19-of-2000",
+  "action": "ingest",
+  "original_file": null,
+  "sha256": null,
+  "title": "The Arbitration Act, 2000",
+  "short_name": "The Arbitration Act, 2000 (No. 19 of 2000)",
+  "act_number": "No. 19 of 2000",
+  "year": 2000,
+  "document_type": "act",
+  "source_url": null,
+  "pages": null,
+  "text_chars_per_page": null,
+  "scan": null,
+  "listing_title": "Arbitration",
+  "listing_number": "Act No. 19 of 2000",
+  "listing_source": "https://www.parliament.gov.zm/node/9494 (Consolidated List of Allocation of Portfolios and Statutory Functions, Second Schedule, under '7. MINISTRY OF JUSTICE': 'Arbitration ... Act No. 19 of 2000'). This is the only place parliament.gov.zm lists the Act; it is not in the Acts index.",
+  "node": null,
+  "note": "missing principal Act: arbitration clauses in drafts",
+  "run_tag": "arbitration-2026-10-12"
+ },
+ "dropped": [
+  [
+   "Arbitration Act (parliament.gov.zm/node/743, 'Arbitration Act.pdf', Volume 4)",
+   "This is the repealed Arbitration Act, Cap. 40 (1933), not the 2000 Act. Source https://www.parliament.gov.zm/sites/default/files/documents/acts/Arbitration%20Act.pdf, sha256 036e75757895c62cd76127bab1ac3b31e4e6e7d37b9b1ef42e5b18495b5cf5de, 21 pages, 2,237 text characters per page (not a scan). It is byte-identical to Levy's 7ab54762-d9e2-4196-a877-f1ac1e0a3c60 (already held, law map: repealed). The Zambia Development Agency's 'Arbitration Act' download (zda.org.zm/wp-content/uploads/2024/02/Arbitration-Act.pdf) is the same file."
+  ],
+  [
+   "The Arbitration Act, 2000 (No. 19 of 2000)",
+   "No official PDF found on 12 Oct 2026. Parliament's Acts index (all 52 pages, 1,031 rows) lists only four Acts of 2000 (Nos. 6, 7, 20 and 21) and no 2000 Arbitration Act. Unlisted node ids near the other 2000 Acts are not Acts. A type-restricted site search ('arbitration type:act') returns only node 743 and the Rhodesia Railways Act, and the 2000-era file pattern (documents/acts/No19_2000.pdf and four title variants) returns 404. The Judiciary's 'Arbitration Act - 2000' page (judiciaryzambia.com/arbitration-act-2000/, download id 2134, about 10.5 MB) redirects to a file that returns 404, and the Internet Archive holds only a 404 capture of that file. The Zambia Law Development Commission site (zldc.org) has an expired TLS certificate and was not fetched without verification. The Ministry of Justice site search has no result. Non-government copies (for example newyorkconvention.org) were not fetched, under the official-sources-only rule."
+  ]
+ ],
+ "staging": {
+  "downloads_dir": "/private/tmp/claude-501/-Users-mukelakatnngu-levy/f8c75107-dcd8-4a43-9e6c-3c7834413f4a/scratchpad/arbitration/",
+  "files_kept": [
+   "node743_Arbitration_Act.pdf (repealed Cap. 40, from parliament.gov.zm node 743)",
+   "zda_Arbitration-Act.pdf (same bytes, from zda.org.zm)"
+  ],
+  "ingest_script_expects": "scripts/ingest_staged_parliament_acts.py takes any directory via --staging-dir and reads <staging-dir>/<original_file> (and <staging-dir>/<parser_file> for an OCR'd scan); this plan must be passed with --plan, because the script's default plan is parliament_refresh_2026_09_16_plan.json. Dry run: backend/.venv/bin/python scripts/ingest_staged_parliament_acts.py --plan scripts/arbitration_2026_10_12_plan.json --staging-dir <DIR>"
+ },
+ "meanwhile": "Arbitration points in backend/app/data/precedents.json rest on Court of Appeal judgments in the library that quote ss.8, 10(1) and 17(1) of Act No. 19 of 2000 verbatim (Chulu v Mwitumwa; Group Five v NUCO; Wamulume Kalabo v Mwape; Cosmas Mulenga v Jangazya, 4 March 2026). The Act's writing requirement, default number of arbitrators and default appointing authority remain unverified."
+}
