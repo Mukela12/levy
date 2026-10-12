@@ -84,6 +84,18 @@ class WhereUpdatesAppear(unittest.TestCase):
             self.assertIn("supersedes", note)
             self.assertFalse(law_map.is_uncommenced("doc-soe"))
 
+    def test_an_enacted_act_replaces_the_bills_not_yet_law_note(self):
+        act = dict(ROW, id="a39", kind="amendment", document_id=None, act_title="The Agricultural Lands (Amendment) Act, 2026",
+                   statement="The Agricultural Lands (Amendment) Act, 2026 (Act No. 39 of 2026) was published as enacted in "
+                             "Government Gazette No. 7941 of 12 June 2026.", value={"principal": "Agricultural Lands"})
+        entries = {"bill": {"status": "bill, not yet law", "title": "The Agricultural Lands (Amendment) Bill ,2026"}}
+        with patch.object(lu, "active", return_value=[act]), patch.object(law_map, "_entries", return_value=entries):
+            note = law_map.status_note("bill")
+            self.assertTrue(note.startswith("ENACTED"))
+            self.assertNotIn("not yet law", note)
+            # The principal Act has no map entry; the search result's name finds it.
+            self.assertIn("Act No. 39 of 2026", law_map.status_note("principal", "REPUBLIC OF ZAMBIA THE AGRICULTURAL LANDS ACT"))
+
     def test_approved_paye_bands_set_a_later_years_tax(self):
         approved = dict(ROW, topic="paye-bands-2027", kind="rate_change", status="approved", act_title="ZRA Practice Note No. 1 of 2027",
                         value={"monthly_bands": [[5500, 0], [7500, 0.2], [9600, 0.3], [None, 0.37]]})

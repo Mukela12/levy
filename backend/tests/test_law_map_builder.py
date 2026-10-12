@@ -73,7 +73,7 @@ class ReportedNotes(unittest.TestCase):
             "old": {"status": "repealed", "title": "The National Pension Scheme Act",
                     "repealed_by": [{"title": "The National Pension Scheme Act, 2026", "id": "new", "reported": True}]},
         }
-        with patch.object(law_map, "_entries", return_value=entries), patch.object(law_map, "_ledger", return_value=(None, False)):
+        with patch.object(law_map, "_entries", return_value=entries), patch.object(law_map, "_ledger", return_value=(None, False, False)):
             self.assertTrue(law_map.status_note("new").startswith("REPORTED IN FORCE"))
             old = law_map.status_note("old")
             self.assertTrue(old.startswith("REPLACED ON A REPORTED COMMENCEMENT"))

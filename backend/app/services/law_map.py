@@ -41,33 +41,54 @@ def _titles(items: list[dict], limit: int = 2) -> str:
     return ", ".join(ref_name(i) for i in items[:limit] if i.get("title"))
 
 
-def _ledger(document_id: str | None) -> tuple[str | None, bool]:
+def _ledger(document_id: str | None, title: str | None = None) -> tuple[str | None, bool, bool]:
     """A recent verified update about this Act (services/legal_updates.py):
-    (note, whether it records the Act's commencement). Never raises."""
-    if not document_id:
-        return None, False
+    (note, whether it records the Act's commencement, whether it shows this
+    Bill was enacted). `title` serves documents the map has no entry for.
+    Never raises."""
+    if not document_id and not title:
+        return None, False, False
     try:
         from . import legal_updates
-        rows = legal_updates.for_document(document_id, entry(document_id).get("title"))
+        e = entry(document_id)
+        title = e.get("title") or title
+        rows = legal_updates.for_document(document_id, title)
+        enacted = False
+        if not rows and e.get("status") == "bill, not yet law" and title:
+            # The library holds the Bill; the Gazette or Parliament shows the Act.
+            act = re.sub(r"(?i)\bbill\b", "Act", title)
+            rows = [r for r in legal_updates.for_document(None, act) if r.get("kind") in ("new_law", "amendment")]
+            enacted = bool(rows)
     except Exception:  # noqa: BLE001
-        return None, False
+        return None, False, False
     if not rows:
-        return None, False
+        return None, False, False
+    if enacted:
+        r = rows[0]
+        return (f"ENACTED, by a recent official record: {r['statement']} (source {r['source_url']}, checked "
+                f"{legal_updates._when(r)}). The library holds only this Bill: treat the Act as law, and say its "
+                f"enacted text may differ from the Bill."), False, True
     text = "; ".join(f"{r['statement']} (source {r['source_url']}, checked {legal_updates._when(r)})" for r in rows[:2])
-    return f"RECENT OFFICIAL UPDATE, newer than the library: {text}", any(r.get("kind") == "commencement" for r in rows)
+    return (f"RECENT OFFICIAL UPDATE, newer than the library: {text}",
+            any(r.get("kind") == "commencement" for r in rows), False)
 
 
-def status_note(document_id: str | None) -> str | None:
+def status_note(document_id: str | None, title: str | None = None) -> str | None:
     """One line for the model, or None when there is nothing worth saying.
 
-    A verified update in the shared ledger is added to the map's own note, and
-    a recorded commencement replaces a "not shown to be in force" one: the map
+    A verified update in the shared ledger is added to the map's own note; a
+    recorded commencement replaces a "not shown to be in force" one, and an
+    enacted Act replaces "BILL before Parliament, not yet law" (on 12 Oct 2026
+    the map still called the Agricultural Lands (Amendment) Bill 2026 a Bill,
+    four months after the Gazette published it as Act No. 39 of 2026). The map
     is rebuilt by hand, the ledger the moment an official source is read.
     """
     note = _map_note(document_id)
-    update, commenced = _ledger(document_id)
+    update, commenced, enacted = _ledger(document_id, title)
     if not update:
         return note
+    if enacted:
+        return update
     if commenced and note and note.startswith(("NOT SHOWN TO BE IN FORCE", "COMMENCEMENT NOT VERIFIED")):
         return update + " It supersedes the library's record that this Act is not shown to be in force."
     return f"{note} {update}" if note else update
@@ -150,7 +171,7 @@ def annotate(rows: list[dict], key: str = "document_id") -> list[dict]:
     model, and `law_status` / `section_state` for the reader's badges. Edits
     rows in place."""
     for r in rows:
-        note = status_note(r.get(key))
+        note = status_note(r.get(key), r.get("act_name") or r.get("title"))
         if note:
             r["status"] = note
         law = _LAW_STATUS.get(entry(r.get(key)).get("status") or "")
