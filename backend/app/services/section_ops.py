@@ -9,7 +9,8 @@ in the first benchmark run; we held the amending Act and did not.
 
 This module reads one amending Act's text and says, per section: repealed,
 repealed and replaced, amended, or inserted. It never touches the database, so
-it can be tested on the clauses as they really appear.
+it can be tested on the clauses as they really appear. Parts and Schedules are
+read too, as their own kinds, and the Constitution's Articles as its sections.
 
 How they really appear is the hard part. Parliament's PDFs carry a margin note
 beside every section ("Repeal of section 24"), and extraction splices it into
@@ -111,7 +112,10 @@ def read_refs(window: str) -> tuple[list[str], list[str]]:
     a units word after a units word.
 
     Returns ([], margins) when the number was cut off by a line break or a
-    margin note, rather than guessing from half of it.
+    margin note, rather than guessing from half of it. "one hundred and 7. The
+    principal Act" is cut off too: it read as section 100 (Mines and Minerals
+    (Amendment) Act, 1997, whose next copy says "one hundred and eight").
+    "seventy-eighty" is OCR for one number, not a list of two.
     """
     tokens = re.findall(r"[A-Za-z]+-?|\d{1,3}[A-Z]{0,2}\.?|[,;:]", window.replace("—", " "))
     groups: list[list[str]] = []
@@ -120,6 +124,8 @@ def read_refs(window: str) -> tuple[list[str], list[str]]:
     margins: list[str] = []
     suffix = ""
     dangling = False
+    hundred_and = False
+    skip: set[int] = set()
     digits_first: list[str] = []
 
     def close() -> None:
@@ -129,15 +135,22 @@ def read_refs(window: str) -> tuple[list[str], list[str]]:
         current, last = [], None
 
     for i, tok in enumerate(tokens):
+        if i in skip:
+            continue
         low = tok.lower().rstrip(".")
         d = _REF_DIGITS.match(tok)
         if d:
             nxt = tokens[i + 1].lower() if i + 1 < len(tokens) else ""
+            nxt2 = tokens[i + 2].lower() if i + 2 < len(tokens) else ""
             # "9. The principal Act is amended" is the amending Act's own
             # section number, wherever it lands. Taken as margin evidence it
             # turned "section twenty- Repeal of 9. The principal Act" into a
-            # repeal of section 9, which never happened.
+            # repeal of section 9, which never happened. "2. (1) The
+            # principal Act" is the same, with its first subsection.
             if tok.endswith(".") and nxt == "the":
+                continue
+            if tok.endswith(".") and nxt == "1" and nxt2 == "the":
+                skip.add(i + 1)
                 continue
             ref = d.group(1) + d.group(2)
             if not groups and not current:
@@ -152,17 +165,25 @@ def read_refs(window: str) -> tuple[list[str], list[str]]:
         base = low.rstrip("-")
         if base in _NUMBER_WORDS:
             k = _kind(base)
+            if dangling and k != "unit":
+                # A hyphen joins a tens word to a unit; "seventy-eighty"
+                # (Income Tax (Amendment) Act, 1997, margin "section 78") is
+                # neither 70 and 80 nor anything else we can read.
+                return [], margins
             if last is not None and ((k == "tens" and last in {"unit", "tens"})
                                      or (k == "unit" and last == "unit")):
                 close()
             current.append(base)
             last = k
             dangling = low.endswith("-")
+            hundred_and = False
             continue
         if (current or groups) and _SUFFIX.match(tok):
             suffix = tok
             break
         if tok == "," or low == "and":
+            if low == "and" and current and current[-1] == "hundred":
+                hundred_and = True
             continue
         if low in _SPLICE:
             continue
@@ -177,6 +198,7 @@ def read_refs(window: str) -> tuple[list[str], list[str]]:
     numbers = [n for n in numbers if n is not None]
     if not numbers:
         return [], margins
+    dangling = dangling or hundred_and
     if dangling and margins:
         # "twenty-" with nothing after it, but the margin said which.
         return margins, margins
@@ -260,19 +282,109 @@ _MARGIN = re.compile(
     r"(?:repeal|amendment|insertion|replacement)\w*\s+(?:and\s+replacement\s+)?of\s+"
     r"sections?\s*(\d{1,3}[A-Z]{0,2})\b", re.I)
 
+# "2. The principal Act is amended in section ten, by—" and "amended in
+# subsection (2) of section Amendment thirty-four": the section is named after
+# the verb. Older Acts (High Court, Supreme Court, English Law 2002, VAT 2010,
+# Criminal Procedure Code 1997) are drafted this way and read as changing
+# nothing. Only the reference right after "in section" is read: "in section
+# forty by the deletion of section 40 of subsection (1)" amends section 40.
+_AMENDED_IN = re.compile(
+    r"\bthe\s+principal\s+act\s+is\s+(?:hereby\s+)?amended\s*,?\s*(?:[—–-]+\s*)?(?:\(\s*a\s*\)\s*)?in\s+"
+    r"(?:sub-?section\s*\(\s*[0-9a-z]{1,4}\s*\)(?:\s*\(\s*[0-9a-z]{1,4}\s*\))*\s+of\s+)?sections?\s+", re.I)
+# "the deletion of section replacement eight and the substitution therefor":
+# the number spelled out, or with the margin note ("Repeal and replacement",
+# "Amendment of section 13") spliced around it. Only number words, digits and
+# margin words may stand between "section" and "substitution therefor", so
+# "deletion of section 14 of subsection (2) and the substitution" (a margin
+# spliced into a subsection amendment) can never match.
+_DEL_WORDS = "|".join(sorted(_NUMBER_WORDS | {"repeal", "replacement", "amendment", "and", "of",
+                                              "section", "sections"}, key=len, reverse=True))
+_DELETION_SPLICED = re.compile(
+    r"principal\s+act\s+is\s+(?:hereby\s+)?amended\s+by\s+the\s+deletion\s+of\s+sections?\s+"
+    rf"(?P<ref>(?:(?:(?:{_DEL_WORDS})\b|\d{{1,3}}[A-Z]{{0,2}}\b)[\s,-]*){{1,10}}?)"
+    r"(?:(?P<sub>(?:and\s+)?(?:the\s+)?substitution\s+therefor|and\s+substituting)|(?P<end>[.;](?=\s|$)))", re.I)
+# "insertion, immediately after section eight, of the following new section:
+# 9. The Minister may" (Fees and Fines (Amendment) Act, 2013). The new number
+# is taken from the text only when it follows the one named: 11A after eleven,
+# or 9 after eight with the section's own words after it.
+_INSERT_AFTER = re.compile(
+    r"\b(?:insertion|addition)\b[^.;]{0,80}?\bafter\s+section\s+(?P<after>[^,;:.()]{1,40}?)\s*,?\s+"
+    r"of\s+the\s+following\s+new\s+sections?\b", re.I)
+_NEW_NUMBER = re.compile(r"\b(\d{1,3})\s?([A-Z]{1,2})?\b(\.)?")
+
+# Schedules. "The Second Schedule to the principal Act is amended", "the repeal
+# of the Second Repeal and Schedule and the substitution therefor": eight of
+# the 25 amending Acts read as changing nothing changed only a Schedule (Road
+# Traffic licence taxes 2010 and 2021, emoluments, customs tariffs). Recorded
+# as kind "schedule", target "SECOND SCHEDULE" or "SCHEDULE" for an Act's only
+# one, so they never touch a section's status.
+_ORDINALS = {
+    "first": "FIRST", "second": "SECOND", "third": "THIRD", "fourth": "FOURTH", "fifth": "FIFTH",
+    "sixth": "SIXTH", "seventh": "SEVENTH", "eighth": "EIGHTH", "ninth": "NINTH", "nineth": "NINTH",
+    "tenth": "TENTH", "eleventh": "ELEVENTH", "twelfth": "TWELFTH", "thirteenth": "THIRTEENTH",
+    "fourteenth": "FOURTEENTH", "fifteenth": "FIFTEENTH", "sixteenth": "SIXTEENTH",
+    "seventeenth": "SEVENTEENTH", "eighteenth": "EIGHTEENTH", "nineteenth": "NINETEENTH",
+    "twentieth": "TWENTIETH", "charging": "CHARGING",
+}
+_ORD = "|".join(sorted(_ORDINALS, key=len, reverse=True))
+_SCHEDULE_AMENDED = re.compile(
+    rf"\b(?:(?P<ords>(?:{_ORD})(?:\s*(?:,|and)\s*(?:{_ORD}))*)\s+|the\s+)schedules?\s+(?:to|of)\s+the\s+"
+    r"principal\s+act\s+(?:is|are)\s+(?:hereby\s+)?amended", re.I)
+_SCHEDULE_REPEAL = re.compile(
+    r"principal\s+act\s+is\s+(?:hereby\s+)?amended\s+by\s+the\s+"
+    r"(?P<how>repeal\s+and\s+replacement|repeal|deletion|replacement)\s+(?:(?:repeal|replacement|amendment|and)\s+){0,3}"
+    r"of\s+the\s+"
+    rf"(?P<body>(?:(?:(?:{_ORD}|repeal|replacement|amendment|of|and)\b|,)\s*){{0,8}}?)schedules?\b"
+    rf"(?P<more>(?:\s*(?:,|and)\s*(?:the\s+)?(?:{_ORD})\s+schedules?\b)*)", re.I)
+
+# The Constitution numbers Articles, not sections, and is amended in its own
+# words: "Article 47 of the Constitution is amended", "The Constitution is
+# amended by the repeal of Article 68 ... and the substitution therefor"
+# (Constitution of Zambia (Amendment) Act, 2025). Single Articles only: the
+# 2016 amending Acts repeal "Articles 62 to 78 inclusive" of a text the
+# library holds already amended by them, and reading those would mark the
+# Constitution in force as dead.
+_ARTICLE_AMENDED = re.compile(
+    r"\barticle\s+(?P<ref>\d{1,3}[A-Z]?)" + _SUBREF + r"\s+of\s+the\s+constitution\s+is\s+(?:hereby\s+)?amended", re.I)
+_ARTICLE_REPEAL = re.compile(
+    r"\bconstitution\s+is\s+(?:hereby\s+)?amended\s+by\s+the\s+repeal\s+of\s+article\s+(?P<ref>\d{1,3}[A-Z]?)\b"
+    r"(?!\s*(?:,|and|to)\s*\d)", re.I)
+
+# Parts named before the verb ("3. Part IV of the principal Act is repealed.",
+# Zambia National Broadcasting Corporation (Amendment) Act, 2017) and new
+# Parts ("insertion of the following new part: new part VIA"). The numeral is
+# matched case-sensitively, or "new part in" would read as Part IN.
+_ROMAN_CS = r"(?-i:[IVXL]+[A-Z]?)"
+_PART_NAMED = re.compile(
+    rf"\bparts?\s+(?P<ref>{_ROMAN_CS}(?:\s*(?:,|and)\s*{_ROMAN_CS})*)\s+of\s+the\s+principal\s+act\s+"
+    r"(?:is|are)\s+(?:hereby\s+)?(?P<verb>repealed(?:\s+and\s+replaced)?|amended)", re.I)
+_PART_INSERTED = re.compile(
+    rf"\binsertion\b[^.;]{{0,80}}?\bnew\s+part\b[\s:]*(?:new\s+part\s+)?(?P<ref>{_ROMAN_CS})\b", re.I)
+_NEXT_CLAUSE = r"\s\d+\.\s+(?:The|Section)\b"
+
+
+def _schedules(text: str) -> list[str]:
+    """ "First and Repeal and Second" -> ["FIRST SCHEDULE", "SECOND SCHEDULE"]; no ordinal -> ["SCHEDULE"]."""
+    out: list[str] = []
+    for w in re.findall(rf"\b(?:{_ORD})\b", text or "", re.I):
+        name = f"{_ORDINALS[w.lower()]} SCHEDULE"
+        if name not in out:
+            out.append(name)
+    return out or ["SCHEDULE"]
+
 
 def extract_ops(text: str) -> list[dict]:
     """Operations one chunk of an amending Act performs on its principal Act.
 
-    Each op: {"op", "kind": "section"|"part", "target", "confidence", "evidence"}.
-    Confidence is "high" when the body and the margin note agree, "medium" when
-    only one of them could be read.
+    Each op: {"op", "kind": "section"|"part"|"schedule", "target", "confidence",
+    "evidence"}. Confidence is "high" when the body and the margin note agree,
+    "medium" when only one of them could be read.
     """
     t = re.sub(r"\s+", " ", text or "")
     out: list[dict] = []
 
     def add(op: str, kind: str, target: str, conf: str, ev: str) -> None:
-        target = target.upper() if kind == "part" else target.upper().lstrip("0") or "0"
+        target = target.upper() if kind in ("part", "schedule") else target.upper().lstrip("0") or "0"
         out.append({"op": op, "kind": kind, "target": target, "confidence": conf, "evidence": ev[:180]})
 
     margins_all = {m.group(1).upper() for m in _MARGIN.finditer(t)}
@@ -355,6 +467,83 @@ def extract_ops(text: str) -> list[dict]:
         ref = (m.group(1) or m.group(2) or "").upper()
         if ref:
             add("inserted", "section", ref, "high", t[m.start():m.start() + 160])
+
+    for m in _AMENDED_IN.finditer(t):
+        refs, margins = read_refs(t[m.end():m.end() + 120])
+        seen = margins_all | {x.upper() for x in margins}
+        for ref in refs:
+            add("amended", "section", ref, "high" if ref.upper() in seen else "medium",
+                t[m.start():m.start() + 160])
+
+    for m in _DELETION_SPLICED.finditer(t):
+        raw = m.group("ref")
+        refs, _ = read_refs(raw)
+        words = [w for w in re.findall(r"[a-z]+", raw.lower()) if w in _NUMBER_WORDS]
+        digits = [x.upper() for x in re.findall(r"\d{1,3}[A-Z]{0,2}", raw, re.I)]
+        spelled = words_to_int(words) if words else None
+        if not refs or (spelled is not None and digits and any(x != str(spelled) for x in digits)):
+            continue    # the words and the margin's digits disagree: read neither
+        if m.group("sub"):
+            op = "replaced"
+        else:
+            # Deleted outright, which is a repeal. Only when the clause ends on
+            # a number word that its own margin digits confirm ("deletion of
+            # section section 40 forty."): "deletion of section two Repeal and
+            # 2. The principal Act" ends on the amending Act's own number.
+            last_word = raw.strip(" ,-").split()[-1].lower().split("-")[-1]
+            if not (len(refs) == 1 and spelled is not None and digits and last_word in _NUMBER_WORDS):
+                continue
+            op = "repealed"
+        for ref in refs:
+            agree = ref.upper() in margins_all or (spelled is not None and digits and ref == str(spelled))
+            add(op, "section", ref, "high" if agree else "medium", t[m.start():m.start() + 160])
+
+    for m in _INSERT_AFTER.finditer(t):
+        after, _ = read_refs(m.group("after"))
+        am = re.match(r"(\d{1,3})([A-Z]{0,2})$", after[0]) if len(after) == 1 else None
+        if not am:
+            continue
+        base, suf = int(am.group(1)), am.group(2)
+        tail = t[m.end():m.end() + 100]
+        for nm in _NEW_NUMBER.finditer(tail):
+            n, s = int(nm.group(1)), nm.group(2) or ""
+            if n == base and s and s > suf:
+                ref = f"{n}{s}"
+            elif (n == base + 1 and not s and not suf and nm.group(3)
+                  and re.match(r"\s+(?!The\s+principal\b|Section\b)(?:\(1\)|[A-Z])", tail[nm.end():])):
+                ref = str(n)
+            else:
+                continue
+            add("inserted", "section", ref, "high" if ref in margins_all else "medium", t[m.start():m.start() + 160])
+            break
+
+    for m in _SCHEDULE_AMENDED.finditer(t):
+        for name in _schedules(m.group("ords") or ""):
+            add("amended", "schedule", name, "medium", t[m.start():m.start() + 160])
+
+    for m in _SCHEDULE_REPEAL.finditer(t):
+        clause = re.split(_NEXT_CLAUSE, t[m.end():m.end() + 400])[0]
+        replaced = "replacement" in m.group("how").lower() or _SUBSTITUTED.search(m.group(0) + clause)
+        op = "replaced" if replaced else "repealed"
+        for name in _schedules(m.group("body") + " " + (m.group("more") or "")):
+            add(op, "schedule", name, "medium", t[m.start():m.start() + 160])
+
+    for m in _ARTICLE_AMENDED.finditer(t):
+        add("amended", "section", m.group("ref"), "medium", t[m.start():m.start() + 160])
+    for m in _ARTICLE_REPEAL.finditer(t):
+        clause = re.split(_NEXT_CLAUSE, t[m.end():m.end() + 400])[0]
+        add("replaced" if _SUBSTITUTED.search(clause) else "repealed", "section", m.group("ref"), "medium",
+            t[m.start():m.start() + 160])
+
+    for m in _PART_NAMED.finditer(t):
+        clause = re.split(_NEXT_CLAUSE, t[m.end():m.end() + 400])[0]
+        verb = m.group("verb").lower()
+        op = ("amended" if verb == "amended" else
+              "replaced" if "replaced" in verb or _SUBSTITUTED.search(clause) else "repealed")
+        for ref in re.findall(r"[IVXL]+[A-Z]?", m.group("ref")):
+            add(op, "part", ref, "medium", t[m.start():m.start() + 160])
+    for m in _PART_INSERTED.finditer(t):
+        add("inserted", "part", m.group("ref"), "medium", t[m.start():m.start() + 160])
 
     # One clause appears twice per chunk: keep the best-supported reading of each.
     rank = {"high": 2, "medium": 1}

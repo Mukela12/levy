@@ -5,6 +5,8 @@ The law map (build_law_map.py) knows whole Acts. This reads inside every
 amending Act it links to a principal, and records what each one did to each
 section, so a search hit on section 24 of the Immigration and Deportation Act
 2010 can say it was repealed by Act No. 19 of 2016 before the model quotes it.
+Parts and Schedules are recorded in their own buckets ("parts", "schedules"),
+which never change what a section reads as.
 
 Found by the first head-to-head benchmark on 28 September 2026: ChatGPT with
 web search caught that repeal, and Levy, which holds the amending Act, did not.
@@ -41,6 +43,9 @@ OUT = REPO / "backend" / "app" / "data" / "section_map.json"
 # to about then.
 UNDATED_EDITION_YEAR = 1996
 RANK = {"high": 2, "medium": 1}
+# Where each kind of op is recorded. Schedules have their own bucket so a
+# replaced Schedule never reads as a replaced section or Part.
+BUCKETS = {"section": "sections", "part": "parts", "schedule": "schedules"}
 
 
 def chunks_of(db, doc_id: str) -> list[str]:
@@ -152,9 +157,9 @@ def main() -> int:
         dropped_links += [f"{(a.get('title') or '')[:44]} -/-> {d}" for d in dropped]
         for pid in keep:
             p = principals_out.setdefault(pid, {"title": (lm.get(pid) or {}).get("title", ""),
-                                                "sections": {}, "parts": {}})
+                                                "sections": {}, "parts": {}, "schedules": {}})
             for o in ops:
-                bucket = p["sections"] if o["kind"] == "section" else p["parts"]
+                bucket = p[BUCKETS[o["kind"]]]
                 bucket.setdefault(o["target"], {"history": []})["history"].append({
                     "op": o["op"],
                     "by_id": did,
@@ -169,14 +174,14 @@ def main() -> int:
 
     counts: Counter = Counter()
     for p in principals_out.values():
-        for bucket in (p["sections"], p["parts"]):
-            for ref, s in bucket.items():
+        for name in BUCKETS.values():
+            for ref, s in p[name].items():
                 s["history"].sort(key=lambda h: (h["by_year"] or 0, h["by_title"]))
                 s["current"] = current_state(s["history"])
-                counts[s["current"]] += 1
+                counts[(name, s["current"])] += 1
 
     print(f"\nprincipal Acts with section-level changes: {len(principals_out)}")
-    print(f"sections/parts by current state: {dict(counts)}")
+    print(f"by bucket and current state: {dict(sorted(counts.items()))}")
     print(f"amending Acts with no readable section ops: {len(no_ops)}")
     for t in no_ops[:12]:
         print(f"    {t[:70]}")

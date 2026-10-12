@@ -93,7 +93,8 @@ def main() -> int:
     lm = json.loads(LAW_MAP.read_text())["documents"]
     sm = json.loads(SECTION_MAP.read_text())
     read_ids = {h["by_id"] for p in sm["principals"].values()
-                for bucket in (p["sections"], p["parts"]) for s in bucket.values() for h in s["history"]}
+                for bucket in (p["sections"], p["parts"], p.get("schedules") or {})
+                for s in bucket.values() for h in s["history"]}
 
     docs = library(get_db())
     principals: dict[str, list[dict]] = defaultdict(list)
