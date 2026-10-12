@@ -415,18 +415,21 @@ def propose_notice(item: dict, issue: dict) -> dict | None:
     if item["type"] == "si":
         si = f"Statutory Instrument No. {item['no']} of {item['year']}"
         title = item["title"]
+        # The notice writes "Parent Act, 2023- The Title"; say "The Title (under the Parent Act, 2023)".
+        parent = re.match(r"^(?P<parent>[A-Z][^–]{3,120}?\bAct(?:,\s*\d{4})?)\s*[-–]\s*(?P<title>The\b.+)$", title)
+        shown = f"{parent['title']} (under the {parent['parent'].strip()})" if parent else title
         if re.search(r"\(\s*Commencement\s*\)", title, re.I):
             act = re.split(r"\s*\(\s*Commencement", title, flags=re.I)[0]
             act = re.sub(r"^.*?\bAct\s*[-–]\s*(?=The\b)", "", act).strip(" -–")
             return {"kind": "commencement", "topic": f"si-{item['year']}-{item['no']}",
-                    "statement": (f"{si}, {title}, was published in {where}. It brings {act} into operation on the "
+                    "statement": (f"{si}, {shown}, was published in {where}. It brings {act} into operation on the "
                                   f"date it appoints, which is the date of publication unless it names another."),
                     "act_title": act, "value": {**value, "si": f"{item['no']} of {item['year']}"}}
         if not SI_SUBJECTS.search(title) or re.search(r"\(Approval and Exemption\)", title, re.I):
             return None       # tax approvals for one named company are not law anyone asks about
         return {"kind": "new_law", "topic": f"si-{item['year']}-{item['no']}",
-                "statement": f"{si}, {title}, was published in {where}.",
-                "act_title": title, "value": {**value, "si": f"{item['no']} of {item['year']}"}}
+                "statement": f"{si}, {shown}, was published in {where}.",
+                "act_title": parent["title"] if parent else title, "value": {**value, "si": f"{item['no']} of {item['year']}"}}
     principal = _principal(item["title"])
     return {"kind": "amendment" if principal else "new_law", "topic": f"act-{item['year']}-{item['no']}",
             "statement": (f"{item['title']} (Act No. {item['no']} of {item['year']}) was published as enacted in {where}. "

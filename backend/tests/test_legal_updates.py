@@ -161,6 +161,13 @@ class GazetteNotices(unittest.TestCase):
         self.assertNotEqual(lu.loose_key("The Local Authorities Superannuation Act, 2026"),
                             lu.loose_key("THE LOCAL AUTHORITIES SUPERANNUATION FUND ACT"))
 
+    def test_the_parent_act_follows_the_title(self):
+        item = {"type": "si", "no": "42", "year": "2026",
+                "title": "Public-Private Partnership Act, 2023- The Public-Private Partnership (Kasumbalesa Border Post) (User Fees) Regulations, 2026"}
+        p = watcher.propose_notice(item, ISSUE)
+        self.assertIn("No. 42 of 2026, The Public-Private Partnership (Kasumbalesa Border Post) (User Fees) Regulations, 2026 "
+                      "(under the Public-Private Partnership Act, 2023), was published", p["statement"])
+
     def test_fuel_duty_is_not_a_pension(self):
         fuel = next(i for i in watcher.parse_gazette_notices(GAZETTE_SI) if i["no"] == "60")
         self.assertIsNone(watcher.propose_notice(fuel, ISSUE))      # "Suspension" once matched "pension"
