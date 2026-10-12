@@ -465,3 +465,182 @@ export function renderTesterAnnouncementEmail({ preview = false }: AnnouncementO
       `GitHub: ${GITHUB_URL}`,
   }
 }
+
+// ── Firm outreach: an invitation to a demo ───────────────────────────────────
+//
+// A first email to a law firm, so it reads as a letter from a person, not a
+// newsletter: a light card, about 120 words, one true line about the firm, one
+// ask (reply with a time). Cold emails of 50 to 125 words get the most replies,
+// and heavy, image-led layouts land in Gmail's Promotions tab. Plain-text
+// alternative included; one tracked link to Levy. The footer carries what the
+// ECT Act 2021 s.64(2) and the Data Protection Act s.61(5) require, and s.65(1)
+// allows one unsolicited email per person, so there is no follow-up.
+
+export type FirmPractice = 'litigation' | 'employment' | 'corporate' | 'general'
+
+/** Who is writing. The ECT Act 2021 s.64(2)(a) wants the sender's identity,
+ * place of business and phone on every marketing email, so the send route
+ * refuses to run without them; previews show placeholders. */
+export type OutreachSender = {
+  business?: string | null
+  address?: string | null
+  phone?: string | null
+}
+
+export type FirmOutreachOptions = {
+  firm: string
+  contactName?: string | null
+  practice?: FirmPractice
+  /** One true sentence about this firm, checked before sending. */
+  hook?: string | null
+  /** Where the address was found and when (ECT Act s.64(2)(c)). */
+  source?: string | null
+  sourceDate?: string | null
+  sender?: OutreachSender
+  variant?: 'a' | 'b'
+  preview?: boolean
+}
+
+export const FIRM_OUTREACH_CAMPAIGN = 'firm-demo-oct26'
+
+// The subject names the firm and the work it does; short enough for a phone.
+const PRACTICE_SUBJECTS: Record<FirmPractice, (firm: string) => string> = {
+  employment: (firm) => `Employment Code final-pay checks for ${firm}`,
+  litigation: (firm) => `Is that authority still good law? A check for ${firm}`,
+  corporate: (firm) => `Statute checks and Zambian-form drafts for ${firm}`,
+  general: (firm) => `Is that Act still in force? A research tool for ${firm}`,
+}
+
+const PRACTICE_LINES: Record<FirmPractice, string> = {
+  employment: 'It also works out final pay, gratuity and leave under the Employment Code, with the section behind every line.',
+  litigation: 'It also drafts skeleton arguments and affidavits in Zambian court form, ready to open in Word.',
+  corporate: 'It also drafts consultancy, service and non-disclosure agreements from Zambian precedents, ready to open in Word.',
+  general: 'It also drafts in Zambian form and works out final pay and gratuity under the Employment Code.',
+}
+
+export function renderFirmOutreachEmail({
+  firm,
+  contactName,
+  practice = 'general',
+  hook,
+  source,
+  sourceDate,
+  sender = {},
+  variant = 'a',
+  preview = false,
+}: FirmOutreachOptions): EmailTemplate {
+  const firmName = firm.trim()
+  const subjectCore = variant === 'b'
+    ? `${firmName}: Zambian law answers with every source linked`
+    : PRACTICE_SUBJECTS[practice](firmName)
+  const subject = preview ? `Preview | ${subjectCore}` : subjectCore
+  const greeting = contactName?.trim() ? `Dear ${contactName.trim()},` : `Dear colleagues at ${firmName},`
+  const siteHref = `${SITE_URL}/?utm_source=email&utm_medium=outreach&utm_campaign=${FIRM_OUTREACH_CAMPAIGN}`
+  const privacyHref = `${SITE_URL.replace(/\/$/, '')}/privacy`
+  const replyHref = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(`Levy demo for ${firmName}`)}&body=${encodeURIComponent('Hi Mukela,\n\nWe would like a demo. Times that suit us:\n1.\n2.\n\nAt our office / online (delete one).\n')}`
+  const stopHref = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('STOP')}`
+  const business = sender.business?.trim() || '[business name]'
+  const address = sender.address?.trim() || '[street address], Lusaka'
+  const phone = sender.phone?.trim() || '[phone]'
+  const where = source?.trim() ? `${source.trim()}${sourceDate?.trim() ? ` on ${sourceDate.trim()}` : ''}` : '[source and date]'
+  const hookLine = hook?.trim() || ''
+  const intro = `I am Mukela Katungu, founder of Levy, a Zambian legal research and drafting tool built in Lusaka. I am writing to offer ${firmName} a free 14-day pilot.`
+  const what = `Levy answers from the Acts, statutory instruments and judgments and links every source. It flags repealed and uncommenced sections and shows how later courts treated a case. ${PRACTICE_LINES[practice]}`
+  const ask = 'Could I show you on one of your own questions, in 20 minutes at your office or online? If not, reply "no" and I will not write again.'
+  const why = `Why you received this: I found this address on ${where}. This is the only email I will send unless you reply.`
+  const rights = 'Your rights: you can object to marketing at any time (reply STOP), ask what I hold about you, ask me to correct or delete it, or complain to the Office of the Data Protection Commissioner.'
+  const preheader = 'A free 14-day pilot: Zambian law answers with every source linked, and repealed or uncommenced sections flagged.'
+  const p = 'margin:0 0 16px;font-size:16px;line-height:1.65;color:#1f2d26;'
+  const small = 'margin:0 0 8px;font-size:12px;line-height:1.6;color:#7f8a83;'
+  const html = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="supported-color-schemes" content="light dark" />
+    <title>${escapeHtml(subjectCore)}</title>
+  </head>
+  <body style="margin:0;padding:0;background:#f5f4ef;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1f2d26;">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${escapeHtml(preheader)}</div>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f5f4ef;padding:28px 12px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border:1px solid #e3e0d6;border-radius:16px;">
+            <tr>
+              <td style="padding:26px 32px 4px;">
+                <table role="presentation" cellspacing="0" cellpadding="0">
+                  <tr>
+                    <td style="vertical-align:middle;"><img src="${LEVY_LOGO_URL}" width="26" height="26" alt="Levy" style="display:block;width:26px;height:26px;border:0;" /></td>
+                    <td style="vertical-align:middle;padding-left:10px;font-size:15px;font-weight:700;color:#0a7a3d;letter-spacing:0.02em;">Levy</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:18px 32px 4px;">
+                <p style="${p}">${escapeHtml(greeting)}</p>
+                <p style="${p}">${escapeHtml(intro)}</p>
+                ${hookLine ? `<p style="${p}">${escapeHtml(hookLine)}</p>` : ''}
+                <p style="${p}">${escapeHtml(what)}</p>
+                <p style="${p}">${escapeHtml(ask)}</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:0 32px 4px;">
+                <table role="presentation" cellspacing="0" cellpadding="0">
+                  <tr>
+                    <td style="border-radius:10px;background:#0a7a3d;">
+                      <a href="${replyHref}" style="display:inline-block;padding:12px 20px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:10px;">Reply with a time</a>
+                    </td>
+                    <td style="padding-left:14px;font-size:14px;color:#4d5c54;">or <a href="${siteHref}" style="color:#0a7a3d;text-decoration:underline;">try Levy now</a></td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:22px 32px 26px;">
+                <p style="margin:0;font-size:15px;line-height:1.6;color:#1f2d26;">Kind regards,<br /><strong>Mukela Katungu</strong><br />Founder, Levy</p>
+                <p style="margin:8px 0 0;font-size:13px;line-height:1.6;color:#6b7a72;">${escapeHtml(business)} &middot; ${escapeHtml(address)} &middot; ${escapeHtml(phone)} &middot; <a href="mailto:${CONTACT_EMAIL}" style="color:#6b7a72;text-decoration:none;">${escapeHtml(CONTACT_EMAIL)}</a></p>
+              </td>
+            </tr>
+          </table>
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;">
+            <tr>
+              <td style="padding:14px 18px 0;text-align:left;">
+                ${preview ? `<p style="${small}"><strong>Preview.</strong></p>` : ''}
+                <p style="${small}">${escapeHtml(why)}</p>
+                <p style="${small}">${escapeHtml(rights).replace('reply STOP', `<a href="${stopHref}" style="color:#7f8a83;text-decoration:underline;">reply STOP</a>`)} Privacy policy: <a href="${privacyHref}" style="color:#7f8a83;text-decoration:underline;">levylegal.ai/privacy</a>.</p>
+                <p style="${small}">Levy gives legal information, not legal advice.</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`
+  const text = [
+    greeting,
+    '',
+    intro,
+    ...(hookLine ? ['', hookLine] : []),
+    '',
+    what,
+    '',
+    ask,
+    '',
+    `Or try Levy now: ${siteHref}`,
+    '',
+    'Kind regards,',
+    'Mukela Katungu',
+    'Founder, Levy',
+    `${business} | ${address} | ${phone} | ${CONTACT_EMAIL}`,
+    '',
+    '---',
+    why,
+    `${rights} Privacy policy: ${privacyHref}`,
+    'Levy gives legal information, not legal advice.',
+  ].join('\n')
+  return { subject, html, text }
+}
