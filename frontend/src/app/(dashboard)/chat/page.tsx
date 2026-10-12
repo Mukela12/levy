@@ -103,6 +103,9 @@ const quickActions = [
   },
 ]
 
+// Where a question waits while its asker signs in (see continueSignedIn).
+const PENDING_QUESTION_KEY = 'levy-pending-question'
+
 export default function NewChatPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
@@ -114,6 +117,11 @@ export default function NewChatPage() {
   // Memory only: a reload re-verifies once, which is the cost of not letting a
   // pass outlive the page it was earned on.
   const anonPassRef = useRef<string | null>(null)
+  // Failed browser checks this visit. After two (the first try and an
+  // automatic retry with the widget on screen), the visitor is offered
+  // sign-in, which skips the check, with their question kept.
+  const [verifyFailures, setVerifyFailures] = useState(0)
+  const lastQuestionRef = useRef('')
   const [accentLineWidth, setAccentLineWidth] = useState(0)
   const [webSearch, setWebSearch] = useState(false)
   // Seed payload for the input box. An empty `text` focuses the box without
@@ -190,6 +198,21 @@ export default function NewChatPage() {
     window.history.replaceState(null, '', '/chat')
     setInputSeed({ text: q, nonce: Date.now() })
   }, [])
+
+  // A question kept when a visitor chose "Sign in instead" after failing the
+  // browser check: put it back in the composer once they are signed in. Not
+  // sent automatically, like the ?q= seed above.
+  useEffect(() => {
+    if (authLoading || !user) return
+    try {
+      const kept = sessionStorage.getItem(PENDING_QUESTION_KEY)
+      if (!kept) return
+      sessionStorage.removeItem(PENDING_QUESTION_KEY)
+      setInputSeed({ text: kept, nonce: Date.now() })
+    } catch {
+      // storage unavailable: nothing to restore
+    }
+  }, [authLoading, user])
 
   // Upload-from-chat on the new-chat page: ingest the file into the user's
   // library now (so we have a document_id), then stage it locally. On send,
@@ -338,7 +361,14 @@ export default function NewChatPage() {
 
       const run = (turnstileToken: string | null, anonPass: string | null) => streamQuery(
         question,
-        { token: session?.access_token, webSearch, history, turnstileToken, anonPass },
+        {
+          token: session?.access_token,
+          webSearch,
+          history,
+          turnstileToken,
+          anonPass,
+          turnstileError: turnstileToken || anonPass ? null : turnstile.lastError(),
+        },
         undefined,
         undefined,
         {
@@ -566,15 +596,39 @@ export default function NewChatPage() {
         },
       )
 
+      lastQuestionRef.current = rawQuestion
+      const verifyFailed = (e: unknown) => e instanceof Error && /verify your browser/i.test(e.message)
+      // A failed check is retried once with a fresh widget drawn on screen,
+      // so a challenge that wanted a click is visible rather than hidden.
+      const challenge = async () => {
+        try {
+          await run(await turnstile.getToken(), null)
+        } catch (e) {
+          if (!verifyFailed(e)) throw e
+          setVerifyFailures((n) => n + 1)
+          turnstile.restart()
+          await run(await turnstile.getToken(), null)
+        }
+      }
       try {
-        await run(anonPass ? null : await turnstile.getToken(), anonPass)
+        if (anonPass) {
+          try {
+            await run(null, anonPass)
+          } catch (e) {
+            // The pass is bound to the IP it was issued to. If the visitor's
+            // network changed (mobile data does this), the server refuses it
+            // and nothing has streamed yet, so fall back to a fresh challenge.
+            if (!verifyFailed(e)) throw e
+            anonPassRef.current = null
+            await challenge()
+          }
+        } else {
+          await challenge()
+        }
+        setVerifyFailures(0)
       } catch (e) {
-        // The pass is bound to the IP it was issued to. If the visitor's
-        // network changed (mobile data does this), the server refuses it and
-        // nothing has streamed yet, so fall back to one fresh challenge.
-        if (!anonPass || !(e instanceof Error) || !/verify your browser/i.test(e.message)) throw e
-        anonPassRef.current = null
-        await run(await turnstile.getToken(), null)
+        if (verifyFailed(e)) setVerifyFailures((n) => n + 1)
+        throw e
       }
     } catch (e) {
       const errorMsg: Message = {
@@ -603,6 +657,42 @@ export default function NewChatPage() {
   // Free-trial nudge for signed-out visitors. Rendered under BOTH composers
   // (welcome screen and conversation view) — the count only arrives after the
   // first answer, by which point the conversation view is the one on screen.
+  function continueSignedIn(path: string) {
+    try {
+      if (lastQuestionRef.current) sessionStorage.setItem(PENDING_QUESTION_KEY, lastQuestionRef.current)
+    } catch {
+      // storage unavailable: the question is not kept, sign-in still works
+    }
+    router.push(path)
+  }
+
+  const verifyHelp =
+    !user && verifyFailures >= 2 ? (
+      <div className="cp-verify-help" role="status">
+        <p>
+          This browser could not pass the security check for free questions. Signing in skips the check,
+          and your question will be waiting for you.
+        </p>
+        <div className="cp-verify-actions">
+          <button type="button" className="cp-verify-primary" onClick={() => continueSignedIn('/auth/login')}>
+            Sign in instead
+          </button>
+          <button type="button" onClick={() => continueSignedIn('/auth/signup')}>
+            Create a free account
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              turnstile.restart()
+              setInputSeed({ text: lastQuestionRef.current, nonce: Date.now() })
+            }}
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    ) : null
+
   const trialNudge =
     turnstile.enabled && trialLeft !== null ? (
       <p className="mt-2 text-center text-[12px] text-white/40">
@@ -633,6 +723,8 @@ export default function NewChatPage() {
         )}
       </p>
     ) : null
+
+  const composerNote = verifyHelp || trialNudge ? <>{verifyHelp}{trialNudge}</> : null
 
   return (
     <div className="flex flex-1 overflow-hidden" style={{ overscrollBehavior: 'none' }}>
@@ -715,7 +807,7 @@ export default function NewChatPage() {
                 }
               />
             }
-            below={trialNudge}
+            below={composerNote}
           />
         ) : hasMessages && canopy ? (
           <CanopyConversation
@@ -733,7 +825,7 @@ export default function NewChatPage() {
               attachNeedsAccount: !user,
               attachmentCount: stagedAttachments.length,
             }}
-            footNote={trialNudge ?? undefined}
+            footNote={composerNote ?? undefined}
           />
         ) : !hasMessages ? (
           /* ── Welcome State ── */
@@ -876,7 +968,7 @@ export default function NewChatPage() {
                     : undefined
                 }
               />
-              {trialNudge}
+              {composerNote}
             </div>
 
             {/* Breadth cue — the curated library is far bigger than the eight
@@ -1044,7 +1136,7 @@ export default function NewChatPage() {
                 onUploadFile={user ? handleUploadFile : undefined}
                 attachmentCount={stagedAttachments.length}
               />
-                  {trialNudge}
+                  {composerNote}
                   <p className="mt-2 text-center text-[10px] text-white/25">
                     Levy provides legal information, not legal advice.
                   </p>

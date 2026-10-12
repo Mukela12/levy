@@ -2516,12 +2516,35 @@ def build_tool_registry(
             "entitlement_breakdown": breakdown,
         }
 
-    async def _calculate_payroll(monthly_basic_pay: float, **kwargs):
+    async def _calculate_payroll(monthly_basic_pay: float, mode: str | None = None, **kwargs):
         """Deterministic monthly pay, deductions and payslip check (services/payroll.py).
 
         Rides the `entitlement_breakdown` envelope with kind "payroll", so the
         existing stream, persistence and card plumbing carry it unchanged.
+        mode "final_pay" and "gratuity" (services/final_pay.py) ride it too,
+        with kind "final_pay" and "gratuity".
         """
+        if mode in ("final_pay", "gratuity"):
+            from .final_pay import calculate_final_pay, calculate_gratuity
+            fn = calculate_final_pay if mode == "final_pay" else calculate_gratuity
+            names = set(inspect.signature(fn).parameters) - {"monthly_basic_pay", "today"}
+            if mode == "final_pay" and kwargs.get("payslip"):
+                kwargs.setdefault("other_deductions", (kwargs["payslip"] or {}).get("other_deductions"))
+            args = {k: v for k, v in kwargs.items() if k in names and v is not None}
+            if mode == "final_pay" and "monthly_allowances" not in args and kwargs.get("other_allowances"):
+                args["monthly_allowances"] = kwargs["other_allowances"]
+            try:
+                breakdown = fn(monthly_basic_pay=monthly_basic_pay, **args)
+            except (TypeError, ValueError) as e:
+                return {"result": {"error": str(e)}}
+            except Exception as e:  # noqa: BLE001
+                return {"result": {"error": f"could not compute {mode.replace('_', ' ')}: {e}"}}
+            return {
+                "result": {"breakdown": breakdown, "ok": True},
+                "db_sources": [],
+                "web_sources": [],
+                "entitlement_breakdown": breakdown,
+            }
         known = {
             "employee_type", "wage_order", "category", "occupation", "order_exemption",
             "hours_worked_in_month", "weekly_hours", "overtime_hours", "weekly_overtime_threshold",
@@ -2540,6 +2563,48 @@ def build_tool_registry(
             "web_sources": [],
             "entitlement_breakdown": breakdown,
         }
+
+    async def _get_drafting_precedent(kind: str):
+        """Levy's vetted Zambian precedent for an everyday agreement (app/data/precedents.json)."""
+        path = os.path.join(os.path.dirname(__file__), "..", "data", "precedents.json")
+        try:
+            with open(path, encoding="utf-8") as fh:
+                library = json.load(fh)
+        except (OSError, ValueError):
+            return {"result": {"error": "The precedent library is not available."}}
+        key = re.sub(r"[^a-z]+", "_", (kind or "").lower()).strip("_")
+        key = {"consultancy_agreement": "consultancy", "consulting": "consultancy", "services": "service_agreement",
+               "service": "service_agreement", "contract_for_services": "service_agreement",
+               "non_disclosure_agreement": "nda", "confidentiality_agreement": "nda"}.get(key, key)
+        if key not in library:
+            return {"result": {"error": f"No precedent for {kind!r}. Available: {', '.join(sorted(library))}."}}
+        return {"result": {"kind": key, **library[key], "how_to_use": (
+            "Ask the questions you cannot answer from the conversation (one ask_user, at most), then draft with "
+            "draft_legal_document following the outline, keeping each Zambian point and its basis. Adapt the "
+            "ready clauses; do not cite a provision this precedent does not give you without reading it first.")},
+            "db_sources": [], "web_sources": []}
+
+    updates_recorded = [0]
+
+    async def _record_legal_update(kind: str, topic: str, statement: str, source_url: str, source_quote: str,
+                                   effective_date: str | None = None, act_title: str | None = None,
+                                   document_id: str | None = None, value: dict | None = None):
+        """Propose an official-source fact for Levy's shared memory (services/legal_updates.py).
+
+        The server fetches the page and checks the quote itself; nothing about
+        the user or the conversation is stored.
+        """
+        from . import legal_updates
+        updates_recorded[0] += 1
+        if updates_recorded[0] > 2:
+            return {"result": {"recorded": False, "reason": "At most two updates per answer."}}
+        doc = document_id if re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+                                          str(document_id or "")) else None
+        out = await legal_updates.record(kind=kind, topic=topic, statement=statement, source_url=source_url,
+                                         source_quote=source_quote, effective_date=effective_date,
+                                         act_title=act_title, document_id=doc,
+                                         value=value if isinstance(value, dict) else None)
+        return {"result": out, "db_sources": [], "web_sources": []}
 
     async def _case_history(case: str, citation: str | None = None):
         """How the judgments in the library cite and treat a case (services/citator.py)."""
@@ -3018,7 +3083,12 @@ def build_tool_registry(
                 "renders the result as a breakdown card. After it runs, "
                 "explain the contested / needs-input items in plain language "
                 "and offer to search case law for any contested point (e.g. "
-                "gratuity on resignation, or redundancy under one year)."
+                "gratuity on resignation, or redundancy under one year).\n\n"
+                "When an employer is preparing or checking the actual final "
+                "pay (days worked in the last month, leave, gratuity already "
+                "paid, notice not worked, tax and the net), or asks for "
+                "gratuity accrued to a date, use calculate_payroll with mode "
+                "'final_pay' or 'gratuity' instead."
             ),
             input_schema={
                 "type": "object",
@@ -3111,12 +3181,42 @@ def build_tool_registry(
                 "rest-day or public-holiday hours. Put 0 in `payslip` for a line the payslip lacks. "
                 "Ask for basic pay and job title if missing. The UI renders a payroll card; after it "
                 "runs, explain each breach and what to do about it, and do not restate figures that "
-                "contradict the card."
+                "contradict the card.\n\n"
+                "mode 'final_pay': everything payable when a job ends and what may come off it: wages "
+                "for the days since the last pay day, accrued leave (s.36(5)), prorated gratuity "
+                "(s.73) or fixed-term severance (s.54(1)(b)-(c)), pay in lieu of notice (s.53(4)), "
+                "redundancy, death and medical-discharge pay, PAYE on the taxable part only (ZRA: "
+                "gratuity, severance and pay in lieu of notice are exempt), NAPSA, NHIMA and, when an "
+                "employee resigned without working notice, the s.53(5) set-off capped at the money "
+                "due. Use it whenever an employer is preparing or checking final dues, with dates. "
+                "mode 'gratuity': gratuity accrued from the contract start (or last payment) to a "
+                "date, less advances, e.g. 'his gratuity to the end of October', 'can we pay gratuity "
+                "early'. Pass dates exactly as the user wrote them."
             ),
             input_schema={
                 "type": "object",
                 "properties": {
+                    "mode": {"type": "string", "enum": ["month", "final_pay", "gratuity"], "description": "'month' (default): one month's pay or a payslip check. 'final_pay': final dues on leaving. 'gratuity': gratuity accrued to a date."},
                     "monthly_basic_pay": {"type": "number", "description": "Basic pay for the month in ZMW, before allowances. For part-time or casual staff, the basic actually paid for the hours worked."},
+                    "termination_reason": {"type": "string", "enum": ["resignation", "dismissal", "summary_dismissal", "redundancy", "end_of_contract", "medical_discharge", "death", "mutual_agreement"], "description": "final_pay: how the employment ended."},
+                    "termination_date": {"type": "string", "description": "final_pay: last day of employment, as the user wrote it (day-first)."},
+                    "employment_start_date": {"type": "string", "description": "final_pay: date employment began (service length, statutory notice, redundancy)."},
+                    "contract_start_date": {"type": "string", "description": "final_pay / gratuity: start of the current contract (the gratuity period)."},
+                    "contract_end_date": {"type": "string", "description": "gratuity: the contract's agreed end date, to project the gratuity at the end."},
+                    "as_of_date": {"type": "string", "description": "gratuity: the date to compute gratuity up to (default today)."},
+                    "contract_type": {"type": "string", "enum": ["long_term", "fixed_term", "permanent", "casual", "temporary", "probation", "unspecified"], "description": "final_pay / gratuity: 'long_term' = over twelve months (s.73 gratuity); 'fixed_term' = a fixed duration of twelve months or less (s.54 severance gratuity)."},
+                    "monthly_allowances": {"type": "number", "description": "final_pay: regular monthly cash allowances (food, transport...), for wages for days worked and notice pay."},
+                    "paid_through_date": {"type": "string", "description": "final_pay: date wages were last paid up to (default: end of the month before the last day)."},
+                    "accrued_leave_days": {"type": "number", "description": "final_pay: untaken leave days owed."},
+                    "notice_months": {"type": "number", "description": "final_pay: the contract's notice period in months, e.g. 1."},
+                    "notice_days": {"type": "number", "description": "final_pay: the contract's notice period in days, if given in days."},
+                    "employer_gave_notice": {"type": "boolean", "description": "final_pay, employer-ended: did the employer give the notice period? false = pay in lieu owed."},
+                    "employee_worked_notice": {"type": "boolean", "description": "final_pay, resignation: did the employee give and work the notice? false = resigned with immediate effect."},
+                    "gratuity_rate": {"type": "number", "description": "A contractual gratuity rate above the statutory 0.25, as a fraction."},
+                    "gratuity_paid_through": {"type": "string", "description": "Date up to which gratuity has already been paid."},
+                    "gratuity_advanced": {"type": "number", "description": "Gratuity already advanced for the current period, in ZMW."},
+                    "basic_earned_in_period": {"type": "number", "description": "Total basic pay earned in the gratuity period, if basic pay changed during it."},
+                    "outstanding_advance": {"type": "number", "description": "final_pay: an unrecovered salary advance (s.68(1)(c))."},
                     "employee_type": {"type": "string", "enum": ["full_time", "guard", "part_time", "casual"], "description": "'guard' for a watchperson or security guard (240-hour divisor, overtime after 60 hours)."},
                     "wage_order": {"type": "string", "enum": ["general", "shop_workers", "truck_driver", "bus_driver", "domestic", "none"]},
                     "occupation": {"type": "string", "description": "Job title as the user gave it, e.g. 'waiter', 'cashier', 'security guard'."},
@@ -3195,7 +3295,9 @@ def build_tool_registry(
                 "instruments include the consent-to-assign / Property "
                 "Transfer Tax (8%) / Lands and Deeds Registry steps where "
                 "relevant. Use bracketed [PLACEHOLDERS] for details the user "
-                "hasn't supplied rather than inventing them."
+                "hasn't supplied rather than inventing them. For a consultancy "
+                "agreement, service agreement or NDA, call get_drafting_precedent "
+                "first and follow it."
             ),
             input_schema={
                 "type": "object",
@@ -3893,6 +3995,55 @@ def build_tool_registry(
                 "required": ["case"],
             },
             handler=_case_history,
+        ),
+        "get_drafting_precedent": ToolDefinition(
+            name="get_drafting_precedent",
+            description=(
+                "Levy's vetted Zambian precedent for an everyday institutional agreement: a consultancy "
+                "agreement, a service agreement or a non-disclosure agreement. Returns the facts to gather, the "
+                "clause outline, the Zambian law points with their statutory basis (employee or consultant, "
+                "withholding tax, data protection, electronic signatures, arbitration seated in Zambia) and "
+                "ready clauses. Call it BEFORE draft_legal_document whenever one of these is asked for."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "kind": {"type": "string", "enum": ["consultancy", "service_agreement", "nda"]},
+                },
+                "required": ["kind"],
+            },
+            handler=_get_drafting_precedent,
+        ),
+        "record_legal_update": ToolDefinition(
+            name="record_legal_update",
+            description=(
+                "Add a legal fact to Levy's shared memory, for every later answer, when you have just read it "
+                "on an OFFICIAL Zambian source in this conversation and it is newer than or different from "
+                "the library: an Act's commencement order, a new Act or statutory instrument, a repeal, new "
+                "PAYE bands or other rates and fees, a new court rule. The server fetches source_url itself "
+                "and records the fact only if source_quote is on that page, so copy the words exactly from "
+                "the fetched text. Official sources only (.gov.zm, parliament.gov.zm, zra.org.zm, boz.zm, "
+                "napsa.co.zm, nhima.co.zm, judiciaryzambia.com and similar regulators); never news, blogs, "
+                "law firms or ZambiaLII. Never include anything about the user, their matter or any private "
+                "person, and never record your own inference or a proposal (a Bill, a Budget proposal not yet "
+                "enacted) as law. At most two per answer, after you have answered from the source."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "kind": {"type": "string", "enum": ["commencement", "new_law", "amendment", "repeal", "rate_change", "court_rule", "other"]},
+                    "topic": {"type": "string", "description": "A short stable key, e.g. 'commencement-national-pension-scheme-act-2026' or 'paye-bands-2027'."},
+                    "statement": {"type": "string", "description": "The fact in one or two plain sentences, with the Act or SI, its number and the dates."},
+                    "effective_date": {"type": "string", "description": "YYYY-MM-DD the change takes effect, if the source states it."},
+                    "act_title": {"type": "string", "description": "The Act or statutory instrument concerned."},
+                    "document_id": {"type": "string", "description": "The library document_id of the Act concerned, if a search returned it."},
+                    "source_url": {"type": "string", "description": "The official page or PDF you read it on."},
+                    "source_quote": {"type": "string", "description": "The exact words on that page that prove the statement (one to three sentences)."},
+                    "value": {"type": "object", "description": "rate_change only: structured figures, e.g. PAYE {'monthly_bands': [[5100, 0], [7100, 0.2], [9200, 0.3], [null, 0.37]]}."},
+                },
+                "required": ["kind", "topic", "statement", "source_url", "source_quote"],
+            },
+            handler=_record_legal_update,
         ),
         "search_case_law": ToolDefinition(
             name="search_case_law",

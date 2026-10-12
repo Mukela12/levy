@@ -47,6 +47,15 @@ export function useTurnstile(active: boolean) {
   // widget does not sit over the composer; shown again only for a new ask.
   const [showing, setShowing] = useState(true)
   const [wanted, setWanted] = useState(false)
+  // After a failed check the widget is rebuilt and drawn whether or not
+  // Cloudflare asks for interaction, so a challenge that wants a click is on
+  // screen instead of hidden. `generation` forces the rebuild.
+  const [visible, setVisible] = useState(false)
+  const [generation, setGeneration] = useState(0)
+  // Why the last attempt produced no token: the widget's error code,
+  // "challenge_timeout", "expired", "timeout" or "no_widget". Sent with a
+  // failed request so the server log can say why a visitor was turned away.
+  const lastErrorRef = useRef<string | null>(null)
 
   const enabled = active && !!SITE_KEY
   const prime = useCallback(() => setWanted(true), [])
@@ -74,15 +83,27 @@ export function useTurnstile(active: boolean) {
           sitekey: SITE_KEY,
           // Only shows a visible challenge when Cloudflare wants interaction;
           // otherwise it stays out of the way.
-          appearance: 'interaction-only',
+          appearance: visible ? 'always' : 'interaction-only',
           // A banked token expires after 5 minutes. Auto-refresh would pop a
           // fresh challenge while someone is only reading; getToken() asks for
           // a new one if and when it is actually needed.
           'refresh-expired': 'never',
-          callback: (t: string) => deliver(t),
-          'error-callback': () => deliver(null),
-          'expired-callback': () => deliver(null),
-          'timeout-callback': () => deliver(null),
+          callback: (t: string) => {
+            lastErrorRef.current = null
+            deliver(t)
+          },
+          'error-callback': (code?: string | number) => {
+            lastErrorRef.current = code ? String(code) : 'error'
+            deliver(null)
+          },
+          'expired-callback': () => {
+            lastErrorRef.current = 'expired'
+            deliver(null)
+          },
+          'timeout-callback': () => {
+            lastErrorRef.current = 'challenge_timeout'
+            deliver(null)
+          },
         })
         setReady(true)
       } catch {
@@ -120,7 +141,27 @@ export function useTurnstile(active: boolean) {
         }
       }
     }
-  }, [enabled, wanted, deliver])
+  }, [enabled, wanted, deliver, visible, generation])
+
+  /** Start again with a fresh widget, drawn visibly. */
+  const restart = useCallback(() => {
+    const id = widgetId.current
+    widgetId.current = null
+    tokenRef.current = null
+    if (id && window.turnstile) {
+      try {
+        window.turnstile.remove(id)
+      } catch {
+        // widget already gone
+      }
+    }
+    setVisible(true)
+    setShowing(true)
+    setWanted(true)
+    setGeneration((g) => g + 1)
+  }, [])
+
+  const lastError = useCallback(() => lastErrorRef.current, [])
 
   /**
    * Resolve a single-use token: the one banked by the initial solve if there
@@ -156,13 +197,16 @@ export function useTurnstile(active: boolean) {
       return t
     }
 
+    lastErrorRef.current = null
     return new Promise<string | null>((resolve) => {
       // Longer than a solve alone: a send before prime() also waits for
-      // Cloudflare's script to download.
+      // Cloudflare's script (~600KB) to download, which on mobile data in
+      // Zambia can take most of 20 seconds by itself.
       const timer = setTimeout(() => {
         waiterRef.current = null
+        lastErrorRef.current = lastErrorRef.current ?? 'timeout'
         resolve(null)
-      }, 20000)
+      }, 30000)
       waiterRef.current = (t) => {
         clearTimeout(timer)
         resolve(t)
@@ -177,10 +221,11 @@ export function useTurnstile(active: boolean) {
       if (!armNext()) {
         clearTimeout(timer)
         waiterRef.current = null
+        lastErrorRef.current = 'no_widget'
         resolve(null)
       }
     })
   }, [enabled])
 
-  return { holderRef, ready, enabled, showing, prime, getToken }
+  return { holderRef, ready, enabled, showing, prime, getToken, restart, lastError }
 }

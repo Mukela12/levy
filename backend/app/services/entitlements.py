@@ -228,7 +228,9 @@ def calculate_entitlements(
             formula=f"3 months x K{pay:,.2f} x {int(years)} completed years",
             note="In addition to other accrued benefits.",
         ))
-    elif reason in {"end_of_fixed_term"} and ctype in {"fixed_term", "long_term"}:
+    elif reason in {"end_of_fixed_term"} and ctype == "fixed_term":
+        # Not for a long-term contract: s.54(3) excludes it from severance pay,
+        # and its gratuity is the s.73 line below. Listing both paid 25% twice.
         items.append(LineItem(
             item="Severance pay (fixed-term gratuity)",
             status="owed",

@@ -1172,6 +1172,13 @@
 .pay-more ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; line-height: 1.45; }
 .pay-disclaimer { margin: 0; font-size: 11px; color: var(--cp-muted, #9a9aa0); line-height: 1.45; }
 .pay-flag .pay-basis { color: inherit; opacity: .75; }
+/* Final pay and gratuity (final-pay-card.tsx). */
+.pay-chip { flex-shrink: 0; padding: 2px 8px; border-radius: 999px; font-weight: 600; font-size: 12px; background: var(--cp-tint, #2a3a2e); color: var(--cp-primary, #b6d7a7); font-variant-numeric: tabular-nums; }
+.pay-tag.is-contested { background: var(--cp-warn-bg, #3e3422); color: var(--cp-warn, #e5c389); }
+.pay-line.is-contested .pay-amount, .pay-line.is-not_applicable .pay-amount { color: var(--cp-muted, #9a9aa0); }
+.pay-line.is-not_applicable .pay-item { color: var(--cp-muted, #9a9aa0); }
+.pay-total.is-muted { font-weight: 500; font-size: 12.5px; color: var(--cp-muted, #9a9aa0); }
+.pay-needs { margin: 8px 0 0; font-size: 12.5px; line-height: 1.45; color: var(--cp-warn, #e5c389); }
 
 /* A case Levy does not hold that judgments in its library cite: real, not verified here. */
 .cp-citation-badge.is-known { color: var(--cp-primary); background: var(--cp-tint); border-color: color-mix(in srgb, var(--cp-primary) 22%, transparent); }
@@ -1180,3 +1187,10 @@
 /* Older chats beyond the 20 the sidebar loads first. */
 .cp-nav-more { display: block; width: 100%; margin: 6px 0 2px; padding: 8px 10px; border: 0; border-radius: var(--cp-small-radius, 8px); background: none; color: var(--cp-muted); font: 500 12.5px/1.3 var(--cp-font); text-align: left; cursor: pointer; }
 .cp-nav-more:hover { background: color-mix(in srgb, var(--cp-text) 5%, transparent); color: var(--cp-text); }
+
+/* Sign-in offer after the browser check fails twice (chat/page.tsx). */
+.cp-verify-help { margin: 10px auto 0; max-width: 560px; padding: 10px 12px; border-radius: var(--cp-small-radius, 10px); background: var(--cp-warn-bg, #3e3422); color: var(--cp-warn, #e5c389); font-size: 13px; line-height: 1.45; text-align: left; }
+.cp-verify-help p { margin: 0 0 8px; }
+.cp-verify-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.cp-verify-actions button { min-height: 36px; padding: 6px 12px; border-radius: 999px; border: 1px solid color-mix(in srgb, currentColor 35%, transparent); background: transparent; color: inherit; font: inherit; font-weight: 600; cursor: pointer; }
+.cp-verify-actions .cp-verify-primary { background: var(--cp-primary, #b6d7a7); border-color: transparent; color: var(--cp-on-primary, #10210f); }

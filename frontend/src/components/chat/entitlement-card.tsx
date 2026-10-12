@@ -10,7 +10,8 @@
 
 import { useState } from 'react'
 import { Calculator, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react'
-import { isPayroll, type EntitlementBreakdown, type ExitEntitlementBreakdown, type EntitlementLineItem } from '@/lib/api'
+import { isFinalPay, isPayroll, type EntitlementBreakdown, type ExitEntitlementBreakdown, type EntitlementLineItem } from '@/lib/api'
+import { FinalPayCard } from './final-pay-card'
 import { PayrollCard } from './payroll-card'
 
 const REASON_LABEL: Record<string, string> = {
@@ -42,6 +43,7 @@ function fmt(currency: string, amount?: number | null): string {
 
 export function EntitlementCard({ breakdown }: { breakdown: EntitlementBreakdown }) {
   if (isPayroll(breakdown)) return <PayrollCard breakdown={breakdown} />
+  if (isFinalPay(breakdown)) return <FinalPayCard breakdown={breakdown} />
   return <ExitCard breakdown={breakdown} />
 }
 

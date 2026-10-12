@@ -660,11 +660,77 @@ export interface PayrollBreakdown {
   disclaimer: string
 }
 
-/** Both calculators ride the same stream event; `kind` tells them apart. */
-export type EntitlementBreakdown = ExitEntitlementBreakdown | PayrollBreakdown
+/** One line of final pay or gratuity (backend services/final_pay.py). */
+export interface FinalPayLine {
+  item: string
+  group: 'due' | 'deduction' | 'setoff' | 'employer' | 'info'
+  status: 'owed' | 'conditional' | 'contested' | 'needs_input' | 'not_applicable' | 'deduction' | 'setoff' | 'employer' | 'info' | 'check'
+  basis: string
+  amount?: number | null
+  formula?: string
+  note?: string
+  taxable?: boolean | null
+}
+
+/** Final pay when employment ends (calculate_payroll, mode "final_pay"). */
+export interface FinalPayBreakdown {
+  kind: 'final_pay'
+  currency: string
+  termination_reason: string
+  contract_type: string
+  termination_date: string
+  monthly_basic_pay: number
+  monthly_allowances: number
+  lines: FinalPayLine[]
+  total_due: number
+  /** Conditional or contested items, left out of the net. */
+  total_conditional: number
+  taxable_total: number
+  total_deductions: number
+  net_before_setoff: number
+  setoff: number
+  net_payable: number
+  /** What the set-off could not absorb: a debt to claim, not a deduction. */
+  balance_claimable: number
+  net_if_conditional_paid: number
+  flags: PayrollFlag[]
+  needs_input: string[]
+  assumptions: string[]
+  disclaimer: string
+}
+
+/** Gratuity accrued to a date (calculate_payroll, mode "gratuity"). */
+export interface GratuityBreakdown {
+  kind: 'gratuity'
+  currency: string
+  contract_type: string
+  monthly_basic_pay: number
+  rate: number
+  period_start: string
+  as_of: string
+  months: number
+  basic_earned: number
+  accrued: number
+  advanced: number
+  balance: number
+  projected_at_end: number | null
+  lines: FinalPayLine[]
+  flags: PayrollFlag[]
+  needs_input: string[]
+  assumptions: string[]
+  disclaimer: string
+}
+
+/** All the calculators ride the same stream event; `kind` tells them apart. */
+export type EntitlementBreakdown = ExitEntitlementBreakdown | PayrollBreakdown | FinalPayBreakdown | GratuityBreakdown
 
 export function isPayroll(b: EntitlementBreakdown): b is PayrollBreakdown {
   return (b as PayrollBreakdown).kind === 'payroll'
+}
+
+export function isFinalPay(b: EntitlementBreakdown): b is FinalPayBreakdown | GratuityBreakdown {
+  const kind = (b as { kind?: string }).kind
+  return kind === 'final_pay' || kind === 'gratuity'
 }
 
 export interface EntitlementBreakdownEvent {
@@ -796,6 +862,8 @@ export async function streamQuery(
     turnstileToken?: string | null
     /** Server-issued pass from an earlier solved challenge; replaces the token. */
     anonPass?: string | null
+    /** Why there is no token (the widget's error code, "timeout"), for the failure log. */
+    turnstileError?: string | null
   },
   legacyOnChunk?: (text: string) => void,
   legacyOnDone?: (metadata: AgentDoneMetadata) => void,
@@ -818,6 +886,7 @@ export async function streamQuery(
       attached_doc_ids: options?.attachedDocIds,
       turnstile_token: options?.turnstileToken ?? undefined,
       anon_pass: options?.anonPass ?? undefined,
+      turnstile_error: options?.turnstileError ?? undefined,
     }),
   })
 

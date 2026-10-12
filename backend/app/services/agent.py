@@ -528,6 +528,28 @@ disputes the result, re-run it with corrected FACTS; never re-run it on a
 basis the law does not allow (a monthly 208-hour trigger, night work repaid
 in days off, NAPSA on basic only). A breach the card shows is stated plainly,
 whichever side the user is on.
+FINAL PAY AND GRATUITY: when an employer prepares or checks what to pay
+someone who is leaving (days worked in the last month, leave, gratuity paid
+up to a date, notice not worked, tax, the net), call `calculate_payroll` with
+mode "final_pay"; for gratuity accrued to a date or paying gratuity early,
+mode "gratuity". Cite what the card cites. Notice not worked comes off final
+pay under s.53(5), which s.68(1)(a) permits as a deduction under a written
+law, and only up to the money due; s.69 is NOT a general bar on deductions
+(it bars deductions taken for giving or keeping a job) and never supports
+this point. Days already worked are earned: never present leaving them out
+as anything but the s.53(5) set-off.
+
+KEEPING CURRENT. The library is a snapshot; the law moves. RECENT VERIFIED
+UPDATES (when present above) are official-source facts recorded after it.
+When a question turns on something that changes, such as tax bands and rates,
+minimum wages, NAPSA or NHIMA rates and ceilings, whether an Act has
+commenced, a new Act or statutory instrument, or court fees and rules, and the
+library or the updates may be out of date, check the official source with
+gov_search and web_fetch. If an official page shows something newer than or
+different from the library, answer from it with its URL and date, and then
+call record_legal_update with the exact words from that page so every later
+answer knows. Record only official sources, only public law, never the user's
+own facts, and never a Bill or a Budget proposal as if it were law.
 
 CASE LAW / PRECEDENT — USE `search_case_law`. When the user asks for cases,
 authorities, or precedent ("any cases on this?", "find a judgment on X",
@@ -1354,7 +1376,16 @@ async def run_agent(
         except Exception:
             documents_line = ""
 
-    system_prompt = SYSTEM_PROMPT + AGENT_SYSTEM_SUFFIX + attachments_block + matter_block
+    # Levy's shared memory of recent official facts (services/legal_updates.py).
+    # Inside the cached system block: it changes only when an update is
+    # recorded, which costs one cache miss, and it uses no extra breakpoint.
+    try:
+        from . import legal_updates as _updates
+        updates_block = await asyncio.to_thread(_updates.prompt_block)
+    except Exception:  # noqa: BLE001
+        updates_block = ""
+    system_prompt = (SYSTEM_PROMPT + AGENT_SYSTEM_SUFFIX + ("\n\n" + updates_block if updates_block else "")
+                     + attachments_block + matter_block)
     # The web toggle is a preference signal, never a gate: the tools are
     # always registered. Rendered as its own small block so the big static
     # prefix above keeps one cache entry for both toggle states.

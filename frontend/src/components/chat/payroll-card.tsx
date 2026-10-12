@@ -12,7 +12,7 @@ import { useState } from 'react'
 import { Calculator, ChevronDown, ChevronUp } from 'lucide-react'
 import type { PayrollBreakdown, PayrollCheck, PayrollLine } from '@/lib/api'
 
-function kwacha(amount?: number | null): string {
+export function kwacha(amount?: number | null): string {
   if (amount === null || amount === undefined) return '-'
   return `K${amount.toLocaleString('en-ZM', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }

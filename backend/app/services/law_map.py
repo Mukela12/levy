@@ -41,14 +41,51 @@ def _titles(items: list[dict], limit: int = 2) -> str:
     return ", ".join(ref_name(i) for i in items[:limit] if i.get("title"))
 
 
+def _ledger(document_id: str | None) -> tuple[str | None, bool]:
+    """A recent verified update about this Act (services/legal_updates.py):
+    (note, whether it records the Act's commencement). Never raises."""
+    if not document_id:
+        return None, False
+    try:
+        from . import legal_updates
+        rows = legal_updates.for_document(document_id)
+    except Exception:  # noqa: BLE001
+        return None, False
+    if not rows:
+        return None, False
+    text = "; ".join(f"{r['statement']} (source {r['source_url']}, checked {legal_updates._when(r)})" for r in rows[:2])
+    return f"RECENT OFFICIAL UPDATE, newer than the library: {text}", any(r.get("kind") == "commencement" for r in rows)
+
+
 def status_note(document_id: str | None) -> str | None:
-    """One line for the model, or None when there is nothing worth saying."""
+    """One line for the model, or None when there is nothing worth saying.
+
+    A verified update in the shared ledger is added to the map's own note, and
+    a recorded commencement replaces a "not shown to be in force" one: the map
+    is rebuilt by hand, the ledger the moment an official source is read.
+    """
+    note = _map_note(document_id)
+    update, commenced = _ledger(document_id)
+    if not update:
+        return note
+    if commenced and note and note.startswith(("NOT SHOWN TO BE IN FORCE", "COMMENCEMENT NOT VERIFIED")):
+        return update + " It supersedes the library's record that this Act is not shown to be in force."
+    return f"{note} {update}" if note else update
+
+
+def _map_note(document_id: str | None) -> str | None:
     e = _entries().get(document_id or "")
     if not e:
         return None
     status = e.get("status")
     if status == "repealed":
         by = _titles(e.get("repealed_by") or []) or "a later Act"
+        if all(x.get("reported") for x in e.get("repealed_by") or [{}]):
+            started = (entry((e.get("repealed_by") or [{}])[0].get("id")).get("commenced") or {})
+            return (f"REPLACED ON A REPORTED COMMENCEMENT: {by} repeals this Act and is reported to be in force "
+                    f"({started.get('order') or 'commencement order'}, {started.get('date') or 'date unconfirmed'}), "
+                    f"but the commencement order has not been verified. Answer from {by}, say its commencement is "
+                    f"reported rather than verified, and cite this Act for the law before it.")
         return (f"REPEALED, replaced by {by}. Do not present this as current law. Answer from the "
                 f"replacing Act, and only cite this one for what the law was at the time.")
     if status == "repeal pending":
@@ -76,6 +113,10 @@ def status_note(document_id: str | None) -> str | None:
         # A deferred-commencement Act whose order was confirmed by hand
         # (scripts/build_law_map.py COMMENCED). Say so, so it is not caveated
         # as "possibly not in force".
+        if started.get("reported"):
+            return (f"REPORTED IN FORCE since {started.get('date')} ({started.get('order')}). The administering "
+                    f"body says the commencement order has been made, but its text has not been verified: say so "
+                    f"when relying on this Act, and that the Gazette is the authority. Basis: {started.get('source')}")
         return (f"IN FORCE since {started.get('date')} ({started.get('order')}). This Act's start was deferred "
                 f"to a statutory instrument, and that order has been made.")
     if status == "bill, not yet law":
@@ -113,6 +154,8 @@ def annotate(rows: list[dict], key: str = "document_id") -> list[dict]:
         if note:
             r["status"] = note
         law = _LAW_STATUS.get(entry(r.get(key)).get("status") or "")
+        if law == "not in force" and not is_uncommenced(r.get(key)):
+            law = None   # a verified commencement in the ledger
         if law:
             r["law_status"] = law
         sec = section_note(r.get(key), r.get("section"))
@@ -191,7 +234,9 @@ def is_dead_section(document_id: str | None, section: str | int | None) -> bool:
 
 
 def is_uncommenced(document_id: str | None) -> bool:
-    return (_entries().get(document_id or "") or {}).get("status") == "commencement pending"
+    if (_entries().get(document_id or "") or {}).get("status") != "commencement pending":
+        return False
+    return not _ledger(document_id)[1]
 
 
 def has_uncommenced(rows: list[dict], key: str = "document_id") -> bool:

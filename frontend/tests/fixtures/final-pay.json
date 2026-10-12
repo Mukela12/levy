@@ -1,0 +1,210 @@
+{
+ "final_pay": {
+  "kind": "final_pay",
+  "currency": "ZMW",
+  "termination_reason": "resignation",
+  "contract_type": "long_term",
+  "termination_date": "2026-01-15",
+  "monthly_basic_pay": 2000.0,
+  "monthly_allowances": 700.0,
+  "lines": [
+   {
+    "item": "Wages for days worked",
+    "group": "due",
+    "status": "owed",
+    "basis": "Employment Code Act No. 3 of 2019, s.66; contract of employment",
+    "amount": 1306.45,
+    "formula": "K2,700.00 a month x 15/31 of Jan 2026 (1 Jan 2026 to 15 Jan 2026)",
+    "note": "Basic K967.74 + allowances K338.71. Earned and due: days worked are not forfeited by leaving, with or without notice.",
+    "taxable": true
+   },
+   {
+    "item": "Accrued leave",
+    "group": "due",
+    "status": "owed",
+    "basis": "Employment Code Act No. 3 of 2019, s.36(5)",
+    "amount": 526.03,
+    "formula": "8 days x K65.75 a day (basic x 12 / 365)",
+    "note": "Taxable: commutation of accrued leave is an emolument (ZRA Practice Note No. 1 of 2026, para 38).",
+    "taxable": true
+   },
+   {
+    "item": "Gratuity",
+    "group": "due",
+    "status": "contested",
+    "basis": "Employment Code Act No. 3 of 2019, s.73",
+    "amount": 241.94,
+    "formula": "25% x K967.74 basic earned (K2,000.00 x 15/31 of Jan 2026, 1 Jan 2026 to 15 Jan 2026)",
+    "note": "s.73(2) prorates gratuity when a contract 'is terminated in accordance with this Code'. A resignation on the contract's notice terms is such a termination; one with no notice worked is argued both ways, which the notice set-off already answers in money. Check the contract. Exempt from tax (ZRA Practice Note No. 1 of 2026, para 38).",
+    "taxable": false
+   },
+   {
+    "item": "PAYE",
+    "group": "deduction",
+    "status": "deduction",
+    "basis": "ZRA Practice Note No. 1 of 2026, Table 13 (2026 charge year); ZRA Practice Note No. 1 of 2026, para 38",
+    "amount": 0.0,
+    "formula": "2026 monthly bands on K1,832.48 taxable (wages and leave pay)",
+    "note": "Gratuity, redundancy and severance pay and pay in lieu of notice are exempt. Treated as one month's emoluments; a cumulative PAYE adjustment for the year can differ.",
+    "taxable": null
+   },
+   {
+    "item": "NAPSA (employee 5%)",
+    "group": "deduction",
+    "status": "deduction",
+    "basis": "National Pension Scheme Act, Cap. 256, s.14",
+    "amount": 65.32,
+    "formula": "5% x K1,306.45 wages for days worked",
+    "note": "Taken on the wages for days worked. Whether NAPSA treats leave commutation as earnings is not settled in Levy's library; confirm with NAPSA.",
+    "taxable": null
+   },
+   {
+    "item": "NHIMA (employee 1%)",
+    "group": "deduction",
+    "status": "deduction",
+    "basis": "National Health Insurance Act No. 2 of 2018, s.15",
+    "amount": 9.68,
+    "formula": "1% x K967.74 basic for days worked",
+    "note": "",
+    "taxable": null
+   },
+   {
+    "item": "NAPSA (employer 5%)",
+    "group": "employer",
+    "status": "employer",
+    "basis": "National Pension Scheme Act, Cap. 256, s.14",
+    "amount": 65.32,
+    "formula": "5% x K1,306.45",
+    "note": "",
+    "taxable": null
+   },
+   {
+    "item": "NHIMA (employer 1%)",
+    "group": "employer",
+    "status": "employer",
+    "basis": "National Health Insurance Act No. 2 of 2018, s.15",
+    "amount": 9.68,
+    "formula": "1% x K967.74",
+    "note": "",
+    "taxable": null
+   },
+   {
+    "item": "Notice not worked (set-off)",
+    "group": "setoff",
+    "status": "setoff",
+    "basis": "Employment Code Act No. 3 of 2019, s.53(5) and s.68(1)(a)",
+    "amount": 1757.48,
+    "formula": "1 month x K2,700.00 = K2,700.00, capped at the K1,757.48 due",
+    "note": "s.53(5): where an employee refuses to work the notice period, the employer may deduct, from money due on termination, what the employee would have earned in it. That is a deduction under a written law, so s.68(1)(a) allows it; s.79(c) makes any deduction outside s.68 an offence. s.69 is not the basis: it only bars deductions taken as a reward for providing or keeping a job. The set-off cannot exceed the money due on termination; anything beyond that is a debt the employer must claim, not a deduction.",
+    "taxable": null
+   }
+  ],
+  "total_due": 1832.48,
+  "total_conditional": 241.94,
+  "taxable_total": 1832.48,
+  "total_deductions": 75.0,
+  "net_before_setoff": 1757.48,
+  "setoff": 1757.48,
+  "net_payable": 0.0,
+  "balance_claimable": 942.52,
+  "net_if_conditional_paid": 0.0,
+  "flags": [
+   {
+    "severity": "check",
+    "message": "Whether s.53(5) reaches an employee who resigns without notice, rather than one who refuses to work a notice period the employer gave, is not settled by its text. A contract clause requiring notice or pay in lieu gives the employer a claim, but taking it from final pay still needs s.53(5): s.68(1) lists no other route.",
+    "basis": "Employment Code Act No. 3 of 2019, s.53(5)"
+   },
+   {
+    "severity": "info",
+    "message": "The days worked are earned wages and go into the final pay. Leaving them off is lawful only as part of the notice set-off, and only up to the money due (K1,757.48 here).",
+    "basis": "Employment Code Act No. 3 of 2019, s.53(5) and s.66"
+   },
+   {
+    "severity": "info",
+    "message": "Gratuity runs to the last day of employment (15 Jan 2026), not to the last month end: it is computed on basic pay earned 'as at the effective date of termination' (s.54(1)(c)) or prorated 'in accordance with the period of employment' (s.73(2)).",
+    "basis": "Employment Code Act No. 3 of 2019, s.73(2)"
+   },
+   {
+    "severity": "info",
+    "message": "The set-off exceeds the money due by K942.52. That balance is a debt the employer can claim; it cannot be deducted from anything else (s.68, s.79(c)).",
+    "basis": "Employment Code Act No. 3 of 2019, s.68"
+   },
+   {
+    "severity": "info",
+    "message": "Give the employee ZRA Form ITF/P13(2), Particulars of Employee Leaving, showing the year's payroll details, so the next employer deducts PAYE correctly; without it the next employer may deduct more.",
+    "basis": "ZRA, Tax information: 'What should I do if I leave employment?'"
+   }
+  ],
+  "needs_input": [],
+  "assumptions": [
+   "K241.94 of items are conditional or contested and are left out of the net; if they are paid, the net is K0.00.",
+   "Monthly wages K2,700.00 = basic K2,000.00 + allowances K700.00. Wages for part of a month are prorated by calendar days; gratuity and leave use basic pay only.",
+   "Leave is valued at basic x 12 / 365 a day. An employer that divides by 26 working days pays more."
+  ],
+  "disclaimer": "Statutory minimums from the Employment Code Act 2019 and ZRA's 2026 rules, applied to the figures given. A contract or collective agreement can improve on them. Legal information, not legal advice."
+ },
+ "gratuity": {
+  "kind": "gratuity",
+  "currency": "ZMW",
+  "contract_type": "long_term",
+  "monthly_basic_pay": 6000.0,
+  "rate": 0.25,
+  "period_start": "2025-11-01",
+  "as_of": "2026-10-31",
+  "months": 12.0,
+  "basic_earned": 72000.0,
+  "accrued": 18000.0,
+  "advanced": 5000.0,
+  "balance": 13000.0,
+  "projected_at_end": 31000.0,
+  "lines": [
+   {
+    "item": "Basic pay earned",
+    "group": "due",
+    "status": "info",
+    "basis": "Employment Code Act No. 3 of 2019, s.73",
+    "amount": 72000.0,
+    "formula": "K6,000.00 x 12 full months (1 Nov 2025 to 31 Oct 2026)",
+    "note": "",
+    "taxable": null
+   },
+   {
+    "item": "Gratuity accrued",
+    "group": "due",
+    "status": "owed",
+    "basis": "Employment Code Act No. 3 of 2019, s.73",
+    "amount": 18000.0,
+    "formula": "25% x K72,000.00",
+    "note": "Exempt from tax (ZRA Practice Note No. 1 of 2026, para 38).",
+    "taxable": null
+   },
+   {
+    "item": "Already advanced",
+    "group": "setoff",
+    "status": "setoff",
+    "basis": "ZRA Practice Note No. 1 of 2026, para 40",
+    "amount": 5000.0,
+    "formula": "as given",
+    "note": "Advances against gratuity reduce what is paid at the end.",
+    "taxable": null
+   }
+  ],
+  "flags": [
+   {
+    "severity": "info",
+    "message": "At the end of the contract (31 Oct 2027), on the same basic pay, the gratuity would be K36,000.00 (K31,000.00 after advances).",
+    "basis": "Employment Code Act No. 3 of 2019, s.73"
+   },
+   {
+    "severity": "info",
+    "message": "Paying gratuity before the contract ends is not required, and the Code does not bar it: s.73(1) fixes when it falls due. Pay it as an advance against the gratuity, agreed in writing, and deduct it from the final figure. ZRA treats an advance against gratuity to an employee still in employment as exempt (ZRA Practice Note No. 1 of 2026, para 40). An advance is not a salary advance under s.68(1)(c), so it is settled against the gratuity, not recovered from wages.",
+    "basis": "Employment Code Act No. 3 of 2019, s.73(1); ZRA Practice Note No. 1 of 2026, para 40"
+   }
+  ],
+  "needs_input": [],
+  "assumptions": [
+   "Basic pay of K6,000.00 a month throughout; partial months prorated by calendar days. If basic pay changed, give the total basic earned in the period."
+  ],
+  "disclaimer": "At least 25% of basic pay earned (s.73(1)); a contract may give more. Legal information, not legal advice."
+ }
+}

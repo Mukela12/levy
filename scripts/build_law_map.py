@@ -55,7 +55,9 @@ RE_REPLACE = re.compile(
 RE_TITLE_REPEALED_BY = re.compile(r"\[\s*repealed\s+by\s+(?P<name>[^\]]+?)\s*\]", re.I)
 # "The Tsetse Control (Repeal) Act 2010" repeals "The Tsetse Control Act"
 RE_REPEAL_ACT_TITLE = re.compile(r"^(?P<stem>.+?)\s*\((?:the\s+)?repeal\)", re.I)
-RE_AMENDMENT_TITLE = re.compile(r"^(?P<stem>.+?)\s*\(amendment\)", re.I)
+# "( Amendment)" and "(Amendment Act)" are in the library too (NIPA 2026,
+# Landlord and Tenant 2020): missed, they were never linked to their principals.
+RE_AMENDMENT_TITLE = re.compile(r"^(?P<stem>.+?)\s*\(\s*amendment(?:\s+act|\s+no\.?\s*\d+)?\s*\)", re.I)
 # "Parts IV and V of the Public Health Act are repealed" kills parts of an Act,
 # not the Act. Marking a live Act dead would be worse than the bug being fixed.
 RE_PARTIAL = re.compile(r"\b(section|subsection|paragraph|part|parts|schedule|so much of|provisions of)\b", re.I)
@@ -102,6 +104,16 @@ COMMENCED: list[dict] = [
     {"match": "teaching profession act 2026",
      "order": "Teaching Profession Act (Commencement) Order, 2026, SI No. 36 of 2026", "date": "15 May 2026",
      "source": "SI 36 of 2026 (ZambiaLII record only; date from its record of the 2013 Act's repeal)"},
+    # REPORTED, not verified: the order's text has not been found. "reported"
+    # carries through to the notes on this Act and on Cap. 256 it repeals, so
+    # neither is stated flatly. Checked 12 Oct 2026.
+    {"match": "national pension scheme act 2026",
+     "order": "SI No. 62 of 2026, whose text has not been located",
+     "date": "early July 2026",
+     "reported": True,
+     "source": ("NAPSA's Director General: SI No. 62 of 2026 brought the reforms into effect (ZNBC, 7 Aug 2026; "
+                "Diggers, 8 Aug 2026); NAPSA paid July 2026 pensions at the 2026 Act's rates. Gazette No. 7954 "
+                "(3 to 10 July 2026), the likely carrier, is not available online.")},
 ]
 # Parliament's undated "Chapter" texts come from the 1995 revised edition,
 # consolidated to about 1996.
@@ -483,6 +495,8 @@ def main() -> int:
         t = slot(r["target"])
         by = by_id.get(r["by"]) if r["by"] else None
         note = {"title": (by or {}).get("title", r["name"]), "id": r["by"], "evidence": r["evidence"][:160]}
+        if by and (commenced.get(by["id"]) or {}).get("reported"):
+            note["reported"] = True     # repealed only if the reported commencement is right
         if r.get("partial"):
             add(t["partially_repealed_by"], note)
             continue
@@ -517,7 +531,7 @@ def main() -> int:
             if r["by"] == d["id"] and r.get("target") and not r.get("partial"):
                 add(e["will_repeal"], {"title": by_id[r["target"]]["title"], "id": r["target"]})
     for doc_id, fact in commenced.items():
-        slot(doc_id)["commenced"] = {k: fact[k] for k in ("order", "date", "source")}
+        slot(doc_id)["commenced"] = {k: fact[k] for k in ("order", "date", "source", "reported") if k in fact}
     # A bill whose Act is now in the library has passed. Left alone it would be
     # announced as "not yet law", which is the same error in the other
     # direction.

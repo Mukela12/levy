@@ -141,6 +141,13 @@ class Deductions(unittest.TestCase):
         r = calculate_payroll(monthly_basic_pay=50000, napsa_ceiling=30000, today=TODAY)
         self.assertEqual(line(r, "NAPSA (employee 5%)", "deductions")["amount"], 1500.0)
 
+    def test_the_2026_ceiling_applies_when_none_is_given(self):
+        r = calculate_payroll(monthly_basic_pay=50000, today=TODAY)
+        napsa = line(r, "NAPSA (employee 5%)", "deductions")
+        self.assertEqual(napsa["amount"], 1861.8)                # 5% x 37,236
+        self.assertIn("2026 ceiling", napsa["formula"])
+        self.assertEqual(line(calculate_payroll(monthly_basic_pay=4000, today=TODAY), "NAPSA (employee 5%)", "deductions")["amount"], 200.0)
+
     def test_later_years_are_told_to_confirm_the_bands(self):
         r = calculate_payroll(monthly_basic_pay=4000, today=date(2027, 2, 1))
         self.assertTrue(any("2027" in f["message"] for f in r["flags"]))

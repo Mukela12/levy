@@ -51,3 +51,30 @@ class Commencement(unittest.TestCase):
         self.assertIsNone(blm.commencement_fact({"title": "THE CYBER SECURITY AND CYBER CRIMES ACT, 2021"}))
         self.assertIsNone(blm.commencement_fact({"title": "The Cyber Security (Amendment) Act, 2026"}))
         self.assertIsNone(blm.commencement_fact({"title": "The Immigration Control Act, 2026"}))
+
+    def test_a_reported_commencement_is_marked_reported(self):
+        fact = blm.commencement_fact({"title": "The National Pension Scheme Act, 2026"})
+        self.assertTrue(fact["reported"])
+        self.assertIn("SI No. 62 of 2026", fact["order"])
+        self.assertIsNone(blm.commencement_fact({"title": "The National Pension Scheme Act"}))
+        self.assertIsNone(blm.commencement_fact({"title": "The National Pension Scheme (Amendment) Act, 2026"}))
+
+
+class ReportedNotes(unittest.TestCase):
+    """A reported commencement is never stated as verified, in either Act's note."""
+
+    def test_both_notes_carry_the_caveat(self):
+        from unittest.mock import patch
+        from app.services import law_map
+        entries = {
+            "new": {"status": "in force", "title": "The National Pension Scheme Act, 2026",
+                    "commenced": {"order": "SI No. 62 of 2026, whose text has not been located", "date": "early July 2026",
+                                  "source": "NAPSA", "reported": True}},
+            "old": {"status": "repealed", "title": "The National Pension Scheme Act",
+                    "repealed_by": [{"title": "The National Pension Scheme Act, 2026", "id": "new", "reported": True}]},
+        }
+        with patch.object(law_map, "_entries", return_value=entries), patch.object(law_map, "_ledger", return_value=(None, False)):
+            self.assertTrue(law_map.status_note("new").startswith("REPORTED IN FORCE"))
+            old = law_map.status_note("old")
+            self.assertTrue(old.startswith("REPLACED ON A REPORTED COMMENCEMENT"))
+            self.assertIn("not been verified", old)

@@ -86,6 +86,9 @@ class ChatRequest(BaseModel):
     # Pass issued after a solved challenge; stands in for turnstile_token on
     # later questions in the same visit. See _issue_anon_pass.
     anon_pass: str | None = None
+    # Why the browser has no token, when it has none: the widget's error code
+    # ("300010"), "timeout" or "no_widget". Logged on a failed check only.
+    turnstile_error: str | None = None
 
 
 class SearchRequest(BaseModel):
@@ -193,10 +196,19 @@ async def _verify_turnstile(token: str | None, ip: str) -> bool:
     pass. Fails CLOSED on a missing secret, a missing token, a rejection, a
     timeout, or any transport error — a challenge we could not confirm is not
     a challenge that was passed."""
+    ok, _ = await _verify_turnstile_detail(token, ip)
+    return ok
+
+
+async def _verify_turnstile_detail(token: str | None, ip: str) -> tuple[bool, list[str]]:
+    """As _verify_turnstile, with Cloudflare's error codes for the failure log
+    ("invalid-input-response", "timeout-or-duplicate", ...)."""
     settings = get_settings()
     secret = (settings.turnstile_secret_key or "").strip()
-    if not secret or not (token or "").strip():
-        return False
+    if not secret:
+        return False, ["no-secret"]
+    if not (token or "").strip():
+        return False, ["no-token"]
     try:
         async with httpx.AsyncClient(timeout=8.0) as client:
             resp = await client.post(
@@ -204,11 +216,44 @@ async def _verify_turnstile(token: str | None, ip: str) -> bool:
                 data={"secret": secret, "response": token, "remoteip": ip},
             )
         if resp.status_code != 200:
-            return False
-        return bool(resp.json().get("success") is True)
+            return False, [f"http-{resp.status_code}"]
+        body = resp.json()
+        codes = [str(c) for c in (body.get("error-codes") or [])][:4]
+        return bool(body.get("success") is True), codes
     except Exception:  # noqa: BLE001 — network/parse failure must not open the door
         logger.warning("turnstile verification failed to complete; denying")
-        return False
+        return False, ["verify-error"]
+
+
+# The browser families that matter for a failed challenge, coarsely: enough to
+# see "Opera Mini fails every time" or "Facebook's in-app browser fails", not
+# enough to fingerprint anyone. The raw user-agent is never stored.
+_UA_FAMILIES = (
+    ("opera_mini", r"Opera Mini|OPiOS"), ("ucbrowser", r"UCBrowser|UCWEB"), ("kaios", r"KAIOS"),
+    ("facebook_app", r"FBAN|FBAV|FB_IAB"), ("instagram_app", r"Instagram"), ("whatsapp", r"WhatsApp"),
+    ("samsung", r"SamsungBrowser"), ("edge", r"Edg/|EdgA/|EdgiOS"), ("opera", r"OPR/|Opera"),
+    ("firefox", r"Firefox/|FxiOS"), ("chrome", r"Chrome/|CriOS"), ("safari", r"Safari/"),
+)
+
+
+def _ua_class(ua: str | None) -> dict:
+    """{family, major, os, mobile, webview} for a user-agent; nothing more."""
+    ua = ua or ""
+    family = next((name for name, pat in _UA_FAMILIES if re.search(pat, ua)), "other")
+    major = None
+    m = re.search(r"(?:Chrome|CriOS|Firefox|FxiOS|Version|SamsungBrowser|OPR|Edg|EdgA|UCBrowser)/(\d{1,3})", ua)
+    if m:
+        major = int(m.group(1))
+    os_name = ("android" if "Android" in ua else "ios" if re.search(r"iPhone|iPad|iPod", ua) else
+               "windows" if "Windows" in ua else "mac" if "Mac OS X" in ua else
+               "kaios" if "KAIOS" in ua else "linux" if "Linux" in ua else "other")
+    return {
+        "family": family,
+        "major": major,
+        "os": os_name,
+        "mobile": bool(re.search(r"Mobi|Android|iPhone|iPod", ua)),
+        "webview": bool(re.search(r"; wv\)|FBAN|FBAV|Instagram|Line/", ua)),
+    }
 
 
 # One solved challenge per visit, not per question. Spending a single-use
@@ -305,12 +350,16 @@ def _is_qa_probe(http_request: Request | None) -> bool:
 
 def _log_anon(outcome: str, ip: str, *, trial_number: int | None = None,
               duration_ms: int | None = None, had_sources: bool | None = None,
-              http_request: Request | None = None) -> None:
+              http_request: Request | None = None, meta: dict | None = None) -> None:
     """Record one anonymous attempt. Content-free, and never raises.
 
     Anonymous runs are not persisted as chat sessions, so without this the
     free trial is invisible: we could not tell a drop in demand from people
     simply using the trial instead of signing up.
+
+    `meta` carries the coarse browser class and, on a failed check, why it
+    failed (20261012 migration adds the column). Until that column exists the
+    row is written without it, so the funnel never goes dark over a detail.
     """
     if _is_qa_probe(http_request):
         return
@@ -322,6 +371,13 @@ def _log_anon(outcome: str, ip: str, *, trial_number: int | None = None,
             row["duration_ms"] = duration_ms
         if had_sources is not None:
             row["had_sources"] = had_sources
+        if meta:
+            logger.info("anon %s %s", outcome, json.dumps(meta, sort_keys=True))
+            try:
+                get_db().table("anon_events").insert({**row, "meta": meta}).execute()
+                return
+            except Exception:  # noqa: BLE001 — most likely the column is not there yet
+                pass
         get_db().table("anon_events").insert(row).execute()
     except Exception:  # noqa: BLE001 — telemetry must never break a user's request
         # WARNING, not debug: telemetry that fails silently is worse than no
@@ -394,9 +450,22 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
         hits.append(now)
         _ANON_HITS[ip] = hits
 
-        if not (_anon_pass_valid(request.anon_pass, ip)
-                or await _verify_turnstile(request.turnstile_token, ip)):
-            _log_anon("turnstile_failed", ip, http_request=http_request)
+        browser = _ua_class(ua)
+        passed = _anon_pass_valid(request.anon_pass, ip)
+        if not passed:
+            passed, cf_codes = await _verify_turnstile_detail(request.turnstile_token, ip)
+        if not passed:
+            # Two of fifteen guests in the week of 6 Oct never got past this,
+            # one after four tries, and the log could not say why. Now it can:
+            # the browser class, whether a token was sent, Cloudflare's reason
+            # and the widget's own error code.
+            _log_anon("turnstile_failed", ip, http_request=http_request, meta={
+                "browser": browser,
+                "had_token": bool((request.turnstile_token or "").strip()),
+                "had_pass": bool(request.anon_pass),
+                "cf_errors": cf_codes,
+                "client_error": (request.turnstile_error or "")[:40] or None,
+            })
             raise HTTPException(
                 status_code=401,
                 detail="We could not verify your browser. Please reload the page and try again, or sign in.",
@@ -412,7 +481,8 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
         anon_pass = _issue_anon_pass(ip)
         # 1-based: which of today's free questions this one was.
         anon_trial_number = get_settings().anon_trial_questions - _anon_trial_remaining(ip)
-        _log_anon("asked", ip, trial_number=anon_trial_number, http_request=http_request)
+        _log_anon("asked", ip, trial_number=anon_trial_number, http_request=http_request,
+                  meta={"browser": browser})
 
     # Only honour a session_id the caller actually owns; otherwise ignore it
     # so nobody can read another user's attached documents via the agent.

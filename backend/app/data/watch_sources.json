@@ -1,0 +1,12 @@
+[
+  {"fact": "PAYE tax bands (ZRA's worked example names the year and the bands)", "url": "https://www.zra.org.zm/tax-information/"},
+  {"fact": "ZRA practice notes and Budget highlights (new downloads)", "url": "https://www.zra.org.zm/feed/?post_type=wpdmpro"},
+  {"fact": "The Budget speech and finance publications (Ministry of Finance downloads)", "url": "https://www.mofnp.gov.zm/?feed=rss2&post_type=wpdmpro"},
+  {"fact": "New Acts of Parliament, including Income Tax (Amendment) Acts", "url": "https://www.parliament.gov.zm/acts-of-parliament"},
+  {"fact": "Bills before Parliament (proposals, not law until assented)", "url": "https://www.parliament.gov.zm/publications/bills-list"},
+  {"fact": "Minimum wage orders under the Employment Code", "url": "https://www.mlss.gov.zm/?page_id=2386"},
+  {"fact": "Ministry of Labour announcements (wage orders, labour law changes)", "url": "https://www.mlss.gov.zm/?feed=rss2"},
+  {"fact": "NHIMA contribution rate and penalties", "url": "https://www.nhima.co.zm/wp-json/wp/v2/pages/1783"},
+  {"fact": "Bank of Zambia policy rate", "url": "https://www.boz.zm/api/v1/views/monetary_policy_rates"},
+  {"fact": "Judiciary notices, rules, practice directions and court fees", "url": "https://judiciaryzambia.com/wp-json/wp/v2/posts?categories=191,288,205"}
+]

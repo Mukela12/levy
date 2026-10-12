@@ -55,6 +55,8 @@ const TOOL_LABELS: Record<string, { label: string; verb: string; Icon: typeof Se
   case_history: { label: 'Case history', verb: 'Checking how courts have used the case', Icon: Scale },
   calculate_entitlements: { label: 'Entitlements', verb: 'Calculating entitlements', Icon: Calculator },
   calculate_payroll: { label: 'Payroll', verb: 'Calculating pay', Icon: Calculator },
+  record_legal_update: { label: 'Legal update', verb: 'Checking the official source and noting the update', Icon: Database },
+  get_drafting_precedent: { label: 'Precedent', verb: 'Reading the Zambian precedent', Icon: FileText },
   recommend_application: { label: 'Plan', verb: 'Planning the application', Icon: Scale },
   make_cheat_sheet: { label: 'Cheat sheet', verb: 'Generating your cheat sheet', Icon: ScrollText },
   generate_quiz: { label: 'Quiz', verb: 'Generating your quiz', Icon: GraduationCap },

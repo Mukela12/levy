@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-12T02:44:23+00:00",
+ "generated_at": "2026-10-12T04:24:09+00:00",
  "documents": {
   "42d7a79f-db67-4d29-9371-49a8556b952f": {
    "status": "repealed",
@@ -1180,8 +1180,15 @@
    "is_global": true
   },
   "53a3386a-2640-41d5-8797-e9418f3bf54c": {
-   "status": "repeal pending",
-   "repealed_by": [],
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "The National Pension Scheme Act, 2026",
+     "id": "2d87cd8b-3107-4186-9c48-6c352ec2de7f",
+     "evidence": "repeal and replace the National Pension Scheme Act",
+     "reported": true
+    }
+   ],
    "repeals": [
     {
      "title": "The Zambia National Provident Fund Act",
@@ -1205,17 +1212,37 @@
    ],
    "amends": [],
    "enacted_as": [],
-   "repeal_pending_by": [
-    {
-     "title": "The National Pension Scheme Act, 2026",
-     "id": "2d87cd8b-3107-4186-9c48-6c352ec2de7f",
-     "evidence": "repeal and replace the National Pension Scheme Act"
-    }
-   ],
+   "repeal_pending_by": [],
    "will_repeal": [],
    "title": "The National Pension Scheme Act",
    "short_name": "National Pension Scheme Act (Cap 256) (NAPSA)",
    "year": null,
+   "is_global": true
+  },
+  "2d87cd8b-3107-4186-9c48-6c352ec2de7f": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "The National Pension Scheme Act",
+     "id": "53a3386a-2640-41d5-8797-e9418f3bf54c"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "commenced": {
+    "order": "SI No. 62 of 2026, whose text has not been located",
+    "date": "early July 2026",
+    "source": "NAPSA's Director General: SI No. 62 of 2026 brought the reforms into effect (ZNBC, 7 Aug 2026; Diggers, 8 Aug 2026); NAPSA paid July 2026 pensions at the 2026 Act's rates. Gazette No. 7954 (3 to 10 July 2026), the likely carrier, is not available online.",
+    "reported": true
+   },
+   "title": "The National Pension Scheme Act, 2026",
+   "short_name": "National Pension Scheme Act (No. 72 of 2026)",
+   "year": 2026,
    "is_global": true
   },
   "df054459-34cd-471d-bcfe-cd16fd8cf6c5": {
@@ -5249,6 +5276,10 @@
     {
      "title": "The National Institute of Public Administration (Amendment) Act, 2021",
      "id": "03b586ca-d1df-4459-bde4-5f73dbf9c26c"
+    },
+    {
+     "title": "The National Institute of Public Administration ( Amendment) Act, 2026",
+     "id": "a54d0191-c619-4ab0-a24a-64c4bcd1a57b"
     }
    ],
    "amends": [],
@@ -5293,6 +5324,10 @@
     {
      "title": "The National Institute of Public Administration (Amendment) Act, 2021",
      "id": "03b586ca-d1df-4459-bde4-5f73dbf9c26c"
+    },
+    {
+     "title": "The National Institute of Public Administration ( Amendment) Act, 2026",
+     "id": "a54d0191-c619-4ab0-a24a-64c4bcd1a57b"
     }
    ],
    "amends": [],
@@ -7922,6 +7957,46 @@
    "title": "The National Museums(Amendment)Act,2026",
    "short_name": "National Museums(Amendment)Act,2026 (No. 42 of 2026)",
    "year": 2026,
+   "is_global": true
+  },
+  "5fe8f030-caeb-4ec6-8f37-3331c0f8cc5c": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [
+    {
+     "title": "The Landlord and Tenant (Business Premises) (Amendment Act), 2020",
+     "id": "4a1e1934-54d4-4db0-bc23-7bd8078e08fb"
+    }
+   ],
+   "amends": [],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "THE LANDLORD AND TENANT (BUSINESS PREMISES) ACT",
+   "short_name": "LANDLORD AND TENANT (BUSINESS PREMISES) ACT",
+   "year": null,
+   "is_global": true
+  },
+  "4a1e1934-54d4-4db0-bc23-7bd8078e08fb": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "THE LANDLORD AND TENANT (BUSINESS PREMISES) ACT",
+     "id": "5fe8f030-caeb-4ec6-8f37-3331c0f8cc5c"
+    }
+   ],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The Landlord and Tenant (Business Premises) (Amendment Act), 2020",
+   "short_name": "Landlord and Tenant (Business Premises) (Amendment Act), 2020 (No. 5 of 2020)",
+   "year": 2020,
    "is_global": true
   },
   "5ac1d14d-e50c-4404-b56d-f195c884030b": {
@@ -11000,6 +11075,30 @@
    "year": 2020,
    "is_global": true
   },
+  "a54d0191-c619-4ab0-a24a-64c4bcd1a57b": {
+   "status": "amending Act",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [
+    {
+     "title": "The National Institute of Public Administration",
+     "id": "14c53f39-b43e-4d3c-b72d-79a0031dea4f"
+    },
+    {
+     "title": "The National Institute of Public Administration",
+     "id": "dba81bed-25f5-4af5-9c50-05e92a691dc4"
+    }
+   ],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "title": "The National Institute of Public Administration ( Amendment) Act, 2026",
+   "short_name": "National Institute of Public Administration ( Amendment) Act, 2026 (No. 65 of 2026)",
+   "year": 2026,
+   "is_global": true
+  },
   "8e4e7163-fa99-4b66-af65-024a42710308": {
    "status": "in force",
    "repealed_by": [],
@@ -13321,26 +13420,6 @@
    ],
    "title": "The Public Service Pensions Act, 2026",
    "short_name": "Public Service Pensions Act, 2026 (No. 73 of 2026)",
-   "year": 2026,
-   "is_global": true
-  },
-  "2d87cd8b-3107-4186-9c48-6c352ec2de7f": {
-   "status": "commencement pending",
-   "repealed_by": [],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [],
-   "amends": [],
-   "enacted_as": [],
-   "repeal_pending_by": [],
-   "will_repeal": [
-    {
-     "title": "The National Pension Scheme Act",
-     "id": "53a3386a-2640-41d5-8797-e9418f3bf54c"
-    }
-   ],
-   "title": "The National Pension Scheme Act, 2026",
-   "short_name": "National Pension Scheme Act (No. 72 of 2026)",
    "year": 2026,
    "is_global": true
   },

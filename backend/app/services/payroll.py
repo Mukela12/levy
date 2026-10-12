@@ -64,6 +64,13 @@ TRANSPORT_ALLOWANCE = 200.0
 LUNCH_ALLOWANCE = 180.0
 TOOL_ALLOWANCE = 150.0
 TOLERANCE = 1.00           # kwacha: rounding on a real payslip is not a breach
+# NAPSA's maximum insurable earnings, a month. 2026: K37,236 (contributions
+# capped at K1,861.80 each side), as published by payroll providers in January
+# 2026; NAPSA's own notice sits behind a CAPTCHA. It is four times the 2026
+# national average earnings of K9,309, the figure behind the official minimum
+# pension of K2,327 (25%), which is why it is relied on. Needs yearly upkeep.
+NAPSA_CEILING = {2026: 37_236.0}
+NAPSA_CEILING_SOURCE = "NAPSA 2026 maximum insurable earnings, as published by payroll providers"
 
 PAYE_YEAR = 2026
 PAYE_SOURCE = "ZRA Practice Note No. 1 of 2026, Table 13 (2026 charge year)"
@@ -236,10 +243,41 @@ def _norm(s: str | None) -> str:
     return re.sub(r"[\s-]+", "_", (s or "").strip().lower())
 
 
-def paye_monthly(taxable: float) -> float:
-    """PAYE on one month's taxable emoluments, 2026 monthly bands."""
+def _valid_bands(raw) -> tuple | None:
+    """Monthly bands as ((upper, rate), ..., (None, rate)), or None if malformed."""
+    try:
+        bands = tuple((None if u is None else float(u), float(r)) for u, r in raw)
+    except (TypeError, ValueError):
+        return None
+    uppers = [u for u, _ in bands[:-1]]
+    if (len(bands) < 2 or bands[-1][0] is not None or None in uppers or uppers != sorted(uppers)
+            or not all(0 <= r <= 0.6 for _, r in bands)):
+        return None
+    return bands
+
+
+def paye_bands_for(year: int) -> tuple[tuple, str, int]:
+    """(bands, source, charge year) for a year: the coded 2026 bands, or that
+    year's bands once a person has approved them in the shared ledger
+    (services/legal_updates.py, topic "paye-bands-<year>")."""
+    if year > PAYE_YEAR:
+        try:
+            from . import legal_updates
+            hit = legal_updates.approved_value(f"paye-bands-{year}")
+        except Exception:  # noqa: BLE001
+            hit = None
+        if hit:
+            value, row = hit
+            bands = _valid_bands((value or {}).get("monthly_bands"))
+            if bands:
+                return bands, f"{row.get('act_title') or 'Approved update'}, {row.get('source_url')}", year
+    return PAYE_MONTHLY_BANDS, PAYE_SOURCE, PAYE_YEAR
+
+
+def paye_monthly(taxable: float, bands: tuple = PAYE_MONTHLY_BANDS) -> float:
+    """PAYE on one month's taxable emoluments (2026 monthly bands by default)."""
     tax, lower = 0.0, 0.0
-    for upper, rate in PAYE_MONTHLY_BANDS:
+    for upper, rate in bands:
         top = taxable if upper is None else min(taxable, upper)
         if top > lower:
             tax += (top - lower) * rate
@@ -564,20 +602,28 @@ def calculate_payroll(
     if conditional_total:
         assumptions.append(f"Gross excludes {_k(conditional_total)} of conditional Order items; if the Order "
                            f"applies, gross is {_k(gross + conditional_total)}.")
+    year = (today or date.today()).year
+    ceiling_given = bool(napsa_ceiling)
+    napsa_ceiling = napsa_ceiling or NAPSA_CEILING.get(year)
     napsa_base = gross if not napsa_ceiling else min(gross, float(napsa_ceiling))
     napsa = _money(NAPSA_RATE * napsa_base)
     nhima = _money(NHIMA_RATE * required_basic)
-    paye = paye_monthly(gross)
+    bands, paye_source, bands_year = paye_bands_for(year)
+    paye = paye_monthly(gross, bands)
     deductions = [
         Line("NAPSA (employee 5%)", "deduction", "National Pension Scheme Act, Cap. 256, s.14", napsa,
-             f"5% x {_k(napsa_base)} " + ("(earnings capped at the ceiling given)" if napsa_ceiling and gross > float(napsa_ceiling)
-                                          else "(gross earnings)"),
-             "On earnings, not basic pay." + ("" if napsa_ceiling else
-             " NAPSA caps contributions at a maximum insurable earnings figure it sets each year; "
-             "on a high salary, check that figure.")),
+             f"5% x {_k(napsa_base)} " + (("(earnings capped at the ceiling given)" if ceiling_given else
+                                           f"(earnings capped at the {year} ceiling of {_k(float(napsa_ceiling))})")
+                                          if napsa_ceiling and gross > float(napsa_ceiling) else "(gross earnings)"),
+             "On earnings, not basic pay." + (
+                 "" if ceiling_given else
+                 f" Capped at {_k(float(napsa_ceiling))} a month, the {NAPSA_CEILING_SOURCE}; NAPSA's own notice "
+                 "could not be read, so confirm it on a high salary." if napsa_ceiling else
+                 " NAPSA caps contributions at a maximum insurable earnings figure it sets each year; "
+                 "on a high salary, check that figure.")),
         Line("NHIMA (employee 1%)", "deduction", "National Health Insurance Act No. 2 of 2018, s.15", nhima,
              f"1% x basic {_k(required_basic)}", "On basic pay, not gross."),
-        Line("PAYE", "deduction", PAYE_SOURCE, paye, f"2026 monthly bands on {_k(gross)}",
+        Line("PAYE", "deduction", paye_source, paye, f"{bands_year} monthly bands on {_k(gross)}",
              "No pension relief applied. Bands change with each Budget."),
     ]
     other_deds = [d for d in (slip.get("other_deductions") or []) if isinstance(d, dict)]
@@ -671,12 +717,12 @@ def calculate_payroll(
                           f"NHIMA is 1% of basic pay ({_k(slip_basic)}), not of gross.")
         if "paye" in slip:
             taken = float(slip["paye"])
-            paye_slip = paye_monthly(slip_gross)
+            paye_slip = paye_monthly(slip_gross, bands)
             diff = _money(taken - paye_slip)
             audit.append(Check("PAYE deducted", _money(taken), paye_slip, diff,
-                               "ok" if abs(diff) <= TOLERANCE else "check", PAYE_SOURCE,
+                               "ok" if abs(diff) <= TOLERANCE else "check", paye_source,
                                "" if abs(diff) <= TOLERANCE else
-                               f"Differs from the 2026 bands on a gross of {_k(slip_gross)}. Pension relief or "
+                               f"Differs from the {bands_year} bands on a gross of {_k(slip_gross)}. Pension relief or "
                                "other taxable benefits can explain a difference; confirm with ZRA."))
         for d in other_deds:
             audit.append(Check(str(d.get("label") or "Other deduction"), _money(d.get("amount") or 0), None, None,
@@ -721,9 +767,10 @@ def calculate_payroll(
     if order in (GENERAL, SHOP):
         assumptions.append(f"Rates are those of {ORDER_LABEL[order]}, in force from 1 January 2024. If a later "
                            "order has been gazetted, its figures replace these.")
-    year = (today or date.today()).year
-    if year > PAYE_YEAR:
-        flags.append(Flag("check", f"PAYE uses the {PAYE_YEAR} bands; confirm the {year} bands with ZRA."))
+    if year > bands_year:
+        flags.append(Flag("check", f"PAYE uses the {bands_year} bands; confirm the {year} bands with ZRA."))
+    elif bands_year > PAYE_YEAR:
+        flags.append(Flag("info", f"PAYE uses the {bands_year} bands approved from {paye_source}."))
 
     res.earnings = [asdict(li) for li in earnings]
     res.deductions = [asdict(li) for li in deductions]

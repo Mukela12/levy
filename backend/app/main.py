@@ -44,8 +44,16 @@ async def lifespan(_app: FastAPI):
     Pair this with RAILWAY_DEPLOYMENT_DRAINING_SECONDS set above the p95 turn
     length, or the platform kills the process before this hook can finish.
     """
-    yield  # startup: nothing to do
+    # The official-source watcher (services/watcher.py), only when
+    # LEGAL_WATCH_HOURS is set: it is off unless deliberately switched on.
+    from .services import watcher
+    watch_task = asyncio.create_task(watcher.run_forever(watcher.hours_from_env())) \
+        if watcher.hours_from_env() > 0 else None
 
+    yield
+
+    if watch_task:
+        watch_task.cancel()
     from .routes.api import _INFLIGHT_RUNS
 
     pending = [t for t in _INFLIGHT_RUNS if not t.done()]
