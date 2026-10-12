@@ -140,6 +140,27 @@ class GazetteNotices(unittest.TestCase):
         self.assertIn("Government Gazette No. 7954 of 7 July 2026", p["statement"])
         self.assertEqual(lu.problems(p["kind"], p["topic"], p["statement"], "https://archive.gazettes.africa/x.pdf", si["quote"]), [])
 
+    def test_ocr_damage_is_cut_or_refused(self):
+        raw = ("THE FOLLOWING Statutory Instruments are published as a Supplement to this Gazette: "
+               "Statutory Instrument No. 92 of 2025: The Income Tax (Konoike Construction Company Limited) (Approval "
+               "and Exemption) Order, 2025 Statutory lnstrumc.ot No. 93 of 2025: The Value Added Tax (General) "
+               "(Amendment) Regulations, 2025; Statutory Instrument No. 99 of 2025: The Immigration and Deportation "
+               "(General) {Amendment) Regulations, 202S B. K. SIAYANGWE, Budget Analyst, Ministry of Home Affairs; "
+               "Statutory Instrument No. 88 of 2025: The Income Tax (fax Agent) (Terms and Conditions) (Amendment) "
+               "Regulations, 2025; Statutory Instrument No. 89 of 2025: The Income Tax (GOPA GAZETTB NonCE No. 1737 or "
+               "2025 Infra GmbH) (Approval and Exemption) Order, 2025 P. K. KANGWA, Secretary to the Cabinet")
+        items = {i["no"]: i for i in watcher.parse_gazette_notices(raw)}
+        self.assertEqual(items["92"]["title"], "The Income Tax (Konoike Construction Company Limited) (Approval and Exemption) Order, 2025")
+        self.assertEqual(items["99"]["title"], "The Immigration and Deportation (General) (Amendment) Regulations, 2025")
+        self.assertEqual(items["88"]["title"], "The Income Tax (Tax Agent) (Terms and Conditions) (Amendment) Regulations, 2025")
+        self.assertNotIn("89", items)                                  # a page header inside the title
+        self.assertIsNone(watcher.propose_notice(items["92"], ISSUE))   # one company's exemption
+
+    def test_plural_titles_are_the_same_act(self):
+        self.assertEqual(lu.loose_key("The Public Service Pension Act, 2026"), lu.loose_key("THE PUBLIC SERVICE PENSIONS ACT, 2026"))
+        self.assertNotEqual(lu.loose_key("The Local Authorities Superannuation Act, 2026"),
+                            lu.loose_key("THE LOCAL AUTHORITIES SUPERANNUATION FUND ACT"))
+
     def test_fuel_duty_is_not_a_pension(self):
         fuel = next(i for i in watcher.parse_gazette_notices(GAZETTE_SI) if i["no"] == "60")
         self.assertIsNone(watcher.propose_notice(fuel, ISSUE))      # "Suspension" once matched "pension"
@@ -158,7 +179,7 @@ class PageParsers(unittest.TestCase):
         raw = "<div>2026</div><div>The Penal Code (Amendment) Act, 2026</div><div>( Act No. 75 of 2026)</div>"
         item = watcher.parse_parliament_list(raw, "Act")[0]
         self.assertEqual((item["key"], item["title"]), ("act:2026:75", "The Penal Code (Amendment) Act, 2026"))
-        held = {lu.title_key("THE PENAL CODE (AMENDMENT) ACT, 2026")}
+        held = {lu.loose_key("THE PENAL CODE (AMENDMENT) ACT, 2026")}
         self.assertIsNone(watcher.propose("parliament_acts", item, {}, held))
         p = watcher.propose("parliament_acts", item, {}, set())
         self.assertEqual((p["kind"], p["value"]["principal"]), ("amendment", "Penal Code"))

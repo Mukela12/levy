@@ -82,6 +82,13 @@ def title_key(title: str) -> str:
     return re.sub(r"^the\s+", "", t)
 
 
+def loose_key(title: str) -> str:
+    """title_key with plurals folded: Parliament lists "The Public Service Pension Act,
+    2026" for the library's "Public Service Pensions Act, 2026"."""
+    return " ".join(w[:-1] if len(w) > 3 and w.endswith("s") and not w.endswith("ss") else w
+                    for w in title_key(title).split())
+
+
 def base_key(title: str) -> str:
     """title_key without the year and the word "act", for matching an amendment's principal."""
     return re.sub(r"\s+", " ", re.sub(r"\b(?:act|19\d\d|20\d\d)\b", " ", title_key(title))).strip()

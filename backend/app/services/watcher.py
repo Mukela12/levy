@@ -182,6 +182,31 @@ _SI_NOTICE = re.compile(r"following\s+Statutory\s+Instruments?\s+a\w{1,2}\s+publ
 _ACT_NOTICE = re.compile(r"following\s+Acts?\s+ha(?:ve|s)\s+been\s+enacted", re.I)
 
 
+# An instrument's title ends with its kind and year: "... Regulations, 2025".
+_TITLE_END = re.compile(r"\b(?:Order|Regulations|Rules|Notice|Directions|By-?laws|Declaration|Instrument|Determination)"
+                        r"\s*,?\s*(?:19|20)\d[\dSO]\b")
+_OCR_FIXES = ((re.compile(r"\(fax\b"), "(Tax"), (re.compile(r"\blnstrum\w*"), "Instrument"), (re.compile(r"\{"), "("))
+
+
+def _clean_si_title(raw: str, year: str) -> str | None:
+    """The title as listed, cut at its kind and year; None when the OCR mixed in other text.
+
+    On 12 Oct 2026 an unread "Statutory lnstrumc.ot No. 93" let one entry run
+    into the next, and a neighbouring column's "Budget Analyst, Ministry of
+    Home Affairs" and a page header ("GAZETTB NonCE No. 1737") rode along.
+    """
+    title = " ".join((raw or "").split())
+    end = _TITLE_END.search(title)
+    if not end:
+        return None
+    title = title[: end.end() - 4] + year          # "202S" in the scan: the notice's own year is right
+    for pattern, fix in _OCR_FIXES:
+        title = pattern.sub(fix, title)
+    if re.search(r"(?i)gazett|non[c1]e\b|notice\s+no|statutory\s+instrument|\s{2,}", title) or len(title) > 200:
+        return None
+    return title
+
+
 def parse_gazette_notices(text: str) -> list[dict]:
     """Statutory instruments and Acts the Gazette's notices list, with their exact words."""
     flat = re.sub(r"[ \t]+", " ", text or "")
@@ -192,9 +217,9 @@ def parse_gazette_notices(text: str) -> list[dict]:
         if signed:
             hi = notice.end() + signed.start()     # the notice ends at the Cabinet Secretary's signature
         for m in _SI.finditer(flat, lo, hi):
-            n, yr, title = m.group(1), m.group(2), " ".join(m.group(3).split()).rstrip(" ;,.")
-            title = re.sub(r"\s+and$", "", title)
-            if len(title) > 220 or ("si", n, yr) in seen:
+            n, yr = m.group(1), m.group(2)
+            title = _clean_si_title(m.group(3), yr)
+            if not title or ("si", n, yr) in seen:
                 continue
             seen.add(("si", n, yr))
             items.append({"type": "si", "no": n, "year": yr, "title": title, "quote": _quote(flat, m.start(), m.end())})
@@ -329,7 +354,7 @@ def _principal(title: str) -> str | None:
 
 
 def _held(title: str, library: set[str]) -> bool:
-    return legal_updates.title_key(title) in library
+    return legal_updates.loose_key(title) in library
 
 
 def propose(parser: str, item: dict, source: dict, library: set[str]) -> dict | None:
@@ -397,8 +422,8 @@ def propose_notice(item: dict, issue: dict) -> dict | None:
                     "statement": (f"{si}, {title}, was published in {where}. It brings {act} into operation on the "
                                   f"date it appoints, which is the date of publication unless it names another."),
                     "act_title": act, "value": {**value, "si": f"{item['no']} of {item['year']}"}}
-        if not SI_SUBJECTS.search(title):
-            return None
+        if not SI_SUBJECTS.search(title) or re.search(r"\(Approval and Exemption\)", title, re.I):
+            return None       # tax approvals for one named company are not law anyone asks about
         return {"kind": "new_law", "topic": f"si-{item['year']}-{item['no']}",
                 "statement": f"{si}, {title}, was published in {where}.",
                 "act_title": title, "value": {**value, "si": f"{item['no']} of {item['year']}"}}
@@ -429,13 +454,14 @@ def _save(url: str, digest: str, excerpt: str, changed: bool) -> None:
 def _library_titles() -> set[str]:
     from ..db.supabase import get_db
     rows = get_db().table("legal_documents").select("title").in_("document_type", ["act", "statutory_instrument"]).limit(5000).execute().data or []
-    return {legal_updates.title_key(r.get("title") or "") for r in rows}
+    return {legal_updates.loose_key(r.get("title") or "") for r in rows}
 
 
 def _exists(topic: str) -> bool:
     from ..db.supabase import get_db
     key = legal_updates.topic_key(topic)
-    return bool(get_db().table("legal_updates").select("id").eq("topic", key).limit(1).execute().data)
+    return bool(get_db().table("legal_updates").select("id").eq("topic", key)
+                .in_("status", ["pending", "verified", "approved"]).limit(1).execute().data)
 
 
 async def _record(p: dict, url: str, quote: str, page_text: str) -> dict:
