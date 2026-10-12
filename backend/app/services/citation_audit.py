@@ -586,13 +586,16 @@ def _match_statute_named(c: dict, index: list[dict]) -> dict | None:
 # Historical framing counts too: a correct answer on Penal Code s.69 (29 Sep
 # 2026) said "What Section 69 used to say" and "While it existed, Section 69
 # provided", and the badge flagged it for review regardless.
-_ACK = re.compile(r"repeal|no longer (?:in force|appl|govern|the law)|replaced (?:by|it)|superseded"
-                  r"|abolish|used to (?:say|provide|read|be)|while (?:it|they) (?:existed|w(?:as|ere) (?:in force|law))"
+_ACK = re.compile(r"repeal|no longer (?:in force|appl|govern|(?:the )?(?:governing )?law)|replaced (?:by|it)"
+                  r"|superseded|abolish|used to (?:say|provide|read|be)"
+                  r"|while (?:it|they|th(?:at|is|e) (?:act|section|provision)) (?:existed|w(?:as|ere) (?:in force|law))"
                   r"|formerly|before (?:the|its) repeal|prior to (?:the|its) repeal"
                   # "the 2022 Act (which replaced the older ... Act No. 11 of
                   # 1997)": the new Act doing the replacing marks the cited one
                   # as the old. A correct answer on 25 Sep was flagged for this.
-                  r"|replac\w* the (?:older|earlier|former|previous|repealed)", re.I)
+                  r"|replac\w* the (?:older|earlier|former|previous|repealed)"
+                  # "I can read the 2016 Act to see what replaced section 24"
+                  r"|what (?:has )?replaced|replaced (?:section|s\.)", re.I)
 
 
 # A sentence ends at ". " before a capital (not "Cap. 268", "No. 3 of") or a line break.
@@ -634,19 +637,42 @@ def _acknowledged_pending(answer: str, cited: str) -> bool:
 _LIVE = re.compile(r"\bstill\b|\bremains?\b|\bcurrently\b|\bcontinues? to\b", re.I)
 _BACK_REF = re.compile(r"^[\s*>\-]*(?:they|it|this act|these|those|both|that act|each"
                        r"|this provision|that provision|the provision|this section|that section)\b", re.I)
+# A source bracket standing alone after a full stop ("... non-compliance.
+# [Immigration and Deportation Act, 2010, Section 24(1)-(2)] (Page 25)")
+# belongs to the sentence it cites, not to a sentence of its own.
+_BRACKET_ONLY = re.compile(r"\s*\[[^\]\n]*\]\s*(?:\((?:p|pp|page|pages)\.?\s*[^)\n]*\)\s*)?[.;,]?\s*$", re.I)
+# A heading can mark its whole block as old law: "## What the Juveniles Act
+# said (historical only)" over a list of what the Act provided (a correct
+# answer flagged on 12 Oct 2026). A line that is all bold is a heading too,
+# below every # level.
+_HEADING = re.compile(r"^[ \t]*(?:(#{1,6})\s+\S.*|\*\*[^*\n]+\*\*:?)[ \t]*$", re.M)
+_HIST = re.compile(r"histor(?:y|ical)|as (?:originally )?enacted|old law|(?:was|were) in force", re.I)
 
 
-def _acknowledged(answer: str, cited: str, ack: re.Pattern = _ACK) -> bool:
+def _framed(answer: str, ack: re.Pattern) -> list[tuple[int, int]]:
+    """Spans under a heading that says what follows is no longer law."""
+    heads = [(h.start(), len(h.group(1)) if h.group(1) else 7, h.group()) for h in _HEADING.finditer(answer)]
+    spans = []
+    for i, (pos, level, text) in enumerate(heads):
+        if ack.search(text) or (ack is _ACK and _HIST.search(text)):
+            end = next((p for p, lv, _ in heads[i + 1:] if lv <= level), len(answer))
+            spans.append((pos, end))
+    return spans
+
+
+def _acknowledged(answer: str, cited: str, ack: re.Pattern = _ACK, rx: str | None = None) -> bool:
     """Every mention of `cited` already says it is dead ("Cap. 268 has been
     repealed and replaced by this Act"). The flag is then a confirmation, not
     something for the reader to chase.
 
-    The words must sit in the citation's own sentence, or in the next one
-    when it points back ("... the Mines and Minerals Development Act, 2015.
-    They no longer govern this area."). A repeal mentioned about some other
-    Act nearby does not count.
+    The words must sit in the citation's own sentence, or in the sentence
+    either side when it points back or names the same thing ("... the Mines
+    and Minerals Development Act, 2015. They no longer govern this area."),
+    or in a heading over the mention's block. A repeal mentioned about some
+    other Act nearby does not count. `rx` replaces the pattern built from
+    `cited` when the answer can write it several ways ("s.24", "section 24").
     """
-    rx = r"\s+".join(re.escape(w) for w in cited.split())
+    rx = rx or r"\s+".join(re.escape(w) for w in cited.split())
     hits = list(re.finditer(rx, answer, re.I))
     if not hits:
         return False
@@ -662,26 +688,32 @@ def _acknowledged(answer: str, cited: str, ack: re.Pattern = _ACK) -> bool:
         hi = min((e for e in ends if e > pos), default=len(answer))
         return lo, hi
 
+    def beside(lo: int, hi: int, forward: bool) -> str:
+        """The next or previous sentence, past blank lines."""
+        while (hi < len(answer)) if forward else (lo > 0):
+            lo, hi = sentence(hi) if forward else sentence(lo - 1)
+            if answer[lo:hi].strip():
+                return answer[lo:hi]
+        return ""
+
+    framed = _framed(answer, ack)
     for m in hits:
         start, end = sentence(m.start())
+        if _BRACKET_ONLY.match(answer[start:end]) and start > 0:
+            start = sentence(start - 1)[0] if answer[start - 1] != "\n" else start
         if ack.search(answer[start:end]):
             continue
         if _LIVE.search(answer[start:end]):
             return False
-        if end < len(answer):
-            n0, n1 = sentence(end)
-            nxt = answer[n0:n1]
-            if _BACK_REF.search(nxt) and ack.search(nxt):
-                continue
-        # The sentence before can carry it too ("It was abolished by Act No. 23
-        # of 2022. You cannot be prosecuted under Section 69 today."), but only
-        # if it points back or names the same thing: a repeal of some other
-        # Act nearby must not clear this mention.
-        if start > 0:
-            p0, p1 = sentence(start - 1)
-            prev = answer[p0:p1]
-            if ack.search(prev) and (_BACK_REF.search(prev) or re.search(rx, prev, re.I)):
-                continue
+        if any(lo <= m.start() < hi for lo, hi in framed):
+            continue
+        # The sentence either side can carry it ("It was abolished by Act No.
+        # 23 of 2022. You cannot be prosecuted under Section 69 today."), but
+        # only if it points back or names the same thing: a repeal of some
+        # other Act nearby must not clear this mention.
+        if any(ack.search(s) and (_BACK_REF.search(s) or re.search(rx, s, re.I))
+               for s in (beside(start, end, True), beside(start, end, False))):
+            continue
         return False
     return True
 
@@ -775,8 +807,13 @@ def _dead_sections(answer: str, cited: str, row: dict) -> list[dict]:
             "status": st["current"],
             "by": law_map._amender(last),
             # "section 24 ... was repealed in 2016" is the answer getting it
-            # right; the flag then confirms rather than contradicts.
-            "acknowledged": _acknowledged(answer, f"section {st['section']}"),
+            # right; the flag then confirms rather than contradicts. Every way
+            # of writing the section counts as a mention ("s.24", "Section
+            # 24(1)"): an answer that wrote only "s.24" was flagged on 12 Oct
+            # 2026 because "section 24" never appeared in it.
+            "acknowledged": _acknowledged(
+                answer, f"section {st['section']}",
+                rx=rf"(?:\bsections?|\bsec\.|(?<![\w'’])s\.?)\s*{re.escape(st['section'])}(?![\dA-Za-z])"),
         })
     return out
 

@@ -125,6 +125,27 @@ class Audit(Base):
         a = "Section 20 of the Immigration and Deportation Act 2010 sets out the conditions."
         self.assertEqual(citation_audit._dead_sections(a, "Immigration and Deportation Act 2010", self.ROW), [])
 
+    def test_an_answer_that_writes_s_dot_is_confirmed(self):
+        # Benchmark answer, 12 Oct 2026: it said so three times but never wrote "section 24".
+        a = ("- The Immigration and Deportation (Amendment) Act, 2016 repealed s.24 (the business permit).\n"
+             "- The repealed s.24 said a business permit named the inviting person. It ran for a period "
+             "\"not exceeding thirty days\" [Immigration and Deportation Act, 2010, s.24(1)–(2)] (p. 25). "
+             "It was repealed in 2016 and I cite it only as history.")
+        dead = citation_audit._dead_sections(a, "Immigration and Deportation Act, 2010", self.ROW)
+        self.assertEqual([(d["section"], d["acknowledged"]) for d in dead], [("24", True)])
+        live = "Under s.24 of the Immigration and Deportation Act 2010, a business permit may be issued."
+        self.assertFalse(citation_audit._dead_sections(live, "Immigration and Deportation Act 2010", self.ROW)[0]
+                         ["acknowledged"])
+
+    def test_a_source_bracket_belongs_to_the_sentence_it_cites(self):
+        a = ("Section 24 as originally enacted allowed a business permit for thirty days. That section has "
+             "since been repealed, so it is no longer law.\n\n**Original text.** The permit had to state the "
+             "business to be undertaken. [Immigration and Deportation Act, 2010, Section 24(1)-(2)] (Page 25)"
+             "\n\n**Repeal.** The Immigration and Deportation (Amendment) Act, 2016 (No. 19 of 2016) repealed "
+             "section 24.\n\nI can read the 2016 Amendment Act to see what replaced section 24 if you would like.")
+        dead = citation_audit._dead_sections(a, "Immigration and Deportation Act, 2010", self.ROW)
+        self.assertEqual([(d["section"], d["acknowledged"]) for d in dead], [("24", True)])
+
 
 if __name__ == "__main__":
     unittest.main()
@@ -228,3 +249,21 @@ class Acknowledged(unittest.TestCase):
         # And the narrow form does not clear a live use.
         self.assertFalse(citation_audit._acknowledged(
             "The Juveniles Act replaced colonial rules and governs sentencing today.", "Juveniles Act"))
+
+    def test_a_heading_can_mark_a_block_as_history(self):
+        # Benchmark answer, 12 Oct 2026, flagged although every part of it was right.
+        text = ("**No, the Juveniles Act is no longer the governing law.** The Juveniles Act (Cap 53) was "
+                "repealed by the Children's Code Act, 2022.\n\n## What the Juveniles Act said (historical only)"
+                "\n\nThis applies only to offences committed while that Act was in force.\n\n- **No imprisonment "
+                "or detention for a child.** [Juveniles Act, s.72(1)] (p. 37) provided that \"No child shall be "
+                "sentenced to imprisonment\".\n\n## What applies now\n\nThe Children's Code Act governs.")
+        self.assertTrue(citation_audit._acknowledged(text, "Juveniles Act"))
+        # The heading's reach ends at the next heading, and a live claim under it is still flagged.
+        self.assertFalse(citation_audit._acknowledged(
+            text + "\n\nThe Juveniles Act sets the sentencing rules.", "Juveniles Act"))
+        self.assertFalse(citation_audit._acknowledged(
+            "## Historical note\n\nThe Juveniles Act still governs sentencing.", "Juveniles Act"))
+
+    def test_a_bracket_opening_a_sentence_is_not_joined_to_the_one_before(self):
+        self.assertFalse(self.ack("The Employment Act was repealed in 2019. [Penal Code, Section 69] makes "
+                                  "defaming the President an offence."))
