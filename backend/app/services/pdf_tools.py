@@ -609,7 +609,23 @@ table.parties td.right { text-align: right; font-weight: 700; }
 """
 
 
-def _render_legal_pdf(body_md: str) -> bytes:
+# "Keep it brief, it should fit on one page" (8 Oct 2026): the court caption
+# and signature block alone filled a page at the standard spacing, so a short
+# skeleton ran to two. Same court format, tighter page.
+_LEGAL_COMPACT_CSS = """
+@page { margin: 14mm 16mm 14mm 18mm; }
+html { font-size: 11pt; line-height: 1.3; }
+p, li { margin-bottom: 4pt; }
+h1, h2, h3 { margin: 8pt 0 4pt 0; }
+.court-caption { line-height: 1.25; }
+.between { margin: 5pt 0 3pt 0; }
+.doc-title { margin: 8pt 0 6pt 0; font-size: 12pt; }
+.recital { margin: 6pt 0; }
+.dated { margin-top: 12pt; }
+"""
+
+
+def _render_legal_pdf(body_md: str, compact: bool = False) -> bytes:
     """Render a court-document Markdown body into a PDF, no auto h1.
 
     Differs from `_render_markdown_pdf` in two ways: (1) it does NOT prepend
@@ -627,7 +643,8 @@ def _render_legal_pdf(body_md: str) -> bytes:
   {body_html}
 </body></html>"""
 
-    pdf_bytes = HTML(string=full_html).write_pdf(stylesheets=[CSS(string=_LEGAL_CSS)])
+    sheets = [CSS(string=_LEGAL_CSS)] + ([CSS(string=_LEGAL_COMPACT_CSS)] if compact else [])
+    pdf_bytes = HTML(string=full_html).write_pdf(stylesheets=sheets)
     return pdf_bytes or b""
 
 
@@ -842,6 +859,7 @@ async def pdf_generate_legal(
     meta_tool: str = "pdf_generate_legal",
     owner_id: str | None = None,
     session_id: str | None = None,
+    compact: bool = False,
 ) -> dict:
     """Render a Zambian court document body (caption + parties + prose) as PDF.
 
@@ -858,7 +876,7 @@ async def pdf_generate_legal(
     # Off-load the CPU-bound render so a long court document doesn't block the
     # event loop (and everyone else's streaming) while it rasterises.
     try:
-        pdf_bytes = await asyncio.to_thread(_render_legal_pdf, body_markdown)
+        pdf_bytes = await asyncio.to_thread(_render_legal_pdf, body_markdown, compact)
     except Exception:  # noqa: BLE001 — never lose the draft to a render error
         pdf_bytes = None
     if not pdf_bytes:

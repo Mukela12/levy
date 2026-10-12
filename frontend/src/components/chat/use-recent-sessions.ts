@@ -25,12 +25,20 @@ export function useChatTitle(userId: string | undefined, sessionId: string) {
   return userId && named?.sessionId === sessionId ? named.title : 'Conversation'
 }
 
+const PAGE = 20
+
 /**
  * The signed-in user's recent chats, shared by both presentations of the
  * sidebar so the query and the delete path live in one place.
+ *
+ * Loads 20 at a time. Until 12 Oct 2026 it stopped at 20 with no way past it:
+ * the two heaviest users (34 and 28 chats) could not open 22 older chats, and
+ * a returning user asked Levy where their first conversation had gone.
  */
 export function useRecentSessions(userId: string | undefined, pathname: string) {
   const [sessions, setSessions] = useState<RecentSession[]>([])
+  const [limit, setLimit] = useState(PAGE)
+  const [hasMore, setHasMore] = useState(false)
 
   const load = useCallback(async () => {
     if (!userId) return
@@ -40,9 +48,14 @@ export function useRecentSessions(userId: string | undefined, pathname: string) 
       .select('id, title, created_at')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
-      .limit(20)
-    if (data) setSessions(data)
-  }, [userId])
+      .limit(limit + 1)
+    if (data) {
+      setHasMore(data.length > limit)
+      setSessions(data.slice(0, limit))
+    }
+  }, [userId, limit])
+
+  const showMore = useCallback(() => setLimit((n) => n + PAGE), [])
 
   useEffect(() => {
     if (userId) void load()
@@ -74,7 +87,7 @@ export function useRecentSessions(userId: string | undefined, pathname: string) 
     setSessions((prev) => prev.filter((s) => s.id !== id))
   }, [])
 
-  return { sessions, reload: load, remove }
+  return { sessions, reload: load, remove, hasMore, showMore }
 }
 
 export function timeAgo(dateStr: string): string {

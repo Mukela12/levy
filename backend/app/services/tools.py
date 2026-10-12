@@ -1079,6 +1079,23 @@ def _parse_one_date(raw: str):
     return None
 
 
+def _lines(value) -> list[str]:
+    """A drafting tool's list argument, whatever shape the model sent it in.
+
+    The schemas ask for arrays, but a model sometimes sends one string. Looping
+    over a string yields characters: on 8 Oct 2026 a 307-character `issues`
+    string became about 300 one-letter "issues for determination" and a
+    13-page skeleton. A string is split into its lines, with list markers
+    ("1.", "(a)", "-") taken off.
+    """
+    if value is None:
+        return []
+    if isinstance(value, str):
+        parts = [re.sub(r"^\s*(?:[-*\u2022]|\(?[0-9ivxa-z]{1,4}[.)])\s+", "", line) for line in value.splitlines()]
+        return [x.strip() for x in parts if x.strip()]
+    return [str(x).strip() for x in value if x is not None and str(x).strip()]
+
+
 def _parse_service_dates(start_date: str, termination_date: str):
     """Turn a start/end pair into (years_of_service, assumption_note).
 
@@ -1570,7 +1587,7 @@ def build_tool_registry(
         mode = (procedural_mode or "").strip()
         applicant = (applicant_name or "").strip()
         respondent = (respondent_name or "").strip()
-        cleaned_reliefs = [r.strip() for r in (reliefs or []) if r and r.strip()]
+        cleaned_reliefs = _lines(reliefs)
 
         if not mode:
             return {"result": {"error": "procedural_mode required"}}
@@ -1778,7 +1795,7 @@ def build_tool_registry(
         applicant = (applicant_name or "").strip()
         respondent = (respondent_name or "").strip()
         deponent = (deponent_name or "").strip()
-        cleaned_facts = [f.strip() for f in (facts or []) if f and f.strip()]
+        cleaned_facts = _lines(facts)
         cleaned_exhibits = [
             {
                 "label": (e.get("label") or "").strip(),
@@ -1946,6 +1963,7 @@ def build_tool_registry(
         counsel_name: str | None = None,
         counsel_firm: str | None = None,
         template_id: str | None = None,
+        compact: bool | None = None,
     ):
         """Draft Skeletal Arguments in support of an application.
 
@@ -1963,18 +1981,18 @@ def build_tool_registry(
         mode = (procedural_mode or "").strip()
         applicant = (applicant_name or "").strip()
         respondent = (respondent_name or "").strip()
-        cleaned_issues = [i.strip() for i in (issues or []) if i and i.strip()]
+        cleaned_issues = _lines(issues)
         cleaned_subs = [
             {
                 "title": (s.get("title") or "").strip(),
-                "paragraphs": [p.strip() for p in (s.get("paragraphs") or []) if p and p.strip()],
-                "citations": [c.strip() for c in (s.get("citations") or []) if c and c.strip()],
+                "paragraphs": _lines(s.get("paragraphs")),
+                "citations": _lines(s.get("citations")),
             }
             for s in (submissions or [])
             if s
         ]
-        cases = [c.strip() for c in (authorities_cases or []) if c and c.strip()]
-        statutes = [s.strip() for s in (authorities_statutes or []) if s and s.strip()]
+        cases = _lines(authorities_cases)
+        statutes = _lines(authorities_statutes)
 
         # Only the submissions are structurally required — a skeleton with no
         # argument in it is not a document. Introduction, issues and prayer are
@@ -2128,6 +2146,7 @@ def build_tool_registry(
             meta_tool="draft_skeletal",
             owner_id=owner_id,
             session_id=session_id,
+            compact=bool(compact),
         )
 
     async def _draft_order(
@@ -2154,7 +2173,7 @@ def build_tool_registry(
         mode = (procedural_mode or "").strip()
         applicant = (applicant_name or "").strip()
         respondent = (respondent_name or "").strip()
-        cleaned_orders = [o.strip() for o in (orders or []) if o and o.strip()]
+        cleaned_orders = _lines(orders)
 
         if not mode:
             return {"result": {"error": "procedural_mode required"}}
@@ -2418,10 +2437,10 @@ def build_tool_registry(
             "procedural_mode": (procedural_mode or "").strip(),
             "court_division": (court_division or "").strip(),
             "urgency": (urgency or "inter_partes").strip(),
-            "reliefs": [r.strip() for r in (reliefs or []) if r and r.strip()],
-            "documents_to_file": [d.strip() for d in (documents_to_file or []) if d and d.strip()],
-            "statutory_basis": [s.strip() for s in (statutory_basis or []) if s and s.strip()],
-            "authorities": [a.strip() for a in (authorities or []) if a and a.strip()],
+            "reliefs": _lines(reliefs),
+            "documents_to_file": _lines(documents_to_file),
+            "statutory_basis": _lines(statutory_basis),
+            "authorities": _lines(authorities),
             "notes": (notes or "").strip() or None,
         }
         if not plan["cause_of_action"] or not plan["procedural_mode"]:
@@ -3608,6 +3627,10 @@ def build_tool_registry(
                         "type": "array",
                         "items": {"type": "string"},
                         "description": "Statutes / Rules relied upon (Acts, sections, Order numbers).",
+                    },
+                    "compact": {
+                        "type": "boolean",
+                        "description": "True when the user wants it brief or on one page: same court format, tighter margins and spacing. Leave out cases and issues too if they asked.",
                     },
                     "authorities_position": {
                         "type": "string",

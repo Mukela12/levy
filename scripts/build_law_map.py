@@ -79,6 +79,30 @@ RE_DEFERRED = re.compile(
 # A deferred-commencement Act older than this is assumed to have started; the
 # library holds no commencement orders to say otherwise.
 PENDING_FROM_YEAR = 2025
+
+# Commencement orders the library does not hold, each confirmed by hand
+# (12 Oct 2026). Without them every deferred-commencement Act reads "not shown
+# to be in force", and the Cyber Security and Cyber Crimes Acts 2025, in force
+# since 12 May 2025, were telling users the 2021 Act still applied. `match`
+# words must all appear in the Act's normalised title, with its year.
+COMMENCED: list[dict] = [
+    {"match": "cyber security act 2025",
+     "order": "Cyber Security Act (Commencement) Order, 2025, SI No. 22 of 2025", "date": "12 May 2025",
+     "source": "SI 22 of 2025 (ZambiaLII record); government and MISA statements that both cyber Acts are in force"},
+    {"match": "cyber crime act 2025|cyber crimes act 2025",
+     "order": "Cyber Crimes Act (Commencement) Order, 2025, SI No. 23 of 2025", "date": "12 May 2025",
+     "source": "SI 23 of 2025 (ZambiaLII record); police prosecutions under the Act, July and September 2026"},
+    {"match": "geological minerals development act 2025",
+     "order": "Geological and Minerals Development Act, 2025 (Commencement) Order, 2025, SI No. 41 of 2025",
+     "date": "June 2025 (signed 3 June, published 13 June 2025)",
+     "source": "Bowmans, 'Zambia mining sector undergoes significant overhaul'; SI 41 of 2025 (ZambiaLII record)"},
+    {"match": "state owned enterprise act 2026",
+     "order": "State-Owned Enterprise Act (Commencement) Order, 2026, SI No. 38 of 2026", "date": "15 May 2026",
+     "source": "SI 38 of 2026 (ZambiaLII record only; Gazette copy not yet held)"},
+    {"match": "teaching profession act 2026",
+     "order": "Teaching Profession Act (Commencement) Order, 2026, SI No. 36 of 2026", "date": "15 May 2026",
+     "source": "SI 36 of 2026 (ZambiaLII record only; date from its record of the 2013 Act's repeal)"},
+]
 # Parliament's undated "Chapter" texts come from the 1995 revised edition,
 # consolidated to about 1996.
 UNDATED_EDITION_YEAR = 1996
@@ -133,6 +157,18 @@ def unsplit(s: str) -> str:
     for rx, rep in _OCR_SPLITS:
         s = rx.sub(rep, s)
     return s
+
+
+def commencement_fact(doc: dict) -> dict | None:
+    """The hand-confirmed commencement order for this Act, if COMMENCED has one."""
+    title = re.sub(r"[^a-z0-9 ]+", " ", (doc.get("title") or "").lower())
+    words = set(title.split())
+    for fact in COMMENCED:
+        if "amendment" in words:
+            continue
+        if any(all(w in words for w in alt.split()) for alt in fact["match"].split("|")):
+            return fact
+    return None
 
 
 def norm(name: str) -> str:
@@ -386,9 +422,14 @@ def main() -> int:
     unresolved: list[dict] = []
 
     deferred: dict[str, bool] = {}
+    commenced: dict[str, dict] = {}
     for d in scan:
         body = clean_clause(text.get(d["id"], ""))
         deferred[d["id"]] = bool(RE_DEFERRED.search(re.sub(r"\s+", "", body)))
+        fact = commencement_fact(d)
+        if fact and deferred[d["id"]]:
+            deferred[d["id"]] = False
+            commenced[d["id"]] = fact
         found: list[tuple[str, str]] = []
         for m in RE_REPEALED.finditer(body):
             for nm, partial in candidate_parts(m.group("list")):
@@ -475,6 +516,8 @@ def main() -> int:
         for r in repeals:
             if r["by"] == d["id"] and r.get("target") and not r.get("partial"):
                 add(e["will_repeal"], {"title": by_id[r["target"]]["title"], "id": r["target"]})
+    for doc_id, fact in commenced.items():
+        slot(doc_id)["commenced"] = {k: fact[k] for k in ("order", "date", "source")}
     # A bill whose Act is now in the library has passed. Left alone it would be
     # announced as "not yet law", which is the same error in the other
     # direction.

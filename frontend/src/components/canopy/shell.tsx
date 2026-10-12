@@ -93,7 +93,7 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
   const pdf = usePdfViewer()
   const { streamingIds } = useChatStream()
   const { theme, setTheme } = useUiVariant()
-  const { sessions, remove } = useRecentSessions(user?.id, pathname)
+  const { sessions, remove, hasMore, showMore } = useRecentSessions(user?.id, pathname)
   const awaiting = useAwaitingSessions()
   const [navOpen, setNavOpen] = useState(false)
   const [rail, setRail] = useState(false)
@@ -228,6 +228,9 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
           </div>
         )
       })}
+      {hasMore && (
+        <button type="button" className="cp-nav-more" onClick={showMore}>Show older chats</button>
+      )}
     </div>
   ) : null
 

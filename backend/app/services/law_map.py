@@ -71,6 +71,13 @@ def status_note(document_id: str | None) -> str | None:
                 f"by statutory instrument and the library records no commencement order. Do not present "
                 f"it as current law or lead with it; describe it as passed but not yet shown to be in "
                 f"force, and say the Gazette should be checked for a commencement order.{tail}")
+    started = e.get("commenced")
+    if started and status in ("in force", "amending Act"):
+        # A deferred-commencement Act whose order was confirmed by hand
+        # (scripts/build_law_map.py COMMENCED). Say so, so it is not caveated
+        # as "possibly not in force".
+        return (f"IN FORCE since {started.get('date')} ({started.get('order')}). This Act's start was deferred "
+                f"to a statutory instrument, and that order has been made.")
     if status == "bill, not yet law":
         return "BILL before Parliament, not yet law."
     if status == "enacted":

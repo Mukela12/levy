@@ -95,3 +95,31 @@ class Audit(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CodeNames(unittest.TestCase):
+    def test_a_code_named_without_act_matches_the_act(self):
+        index = [
+            {"id": "ec", "title": "THE EMPLOYMENT CODE ACT, 2019", "short_name": "", "document_type": "act", "year": 2019},
+            {"id": "so", "title": "The Employment Code (Shop Workers Minimum Wages and Conditions of Employment) Order, 2023",
+             "short_name": "", "document_type": "statutory_instrument", "year": 2023},
+            {"id": "go", "title": "The Employment Code (Minimum Wages and Conditions of Employment) (General) Order, 2023",
+             "short_name": "", "document_type": "statutory_instrument", "year": 2023},
+        ]
+        for r in index:
+            r["_ntitle"], r["_nshort"] = ca._norm(ca._with_act(r, r["title"])), ""
+            r["_btitle"], r["_bshort"] = ca._base(r["title"]), ""
+        c = next(c for c in ca.extract_citations("Under the Employment Code, section 75 applies.") if c["kind"] == "statute")
+        self.assertEqual(ca._match_statute(c, index)["id"], "ec")
+
+
+class ReceivedEnglishStatutes(unittest.TestCase):
+    def setUp(self):
+        ca._INDEX = []
+        ca._INDEX_AT = 1e18
+        self.addCleanup(setattr, ca, "_INDEX", None)
+
+    def test_english_acts_zambia_applies_are_foreign_not_missing(self):
+        with patch("app.services.quote_check.check_quotes", lambda *a, **k: {}):
+            out = ca.audit_answer("Under the Sale of Goods Act 1893 and the Limitation Act the seller may sue.")
+        self.assertTrue(all(v.get("foreign") for v in out if v["kind"] == "statute"))

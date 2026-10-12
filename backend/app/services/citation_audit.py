@@ -541,6 +541,17 @@ def _kind_fits(name: str, r: dict) -> bool:
 
 
 def _match_statute(c: dict, index: list[dict]) -> dict | None:
+    hit = _match_statute_named(c, index)
+    # "the Employment Code" is how answers and users name the Employment Code
+    # Act, but the bare name also fits the two Employment Code wage Orders, so
+    # it matched nothing: 5 of 12 "not in library" answers in the week to
+    # 12 Oct 2026 were the Employment Code. Retry as the Act when unmatched.
+    if hit is None and re.search(r"\bCode$", (c.get("name") or "").strip(), re.I):
+        hit = _match_statute_named(dict(c, name=c["name"].strip() + " Act"), index)
+    return hit
+
+
+def _match_statute_named(c: dict, index: list[dict]) -> dict | None:
     cands = _statute_candidates(c, index)
     if not cands:
         return None
@@ -596,7 +607,11 @@ _ACK_PENDING = re.compile(
     r"|not (?:yet )?(?:been )?shown to (?:be in force|have commenced)|no commencement order"
     r"|ha(?:s|ve) not (?:yet )?(?:commenced|come into (?:force|operation)|been commenced)"
     r"|awaiting (?:a |its )?commencement|commencement order|yet to (?:commence|come into)"
-    r"|(?:once|when|until) it (?:commences|comes into (?:force|operation))|passed but", re.I)
+    r"|(?:once|when|until) it (?:commences|comes into (?:force|operation))|passed but"
+    # "I could not confirm it has commenced", "may change the position if it has
+    # commenced" (production answers, 7 Oct 2026)
+    r"|(?:could not|cannot|can't|unable to) (?:confirm|verify) (?:that |whether )?(?:it|the act) ha(?:s|ve) (?:commenced|come into force)"
+    r"|if (?:and when )?it ha(?:s|ve) (?:commenced|come into force)", re.I)
 
 def _acknowledged_pending(answer: str, cited: str) -> bool:
     """Every mention of a not-yet-in-force Act sits in a block that says so.
@@ -784,6 +799,11 @@ def _case_treatment(answer: str, c: dict, case: dict) -> dict:
     return out
 
 
+# English statutes Zambian courts apply, usually cited without a year.
+_RECEIVED = {"limitation act", "fatal accidents act", "sale of goods act", "contempt of court act",
+             "law reform miscellaneous provisions act 1934"}
+
+
 def audit_answer(text: str) -> list[dict]:
     """Return per-citation verdicts for an answer. Never raises."""
     try:
@@ -824,6 +844,13 @@ def audit_answer(text: str) -> list[dict]:
                 out.append(verdict)
             else:
                 verdict = {"text": c["text"], "kind": c["kind"], "status": "not_found"}
+                if c["kind"] == "statute" and not foreign:
+                    # English Acts Zambia applies as received law: the Sale of
+                    # Goods Act 1893 under the English Law (Extent of
+                    # Application) Act, the Limitation Act 1939 through Cap. 72.
+                    # Shown as outside the Zambian library, not as missing.
+                    year = _cited_year(c)
+                    foreign = bool(year and year < 1964) or _norm(c["name"]) in _RECEIVED
                 if foreign:
                     verdict["foreign"] = True
                 if c["kind"] == "case":

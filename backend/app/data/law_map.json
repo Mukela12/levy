@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-08T04:59:29+00:00",
+ "generated_at": "2026-10-12T02:44:23+00:00",
  "documents": {
   "42d7a79f-db67-4d29-9371-49a8556b952f": {
    "status": "repealed",
@@ -3250,8 +3250,14 @@
    "is_global": true
   },
   "529e69cb-ac05-4d1d-b917-08a3ed4fe122": {
-   "status": "repeal pending",
-   "repealed_by": [],
+   "status": "repealed",
+   "repealed_by": [
+    {
+     "title": "THE TEACHING PROFESSION ACT, 2026",
+     "id": "91d81eba-5f80-40c7-bc1a-9cea585fe24a",
+     "evidence": "The Teaching Profession Act, is repealed"
+    }
+   ],
    "repeals": [],
    "partially_repealed_by": [],
    "amended_by": [
@@ -3262,17 +3268,36 @@
    ],
    "amends": [],
    "enacted_as": [],
-   "repeal_pending_by": [
-    {
-     "title": "THE TEACHING PROFESSION ACT, 2026",
-     "id": "91d81eba-5f80-40c7-bc1a-9cea585fe24a",
-     "evidence": "The Teaching Profession Act, is repealed"
-    }
-   ],
+   "repeal_pending_by": [],
    "will_repeal": [],
    "title": "Teaching Profession Act, 2013",
    "short_name": "Teaching Profession Act, 2013 (No. 5 of 2013)",
    "year": 2013,
+   "is_global": true
+  },
+  "91d81eba-5f80-40c7-bc1a-9cea585fe24a": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "Teaching Profession Act, 2013",
+     "id": "529e69cb-ac05-4d1d-b917-08a3ed4fe122"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "commenced": {
+    "order": "Teaching Profession Act (Commencement) Order, 2026, SI No. 36 of 2026",
+    "date": "15 May 2026",
+    "source": "SI 36 of 2026 (ZambiaLII record only; date from its record of the 2013 Act's repeal)"
+   },
+   "title": "THE TEACHING PROFESSION ACT, 2026",
+   "short_name": "TEACHING PROFESSION ACT",
+   "year": 2026,
    "is_global": true
   },
   "9841b1f0-4c2c-4f87-a88f-c19c0d27e7e6": {
@@ -3584,24 +3609,49 @@
    "is_global": true
   },
   "fa63a56b-bf16-40dc-8980-4910c2488972": {
-   "status": "repeal pending",
-   "repealed_by": [],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [],
-   "amends": [],
-   "enacted_as": [],
-   "repeal_pending_by": [
+   "status": "repealed",
+   "repealed_by": [
     {
      "title": "THE CYBER SECURITY ACT, 2025",
      "id": "a812d033-836d-462c-b98c-255c92a03a0d",
      "evidence": "The Cyber Security and Cyber Crimes Act, 2021 is repealed"
     }
    ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": [],
+   "repeal_pending_by": [],
    "will_repeal": [],
    "title": "THE CYBER SECURITY AND CYBER CRIMES ACT, 2021",
    "short_name": "CYBER SECURITY AND CYBER CRIMES ACT",
    "year": 2021,
+   "is_global": true
+  },
+  "a812d033-836d-462c-b98c-255c92a03a0d": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "THE CYBER SECURITY AND CYBER CRIMES ACT, 2021",
+     "id": "fa63a56b-bf16-40dc-8980-4910c2488972"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "commenced": {
+    "order": "Cyber Security Act (Commencement) Order, 2025, SI No. 22 of 2025",
+    "date": "12 May 2025",
+    "source": "SI 22 of 2025 (ZambiaLII record); government and MISA statements that both cyber Acts are in force"
+   },
+   "title": "THE CYBER SECURITY ACT, 2025",
+   "short_name": "CYBER SECURITY ACT",
+   "year": 2025,
    "is_global": true
   },
   "2a683a50-273f-407a-ad84-5c1bf4d77c7a": {
@@ -4332,24 +4382,49 @@
    "is_global": true
   },
   "98a6dbc9-9f23-4940-a12f-a97023a969ee": {
-   "status": "repeal pending",
-   "repealed_by": [],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [],
-   "amends": [],
-   "enacted_as": [],
-   "repeal_pending_by": [
+   "status": "repealed",
+   "repealed_by": [
     {
      "title": "The State-Owned Enterprise Act, 2026",
      "id": "e4782a75-93b0-40cb-9d7c-57e6efcc7210",
      "evidence": "The Self-Management Enterprises Act is repealed"
     }
    ],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": [],
+   "repeal_pending_by": [],
    "will_repeal": [],
    "title": "The Self-Management Enterprises Act",
    "short_name": "Self-Management Enterprises Act",
    "year": null,
+   "is_global": true
+  },
+  "e4782a75-93b0-40cb-9d7c-57e6efcc7210": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [
+    {
+     "title": "The Self-Management Enterprises Act",
+     "id": "98a6dbc9-9f23-4940-a12f-a97023a969ee"
+    }
+   ],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "commenced": {
+    "order": "State-Owned Enterprise Act (Commencement) Order, 2026, SI No. 38 of 2026",
+    "date": "15 May 2026",
+    "source": "SI 38 of 2026 (ZambiaLII record only; Gazette copy not yet held)"
+   },
+   "title": "The State-Owned Enterprise Act, 2026",
+   "short_name": "State-Owned Enterprise Act, 2026 (No. 10 of 2026)",
+   "year": 2026,
    "is_global": true
   },
   "eb5a83a0-d03c-42c7-a971-6b61d010f8e7": {
@@ -13402,26 +13477,6 @@
    "year": 2025,
    "is_global": true
   },
-  "91d81eba-5f80-40c7-bc1a-9cea585fe24a": {
-   "status": "commencement pending",
-   "repealed_by": [],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [],
-   "amends": [],
-   "enacted_as": [],
-   "repeal_pending_by": [],
-   "will_repeal": [
-    {
-     "title": "Teaching Profession Act, 2013",
-     "id": "529e69cb-ac05-4d1d-b917-08a3ed4fe122"
-    }
-   ],
-   "title": "THE TEACHING PROFESSION ACT, 2026",
-   "short_name": "TEACHING PROFESSION ACT",
-   "year": 2026,
-   "is_global": true
-  },
   "99bcb531-ea45-462c-a603-d73b6cae5dc8": {
    "status": "commencement pending",
    "repealed_by": [],
@@ -13490,21 +13545,6 @@
    "year": 2025,
    "is_global": true
   },
-  "9f4a3af3-6fef-455b-a1f0-5c51947e644f": {
-   "status": "commencement pending",
-   "repealed_by": [],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [],
-   "amends": [],
-   "enacted_as": [],
-   "repeal_pending_by": [],
-   "will_repeal": [],
-   "title": "THE GEOLOGICAL MINERALS DEVELOPMENT ACT, 2025",
-   "short_name": "GEOLOGICAL MINERALS DEVELOPMENT ACT",
-   "year": 2025,
-   "is_global": true
-  },
   "a60ac617-a082-43e4-848b-96e7e172e899": {
    "status": "commencement pending",
    "repealed_by": [],
@@ -13518,26 +13558,6 @@
    "title": "The Zambia Deposit Insurance Corporation Act, 2026",
    "short_name": "Zambia Deposit Insurance Corporation Act, 2026 (No. 11 of 2026)",
    "year": 2026,
-   "is_global": true
-  },
-  "a812d033-836d-462c-b98c-255c92a03a0d": {
-   "status": "commencement pending",
-   "repealed_by": [],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [],
-   "amends": [],
-   "enacted_as": [],
-   "repeal_pending_by": [],
-   "will_repeal": [
-    {
-     "title": "THE CYBER SECURITY AND CYBER CRIMES ACT, 2021",
-     "id": "fa63a56b-bf16-40dc-8980-4910c2488972"
-    }
-   ],
-   "title": "THE CYBER SECURITY ACT, 2025",
-   "short_name": "CYBER SECURITY ACT",
-   "year": 2025,
    "is_global": true
   },
   "b1d202f0-7d73-46d0-9e6b-acc8b69d1119": {
@@ -13575,21 +13595,6 @@
    "year": 2026,
    "is_global": true
   },
-  "bc45971e-db1d-4bfc-8fb4-24df54ab6350": {
-   "status": "commencement pending",
-   "repealed_by": [],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [],
-   "amends": [],
-   "enacted_as": [],
-   "repeal_pending_by": [],
-   "will_repeal": [],
-   "title": "Cyber Crime Act, 2025",
-   "short_name": "Cyber Crime Act 2025",
-   "year": 2025,
-   "is_global": true
-  },
   "dfdaaaa7-b1f7-4258-9c92-6f3e4cbe2f36": {
    "status": "commencement pending",
    "repealed_by": [],
@@ -13610,26 +13615,6 @@
    "year": 2025,
    "is_global": true
   },
-  "e4782a75-93b0-40cb-9d7c-57e6efcc7210": {
-   "status": "commencement pending",
-   "repealed_by": [],
-   "repeals": [],
-   "partially_repealed_by": [],
-   "amended_by": [],
-   "amends": [],
-   "enacted_as": [],
-   "repeal_pending_by": [],
-   "will_repeal": [
-    {
-     "title": "The Self-Management Enterprises Act",
-     "id": "98a6dbc9-9f23-4940-a12f-a97023a969ee"
-    }
-   ],
-   "title": "The State-Owned Enterprise Act, 2026",
-   "short_name": "State-Owned Enterprise Act, 2026 (No. 10 of 2026)",
-   "year": 2026,
-   "is_global": true
-  },
   "fff725a7-1864-4784-bc48-634de9e1b851": {
    "status": "commencement pending",
    "repealed_by": [],
@@ -13648,6 +13633,46 @@
    "title": "The Local Authorities Superannuation Act, 2026",
    "short_name": "Local Authorities Superannuation Act, 2026 (No. 74 of 2026)",
    "year": 2026,
+   "is_global": true
+  },
+  "9f4a3af3-6fef-455b-a1f0-5c51947e644f": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "commenced": {
+    "order": "Geological and Minerals Development Act, 2025 (Commencement) Order, 2025, SI No. 41 of 2025",
+    "date": "June 2025 (signed 3 June, published 13 June 2025)",
+    "source": "Bowmans, 'Zambia mining sector undergoes significant overhaul'; SI 41 of 2025 (ZambiaLII record)"
+   },
+   "title": "THE GEOLOGICAL MINERALS DEVELOPMENT ACT, 2025",
+   "short_name": "GEOLOGICAL MINERALS DEVELOPMENT ACT",
+   "year": 2025,
+   "is_global": true
+  },
+  "bc45971e-db1d-4bfc-8fb4-24df54ab6350": {
+   "status": "in force",
+   "repealed_by": [],
+   "repeals": [],
+   "partially_repealed_by": [],
+   "amended_by": [],
+   "amends": [],
+   "enacted_as": [],
+   "repeal_pending_by": [],
+   "will_repeal": [],
+   "commenced": {
+    "order": "Cyber Crimes Act (Commencement) Order, 2025, SI No. 23 of 2025",
+    "date": "12 May 2025",
+    "source": "SI 23 of 2025 (ZambiaLII record); police prosecutions under the Act, July and September 2026"
+   },
+   "title": "The Cyber Crimes Act, 2025",
+   "short_name": "Cyber Crimes Act, 2025 (No. 4 of 2025)",
+   "year": 2025,
    "is_global": true
   },
   "0e14c107-93ff-4236-99f1-18a48613a1e7": {

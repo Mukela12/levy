@@ -79,7 +79,11 @@ def main() -> int:
     pct = lambda k: f"{k} ({100 * k / n:.0f}%)" if n else "0"  # noqa: E731
     models = Counter(m.get("model") or "unrecorded" for m in answers)
     fallback = sum(c for mdl, c in models.items() if mdl not in PRIMARY and mdl != "unrecorded")
-    empty = sum(1 for m in answers if len((m.get("content") or "").strip()) < 200)
+    # A turn that hands the user a clarifying question (ask_user) has no prose by
+    # design; counting it as an empty answer made 6 of 40 look broken on 12 Oct.
+    asked = lambda m: any(c.get("name") == "ask_user" for c in (m.get("tool_calls") or []))  # noqa: E731
+    empty = sum(1 for m in answers if len((m.get("content") or "").strip()) < 200 and not asked(m))
+    clarifying = sum(1 for m in answers if asked(m))
 
     tool_runs, tool_errors = Counter(), Counter()
     misses = 0
@@ -135,6 +139,7 @@ def main() -> int:
     print(f"- answered by: " + ", ".join(f"{k} {v}" for k, v in models.most_common()))
     print(f"- fallback answers (not the primary Claude): {pct(fallback)}")
     print(f"- empty or very short answers (<200 chars): {pct(empty)}")
+    print(f"- turns that asked the user a clarifying question: {pct(clarifying)}")
     print(f"- library misses (searched, nothing returned): {pct(misses)}")
     print(f"- re-asks within {REASK_MINUTES} min (rephrased question after an answer): {reasks}")
     print(f"- citation audit ran on {audited}; answers with a citation not found: {not_found}; "

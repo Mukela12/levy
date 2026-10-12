@@ -37,3 +37,17 @@ class RepealClauses(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Commencement(unittest.TestCase):
+    """Hand-confirmed commencement orders (COMMENCED) apply to the right Act only."""
+
+    def test_the_2025_cyber_acts_are_matched(self):
+        self.assertIn("SI No. 22 of 2025", blm.commencement_fact({"title": "THE CYBER SECURITY ACT, 2025"})["order"])
+        self.assertIn("SI No. 23 of 2025", blm.commencement_fact({"title": "The Cyber Crimes Act, 2025"})["order"])
+        self.assertIn("SI No. 23 of 2025", blm.commencement_fact({"title": "Cyber Crime Act, 2025"})["order"])
+
+    def test_the_act_they_replaced_and_amending_acts_are_not(self):
+        self.assertIsNone(blm.commencement_fact({"title": "THE CYBER SECURITY AND CYBER CRIMES ACT, 2021"}))
+        self.assertIsNone(blm.commencement_fact({"title": "The Cyber Security (Amendment) Act, 2026"}))
+        self.assertIsNone(blm.commencement_fact({"title": "The Immigration Control Act, 2026"}))
