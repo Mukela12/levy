@@ -1,7 +1,18 @@
 {
   "reviewed": "2026-10-06",
-  "expires": "2026-11-03",
+  "expires": "2026-10-19",
   "topics": [
+    {
+      "id": "regional-judicial-principles-2026",
+      "question": "What could the new Livingstone and Gaborone Principles mean for justice in Zambia?",
+      "kind": "Judiciary news",
+      "published": "2026-10-05",
+      "source": "Judiciary of Zambia",
+      "sourceTitle": "Judiciary press statement: regional legal frameworks launched at the 2026 SEACJF",
+      "url": "https://judiciaryzambia.com/wp-content/uploads/2026/10/link.pdf",
+      "context": "The Judiciary's 5 October statement reports the launch of regional principles on judicial financial independence and economic and financial crime adjudication. It highlights both efficient proceedings and due process.",
+      "status": "Source checked on 12 October 2026; review due 19 October. This is a press statement, not an Act or judgment. The full principles and their domestic legal effect have not been verified here; do not treat the announcement as binding Zambian law."
+    },
     {
       "id": "minimum-wage-2023",
       "question": "What minimum wage and conditions does the 2023 general order set for protected employees?",
@@ -21,7 +32,7 @@
       "source": "National Assembly",
       "sourceTitle": "The Immigration Control Act, 2026 (No. 3 of 2026)",
       "url": "https://www.parliament.gov.zm/sites/default/files/documents/acts/The%20Immigration%20Control%20Act%2C%202026.pdf",
-      "context": "Read the new Act beside the Immigration and Deportation Act, 2010, which is the one the Department of Immigration has been applying.",
+      "context": "Compare the 2026 Act with the Immigration and Deportation Act, 2010 and its amendments. Which provisions apply depends on commencement and any transitional rules, not just the date an Act was passed.",
       "status": "The 2026 Act starts on a date the Minister appoints by statutory instrument, and no commencement order is recorded here. Check the Gazette before relying on either Act."
     },
     {
@@ -44,7 +55,7 @@
       "sourceTitle": "The National Pension Scheme Act (Cap. 256)",
       "url": "https://www.parliament.gov.zm/sites/default/files/documents/acts/National%20Pension%20Scheme%20Act.pdf",
       "context": "The Act says who must contribute, who pays it over and what happens when payment is late. The rate itself and the earnings ceiling are set separately by statutory instrument.",
-      "status": "A National Pension Scheme Act, 2026 (No. 72 of 2026) has been passed but starts on a date the Minister appoints by statutory instrument, and no commencement order is recorded here. Cap. 256 is the law for now."
+      "status": "This link is to Cap. 256. A 2026 replacement is listed by Parliament, but its commencement and transitional provisions have not been verified in this review. Do not assume Cap. 256 still governs merely because no commencement order is recorded here; confirm the applicable law and current rates with NAPSA and the Gazette."
     },
     {
       "id": "workplace-safety-2025",
