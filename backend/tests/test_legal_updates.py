@@ -104,34 +104,154 @@ class WhereUpdatesAppear(unittest.TestCase):
                 self.assertEqual(payroll.paye_bands_for(2027)[2], 2026)
 
 
-class Watcher(unittest.TestCase):
-    def test_only_added_lines_are_read(self):
-        old = "Budget 2026\nPAYE bands unchanged\nContact us"
-        new = "Budget 2026\nPAYE bands unchanged\nThe exempt threshold rises to K5,500 from 1 January 2027\nContact us"
-        self.assertEqual(watcher.added_text(old, new), "The exempt threshold rises to K5,500 from 1 January 2027")
+GAZETTE_SI = """GzErT Nonce No. 1072 or 2026
+ Notice
+ THE FOLLOWING Statutory Instruments arc published as a
+ Supplement to this Gazette:
+ Statutory Instrument No. 60 of2026: Customs and Excise
+ Act-The Customs and Excise (Suspension) (Fuel)
+ (No. 2) Regulations, 2026; and
+ Statutory Instrument No. 62 of 2026: National Pension
+ Scheme Act-The National Pension Scheme Act, 2026 (Commencement) Order, 2026
 
-    def test_first_visit_is_a_baseline_and_a_change_is_checked(self):
+ P. K. KANGWA,
+ LUSAKA Secretary to the Cabinet"""
+GAZETTE_OBJECTION = ("The objector must provide their physical address under Statutory Instrument No. 41 of 2023: "
+                     "The written objection must be addressed to the Director within thirty days.")
+GAZETTE_ACTS = """NoncE No. 974 or 2026 No. 35 of 2026: The Nurses and Midwives (Amendment)
+ Notice Act;
+ NOTICE IS HEREBY GIVEN that the following Acts have been enacted No. 36 of 2026: The Mental Health (Amendment) Act;
+ and are contained in the Supplement of this Gazette:
+ No. 39 of 2026: The Agricultural Lands (Amendment) Act;
+ No. 72 of 2026: The National Pension Scheme Act;"""
+ISSUE = {"no": "7954", "date": "2026-07-07"}
+
+
+class GazetteNotices(unittest.TestCase):
+    def test_statutory_instruments_are_read_from_the_notice_only(self):
+        items = watcher.parse_gazette_notices(GAZETTE_SI + "\n\n" + GAZETTE_OBJECTION)
+        self.assertEqual([(i["no"], i["year"]) for i in items if i["type"] == "si"], [("60", "2026"), ("62", "2026")])
+
+    def test_a_commencement_order_names_its_act(self):
+        si = next(i for i in watcher.parse_gazette_notices(GAZETTE_SI) if i["no"] == "62")
+        p = watcher.propose_notice(si, ISSUE)
+        self.assertEqual(p["kind"], "commencement")
+        self.assertEqual(p["act_title"], "The National Pension Scheme Act, 2026")
+        self.assertIn("Government Gazette No. 7954 of 7 July 2026", p["statement"])
+        self.assertEqual(lu.problems(p["kind"], p["topic"], p["statement"], "https://archive.gazettes.africa/x.pdf", si["quote"]), [])
+
+    def test_fuel_duty_is_not_a_pension(self):
+        fuel = next(i for i in watcher.parse_gazette_notices(GAZETTE_SI) if i["no"] == "60")
+        self.assertIsNone(watcher.propose_notice(fuel, ISSUE))      # "Suspension" once matched "pension"
+
+    def test_enacted_acts_get_their_year_and_principal(self):
+        acts = {i["no"]: i for i in watcher.parse_gazette_notices(GAZETTE_ACTS) if i["type"] == "act"}
+        self.assertEqual(set(acts), {"36", "39", "72"})     # No. 35's title is split across columns: skipped
+        self.assertEqual(acts["72"]["title"], "The National Pension Scheme Act, 2026")
+        p = watcher.propose_notice(acts["39"], ISSUE)
+        self.assertEqual((p["kind"], p["value"]["principal"]), ("amendment", "Agricultural Lands"))
+        self.assertIn("does not show it is in force", p["statement"])
+
+
+class PageParsers(unittest.TestCase):
+    def test_parliament_list(self):
+        raw = "<div>2026</div><div>The Penal Code (Amendment) Act, 2026</div><div>( Act No. 75 of 2026)</div>"
+        item = watcher.parse_parliament_list(raw, "Act")[0]
+        self.assertEqual((item["key"], item["title"]), ("act:2026:75", "The Penal Code (Amendment) Act, 2026"))
+        held = {lu.title_key("THE PENAL CODE (AMENDMENT) ACT, 2026")}
+        self.assertIsNone(watcher.propose("parliament_acts", item, {}, held))
+        p = watcher.propose("parliament_acts", item, {}, set())
+        self.assertEqual((p["kind"], p["value"]["principal"]), ("amendment", "Penal Code"))
+
+    def test_zra_paye_bands(self):
+        raw = ("<p>Example Calculation (2027 Tax Bands): Taxable Pay K15,000.00 Tax Calculation: Chargeable Income (K) "
+               "Rate Tax Due (K) First 5,500.00 0% 0.00 5,500.01 – 7,500.00 20% 400.00 7,500.01 – 9,600.00 30% "
+               "630.00 9,600.01 and above 37% 2,146.00</p>")
+        item = watcher.parse_zra_paye(raw)[0]
+        self.assertEqual(item["year"], 2027)
+        self.assertEqual(item["bands"], [[5500.0, 0.0], [7500.0, 0.2], [9600.0, 0.3], [None, 0.37]])
+        p = watcher.propose("zra_paye", item, {}, set())
+        self.assertEqual((p["topic"], p["value"]["monthly_bands"][0]), ("paye-bands-2027", [5500.0, 0.0]))
+        same = dict(item, year=2026, bands=[[5100.0, 0.0], [7100.0, 0.2], [9200.0, 0.3], [None, 0.37]])
+        self.assertIsNone(watcher.propose("zra_paye", same, {}, set()))   # what the calculator already uses
+
+    def test_boz_rate_takes_the_latest(self):
+        raw = ('[{"monetary_policy_rate_date":"<time datetime=\\"2026-06-30T12:00:00Z\\">Tue, 30 Jun 2026</time>",'
+               '"next_update":"September","monetary_policy_rate":"11.00"},'
+               '{"monetary_policy_rate_date":"<time datetime=\\"2026-09-30T12:00:00Z\\">Wed, 30 Sep 2026</time>",'
+               '"next_update":"November 27 ","monetary_policy_rate":"10.75"}]')
+        item = watcher.parse_boz(raw)[0]
+        self.assertEqual((item["date"], item["rate"]), ("2026-09-30", "10.75"))
+        p = watcher.propose("boz_rate", item, {}, set())
+        self.assertIn("10.75% from 30 September 2026", p["statement"])
+
+    def test_nhima_one_percent_is_not_news(self):
+        raw = '{"content":{"rendered":"<p>Formal sector &#8211; 1% of your declared income from the employee and 1% employer contribution from the basic salary of the employee.</p>"}}'
+        item = watcher.parse_nhima(raw)[0]
+        self.assertEqual(item["key"], "nhima:1:1")
+        self.assertIsNone(watcher.propose("nhima_rate", item, {}, set()))
+
+    def test_rss_items_and_relevance(self):
+        raw = ("<rss><channel><item><title>April 2026</title><link>https://www.zra.org.zm/download/april-2026/</link>"
+               "<pubDate>Fri, 02 Oct 2026 09:52:20 +0000</pubDate></item><item><title>Practice Note No. 1 of 2027"
+               "</title><link>https://www.zra.org.zm/download/pn-1-2027/</link><pubDate>Mon, 04 Jan 2027 08:00:00 +0000"
+               "</pubDate></item></channel></rss>")
+        items = watcher.parse_rss(raw)
+        self.assertEqual(len(items), 2)
+        self.assertIsNone(watcher.propose("rss", items[0], {"publisher": "ZRA"}, set()))
+        p = watcher.propose("rss", items[1], {"publisher": "ZRA"}, set())
+        self.assertIn('ZRA published "Practice Note No. 1 of 2027" on 4 January 2027', p["statement"])
+
+
+class WatcherRun(unittest.TestCase):
+    def test_first_visit_to_a_list_is_a_baseline(self):
+        raw = "<div>The Penal Code (Amendment) Act, 2026</div><div>( Act No. 75 of 2026)</div>" * 3
         saved = []
-        with patch.object(lu, "_page_text", return_value=PAGE), \
-                patch.object(watcher, "_snapshot", return_value=None), \
+        with patch.object(watcher, "fetch", return_value=raw), patch.object(watcher, "_snapshot", return_value=None), \
                 patch.object(watcher, "_save", side_effect=lambda *a: saved.append(a)):
-            self.assertEqual(asyncio.run(watcher.check({"url": GOOD["source_url"]}))["status"], "baseline")
-        proposals = [{"kind": "commencement", "topic": "commencement-soe-act-2026", "statement": GOOD["statement"],
-                      "source_quote": QUOTE}]
-        recorded = {}
+            out = asyncio.run(watcher.check({"url": "https://www.parliament.gov.zm/publications/bills-list",
+                                             "parser": "parliament_bills"}))
+        self.assertEqual(out["status"], "unparsed")       # an Acts page read as Bills finds nothing
+        bills = "<div>The Penal Code (Amendment) Bill, 2026</div><div>(Bill No. 75 of 2026)</div>"
+        with patch.object(watcher, "fetch", return_value=bills * 3), patch.object(watcher, "_snapshot", return_value=None), \
+                patch.object(watcher, "_save", side_effect=lambda *a: saved.append(a)), \
+                patch.object(lu, "record", side_effect=AssertionError("nothing to record on a first visit")):
+            out = asyncio.run(watcher.check({"url": "https://www.parliament.gov.zm/publications/bills-list",
+                                             "parser": "parliament_bills"}))
+        self.assertEqual(out["status"], "baseline")
+        self.assertIn("bill:2026:75", saved[-1][2])
+
+    def test_a_new_item_is_recorded_with_the_pages_own_words(self):
+        bills = "<div>The Penal Code (Amendment) Bill, 2026</div><div>(Bill No. 75 of 2026)</div>"
+        got = {}
 
         async def fake_record(**kw):
-            recorded.update(kw)
+            got.update(kw)
             return {"recorded": True, "status": "verified"}
 
-        with patch.object(lu, "_page_text", return_value=PAGE), \
-                patch.object(watcher, "_snapshot", return_value={"content_hash": "old", "excerpt": "nothing"}), \
-                patch.object(watcher, "_save"), patch.object(watcher, "_propose", return_value=proposals), \
+        with patch.object(watcher, "fetch", return_value=bills * 2), \
+                patch.object(watcher, "_snapshot", return_value={"content_hash": "x", "excerpt": "[]"}), \
+                patch.object(watcher, "_save"), patch.object(watcher, "_exists", return_value=False), \
                 patch.object(lu, "record", side_effect=fake_record):
-            out = asyncio.run(watcher.check({"url": GOOD["source_url"], "fact": "commencement orders"}))
-        self.assertEqual((out["status"], out["proposals"]), ("changed", 1))
-        self.assertEqual((recorded["origin"], recorded["source_url"]), ("watcher", GOOD["source_url"]))
-        self.assertTrue(recorded["page_text"])          # checked against the page it read, not a second fetch
+            out = asyncio.run(watcher.check({"url": "https://www.parliament.gov.zm/publications/bills-list",
+                                             "parser": "parliament_bills"}))
+        self.assertEqual((out["status"], out["new"]), ("changed", 1))
+        self.assertEqual((got["origin"], got["kind"]), ("watcher", "other"))
+        self.assertIn("(Bill No. 75 of 2026)", got["source_quote"])
+
+    def test_the_gazette_archive_is_an_allowed_source(self):
+        self.assertTrue(lu.official("https://archive.gazettes.africa/archive/zm/2026/x.pdf"))
+        self.assertTrue(lu.official("https://gazettes.africa/gazettes/zm/2026"))
+        self.assertFalse(lu.official("https://zambialii.org/akn/zm/officialGazette/x"))
+
+    def test_updates_reach_an_act_by_title_or_as_principal(self):
+        rows = [dict(ROW, document_id=None, act_title="The National Pension Scheme Act, 2026", value={}),
+                dict(ROW, id="u2", document_id=None, kind="amendment", act_title="The Agricultural Lands (Amendment) Act, 2026",
+                     value={"principal": "Agricultural Lands"})]
+        with patch.object(lu, "active", return_value=rows):
+            self.assertEqual(len(lu.for_document("x", "THE NATIONAL PENSION SCHEME ACT, 2026")), 1)
+            self.assertEqual(len(lu.for_document("y", "The National Pension Scheme Act")), 0)    # Cap. 256 is another Act
+            self.assertEqual(lu.for_document("z", "THE AGRICULTURAL LANDS ACT")[0]["id"], "u2")
 
 
 if __name__ == "__main__":

@@ -48,7 +48,7 @@ def _ledger(document_id: str | None) -> tuple[str | None, bool]:
         return None, False
     try:
         from . import legal_updates
-        rows = legal_updates.for_document(document_id)
+        rows = legal_updates.for_document(document_id, entry(document_id).get("title"))
     except Exception:  # noqa: BLE001
         return None, False
     if not rows:

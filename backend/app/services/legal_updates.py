@@ -42,6 +42,10 @@ OFFICIAL_HOSTS = (
     "parliament.gov.zm", "zra.org.zm", "boz.zm", "napsa.co.zm", "nhima.co.zm", "judiciaryzambia.com",
     "pacra.org.zm", "zppa.org.zm", "lawsofzambia.com", "pia.org.zm", "seczambia.org.zm", "ccpc.org.zm",
     "zicta.zm", "erb.org.zm", "zema.org.zm", "zda.org.zm", "rtsa.org.zm", "zambiaimmigration.gov.zm",
+    # The Government Gazette has no official online edition; gazettes.africa
+    # archives the printed issues. Allowed by the user on 12 Oct 2026 (it is
+    # not ZambiaLII, though the same group runs it).
+    "gazettes.africa",
 )
 QUOTE_MATCH = 0.9          # share of the quote's 8-letter runs that must be on the page
 MAX_PER_DAY = 60           # a ceiling on new rows a day, whatever the cause
@@ -68,6 +72,19 @@ def official(url: str) -> bool:
         return False
     host = host[4:] if host.startswith("www.") else host
     return host.endswith(OFFICIAL_SUFFIXES) or any(host == h or host.endswith("." + h) for h in OFFICIAL_HOSTS)
+
+
+def title_key(title: str) -> str:
+    """An Act's title for matching: case, punctuation, "The" and Cap. numbers dropped, the year kept."""
+    t = (title or "").lower().replace("republic of zambia", " ")
+    t = re.sub(r"\((?:cap|chapter)\.?\s*\d+[^)]*\)|\b(?:cap|chapter)\.?\s*\d+\b", " ", t)
+    t = re.sub(r"[^a-z0-9]+", " ", t).strip()
+    return re.sub(r"^the\s+", "", t)
+
+
+def base_key(title: str) -> str:
+    """title_key without the year and the word "act", for matching an amendment's principal."""
+    return re.sub(r"\s+", " ", re.sub(r"\b(?:act|19\d\d|20\d\d)\b", " ", title_key(title))).strip()
 
 
 def topic_key(topic: str) -> str:
@@ -214,13 +231,24 @@ def _when(row: dict) -> str:
         return stamp
 
 
+def _date_key(row: dict) -> str:
+    return str(row.get("effective_date") or (row.get("value") or {}).get("gazette_date") or row.get("first_seen_at") or "")
+
+
 def prompt_block(rows: list[dict] | None = None) -> str:
-    """The system-prompt list of updates, or "" when there are none."""
+    """The system-prompt list of updates, or "" when there are none.
+
+    Changes to the law and to rates lead; newly listed Acts and publications
+    follow, so a burst of Gazette notices cannot push a commencement order out.
+    """
     rows = active() if rows is None else rows
     if not rows:
         return ""
+    lead = sorted((r for r in rows if r.get("kind") in ("commencement", "repeal", "rate_change", "court_rule")),
+                  key=_date_key, reverse=True)[:15]
+    rest = sorted((r for r in rows if r not in lead), key=_date_key, reverse=True)[:PROMPT_LIMIT - len(lead)]
     lines = []
-    for r in rows[:PROMPT_LIMIT]:
+    for r in lead + rest:
         eff = f" (effective {r['effective_date']})" if r.get("effective_date") else ""
         mark = "" if r.get("status") == "approved" else " [checked by quote, not yet by a person]"
         lines.append(f"- {r['statement']}{eff} Source: {r['source_url']}, checked {_when(r)}.{mark}")
@@ -231,10 +259,20 @@ def prompt_block(rows: list[dict] | None = None) -> str:
         + "\n".join(lines))
 
 
-def for_document(document_id: str | None) -> list[dict]:
-    if not document_id:
+def for_document(document_id: str | None, title: str | None = None) -> list[dict]:
+    """Updates about one Act: by its library id, by its title (a Gazette commencement
+    order names the Act), or as the principal an amending Act amends."""
+    if not document_id and not title:
         return []
-    return [r for r in active() if str(r.get("document_id") or "") == str(document_id)]
+    tkey, bkey = title_key(title or ""), base_key(title or "")
+    out = []
+    for r in active():
+        principal = (r.get("value") or {}).get("principal") if isinstance(r.get("value"), dict) else None
+        if (document_id and str(r.get("document_id") or "") == str(document_id)) \
+                or (tkey and r.get("act_title") and title_key(r["act_title"]) == tkey) \
+                or (bkey and principal and base_key(principal) == bkey):
+            out.append(r)
+    return out
 
 
 def approved_value(topic: str):

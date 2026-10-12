@@ -154,10 +154,20 @@ def health():
     into the container, so exposing it makes "is my commit live?" a curl instead
     of an argument with the deploy dashboard's login screen.
     """
-    return {
-        "status": "ok",
-        "commit": os.environ.get("RAILWAY_GIT_COMMIT_SHA", "")[:7] or None,
-    }
+    return {"status": "ok", "commit": _build_commit()}
+
+
+def _build_commit() -> str | None:
+    """The deployed commit. A git-connected deploy has RAILWAY_GIT_COMMIT_SHA; since
+    12 Oct 2026 deploys run from the CLI, which writes app/BUILD_COMMIT into the
+    clean copy it uploads (the file is never committed)."""
+    sha = os.environ.get("RAILWAY_GIT_COMMIT_SHA", "")
+    if not sha:
+        try:
+            sha = open(os.path.join(os.path.dirname(__file__), "BUILD_COMMIT"), encoding="utf-8").read().strip()
+        except OSError:
+            sha = ""
+    return sha[:7] or None
 
 
 @app.get("/health/llm")
