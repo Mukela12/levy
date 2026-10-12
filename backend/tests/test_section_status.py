@@ -264,6 +264,14 @@ class Acknowledged(unittest.TestCase):
         self.assertFalse(citation_audit._acknowledged(
             "## Historical note\n\nThe Juveniles Act still governs sentencing.", "Juveniles Act"))
 
+    def test_the_past_tense_after_the_name_is_history(self):
+        self.assertTrue(citation_audit._acknowledged(
+            "## Points to note\n- The Juveniles Act distinguished \"child\" from \"young person\".", "Juveniles Act"))
+        self.assertTrue(self.ack("Section 69 (as it stood) made it an offence to defame the President."))
+        # The present tense is reliance, and "still" outranks any tense.
+        self.assertFalse(self.ack("Section 69 makes it an offence to defame the President."))
+        self.assertFalse(self.ack("Section 69 made it an offence then and still does."))
+
     def test_a_bracket_opening_a_sentence_is_not_joined_to_the_one_before(self):
         self.assertFalse(self.ack("The Employment Act was repealed in 2019. [Penal Code, Section 69] makes "
                                   "defaming the President an offence."))

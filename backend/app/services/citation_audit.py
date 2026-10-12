@@ -647,6 +647,13 @@ _BRACKET_ONLY = re.compile(r"\s*\[[^\]\n]*\]\s*(?:\((?:p|pp|page|pages)\.?\s*[^)
 # below every # level.
 _HEADING = re.compile(r"^[ \t]*(?:(#{1,6})\s+\S.*|\*\*[^*\n]+\*\*:?)[ \t]*$", re.M)
 _HIST = re.compile(r"histor(?:y|ical)|as (?:originally )?enacted|old law|(?:was|were) in force", re.I)
+# The past tense straight after the name is history, not reliance: "The
+# Juveniles Act distinguished 'child' from 'young person'" (6 Oct 2026), "the
+# business permit provision, section 24, allowed a permit of up to 30 days".
+# A live use reads "provides", "allows", "under section 24 you may".
+_PAST = re.compile(r"\s*,?\s*(?:\([^)\n]{0,40}\)[\s–-]*)*(?:said|provided|stated|required|allowed|permitted"
+                   r"|prohibited|distinguished|defined|set out|gave|empowered|imposed|created|established"
+                   r"|governed|contained|made|had)\b", re.I)
 
 
 def _framed(answer: str, ack: re.Pattern) -> list[tuple[int, int]]:
@@ -706,6 +713,8 @@ def _acknowledged(answer: str, cited: str, ack: re.Pattern = _ACK, rx: str | Non
         if _LIVE.search(answer[start:end]):
             return False
         if any(lo <= m.start() < hi for lo, hi in framed):
+            continue
+        if ack is _ACK and _PAST.match(answer, m.end()):
             continue
         # The sentence either side can carry it ("It was abolished by Act No.
         # 23 of 2022. You cannot be prosecuted under Section 69 today."), but
