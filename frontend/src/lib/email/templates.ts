@@ -485,6 +485,17 @@ export type OutreachSender = {
   business?: string | null
   address?: string | null
   phone?: string | null
+  /** Small mark shown beside the business line. */
+  logoUrl?: string | null
+}
+
+/** The business behind Levy, as on its ZRA registration and letterhead.
+ * LEVY_BUSINESS_* env vars override it. */
+export const LEVY_OPERATOR: Required<OutreachSender> = {
+  business: 'Fluxium Tech Business (trading name of Mukela Katungu), TPIN 2003851084',
+  address: 'Kulima Tower, 11th Floor, Room 1107, Lusaka',
+  phone: '+260 771 699 187',
+  logoUrl: `${SITE_URL.replace(/\/$/, '')}/fluxium-mark.png`,
 }
 
 export type FirmOutreachOptions = {
@@ -507,15 +518,20 @@ export const FIRM_OUTREACH_CAMPAIGN = 'firm-demo-oct26'
 const PRACTICE_SUBJECTS: Record<FirmPractice, (firm: string) => string> = {
   employment: (firm) => `Employment Code final-pay checks for ${firm}`,
   litigation: (firm) => `Is that authority still good law? A check for ${firm}`,
-  corporate: (firm) => `Statute checks and Zambian-form drafts for ${firm}`,
+  corporate: (firm) => `Is that section still in force? A research tool for ${firm}`,
   general: (firm) => `Is that Act still in force? A research tool for ${firm}`,
 }
 
+// What Levy holds, said once in the body. Update after each judgment harvest.
+export const LIBRARY_SIZE = 'the Acts, statutory instruments and more than 1,100 Zambian judgments'
+
+// Only employment work gets an extra line: the calculator is the one thing
+// the general paragraph does not already say.
 const PRACTICE_LINES: Record<FirmPractice, string> = {
-  employment: 'It also works out final pay, gratuity and leave under the Employment Code, with the section behind every line.',
-  litigation: 'It also drafts skeleton arguments and affidavits in Zambian court form, ready to open in Word.',
-  corporate: 'It also drafts consultancy, service and non-disclosure agreements from Zambian precedents, ready to open in Word.',
-  general: 'It also drafts in Zambian form and works out final pay and gratuity under the Employment Code.',
+  employment: 'For employment matters it also works out final pay, gratuity and leave under the Employment Code, with the section behind each figure.',
+  litigation: '',
+  corporate: '',
+  general: '',
 }
 
 export function renderFirmOutreachEmail({
@@ -534,7 +550,7 @@ export function renderFirmOutreachEmail({
     ? `${firmName}: Zambian law answers with every source linked`
     : PRACTICE_SUBJECTS[practice](firmName)
   const subject = preview ? `Preview | ${subjectCore}` : subjectCore
-  const greeting = contactName?.trim() ? `Dear ${contactName.trim()},` : `Dear colleagues at ${firmName},`
+  const greeting = contactName?.trim() ? `Dear ${contactName.trim()},` : `Dear ${firmName} team,`
   const siteHref = `${SITE_URL}/?utm_source=email&utm_medium=outreach&utm_campaign=${FIRM_OUTREACH_CAMPAIGN}`
   const privacyHref = `${SITE_URL.replace(/\/$/, '')}/privacy`
   const replyHref = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(`Levy demo for ${firmName}`)}&body=${encodeURIComponent('Hi Mukela,\n\nWe would like a demo. Times that suit us:\n1.\n2.\n\nAt our office / online (delete one).\n')}`
@@ -544,9 +560,9 @@ export function renderFirmOutreachEmail({
   const phone = sender.phone?.trim() || '[phone]'
   const where = source?.trim() ? `${source.trim()}${sourceDate?.trim() ? ` on ${sourceDate.trim()}` : ''}` : '[source and date]'
   const hookLine = hook?.trim() || ''
-  const intro = `I am Mukela Katungu, founder of Levy, a Zambian legal research and drafting tool built in Lusaka. I am writing to offer ${firmName} a free 14-day pilot.`
-  const what = `Levy answers from the Acts, statutory instruments and judgments and links every source. It flags repealed and uncommenced sections and shows how later courts treated a case. ${PRACTICE_LINES[practice]}`
-  const ask = 'Could I show you on one of your own questions, in 20 minutes at your office or online? If not, reply "no" and I will not write again.'
+  const intro = `I am Mukela Katungu, a software engineer in Lusaka. I built Levy, a research and drafting assistant for Zambian law, and I would like to offer ${firmName} a free 14-day pilot.`
+  const what = `Ask Levy a legal question and it answers from ${LIBRARY_SIZE}, with a link to every source. It flags sections that are repealed or not yet in force, shows when a later court departed from a case, and drafts skeleton arguments and agreements in Zambian form, ready for Word. ${PRACTICE_LINES[practice]}`.trim()
+  const ask = 'Could I show you how it handles a question from your own practice, in 20 minutes at your office or online? If it is not for you, reply "no" and I will not write again.'
   const why = `Why you received this: I found this address on ${where}. This is the only email I will send unless you reply.`
   const rights = 'Your rights: you can object to marketing at any time (reply STOP), ask what I hold about you, ask me to correct or delete it, or complain to the Office of the Data Protection Commissioner.'
   const preheader = 'A free 14-day pilot: Zambian law answers with every source linked, and repealed or uncommenced sections flagged.'
@@ -581,8 +597,8 @@ export function renderFirmOutreachEmail({
               <td style="padding:18px 32px 4px;">
                 <p style="${p}">${escapeHtml(greeting)}</p>
                 <p style="${p}">${escapeHtml(intro)}</p>
-                ${hookLine ? `<p style="${p}">${escapeHtml(hookLine)}</p>` : ''}
                 <p style="${p}">${escapeHtml(what)}</p>
+                ${hookLine ? `<p style="${p}">${escapeHtml(hookLine)}</p>` : ''}
                 <p style="${p}">${escapeHtml(ask)}</p>
               </td>
             </tr>
@@ -601,7 +617,12 @@ export function renderFirmOutreachEmail({
             <tr>
               <td style="padding:22px 32px 26px;">
                 <p style="margin:0;font-size:15px;line-height:1.6;color:#1f2d26;">Kind regards,<br /><strong>Mukela Katungu</strong><br />Founder, Levy</p>
-                <p style="margin:8px 0 0;font-size:13px;line-height:1.6;color:#6b7a72;">${escapeHtml(business)} &middot; ${escapeHtml(address)} &middot; ${escapeHtml(phone)} &middot; <a href="mailto:${CONTACT_EMAIL}" style="color:#6b7a72;text-decoration:none;">${escapeHtml(CONTACT_EMAIL)}</a></p>
+                <table role="presentation" cellspacing="0" cellpadding="0" style="margin:10px 0 0;">
+                  <tr>
+                    ${sender.logoUrl ? `<td style="vertical-align:top;padding:2px 10px 0 0;"><img src="${sender.logoUrl}" width="34" height="23" alt="Fluxium" style="display:block;width:34px;height:23px;border:0;" /></td>` : ''}
+                    <td style="vertical-align:top;font-size:13px;line-height:1.6;color:#6b7a72;">${escapeHtml(business)} &middot; ${escapeHtml(address)} &middot; ${escapeHtml(phone)} &middot; <a href="mailto:${CONTACT_EMAIL}" style="color:#6b7a72;text-decoration:none;">${escapeHtml(CONTACT_EMAIL)}</a></td>
+                  </tr>
+                </table>
               </td>
             </tr>
           </table>
@@ -624,9 +645,9 @@ export function renderFirmOutreachEmail({
     greeting,
     '',
     intro,
-    ...(hookLine ? ['', hookLine] : []),
     '',
     what,
+    ...(hookLine ? ['', hookLine] : []),
     '',
     ask,
     '',

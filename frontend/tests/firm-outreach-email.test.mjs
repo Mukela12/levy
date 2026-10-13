@@ -26,6 +26,13 @@ test('every email carries the identity, source, opt-out, rights and privacy poli
   assert.match(e.text, /only email I will send unless you reply/)
 })
 
+test('the firm is greeted as a team, never as colleagues', () => {
+  const e = renderFirmOutreachEmail(base)
+  assert.ok(e.text.startsWith('Dear Example & Co team,'))
+  assert.ok(!/colleague/i.test(e.html + e.text))
+  assert.match(e.text, /software engineer/)
+})
+
 test('the subject follows the practice, and variant b names the firm first', () => {
   assert.equal(renderFirmOutreachEmail({ ...base, practice: 'employment' }).subject, 'Employment Code final-pay checks for Example & Co')
   assert.match(renderFirmOutreachEmail({ ...base, practice: 'litigation' }).subject, /still good law/)
@@ -33,9 +40,9 @@ test('the subject follows the practice, and variant b names the firm first', () 
 })
 
 test('a hook is its own paragraph and is left out when there is none', () => {
-  const hook = 'Levy holds 20 judgments that list Example & Co as counsel.'
+  const hook = 'Cases your firm has argued are already in its library.'
   assert.ok(renderFirmOutreachEmail({ ...base, hook }).text.includes(`\n\n${hook}\n\n`))
-  assert.ok(!renderFirmOutreachEmail(base).text.includes('judgments that list'))
+  assert.ok(!renderFirmOutreachEmail(base).text.includes('your firm has argued'))
 })
 
 test('missing sender details show as placeholders, never as blanks', () => {

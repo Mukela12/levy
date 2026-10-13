@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendLevyEmail } from '@/lib/email/resend'
-import { renderFirmOutreachEmail, type FirmPractice } from '@/lib/email/templates'
+import { LEVY_OPERATOR, renderFirmOutreachEmail, type FirmPractice } from '@/lib/email/templates'
 
 /**
  * Demo invitations to law firms, one personalised email each (firm name,
@@ -14,9 +14,9 @@ import { renderFirmOutreachEmail, type FirmPractice } from '@/lib/email/template
  * The ECT Act 2021 allows one unsolicited commercial email per person
  * (s.65(1)) and wants every one to carry the sender's place of business and
  * phone, where the address was found, and the privacy policy (s.64(2)). A
- * real send therefore refuses to run without LEVY_BUSINESS_NAME,
- * LEVY_BUSINESS_ADDRESS and LEVY_BUSINESS_PHONE, without a source for every
- * recipient, or while levylegal.ai/privacy is not live.
+ * real send therefore refuses to run without the operator's details
+ * (LEVY_OPERATOR, overridable by LEVY_BUSINESS_* env vars), without a source
+ * for every recipient, or while levylegal.ai/privacy is not live.
  */
 type Recipient = {
   email: string
@@ -81,9 +81,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'At least one recipient with an email and a firm is required' }, { status: 400 })
     }
     const sender = {
-      business: process.env.LEVY_BUSINESS_NAME,
-      address: process.env.LEVY_BUSINESS_ADDRESS,
-      phone: process.env.LEVY_BUSINESS_PHONE,
+      business: process.env.LEVY_BUSINESS_NAME || LEVY_OPERATOR.business,
+      address: process.env.LEVY_BUSINESS_ADDRESS || LEVY_OPERATOR.address,
+      phone: process.env.LEVY_BUSINESS_PHONE || LEVY_OPERATOR.phone,
+      logoUrl: LEVY_OPERATOR.logoUrl,
     }
     // 'split' alternates the two subject lines so their open rates can be compared.
     const variantFor = (i: number): 'a' | 'b' =>
