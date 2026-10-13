@@ -492,7 +492,7 @@ export type OutreachSender = {
 /** The business behind Levy, as on its ZRA registration and letterhead.
  * LEVY_BUSINESS_* env vars override it. */
 export const LEVY_OPERATOR: Required<OutreachSender> = {
-  business: 'Fluxium Tech Business (trading name of Mukela Katungu), TPIN 2003851084',
+  business: 'Fluxium Tech Business, TPIN 2003851084',
   address: 'Kulima Tower, 11th Floor, Room 1107, Lusaka',
   phone: '+260 771 699 187',
   logoUrl: `${SITE_URL.replace(/\/$/, '')}/fluxium-mark.png`,
