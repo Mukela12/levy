@@ -52,6 +52,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import sys
@@ -123,6 +124,16 @@ SKIP_POST = re.compile(
     r"annual-report|practice-direction|holiday|notice|administration-of-)",
     re.I,
 )
+
+
+# PDFs fetched ahead of time by prefetch_judgment_pdfs.py, which downloads
+# several at once: the Judiciary serves each connection at 10-60 KB/s, so
+# fetching one judgment at a time here would take days for a few hundred.
+PDF_CACHE = Path(__file__).resolve().parent / ".pdf_cache"
+
+
+def cached_pdf_path(pdf_url: str) -> Path:
+    return PDF_CACHE / (hashlib.sha1(pdf_url.encode()).hexdigest() + ".pdf")
 
 
 def client() -> httpx.Client:
@@ -255,9 +266,16 @@ def looks_like_judgment(pdf_url: str, title: str) -> bool:
 
 
 def already() -> set[str]:
-    rows = (get_db().table("legal_documents").select("canonical_url")
-            .eq("document_type", "judgment").execute()).data or []
-    return {r["canonical_url"] for r in rows if r.get("canonical_url")}
+    # Page through: one select returns at most 1,000 rows, and past 1,000
+    # judgments the rest looked unheld and were downloaded again (14 Oct 2026).
+    db, urls, start = get_db(), set(), 0
+    while True:
+        rows = (db.table("legal_documents").select("canonical_url").eq("document_type", "judgment")
+                .order("id").range(start, start + 999).execute()).data or []
+        urls |= {r["canonical_url"] for r in rows if r.get("canonical_url")}
+        if len(rows) < 1000:
+            return urls
+        start += 1000
 
 
 def main() -> int:
@@ -269,6 +287,8 @@ def main() -> int:
     ap.add_argument("--delay", type=float, default=1.0, help="seconds between HTTP requests")
     ap.add_argument("--no-ocr", action="store_true",
                     help="ingest only; leave scanned judgments as header stubs")
+    ap.add_argument("--cached-only", action="store_true",
+                    help="ingest only PDFs prefetch_judgment_pdfs.py has downloaded; leave the rest for a later run")
     ap.add_argument("--dry-run", action="store_true",
                     help="discover and report only; download and ingest nothing")
     args = ap.parse_args()
@@ -339,15 +359,20 @@ def main() -> int:
                         have.add(pdf)
                         ingested += 1
                         continue
-                    try:
-                        r = c.get(pdf)
-                        time.sleep(args.delay)
-                    except Exception:
-                        failed += 1
+                    cached = cached_pdf_path(pdf)
+                    if cached.is_file():
+                        content = cached.read_bytes()
+                    elif args.cached_only:
                         continue
-                    content = r.content
-                    if (r.status_code != 200 or not content.startswith(b"%PDF")
-                            or len(content) < 20_000):
+                    else:
+                        try:
+                            r = c.get(pdf)
+                            time.sleep(args.delay)
+                        except Exception:
+                            failed += 1
+                            continue
+                        content = r.content if r.status_code == 200 else b""
+                    if not content.startswith(b"%PDF") or len(content) < 20_000:
                         continue
                     area = infer_area(title)
                     key = slug(title) + ".pdf"

@@ -184,9 +184,16 @@ def infer_area(title: str) -> str:
 
 
 def already_ingested_urls() -> set[str]:
-    rows = (get_db().table("legal_documents").select("canonical_url")
-            .eq("document_type", "judgment").execute()).data or []
-    return {r["canonical_url"] for r in rows if r.get("canonical_url")}
+    # Page through: one select returns at most 1,000 rows, and past 1,000
+    # judgments the rest looked unheld and were downloaded again (14 Oct 2026).
+    db, urls, start = get_db(), set(), 0
+    while True:
+        rows = (db.table("legal_documents").select("canonical_url").eq("document_type", "judgment")
+                .order("id").range(start, start + 999).execute()).data or []
+        urls |= {r["canonical_url"] for r in rows if r.get("canonical_url")}
+        if len(rows) < 1000:
+            return urls
+        start += 1000
 
 
 def main() -> int:
