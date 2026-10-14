@@ -523,7 +523,7 @@ const PRACTICE_SUBJECTS: Record<FirmPractice, (firm: string) => string> = {
 }
 
 // What Levy holds, said once in the body. Update after each judgment harvest.
-export const LIBRARY_SIZE = 'the Acts, statutory instruments and more than 1,100 Zambian judgments'
+export const LIBRARY_SIZE = 'the Acts, statutory instruments and more than 1,600 Zambian judgments'
 
 // Only employment work gets an extra line: the calculator is the one thing
 // the general paragraph does not already say.
