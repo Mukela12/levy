@@ -165,7 +165,8 @@ def preflight() -> str | None:
     return None
 
 
-def promote_scanned(did: str, *, title: str, min_chars: int = 500) -> tuple[bool, str]:
+def promote_scanned(did: str, *, title: str, min_chars: int = 500,
+                    pdf_bytes: bytes | None = None) -> tuple[bool, str]:
     """OCR one header-only judgment into full-text chunks.
 
     Returns (ok, detail). Raises OcrUnavailable if the toolchain is broken,
@@ -183,7 +184,9 @@ def promote_scanned(did: str, *, title: str, min_chars: int = 500) -> tuple[bool
     if not row:
         return False, "document not found"
     r = row[0]
-    if not r.get("pdf_storage_path"):
+    # A PDF over the storage upload limit (413) has no stored copy; the
+    # harvester's local download can stand in for it.
+    if pdf_bytes is None and not r.get("pdf_storage_path"):
         return False, "no stored PDF"
     ex = retry(lambda: db.table("legal_chunks").select("id,metadata")
                .eq("document_id", did).execute().data) or []
@@ -191,8 +194,11 @@ def promote_scanned(did: str, *, title: str, min_chars: int = 500) -> tuple[bool
     citation = r.get("short_name") or base.get("act_name") or title
     old_ids = [c["id"] for c in ex]
 
-    bucket, _, key = r["pdf_storage_path"].partition("/")
-    pdf = retry(lambda: db.storage.from_(bucket).download(key))
+    if pdf_bytes is not None:
+        pdf = pdf_bytes
+    else:
+        bucket, _, key = r["pdf_storage_path"].partition("/")
+        pdf = retry(lambda: db.storage.from_(bucket).download(key))
     pages = ocr_pdf_pages(pdf)               # may raise OcrUnavailable
     text = "\n".join(pages)
     if len(text.strip()) < min_chars:
