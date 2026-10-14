@@ -13,6 +13,32 @@ INLINE_MAX_CHARS = 30_000   # per attachment
 INLINE_TOTAL_CAP = 60_000   # across all inline attachments in one turn
 
 
+IMAGE_EXTS = (".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp", ".tif", ".tiff")
+
+
+def image_to_pdf(content: bytes, filename: str) -> bytes:
+    """A photo or screenshot as a one-page PDF.
+
+    Most users are on phones and photograph the document (a payslip, a court
+    notice, a table of tax bands), but chat attachments took only PDFs. As a
+    one-page PDF with no text layer the photo follows the scanned-PDF path:
+    the upload reports needs_ocr, and read_pdf_pages hands the page to the
+    model as an image, which it reads. Raises ValueError for a file PyMuPDF
+    cannot open as an image (HEIC among them).
+    """
+    import pymupdf
+    ext = filename.rsplit(".", 1)[-1].lower()
+    kind = {"jpg": "jpeg", "tif": "tiff"}.get(ext, ext)
+    try:
+        img = pymupdf.open(stream=content, filetype=kind)
+        pdf = img.convert_to_pdf()
+    except Exception as e:  # noqa: BLE001
+        raise ValueError(f"not a readable {ext} image") from e
+    if not pdf or pymupdf.open(stream=pdf, filetype="pdf").page_count < 1:
+        raise ValueError("image produced an empty PDF")
+    return pdf
+
+
 def looks_scanned(text: str | None, page_count: int | None) -> bool:
     """Too little text for its pages: a scan, a photo, or a PDF of images.
 

@@ -67,6 +67,8 @@ ZM_NEWS_DOMAINS: list[str] = [
 # unrestricted web_search if nothing useful is found.
 GOV_ZM_DOMAINS: list[str] = [
     # Legal & legislative
+    "gazettes.africa",       # the Government Gazette archive: SIs, commencement orders, notices
+    "archive.gazettes.africa",
     "parliament.gov.zm",
     "lawsofzambia.com",
     "judiciaryzambia.com",
@@ -4139,10 +4141,16 @@ def build_tool_registry(
             description=(
                 "Web search restricted to official Zambian government and "
                 "institutional websites (parliament.gov.zm, lawsofzambia.com, "
-                "judiciaryzambia.com, pacra.org.zm, etc.). Use this for context "
+                "judiciaryzambia.com, pacra.org.zm, the Government Gazette archive "
+                "at gazettes.africa, etc.). Use this for context "
                 "the corpus does not contain — current procedures, fees, news, "
                 "court judgments not yet ingested. Cite returned URLs back to "
-                "the user."
+                "the user. For a statutory instrument, a commencement order or a "
+                "Gazette notice the library lacks, open the Gazette directly: "
+                "web_fetch https://gazettes.africa/gazettes/zm/<year> lists that "
+                "year's gazettes and supplements with links, and read_pdf_pages "
+                "reads a gazette PDF (archive.gazettes.africa), scanned pages as "
+                "images."
             ),
             input_schema={
                 "type": "object",

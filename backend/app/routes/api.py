@@ -1482,10 +1482,12 @@ async def upload_document(
 
     from pypdf import PdfReader
     from ..db.supabase import get_db
-    from ..services.attachments import looks_scanned
+    from ..services.attachments import IMAGE_EXTS, image_to_pdf, looks_scanned
 
-    if not file.filename or not file.filename.lower().endswith(".pdf"):
-        raise HTTPException(status_code=400, detail="Only PDF files are supported")
+    name = (file.filename or "").lower()
+    is_image = name.endswith(IMAGE_EXTS)
+    if not name.endswith(".pdf") and not is_image:
+        raise HTTPException(status_code=400, detail="Only PDFs and photos (JPEG, PNG or WEBP) are supported")
     if folder_id:
         _assert_owns("document_folders", folder_id, uid)
 
@@ -1493,6 +1495,12 @@ async def upload_document(
 
     try:
         content = await file.read()
+        if is_image:
+            # A photo becomes a one-page PDF and is read as a scanned page.
+            try:
+                content = image_to_pdf(content, name)
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Could not read that image. Send a JPEG or PNG photo, or a PDF.")
         size_bytes = len(content)
         pdf_hash = hashlib.sha256(content).hexdigest()
 

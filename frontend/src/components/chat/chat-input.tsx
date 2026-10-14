@@ -160,7 +160,7 @@ export function ChatInput({
             <input
               ref={fileInputRef}
               type="file"
-              accept=".pdf"
+              accept=".pdf,image/jpeg,image/png,image/webp"
               className="hidden"
               onChange={handleFileSelected}
             />
@@ -209,7 +209,7 @@ export function ChatInput({
                       >
                         <Upload className="size-3.5 text-emerald-400/80" />
                         <span className="flex-1">Upload file</span>
-                        <span className="text-[10px] text-white/30">PDF</span>
+                        <span className="text-[10px] text-white/30">PDF or photo</span>
                       </button>
                     )}
                     {onAttachClick && (
