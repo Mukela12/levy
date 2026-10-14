@@ -10,8 +10,9 @@ Act. Measured on 14 Oct 2026: 51 chunks of the High Court Act, 79 of the
 Supreme Court Act, 118 of the Subordinate Courts Act and 94 of the Legal
 Practitioners Act.
 
-A letter is rejoined only when the joined word is in the system dictionary and
-the fragment is not, so "A person" and "I am" stay as they are. Order numbers
+A letter is rejoined only when the joined word, or its singular or stem, is in
+the system dictionary. After A, I or O the fragment must also not be a word, so
+"A person" and "I am" stay as they are. Order numbers
 split the same way ("Order X II") are rejoined when the result is a valid
 Roman numeral.
 
@@ -34,12 +35,42 @@ ORDER_ROMAN = re.compile(r"\b(Order|ORDER) ([IVXL]{1,4}) ([IVXL]{1,4})\b")
 ROMAN = re.compile(r"^L?X{0,3}(IX|IV|V?I{0,3})$")
 
 
+# Word counts from about 14,000 chunks of Levy's judgments (built 14 Oct 2026).
+# The system dictionary is American and old: it lacks "offences", "licence"
+# and "defence", and carries archaic words such as "stablishment" and
+# "bunder". Zambian legal text decides instead what counts as a word.
+VOCAB = {w: int(c) for w, c in (line.split("\t") for line in
+         (Path(__file__).resolve().parent / "data" / "legal_vocab.tsv").read_text().splitlines() if "\t" in line)}
+COMMON_MIN = 20     # a fragment this frequent in the judgments is a real word
+
+
+def _word(w: str) -> bool:
+    return w in WORDS or VOCAB.get(w, 0) >= 3
+
+
+def known(word: str) -> bool:
+    """A word, directly or as a plural or inflection of one."""
+    w = word.lower()
+    if _word(w):
+        return True
+    for suffix, stem_end in (("ies", "y"), ("es", ""), ("s", ""), ("ed", ""), ("ed", "e"), ("ing", ""), ("ing", "e")):
+        if w.endswith(suffix) and len(w) > len(suffix) + 2 and _word(w[: -len(suffix)] + stem_end):
+            return True
+    return False
+
+
 def fix(text: str) -> str:
     def initial(m: re.Match) -> str:
-        joined = m.group(1) + m.group(2)
-        if joined.lower() in WORDS and m.group(2).lower() not in WORDS:
-            return joined
-        return m.group(0)
+        letter, rest = m.group(1), m.group(2)
+        fragment = rest.lower()
+        # "Form B under", "A person", "I am": the fragment is an everyday word.
+        if VOCAB.get(fragment, 0) >= COMMON_MIN:
+            return m.group(0)
+        # A, I and O are the only one-letter English words, so after them a
+        # dictionary word is left alone too ("A ward" of the court).
+        if letter in "AIO" and fragment in WORDS:
+            return m.group(0)
+        return letter + rest if known(letter + rest) else m.group(0)
 
     def roman(m: re.Match) -> str:
         joined = m.group(2) + m.group(3)
