@@ -52,8 +52,14 @@ class OcrUnavailable(RuntimeError):
     """
 
 
-def ocr_pdf(pdf_bytes: bytes) -> str:
-    """OCR a scanned PDF with Tesseract via ocrmypdf; return the sidecar text."""
+def ocr_pdf_pages(pdf_bytes: bytes) -> list[str]:
+    """OCR a scanned PDF with Tesseract via ocrmypdf; one string per page.
+
+    The sidecar separates pages with form feeds. Keeping them is what lets a
+    chunk carry its real page range: joining them stamped every OCR'd
+    judgment's chunks "page 1" (35 of the 39 newest judgments on 14 Oct
+    2026), so an answer could not cite the page a holding is on.
+    """
     with tempfile.TemporaryDirectory() as td:
         ip = Path(td) / "in.pdf"; op = Path(td) / "out.pdf"; side = Path(td) / "t.txt"
         ip.write_bytes(pdf_bytes)
@@ -71,8 +77,13 @@ def ocr_pdf(pdf_bytes: bytes) -> str:
             tail = err[-1] if err else f"exit {proc.returncode}"
             raise OcrUnavailable(tail[:160])
         if not side.exists():
-            return ""
-        return "\n".join(side.read_text(errors="ignore").split("\f"))  # form-feeds -> newlines
+            return []
+        return side.read_text(errors="ignore").split("\f")
+
+
+def ocr_pdf(pdf_bytes: bytes) -> str:
+    """The OCR text as one string, for callers that do not need pages."""
+    return "\n".join(ocr_pdf_pages(pdf_bytes))
 
 
 def chunk_text(text: str, target: int = 1100) -> list[str]:
@@ -91,6 +102,41 @@ def chunk_text(text: str, target: int = 1100) -> list[str]:
             cur = p
     if cur:
         chunks.append(cur)
+    return chunks
+
+
+def chunk_pages(pages: list[str], target: int = 1100) -> list[dict]:
+    """chunk_text over a list of pages, keeping each chunk's first and last page.
+
+    Same sizes as chunk_text: paragraphs join until the chunk would pass 1.4x
+    target, and a paragraph longer than 1.6x target is cut. A chunk that runs
+    from the foot of one page onto the next records both pages.
+    """
+    chunks: list[dict] = []
+    cur, start, end = "", 0, 0
+    hard = int(target * 1.4)
+
+    def flush() -> None:
+        nonlocal cur
+        if cur:
+            chunks.append({"text": cur, "page_start": start, "page_end": end})
+        cur = ""
+
+    for n, page in enumerate(pages, start=1):
+        for p in (x.strip() for x in re.split(r"\n\s*\n", page or "")):
+            if not p:
+                continue
+            if cur and len(cur) + len(p) > hard:
+                flush()
+            while len(p) > int(target * 1.6):
+                flush()
+                chunks.append({"text": p[:hard], "page_start": n, "page_end": n})
+                p = p[hard:]
+            if not cur:
+                start = n
+            cur = (cur + "\n\n" + p).strip()
+            end = n
+    flush()
     return chunks
 
 
@@ -147,24 +193,25 @@ def promote_scanned(did: str, *, title: str, min_chars: int = 500) -> tuple[bool
 
     bucket, _, key = r["pdf_storage_path"].partition("/")
     pdf = retry(lambda: db.storage.from_(bucket).download(key))
-    text = ocr_pdf(pdf)                      # may raise OcrUnavailable
+    pages = ocr_pdf_pages(pdf)               # may raise OcrUnavailable
+    text = "\n".join(pages)
     if len(text.strip()) < min_chars:
         return False, f"too little text ({len(text.strip())})"
 
-    pieces = chunk_text(text)
+    pieces = chunk_pages(pages)
     if not pieces:
         return False, "no chunks after OCR"
-    embs = retry(lambda: get_embeddings(pieces))
+    embs = retry(lambda: get_embeddings([c["text"] for c in pieces]))
     meta = {"document_type": "judgment", "act_name": citation,
             "ocr": True, "ocr_engine": "tesseract"}
     if base.get("category"):
         meta["category"] = base["category"]
     if base.get("issuing_authority"):
         meta["issuing_authority"] = base["issuing_authority"]
-    recs = [{"document_id": did, "content": t, "embedding": e,
+    recs = [{"document_id": did, "content": c["text"], "embedding": e,
              "metadata": {**meta, "is_header": i == 0},
-             "chunk_index": i, "page_start": 1, "page_end": 1}
-            for i, (t, e) in enumerate(zip(pieces, embs))]
+             "chunk_index": i, "page_start": c["page_start"], "page_end": c["page_end"]}
+            for i, (c, e) in enumerate(zip(pieces, embs))]
     # insert first (never leave the doc with zero chunks), then drop the header
     retry(lambda: insert_chunks(recs))
     if old_ids:
