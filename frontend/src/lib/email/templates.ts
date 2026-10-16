@@ -565,13 +565,16 @@ const OUTREACH_DRAFTS: Record<Exclude<OutreachDraft, 'demo'>, DraftCopy> = {
     subject: (firm) => `Seeking ${firm.endsWith('s') ? `${firm}'` : `${firm}'s`} view on a Zambian legal research tool`,
     preheader: 'A software engineer in Lusaka asks for a law firm\'s view on Levy, a research tool for Zambian law.',
     body: () => [
-      'I am a software engineer based in Lusaka, and this year I built Levy, an AI research assistant for Zambian law. It has answered more than 850 questions so far, and I am writing to ask whether it could be useful to your firm.',
+      // Who uses it and for what, from the chats on 16 Oct 2026, instead of
+      // counts. No user is described individually.
+      'I built Levy, an AI assistant for Zambian law. Since May it has been helping lawyers draft applications and check authorities, HR officers work out overtime, leave and redundancy pay, and law students prepare for exams.',
+      'I have not launched it officially, because I honestly do not know yet whether it is ready. As a software engineer in Lusaka with no connections in the legal profession, I am writing to firms directly to find out.',
       // The user's point: the value is the harness, not the model.
-      'The most important part of Levy is not the AI model but the harness around it. The harness chooses what to read from ${LIBRARY}, checks every citation against that library, and flags provisions that are repealed or not yet in force. That is what ties each answer to a source a lawyer can check, rather than to whatever a model remembers. The AI model is used only for the reasoning in between.',
+      'What matters most is not the AI model but the harness around it. It chooses what to read from ${LIBRARY}, checks every citation and flags repealed provisions, so every answer rests on sources a lawyer can check. The model only does the reasoning.',
     ],
     // Adoption and feedback together: firms that use it are the ones who improve it.
-    ask: () => 'I do not come from the legal profession, so lawyers who use Levy are the best judges of how well it suits a firm\'s work. It is free, and anyone at your firm can sign up. If your team tries it, I would value your honest view of where it helps and where it falls short: each correction from a lawyer makes it better for everyone who relies on it.',
-    closing: () => 'Once I am confident in the harness, I plan to release an enterprise version that your firm, or anyone, can use by connecting its own Claude, OpenAI or other AI provider for the reasoning. If that would interest your firm, please let me know.',
+    ask: () => 'It is free, and anyone at your firm can sign up. Every correction from a lawyer improves it for everyone, so I would value your honest view of where it falls short.',
+    closing: () => 'Once I am confident in the harness, I plan an enterprise version that firms can run with their own Claude, OpenAI or other AI provider. If that would interest you, please let me know.',
   },
 }
 

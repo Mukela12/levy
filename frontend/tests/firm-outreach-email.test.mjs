@@ -54,9 +54,14 @@ test('the chosen draft explains the harness, invites the firm in, and has no bus
   const e = renderFirmOutreachEmail({ ...base, draft: 'formal' })
   assert.match(e.subject, /^Seeking Example & Co's view/)
   assert.match(e.text, /not the AI model but the harness around it/)
-  assert.match(e.text, /used only for the reasoning/)
-  assert.match(e.text, /connecting its own Claude, OpenAI or other AI provider/)
+  assert.match(e.text, /only does the reasoning/)
+  assert.match(e.text, /their own Claude, OpenAI or other AI provider/)
   assert.match(e.text, /anyone at your firm can sign up/)
+  // Who uses it, not how many questions it has answered.
+  assert.match(e.text, /helping lawyers draft applications/)
+  assert.match(e.text, /not launched it officially/)
+  assert.match(e.text, /no connections in the legal profession/)
+  assert.ok(!/questions so far|850/.test(e.text), 'no usage counts')
   assert.ok(!/Fluxium|TPIN/.test(e.html + e.text), 'the Fluxium line is gone')
   // The user removed the sender line and the rights and privacy wording.
   for (const gone of ['Sent by', SENDER.address, SENDER.phone, 'Data Protection Commissioner', '/privacy']) {
