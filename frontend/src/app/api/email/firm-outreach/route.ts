@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendLevyEmail } from '@/lib/email/resend'
-import { LEVY_OPERATOR, renderFirmOutreachEmail, type FirmPractice } from '@/lib/email/templates'
+import { LEVY_OPERATOR, renderFirmOutreachEmail, type FirmPractice, type OutreachDraft } from '@/lib/email/templates'
 
 /**
  * Demo invitations to law firms, one personalised email each (firm name,
@@ -31,11 +31,14 @@ type Recipient = {
 type OutreachRequest = {
   recipients: Recipient[]
   variant?: 'a' | 'b' | 'split'
+  /** Wording: 'formal' (the chosen draft) unless another is named. */
+  draft?: OutreachDraft
   preview?: boolean
   dryRun?: boolean
 }
 
 const PRACTICES = new Set<FirmPractice>(['litigation', 'employment', 'corporate', 'general'])
+const DRAFTS = new Set<OutreachDraft>(['demo', 'feedback', 'short', 'story', 'formal'])
 const SEND_INTERVAL_MS = 200
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -96,6 +99,7 @@ export async function POST(request: NextRequest) {
         firm: r.firm, contactName: r.contactName, practice: r.practice, hook: r.hook,
         source: r.source, sourceDate: r.sourceDate, sender,
         variant: variantFor(i), preview: Boolean(payload.preview),
+        draft: DRAFTS.has(payload.draft as OutreachDraft) ? payload.draft : 'formal',
       }),
     }))
 

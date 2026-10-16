@@ -50,6 +50,18 @@ test('missing sender details show as placeholders, never as blanks', () => {
   assert.ok(e.text.includes('[street address], Lusaka') && e.text.includes('[phone]') && e.text.includes('[source and date]'))
 })
 
+test('the chosen draft explains the harness and the enterprise idea, with no business line', () => {
+  const e = renderFirmOutreachEmail({ ...base, draft: 'formal' })
+  assert.match(e.subject, /^Seeking Example & Co's view/)
+  assert.match(e.text, /not the AI model but the harness around it/)
+  assert.match(e.text, /used only for the reasoning/)
+  assert.match(e.text, /connecting its own Claude, OpenAI or other AI provider/)
+  assert.ok(!/Fluxium|TPIN/.test(e.html + e.text), 'the Fluxium line is gone')
+  // ECT Act s.64(2)(a): identity, place of business and phone still in the small print.
+  assert.match(e.text, /Sent by Mukela Katungu, Plot 1, Example Road, Lusaka\. Phone \+260 970 000000\./)
+  assert.ok(!/[\u2014]/.test(e.html + e.text))
+})
+
 test('no em dashes in Levy wording', () => {
   const e = renderFirmOutreachEmail({ ...base, hook: 'A hook.' })
   assert.ok(!(e.html + e.text + e.subject).includes('—'))

@@ -509,10 +509,70 @@ export type FirmOutreachOptions = {
   sourceDate?: string | null
   sender?: OutreachSender
   variant?: 'a' | 'b'
+  /** Which wording: the demo invitation, or one of the four requests for a lawyer's view. */
+  draft?: OutreachDraft
   preview?: boolean
 }
 
 export const FIRM_OUTREACH_CAMPAIGN = 'firm-demo-oct26'
+
+export type OutreachDraft = 'demo' | 'feedback' | 'short' | 'story' | 'formal'
+
+// The founder asks for a lawyer's honest view instead of offering a demo: a
+// software engineer, not a lawyer, who says so. Each draft keeps the same
+// card, footer and link; only the words change. Facts recounted 14 Oct 2026
+// (40 sign-ups, 856 questions); recount before each send.
+type DraftCopy = {
+  subject: (firm: string) => string
+  preheader: string
+  body: (firm: string) => string[]
+  ask: (firm: string) => string
+  /** A last paragraph after the ask. */
+  closing?: (firm: string) => string
+}
+
+const LIBRARY_LINE = `It answers from ${'${LIBRARY}'}, with a link to every source, and flags sections that are repealed or not yet in force.`
+
+const OUTREACH_DRAFTS: Record<Exclude<OutreachDraft, 'demo'>, DraftCopy> = {
+  feedback: {
+    subject: (firm) => `A question for ${firm} from a Lusaka software engineer`,
+    preheader: "I built a small AI research tool for Zambian law and would value a lawyer's honest view.",
+    body: () => [
+      "I'm Mukela Katungu, a software engineer based in Lusaka. Earlier this year I started a small legal AI project called Levy, and it has gained some traction: 40 people have signed up and it has answered more than 850 questions about Zambian law.",
+      LIBRARY_LINE,
+    ],
+    ask: (firm) => `As I'm not a lawyer, I'm not sure how well suited it is to the work a firm like yours does. Would someone at ${firm} be willing to try it and tell me honestly where it falls short? Even a one-line reply would help.`,
+  },
+  short: {
+    subject: (firm) => `Is this useful to lawyers at ${firm}?`,
+    preheader: "A free AI research tool for Zambian law, built by an engineer who needs a lawyer's verdict.",
+    body: () => [
+      "I'm Mukela Katungu, a software engineer in Lusaka. I built Levy, a free AI research tool for Zambian law that answers from the Acts and Zambian judgments and links every source.",
+      "It has picked up more users than I expected, but I'm an engineer, not a lawyer, so I can't judge whether it is good enough for practice.",
+    ],
+    ask: () => 'Could you try it on a question you already know the answer to, and tell me what it got wrong? That is the most useful feedback I could get right now.',
+  },
+  story: {
+    subject: (firm) => `Why I built a Zambian legal AI tool, and a question for ${firm}`,
+    preheader: 'General chatbots are not designed for law. I built one for Zambian law that people can check.',
+    body: () => [
+      "I'm Mukela Katungu, a software engineer based in Lusaka. I started Levy as a small project because general AI chatbots aren't designed for law, and I wanted something for Zambian law that people could trust and check.",
+      `${LIBRARY_LINE} Since it launched, people across Zambia have asked it more than 850 questions.`,
+    ],
+    ask: (firm) => `What I can't tell, as an engineer, is whether it meets the standard a law firm needs. If anyone at ${firm} has a few minutes to try it, I'd be grateful for an honest verdict.`,
+  },
+  formal: {
+    subject: (firm) => `Seeking ${firm.endsWith('s') ? `${firm}'` : `${firm}'s`} view on a Zambian legal research tool`,
+    preheader: 'A software engineer in Lusaka asks for a law firm\'s view on Levy, a research tool for Zambian law.',
+    body: () => [
+      'I am writing to ask for your advice. I am a software engineer based in Lusaka, and this year I built Levy, an AI research assistant for Zambian law. It has answered more than 850 questions so far.',
+      // The user's point: the value is the harness, not the model.
+      'The most important part of Levy is not the AI model but the harness around it. The harness chooses what to read from ${LIBRARY}, checks every citation against that library, and flags provisions that are repealed or not yet in force. That is what ties each answer to a source a lawyer can check, rather than to whatever a model remembers. The AI model is used only for the reasoning in between.',
+    ],
+    ask: () => 'Because I do not come from the legal profession, I am unsure how well it suits a firm\'s work. I would value your honest view, whether you try it on a question or simply reply. Levy is free to use.',
+    closing: () => 'Once I am confident in the harness, I plan to release an enterprise version that your firm, or anyone, can use by connecting its own Claude, OpenAI or other AI provider for the reasoning. If that would interest your firm, please let me know.',
+  },
+}
 
 // The subject names the firm and the work it does; short enough for a phone.
 const PRACTICE_SUBJECTS: Record<FirmPractice, (firm: string) => string> = {
@@ -543,29 +603,37 @@ export function renderFirmOutreachEmail({
   sourceDate,
   sender = {},
   variant = 'a',
+  draft = 'demo',
   preview = false,
 }: FirmOutreachOptions): EmailTemplate {
   const firmName = firm.trim()
-  const subjectCore = variant === 'b'
+  const copy = draft === 'demo' ? null : OUTREACH_DRAFTS[draft]
+  const fill = (t: string) => t.replace('${LIBRARY}', LIBRARY_SIZE)
+  const subjectCore = copy ? copy.subject(firmName) : variant === 'b'
     ? `${firmName}: Zambian law answers with every source linked`
     : PRACTICE_SUBJECTS[practice](firmName)
   const subject = preview ? `Preview | ${subjectCore}` : subjectCore
   const greeting = contactName?.trim() ? `Dear ${contactName.trim()},` : `Dear ${firmName} team,`
-  const siteHref = `${SITE_URL}/?utm_source=email&utm_medium=outreach&utm_campaign=${FIRM_OUTREACH_CAMPAIGN}`
+  const siteHref = `${SITE_URL}/?utm_source=email&utm_medium=outreach&utm_campaign=${FIRM_OUTREACH_CAMPAIGN}&utm_content=${draft}`
   const privacyHref = `${SITE_URL.replace(/\/$/, '')}/privacy`
   const replyHref = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(`Levy demo for ${firmName}`)}&body=${encodeURIComponent('Hi Mukela,\n\nWe would like a demo. Times that suit us:\n1.\n2.\n\nAt our office / online (delete one).\n')}`
   const stopHref = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('STOP')}`
-  const business = sender.business?.trim() || '[business name]'
   const address = sender.address?.trim() || '[street address], Lusaka'
   const phone = sender.phone?.trim() || '[phone]'
   const where = source?.trim() ? `${source.trim()}${sourceDate?.trim() ? ` on ${sourceDate.trim()}` : ''}` : '[source and date]'
   const hookLine = hook?.trim() || ''
-  const intro = `I am Mukela Katungu, a software engineer in Lusaka. I built Levy, a research and drafting assistant for Zambian law, and I would like to offer ${firmName} a free 14-day pilot.`
-  const what = `Ask Levy a legal question and it answers from ${LIBRARY_SIZE}, with a link to every source. It flags sections that are repealed or not yet in force, shows when a later court departed from a case, and drafts skeleton arguments and agreements in Zambian form, ready for Word. ${PRACTICE_LINES[practice]}`.trim()
-  const ask = 'Could I show you how it handles a question from your own practice, in 20 minutes at your office or online? If it is not for you, reply "no" and I will not write again.'
+  const paragraphs = copy ? copy.body(firmName).map(fill) : [
+    `I am Mukela Katungu, a software engineer in Lusaka. I built Levy, a research and drafting assistant for Zambian law, and I would like to offer ${firmName} a free 14-day pilot.`,
+    `Ask Levy a legal question and it answers from ${LIBRARY_SIZE}, with a link to every source. It flags sections that are repealed or not yet in force, shows when a later court departed from a case, and drafts skeleton arguments and agreements in Zambian form, ready for Word. ${PRACTICE_LINES[practice]}`.trim(),
+  ]
+  const ask = copy ? copy.ask(firmName) : 'Could I show you how it handles a question from your own practice, in 20 minutes at your office or online? If it is not for you, reply "no" and I will not write again.'
+  const closing = copy?.closing ? copy.closing(firmName) : ''
+  // ECT Act s.64(2)(a): the sender's identity, place of business, phone and
+  // email. It sits in the small print rather than under the signature.
+  const sentBy = `Sent by Mukela Katungu, ${address}. Phone ${phone}. Email ${CONTACT_EMAIL}.`
   const why = `Why you received this: I found this address on ${where}. This is the only email I will send unless you reply.`
   const rights = 'Your rights: you can object to marketing at any time (reply STOP), ask what I hold about you, ask me to correct or delete it, or complain to the Office of the Data Protection Commissioner.'
-  const preheader = 'A free 14-day pilot: Zambian law answers with every source linked, and repealed or uncommenced sections flagged.'
+  const preheader = copy ? copy.preheader : 'A free 14-day pilot: Zambian law answers with every source linked, and repealed or uncommenced sections flagged.'
   const p = 'margin:0 0 16px;font-size:16px;line-height:1.65;color:#1f2d26;'
   const small = 'margin:0 0 8px;font-size:12px;line-height:1.6;color:#7f8a83;'
   const html = `<!doctype html>
@@ -596,10 +664,10 @@ export function renderFirmOutreachEmail({
             <tr>
               <td style="padding:18px 32px 4px;">
                 <p style="${p}">${escapeHtml(greeting)}</p>
-                <p style="${p}">${escapeHtml(intro)}</p>
-                <p style="${p}">${escapeHtml(what)}</p>
+                ${paragraphs.map((t) => `<p style="${p}">${escapeHtml(t)}</p>`).join('\n                ')}
                 ${hookLine ? `<p style="${p}">${escapeHtml(hookLine)}</p>` : ''}
                 <p style="${p}">${escapeHtml(ask)}</p>
+                ${closing ? `<p style="${p}">${escapeHtml(closing)}</p>` : ''}
               </td>
             </tr>
             <tr>
@@ -607,9 +675,13 @@ export function renderFirmOutreachEmail({
                 <table role="presentation" cellspacing="0" cellpadding="0">
                   <tr>
                     <td style="border-radius:10px;background:#0a7a3d;">
-                      <a href="${replyHref}" style="display:inline-block;padding:12px 20px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:10px;">Reply with a time</a>
+                      ${copy
+                        ? `<a href="${siteHref}" style="display:inline-block;padding:12px 20px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:10px;">Try Levy free</a>`
+                        : `<a href="${replyHref}" style="display:inline-block;padding:12px 20px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:10px;">Reply with a time</a>`}
                     </td>
-                    <td style="padding-left:14px;font-size:14px;color:#4d5c54;">or <a href="${siteHref}" style="color:#0a7a3d;text-decoration:underline;">try Levy now</a></td>
+                    <td style="padding-left:14px;font-size:14px;color:#4d5c54;">${copy
+                      ? 'or simply reply to this email'
+                      : `or <a href="${siteHref}" style="color:#0a7a3d;text-decoration:underline;">try Levy now</a>`}</td>
                   </tr>
                 </table>
               </td>
@@ -617,12 +689,6 @@ export function renderFirmOutreachEmail({
             <tr>
               <td style="padding:22px 32px 26px;">
                 <p style="margin:0;font-size:15px;line-height:1.6;color:#1f2d26;">Kind regards,<br /><strong>Mukela Katungu</strong><br />Founder, Levy</p>
-                <table role="presentation" cellspacing="0" cellpadding="0" style="margin:10px 0 0;">
-                  <tr>
-                    ${sender.logoUrl ? `<td style="vertical-align:top;padding:2px 10px 0 0;"><img src="${sender.logoUrl}" width="34" height="23" alt="Fluxium" style="display:block;width:34px;height:23px;border:0;" /></td>` : ''}
-                    <td style="vertical-align:top;font-size:13px;line-height:1.6;color:#6b7a72;">${escapeHtml(business)} &middot; ${escapeHtml(address)} &middot; ${escapeHtml(phone)} &middot; <a href="mailto:${CONTACT_EMAIL}" style="color:#6b7a72;text-decoration:none;">${escapeHtml(CONTACT_EMAIL)}</a></td>
-                  </tr>
-                </table>
               </td>
             </tr>
           </table>
@@ -630,6 +696,7 @@ export function renderFirmOutreachEmail({
             <tr>
               <td style="padding:14px 18px 0;text-align:left;">
                 ${preview ? `<p style="${small}"><strong>Preview.</strong></p>` : ''}
+                <p style="${small}">${escapeHtml(sentBy)}</p>
                 <p style="${small}">${escapeHtml(why)}</p>
                 <p style="${small}">${escapeHtml(rights).replace('reply STOP', `<a href="${stopHref}" style="color:#7f8a83;text-decoration:underline;">reply STOP</a>`)} Privacy policy: <a href="${privacyHref}" style="color:#7f8a83;text-decoration:underline;">levylegal.ai/privacy</a>.</p>
                 <p style="${small}">Levy gives legal information, not legal advice.</p>
@@ -643,22 +710,20 @@ export function renderFirmOutreachEmail({
 </html>`
   const text = [
     greeting,
-    '',
-    intro,
-    '',
-    what,
+    ...paragraphs.flatMap((t) => ['', t]),
     ...(hookLine ? ['', hookLine] : []),
     '',
     ask,
+    ...(closing ? ['', closing] : []),
     '',
-    `Or try Levy now: ${siteHref}`,
+    copy ? `Try Levy free: ${siteHref} (or simply reply to this email)` : `Or try Levy now: ${siteHref}`,
     '',
     'Kind regards,',
     'Mukela Katungu',
     'Founder, Levy',
-    `${business} | ${address} | ${phone} | ${CONTACT_EMAIL}`,
     '',
     '---',
+    sentBy,
     why,
     `${rights} Privacy policy: ${privacyHref}`,
     'Levy gives legal information, not legal advice.',
