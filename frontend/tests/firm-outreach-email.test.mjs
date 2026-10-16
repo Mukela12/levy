@@ -62,6 +62,11 @@ test('the chosen draft explains the harness, invites the firm in, and has no bus
   assert.match(e.text, /not launched it officially/)
   assert.match(e.text, /no connections in the legal profession/)
   assert.ok(!/questions so far|850/.test(e.text), 'no usage counts')
+  // The GitHub button sits under the name, with the profile photo.
+  assert.ok(e.html.indexOf('GitHub account') > e.html.indexOf('Founder, Levy'))
+  assert.match(e.html, /href="https:\/\/github\.com\/Mukela12"/)
+  assert.match(e.html, /avatars\.githubusercontent\.com\/u\/65640620/)
+  assert.match(e.text, /Founder, Levy\nGitHub account: https:\/\/github\.com\/Mukela12/)
   assert.ok(!/Fluxium|TPIN/.test(e.html + e.text), 'the Fluxium line is gone')
   // The user removed the sender line and the rights and privacy wording.
   for (const gone of ['Sent by', SENDER.address, SENDER.phone, 'Data Protection Commissioner', '/privacy']) {

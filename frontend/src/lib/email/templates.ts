@@ -2,6 +2,8 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://levylegal.ai'
 const CONTACT_EMAIL = process.env.LEVY_EMAIL_REPLY_TO || 'mukelakatungu@levylegal.ai'
 const GITHUB_URL = 'https://github.com/Mukela12'
 const GITHUB_LOGO_URL = 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png'
+// The founder's GitHub profile photo, for the button under the firm emails' signature.
+const GITHUB_AVATAR_URL = 'https://avatars.githubusercontent.com/u/65640620?v=4&s=80'
 // PNG, not the site's SVG: Gmail strips SVG images, and most of the list is on
 // Gmail, so the SVG rendered as a broken box with alt text.
 const LEVY_LOGO_URL = `${SITE_URL.replace(/\/$/, '')}/levy-logo-email.png`
@@ -686,6 +688,20 @@ export function renderFirmOutreachEmail({
             <tr>
               <td style="padding:22px 32px 26px;">
                 <p style="margin:0;font-size:15px;line-height:1.6;color:#1f2d26;">Kind regards,<br /><strong>Mukela Katungu</strong><br />Founder, Levy</p>
+                <table role="presentation" cellspacing="0" cellpadding="0" style="margin-top:12px;">
+                  <tr>
+                    <td style="border:1px solid #dcdcdc;border-radius:999px;background:#ffffff;">
+                      <a href="${GITHUB_URL}" style="display:block;padding:5px 16px 5px 5px;color:#111827;text-decoration:none;font-size:14px;font-weight:700;">
+                        <table role="presentation" cellspacing="0" cellpadding="0">
+                          <tr>
+                            <td style="vertical-align:middle;"><img src="${GITHUB_AVATAR_URL}" width="28" height="28" alt="" style="display:block;width:28px;height:28px;border:0;border-radius:50%;" /></td>
+                            <td style="vertical-align:middle;padding-left:9px;color:#111827;">GitHub account</td>
+                          </tr>
+                        </table>
+                      </a>
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
           </table>
@@ -716,6 +732,7 @@ export function renderFirmOutreachEmail({
     'Kind regards,',
     'Mukela Katungu',
     'Founder, Levy',
+    `GitHub account: ${GITHUB_URL}`,
     '',
     '---',
     why,
