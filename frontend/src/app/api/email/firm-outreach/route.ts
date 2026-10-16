@@ -3,7 +3,7 @@ import { sendLevyEmail } from '@/lib/email/resend'
 import { LEVY_OPERATOR, renderFirmOutreachEmail, type FirmPractice, type OutreachDraft } from '@/lib/email/templates'
 
 /**
- * Demo invitations to law firms, one personalised email each (firm name,
+ * Emails asking law firms for their view of Levy, one personalised email each (firm name,
  * published contact, a line for the firm's main practice). Same guard rails
  * as product-update: the admin token, `dryRun` to render every subject and
  * check the list without sending, pacing inside Resend's 10 a second, and a

@@ -17,9 +17,9 @@ const { renderFirmOutreachEmail } = exported
 const SENDER = { business: 'Levy (Mukela Katungu)', address: 'Plot 1, Example Road, Lusaka', phone: '+260 970 000000' }
 const base = { firm: 'Example & Co', source: "the firm's website (example.co.zm/contact)", sourceDate: '13 October 2026', sender: SENDER }
 
-test('every email carries the identity, source, opt-out, rights and privacy policy', () => {
+test('every email says where the address came from and how to opt out', () => {
   const e = renderFirmOutreachEmail(base)
-  for (const part of [SENDER.address, SENDER.phone, 'example.co.zm/contact', '13 October 2026', 'reply STOP', 'Data Protection Commissioner', '/privacy']) {
+  for (const part of ['example.co.zm/contact', '13 October 2026', 'reply STOP']) {
     assert.ok(e.text.includes(part), `text lacks ${part}`)
     assert.ok(e.html.includes(part.replace(/&/g, '&amp;').replace(/'/g, '&#39;')) || e.html.includes(part), `html lacks ${part}`)
   }
@@ -45,20 +45,23 @@ test('a hook is its own paragraph and is left out when there is none', () => {
   assert.ok(!renderFirmOutreachEmail(base).text.includes('your firm has argued'))
 })
 
-test('missing sender details show as placeholders, never as blanks', () => {
+test('a missing source shows as a placeholder, never as a blank', () => {
   const e = renderFirmOutreachEmail({ firm: 'Example & Co' })
-  assert.ok(e.text.includes('[street address], Lusaka') && e.text.includes('[phone]') && e.text.includes('[source and date]'))
+  assert.ok(e.text.includes('[source and date]'))
 })
 
-test('the chosen draft explains the harness and the enterprise idea, with no business line', () => {
+test('the chosen draft explains the harness, invites the firm in, and has no business or sender line', () => {
   const e = renderFirmOutreachEmail({ ...base, draft: 'formal' })
   assert.match(e.subject, /^Seeking Example & Co's view/)
   assert.match(e.text, /not the AI model but the harness around it/)
   assert.match(e.text, /used only for the reasoning/)
   assert.match(e.text, /connecting its own Claude, OpenAI or other AI provider/)
+  assert.match(e.text, /anyone at your firm can sign up/)
   assert.ok(!/Fluxium|TPIN/.test(e.html + e.text), 'the Fluxium line is gone')
-  // ECT Act s.64(2)(a): identity, place of business and phone still in the small print.
-  assert.match(e.text, /Sent by Mukela Katungu, Plot 1, Example Road, Lusaka\. Phone \+260 970 000000\./)
+  // The user removed the sender line and the rights and privacy wording.
+  for (const gone of ['Sent by', SENDER.address, SENDER.phone, 'Data Protection Commissioner', '/privacy']) {
+    assert.ok(!(e.html + e.text).includes(gone), `still shows ${gone}`)
+  }
   assert.ok(!/[\u2014]/.test(e.html + e.text))
 })
 
