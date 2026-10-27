@@ -49,11 +49,17 @@ async def lifespan(_app: FastAPI):
     from .services import watcher
     watch_task = asyncio.create_task(watcher.run_forever(watcher.hours_from_env())) \
         if watcher.hours_from_env() > 0 else None
+    # Levy News in shadow mode (services/news), only when NEWS_WATCH_HOURS is set.
+    from .services.news import pipeline as news
+    news_task = asyncio.create_task(news.run_forever(news.hours_from_env())) \
+        if news.hours_from_env() > 0 else None
 
     yield
 
     if watch_task:
         watch_task.cancel()
+    if news_task:
+        news_task.cancel()
     from .routes.api import _INFLIGHT_RUNS
 
     pending = [t for t in _INFLIGHT_RUNS if not t.done()]

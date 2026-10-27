@@ -1,0 +1,14 @@
+[
+ {"name": "News Diggers", "type": "private", "url": "https://diggers.news/feed/"},
+ {"name": "Lusaka Times", "type": "private", "url": "https://www.lusakatimes.com/feed/"},
+ {"name": "Mwebantu", "type": "private", "url": "https://www.mwebantu.com/feed/"},
+ {"name": "Zambian Observer", "type": "private", "url": "https://zambianobserver.com/feed/"},
+ {"name": "Zambia Monitor", "type": "private", "url": "https://www.zambiamonitor.com/feed/"},
+ {"name": "Zambian Eye", "type": "private", "url": "https://zambianeye.com/feed/"},
+ {"name": "Zambia Daily Mail", "type": "state", "url": "https://www.daily-mail.co.zm/feed/"},
+ {"name": "Times of Zambia", "type": "state", "url": "https://www.times.co.zm/?feed=rss2"},
+ {"name": "ZRA", "type": "official", "url": "https://www.zra.org.zm/feed/"},
+ {"name": "Google News", "type": "aggregator", "url": "https://news.google.com/rss/search?q=Zambia%20when:1d&hl=en-US&gl=US&ceid=US:en"},
+ {"name": "r/Zambia", "type": "social", "url": "https://www.reddit.com/r/Zambia/new/.rss"},
+ {"name": "iVerify Zambia", "type": "fact_checker", "url": "https://iverifyzambia.org/feed/"}
+]
