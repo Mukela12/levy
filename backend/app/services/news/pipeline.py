@@ -16,6 +16,7 @@ import asyncio
 import concurrent.futures as cf
 import logging
 import os
+import threading
 from datetime import datetime, timedelta, timezone
 
 from . import sources
@@ -25,6 +26,10 @@ from .triage import triage
 from .verify import check_story
 
 logger = logging.getLogger(__name__)
+
+# One run at a time in this process: the scheduled run and a manual one from
+# the review page must not triage the same headlines twice.
+RUN_LOCK = threading.Lock()
 
 
 def _env_float(name: str, default: float) -> float:
@@ -45,8 +50,17 @@ def make_client():
     return anthropic.Anthropic(api_key=get_settings().anthropic_api_key, max_retries=3, timeout=300.0)
 
 
-def run_once(*, store=None, client=None, max_checks: int | None = None, budget_usd: float | None = None,
-             since_hours: float = 36, collect=sources.collect) -> dict:
+def run_once(**kwargs) -> dict:
+    if not RUN_LOCK.acquire(blocking=False):
+        return {"note": "a run is already in progress"}
+    try:
+        return _run(**kwargs)
+    finally:
+        RUN_LOCK.release()
+
+
+def _run(*, store=None, client=None, max_checks: int | None = None, budget_usd: float | None = None,
+         since_hours: float = 36, collect=sources.collect) -> dict:
     store = store or SupabaseStore()
     client = client or make_client()
     max_checks = int(max_checks if max_checks is not None else _env_float("NEWS_MAX_CHECKS", 5))

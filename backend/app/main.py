@@ -14,6 +14,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from .routes.api import router as api_router
+from .routes.news_admin import router as news_admin_router
 
 logger = logging.getLogger("levy")
 
@@ -133,6 +134,7 @@ async def _unhandled(request: Request, exc: Exception):
 
 # Register API routes
 app.include_router(api_router)
+app.include_router(news_admin_router)
 
 
 @app.get("/")
