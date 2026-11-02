@@ -222,7 +222,8 @@ def _rows_for_chunks(
                 "source_url": item["source_url"],
                 "ingestion_run": run_tag,
                 "text_provenance": (
-                    ("OCR: " + ", ".join(item["ocr_engines"]) + " (best reading per page)")
+                    item.get("text_provenance")
+                    or ("OCR: " + ", ".join(item["ocr_engines"]) + " (best reading per page)")
                     if item.get("ocr_engines")
                     else "Apple Vision OCR with visual QA"
                     if item.get("parser_file")

@@ -35,6 +35,15 @@ Every rule below was read from the text in Levy's library:
   SI No. 3 of 2025, Truck and Bus Drivers (Amendment) Order: minimum monthly
     basic K4,000 (truck) and K3,000 (bus). The principal Order (SI No. 106 of
     2020) is not in the library, so its other terms are not checked.
+  SI No. 49 of 2023, Domestic Workers Order (in force 1 January 2024), with
+    its terms in the body of the Order, not a Schedule: the minimum wage,
+    "excluding an amount paid in lieu of rations", is K5.29 an hour or
+    K1,100.00 a month (para 4(1)); a higher wage held before the Order is kept
+    (para 4(2)); separation benefits of one month's basic pay for every two
+    completed years of service, never together with gratuity (para 5); K200 a
+    month for transport beyond a 3 km radius unless the employer provides
+    transport (para 6); exclusions in para 2(2). No categories, housing,
+    lunch or night differential.
   National Pension Scheme Act, Cap. 256, s.14: contributions on the member's
     EARNINGS at the prescribed percentage (5% employee + 5% employer), with a
     maximum insurable earnings ceiling NAPSA sets each year.
@@ -48,7 +57,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import asdict, dataclass, field
-from datetime import date
+from datetime import date, timedelta
 
 EC = "Employment Code Act No. 3 of 2019"
 NAPSA_RATE = 0.05          # employee share; the employer pays the same again
@@ -129,11 +138,13 @@ CATEGORIES: tuple[Category, ...] = (
     Category(SHOP, 7, 15.10, 3_142.26, ("supervisor", "window dresser", "stenographer", "cashier")),
 )
 
+DOMESTIC = "domestic"
 ORDER_LABEL = {
     GENERAL: "SI No. 48 of 2023 (General Order)",
     SHOP: "SI No. 50 of 2023 (Shop Workers Order)",
     "truck_driver": "SI No. 3 of 2025 (Truck and Bus Drivers)",
     "bus_driver": "SI No. 3 of 2025 (Truck and Bus Drivers)",
+    DOMESTIC: "SI No. 49 of 2023 (Domestic Workers Order)",
 }
 # Schedule paragraphs, per Order.
 PARA = {
@@ -143,6 +154,85 @@ PARA = {
            "tool": "para 8", "housing": "para 10", "exempt": "para 2(2)", "part_time": "para 12(4)"},
 }
 DRIVER_MINIMUM = {"truck_driver": 4_000.0, "bus_driver": 3_000.0}
+
+# SI No. 49 of 2023 (Government Gazette No. 7522 supplement, pp. 299-300). Its
+# figures sit in numbered paragraphs, not a Schedule. The words are quoted as
+# printed, from the scan on ILO NATLEX checked against the page images.
+DOMESTIC_HOURLY = 5.29
+DOMESTIC_MONTHLY = 1_100.00
+DOMESTIC_TRANSPORT = 200.0
+DOMESTIC_PARA = {"basic": "para 4(1)", "kept": "para 4(2)", "pay_day": "para 4(3)(a)", "separation": "para 5",
+                 "transport": "para 6", "exempt": "para 2(2)"}
+DOMESTIC_TEXT = {
+    "minimum": ("The minimum wage for a domestic worker, excluding an amount paid in lieu of rations, shall not be "
+                "less than five Kwacha and twenty nine ngwee (K5.29) per hour or one thousand, one hundred Kwacha "
+                "(K1,100.00) per month."),
+    "kept": ("A domestic worker shall, where the domestic worker was in receipt of a wage in excess of the minimum "
+             "wage prior to the commencement of this Order, retain the wage on the commencement of this Order."),
+    "separation": ("A domestic worker shall, where a domestic worker's contract of employment is terminated, be "
+                   "entitled to separation benefits of not less than one month's basic pay for every two completed "
+                   "years of service and any other dues."),
+    "not_both": ("Despite subparagraph (1), a domestic worker shall not be entitled to both separation benefits and "
+                 "gratuity."),
+    "transport": ("A domestic worker who resides beyond a three kilometre radius from the place of work shall be paid "
+                  "a monthly allowance of two hundred Kwacha (K200.00) for transport expenses unless the employer "
+                  "provides transport for that domestic worker."),
+}
+# Para 2(2): the Order does not apply to these. (b), a sector with its own
+# prescribed minimum wage, is that sector's order instead.
+DOMESTIC_EXEMPTIONS = {
+    "collective_agreement": ("an employee whose wages and conditions are regulated through collective bargaining "
+                             "under the Industrial and Labour Relations Act", "para 2(2)(a)"),
+    "piece_work": ("an employee 'who performs domestic work on a piece work basis'", "para 2(2)(c)"),
+}
+# Job titles that are domestic work, which SI 48 excludes (para 2(2)(c)).
+DOMESTIC_TITLES = ("domestic", "maid", "house help", "househelp", "housekeeper", "house keeper", "nanny")
+
+
+def completed_years(start: date, last_day: date) -> int:
+    """Whole years of service to the last day worked, inclusive: the anniversaries reached."""
+    after = last_day + timedelta(days=1)
+    return max(0, after.year - start.year - ((after.month, after.day) < (start.month, start.day)))
+
+
+def domestic_separation(basic: float, years_completed: int) -> tuple[float, str]:
+    """SI No. 49 of 2023, para 5(1): one month's basic pay for every two completed years of service."""
+    months = int(years_completed) // 2
+    return basic * months, (f"{months} month{'s' if months != 1 else ''} x {_k(basic)} basic "
+                            f"({int(years_completed)} completed years, one month for every two)")
+
+
+def domestic_separation_terms(basic: float, years_completed: int, reason: str, gratuity_statuses: list[str],
+                              with_code_payment: bool) -> tuple[str, float | None, str, str]:
+    """(status, amount, formula, note) for SI 49's separation benefits on this ending.
+
+    Para 5(1) gives them whenever the contract "is terminated", and adds "and any
+    other dues"; para 5(2) rules out only gratuity, so a gratuity that is due
+    displaces them and a Code payment (redundancy, death, medical) does not.
+    """
+    amount, formula = domestic_separation(basic, years_completed)
+    quote = f'Para 5(1): "{DOMESTIC_TEXT["separation"]}"'
+    if years_completed < 2:
+        return "not_applicable", None, formula, f"{quote} Under two completed years of service, none is due yet."
+    if "owed" in gratuity_statuses:
+        return ("not_applicable", None, formula,
+                f'Para 5(2): "{DOMESTIC_TEXT["not_both"]}" The gratuity is due here, so separation benefits are not.')
+    status, note = "owed", quote
+    if reason == "summary_dismissal":
+        status = "contested"
+        note += (" The Order makes no exception for misconduct, but s.51(1) gives a summarily dismissed employee "
+                 "wages and other accrued benefits up to dismissal; whether separation benefits are among them is "
+                 "not settled.")
+    elif reason == "resignation":
+        note += " The Order does not limit it to a contract the employer ends."
+    elif reason == "death":
+        note += " Paid to the estate."
+    if with_code_payment:
+        note += (" Para 5(2) rules out only gratuity, so this is shown with the Employment Code payment, not in "
+                 "place of it.")
+    if any(s in ("conditional", "contested", "needs_input") for s in gratuity_statuses):
+        note += f' If the gratuity is paid, this is not due as well: "{DOMESTIC_TEXT["not_both"]}"'
+    return status, _money(amount), formula, note
 
 # Where a job title alone cannot pick the category.
 AMBIGUITY_HINTS = {
@@ -372,6 +462,8 @@ def calculate_payroll(
         order = SHOP
     if order in {"general_order", "si_48"}:
         order = GENERAL
+    if order in {"domestic_worker", "domestic_workers", "household", "si_49"}:
+        order = DOMESTIC
     exemption = _norm(order_exemption) if order_exemption else ""
     if exemption in {"none", "no"}:
         exemption = ""
@@ -436,11 +528,29 @@ def calculate_payroll(
                           "2020, which Levy's library does not hold; cross-border subsistence is at least "
                           "US$30 a night where no accommodation or sleeping cab is provided.",
                           "SI No. 3 of 2025, paras 4 and 15"))
-    elif order == "domestic":
-        order_status = "unknown"
-        flags.append(Flag("check", "Domestic workers have their own minimum wage order (2023), which Levy's "
-                          "library does not hold, so the minimum wage cannot be checked here. The "
-                          "Employment Code floors below still apply.", "SI No. 48 of 2023, para 2(2)(c)"))
+    elif order == DOMESTIC:
+        if exemption in DOMESTIC_EXEMPTIONS:
+            who, para = DOMESTIC_EXEMPTIONS[exemption]
+            flags.append(Flag("info", f"The Domestic Workers Order does not apply to {who}, so its minimum wage "
+                              "and transport allowance are not checked. The Employment Code floors (overtime, rest "
+                              "days, leave, deductions) still apply.", f"{ORDER_LABEL[DOMESTIC]}, {para}"))
+        else:
+            minimum_basic, minimum_hourly = DOMESTIC_MONTHLY, DOMESTIC_HOURLY
+            order_status = "yes"
+            if exemption:
+                flags.append(Flag("check", "The Domestic Workers Order excludes only collective bargaining, a "
+                                  "sector with its own prescribed minimum wage and piece work, so it was applied.",
+                                  f"{ORDER_LABEL[DOMESTIC]}, {DOMESTIC_PARA['exempt']}"))
+            assumptions.append("The minimum excludes any amount paid in lieu of rations: money given for food does "
+                               f"not count towards it ({DOMESTIC_PARA['basic']}).")
+            assumptions.append("A domestic worker paid more than the minimum before 1 January 2024 keeps that wage "
+                               f"({DOMESTIC_PARA['kept']}). A monthly paid domestic worker is paid on the last day "
+                               f"of each month ({DOMESTIC_PARA['pay_day']}).")
+    if order == GENERAL and occupation and any(t in occupation.lower() for t in DOMESTIC_TITLES):
+        flags.append(Flag("check", (
+            f'"{occupation}" sounds like a domestic worker, whom the General Order excludes. Work done in or for a '
+            'household falls under the Domestic Workers Order, SI No. 49 of 2023 (wage_order "domestic").'),
+            f"{ORDER_LABEL[GENERAL]}, para 2(2)(c)"))
 
     part_time = etype in {"part_time", "casual"}
     hours_in_month = float(hours_worked_in_month or 0)
@@ -450,20 +560,28 @@ def calculate_payroll(
     # 2) The basic the law requires for this month.
     floor_basis = "Contract of employment"
     if minimum_basic is not None and order_status == "yes":
-        if part_time and hours_in_month:
+        if part_time and hours_in_month and order == DOMESTIC:
+            # The Domestic Workers Order prints its own hourly minimum.
+            floor = minimum_hourly * hours_in_month
+            floor_formula = f"{_k(minimum_hourly)} an hour x {hours_in_month:g} hours"
+            floor_basis = f"{ORDER_LABEL[order]}, {DOMESTIC_PARA['basic']}"
+        elif part_time and hours_in_month:
             floor = minimum_basic * hours_in_month / HOURS_DIVISOR
             floor_formula = f"{_k(minimum_basic)} x {hours_in_month:g} / {HOURS_DIVISOR} hours"
             floor_basis = (f"{ORDER_LABEL[order]}, Schedule, {PARA[order]['part_time']}" if order == SHOP
                            else f"{ORDER_LABEL.get(order, '')}, Schedule, para 1, prorated over 208 hours")
         else:
             floor, floor_formula = minimum_basic, f"Category {res.category} minimum" if cat else "Order minimum"
-            floor_basis = f"{ORDER_LABEL[order]}, Schedule, {PARA[order]['basic']}" if order in PARA \
-                else ORDER_LABEL[order]
+            floor_basis = (f"{ORDER_LABEL[order]}, Schedule, {PARA[order]['basic']}" if order in PARA
+                           else f"{ORDER_LABEL[order]}, {DOMESTIC_PARA['basic']}" if order == DOMESTIC
+                           else ORDER_LABEL[order])
         required_basic = max(basic_paid, floor)
         if basic_paid + TOLERANCE < floor:
             flags.append(Flag("breach", f"Basic pay of {_k(basic_paid)} is below the minimum of {_k(floor)} "
                               f"({floor_formula}). The shortfall is {_k(floor - basic_paid)} a month, and every "
-                              "rate built on basic pay is understated with it.", floor_basis))
+                              "rate built on basic pay is understated with it." +
+                              (" Money paid in lieu of rations does not count towards the minimum."
+                               if order == DOMESTIC else ""), floor_basis))
     else:
         required_basic = basic_paid
     res.minimum_basic = _money(minimum_basic) if minimum_basic is not None else None
@@ -557,12 +675,16 @@ def calculate_payroll(
                                  "Due for every hour worked between 18:00 and 06:00. The Order says the employee "
                                  "'shall be paid' it: days off in lieu do not discharge it, and it applies even "
                                  "where night work is the normal pattern of the job."))
+        elif order == DOMESTIC:
+            flags.append(Flag("info", "The Domestic Workers Order has no night shift differential, so night hours "
+                              "carry no premium under it. Check the contract."))
         else:
             flags.append(Flag("info", "No wage order with a night differential was applied, so night hours "
                               "carry no statutory premium here. Check the contract or collective agreement."))
 
     def allowance(name, key, amount, applies, formula, unknown_note):
-        basis = f"{ORDER_LABEL[order]}, Schedule, {PARA[order][key]}"
+        basis = (f"{ORDER_LABEL[order]}, {DOMESTIC_PARA[key]}" if order == DOMESTIC
+                 else f"{ORDER_LABEL[order]}, Schedule, {PARA[order][key]}")
         if applies is True:
             earnings.append(Line(name, order_line, basis, _money(amount), formula))
         elif applies is None:
@@ -587,6 +709,18 @@ def calculate_payroll(
                       "Owed unless free, wholesome and adequate meals are provided.")
             if provides_own_tools:
                 allowance("Tool allowance", "tool", TOOL_ALLOWANCE, True, "K150 a month", "")
+    elif order == DOMESTIC and order_status == "yes":
+        # Para 6 is the Order's only allowance: no housing, lunch or tool allowance.
+        if part_time:
+            flags.append(Flag("check", "The Domestic Workers Order does not say how its monthly transport "
+                              "allowance applies to part-time or casual work; it is not computed here."))
+        else:
+            beyond = lives_beyond_3km
+            transport = (None if beyond is None or (beyond and transport_provided is None)
+                         else bool(beyond and not transport_provided))
+            allowance("Transport allowance", "transport", DOMESTIC_TRANSPORT, transport, "K200 a month",
+                      "Owed where the domestic worker lives beyond a three kilometre radius from the place of work "
+                      "and the employer does not provide transport.")
 
     if other_allowances:
         earnings.append(Line("Other allowances (contract)", "contractual", "Contract of employment",
@@ -764,7 +898,7 @@ def calculate_payroll(
         f"Hourly rate {_rate(hourly)} ({res.hourly_rate_formula}).",
         "Annual leave accrues at at least 2 days per month of service (s.36(1)).",
     ]
-    if order in (GENERAL, SHOP):
+    if order in (GENERAL, SHOP, DOMESTIC):
         assumptions.append(f"Rates are those of {ORDER_LABEL[order]}, in force from 1 January 2024. If a later "
                            "order has been gazetted, its figures replace these.")
     if year > bands_year:

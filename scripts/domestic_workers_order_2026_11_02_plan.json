@@ -1,0 +1,40 @@
+{
+ "description": "The Domestic Workers Minimum Wages Order, SI No. 49 of 2023. The Ministry of Labour publishes SI 48 and SI 50 but never uploaded SI 49, and Gazettes.Africa holds no 2023 supplements, so the official copy is ILO NATLEX record ZMB-2023-R-118201: a scan of the Government Printer's supplement to Gazette No. 7522 of 24 November 2023, pp. 299-300 (scanned 2 December 2023). Checked against the Gazette's contents list (SI 49 at p. 299), SI 48 ending at p. 298 and SI 50 starting at p. 301, and the signature block shared with SI 48 (Lusaka, 20 November 2023, B. M. Tambatamba, [MLSS.64/9/9]). The scan's embedded text layer misreads K1,100.00 as 'KI, 100.00', so the parser reads a transcription checked against the page images.",
+ "items": [
+  {
+   "key": "min-wages-domestic-workers-order-2023",
+   "action": "ingest",
+   "document_type": "statutory_instrument",
+   "storage_prefix": "statutory-instruments",
+   "original_file": "SI_2023_049_Employment_Code_Domestic_Workers_Minimum_Wages_Order_2023.pdf",
+   "sha256": "5ca276fb40703d8fdf6632cafb54e2981730408ed232b8d2b7a51b0c262015dc",
+   "title": "The Employment Code (Domestic Workers Minimum Wages and Conditions of Employment) Order, 2023",
+   "short_name": "Employment Code (Domestic Workers Minimum Wages and Conditions of Employment) Order, 2023 (SI No. 49 of 2023)",
+   "act_number": "SI No. 49 of 2023",
+   "year": 2023,
+   "source_url": "https://natlex.ilo.org/dyn/natlex2/natlex2/files/download/118201/SI%2049%202023%20ZAMBIA.pdf",
+   "run_tag": "domestic-workers-order-2026-11-02",
+   "scan": true,
+   "parser_file": "SI_2023_049_Employment_Code_Domestic_Workers_Minimum_Wages_Order_2023.verified.pdf",
+   "ocr_engines": [
+    "apple"
+   ],
+   "text_provenance": "Apple Vision OCR, every line checked against the page images (13 corrections), margin notes moved to the foot of each page",
+   "transcription_corrections": [
+    {"page": 299, "ocr": "241h November. 2023", "printed": "24th November, 2023"},
+    {"page": 299, "ocr": "Lemmence-", "printed": "Commencement"},
+    {"page": 299, "ocr": "on Ist January, 2024.", "printed": "on 1st January, 2024."},
+    {"page": 299, "ocr": "a) in an occupation where wages and conditions o", "printed": "(a) in an occupation where wages and conditions of"},
+    {"page": 299, "ocr": "with the industrial", "printed": "with the Industrial"},
+    {"page": 299, "ocr": "otherwise requires", "printed": "otherwise requires—"},
+    {"page": 299, "ocr": "Copies of this Stantory Instrument can he obtained from the Government Printer", "printed": "Copies of this Statutory Instrument can be obtained from the Government Printer,"},
+    {"page": 300, "ocr": "five K wacha", "printed": "five Kwacha"},
+    {"page": 300, "ocr": "a domestic worker shail not be", "printed": "a domestic worker shall not be"},
+    {"page": 300, "ocr": "A domestic worker who does any work likely to be injurious", "printed": "7. A domestic worker who does any work likely to be injurious"},
+    {"page": 300, "ocr": "equipmen", "printed": "equipment"},
+    {"page": 300, "ocr": "Personal / equipmen / protective (margin note order)", "printed": "Personal protective equipment"},
+    {"page": 300, "ocr": "[ML$S.64/9/9]", "printed": "[MLSS.64/9/9]"}
+   ]
+  }
+ ]
+}

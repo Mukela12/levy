@@ -42,7 +42,7 @@ from . import hybrid, law_map
 from . import kimi_tools, pdf_tools
 from . import templates as templates_service
 from .entitlements import calculate_entitlements
-from .payroll import calculate_payroll
+from .payroll import calculate_payroll, completed_years
 
 
 # ─── Zambian news whitelist ──────────────────────────────────────────────────
@@ -2472,6 +2472,7 @@ def build_tool_registry(
         unpaid_salary_amount: float | None = None,
         napsa_contributed: bool | None = None,
         nhima_contributed: bool | None = None,
+        wage_order: str | None = None,
     ):
         """Deterministic Employment Code Act exit-entitlement computation.
 
@@ -2485,11 +2486,15 @@ def build_tool_registry(
         doing by hand.
         """
         derived_note = None
+        whole_years = None
         if years_of_service is None and start_date and termination_date:
             parsed = _parse_service_dates(start_date, termination_date)
             if isinstance(parsed, str):
                 return {"result": {"error": parsed}}
             years_of_service, derived_note = parsed
+            # "Every two completed years" (SI 49 of 2023, para 5) counts anniversaries,
+            # not a 365.25-day fraction that leaves out the last day worked.
+            whole_years = completed_years(_parse_one_date(start_date), _parse_one_date(termination_date))
         if years_of_service is None:
             return {"result": {"error": (
                 "Service length is missing. Provide either years_of_service, or "
@@ -2506,6 +2511,8 @@ def build_tool_registry(
                 unpaid_salary_amount=unpaid_salary_amount,
                 napsa_contributed=napsa_contributed,
                 nhima_contributed=nhima_contributed,
+                wage_order=wage_order,
+                completed_years_of_service=whole_years,
             )
         except Exception as e:  # noqa: BLE001
             return {"result": {"error": f"could not compute entitlements: {e}"}}
@@ -3092,7 +3099,12 @@ def build_tool_registry(
                 "pay (days worked in the last month, leave, gratuity already "
                 "paid, notice not worked, tax and the net), or asks for "
                 "gratuity accrued to a date, use calculate_payroll with mode "
-                "'final_pay' or 'gratuity' instead."
+                "'final_pay' or 'gratuity' instead.\n\n"
+                "For a domestic worker (work in or for a household: a maid, "
+                "nanny or house help, or a household's gardener, cook or "
+                "guard), pass wage_order 'domestic'. It adds the Domestic "
+                "Workers Order's separation benefits (SI No. 49 of 2023, "
+                "para 5) and holds basic pay to its K1,100 monthly minimum."
             ),
             input_schema={
                 "type": "object",
@@ -3153,6 +3165,11 @@ def build_tool_registry(
                         "type": "boolean",
                         "description": "Was NHIMA being contributed? False flags an employer compliance breach.",
                     },
+                    "wage_order": {
+                        "type": "string",
+                        "enum": ["domestic", "none"],
+                        "description": "'domestic' for a domestic worker (work in or for a household): applies SI No. 49 of 2023, its separation benefits of one month's basic pay for every two completed years of service (never together with gratuity) and its K1,100 monthly minimum. Otherwise 'none'.",
+                    },
                 },
                 # Service length is required, but it can arrive either as
                 # years_of_service or as a start/termination date pair — so it
@@ -3168,7 +3185,7 @@ def build_tool_registry(
                 "payslip or timesheet against it: the s.75(4) hourly rate, overtime (s.75(1)/(2), "
                 "counted WEEK BY WEEK over 48 hours, 60 for a guard), public holiday / rest day pay "
                 "(s.75(3)), the minimum wage and allowances of the 2023 wage orders (SI 48 General, "
-                "SI 50 Shop Workers) and the truck/bus driver minimums, the 15% night differential, "
+                "SI 49 Domestic Workers, SI 50 Shop Workers) and the truck/bus driver minimums, the 15% night differential, "
                 "NAPSA (5% of gross earnings), NHIMA (1% of basic) and 2026 PAYE. With `payslip`, "
                 "every line is compared with the law and shortfalls and over-deductions are totalled.\n\n"
                 "Use this for ANY pay arithmetic: hourly or overtime rates, 'is this payslip right', "
@@ -3179,8 +3196,9 @@ def build_tool_registry(
                 "employees alike.\n\n"
                 "Choose `wage_order`: 'shop_workers' for shops, salons, restaurants and bars, "
                 "'general' for the occupations in SI 48 (general workers, cleaners, guards, drivers, "
-                "typists, clerks...), 'truck_driver' / 'bus_driver', 'domestic', or 'none' when no "
-                "order covers the job. Pass the job title as `occupation` (or the category). Pass "
+                "typists, clerks...), 'truck_driver' / 'bus_driver', 'domestic' for a domestic worker in "
+                "or for a household (SI 49: K1,100.00 a month or K5.29 an hour, K200 transport beyond 3 km), "
+                "or 'none' when no order covers the job. Pass the job title as `occupation` (or the category). Pass "
                 "the hours of each week in `weekly_hours` exactly as the user gives them, without "
                 "rest-day or public-holiday hours. Put 0 in `payslip` for a line the payslip lacks. "
                 "Ask for basic pay and job title if missing. The UI renders a payroll card; after it "
@@ -3192,7 +3210,8 @@ def build_tool_registry(
                 "redundancy, death and medical-discharge pay, PAYE on the taxable part only (ZRA: "
                 "gratuity, severance and pay in lieu of notice are exempt), NAPSA, NHIMA and, when an "
                 "employee resigned without working notice, the s.53(5) set-off capped at the money "
-                "due. Use it whenever an employer is preparing or checking final dues, with dates. "
+                "due. With wage_order 'domestic' it adds a domestic worker's separation benefits (SI 49, "
+                "para 5). Use it whenever an employer is preparing or checking final dues, with dates. "
                 "mode 'gratuity': gratuity accrued from the contract start (or last payment) to a "
                 "date, less advances, e.g. 'his gratuity to the end of October', 'can we pay gratuity "
                 "early'. Pass dates exactly as the user wrote them."
@@ -3225,7 +3244,7 @@ def build_tool_registry(
                     "wage_order": {"type": "string", "enum": ["general", "shop_workers", "truck_driver", "bus_driver", "domestic", "none"]},
                     "occupation": {"type": "string", "description": "Job title as the user gave it, e.g. 'waiter', 'cashier', 'security guard'."},
                     "category": {"type": "integer", "description": "Category number (1 to 7) under the order, if known."},
-                    "order_exemption": {"type": "string", "enum": ["none", "management", "collective_agreement", "civil_service", "local_authority"], "description": "Set when the employee is outside the wage orders."},
+                    "order_exemption": {"type": "string", "enum": ["none", "management", "collective_agreement", "civil_service", "local_authority", "piece_work"], "description": "Set when the employee is outside the wage orders. 'piece_work': a domestic worker paid by the piece (SI 49, para 2(2)(c))."},
                     "hours_worked_in_month": {"type": "number", "description": "Part-time or casual: ordinary hours worked in the month."},
                     "weekly_hours": {"type": "array", "items": {"type": "number"}, "description": "Hours actually worked in each week of the month, excluding rest-day and public-holiday hours."},
                     "overtime_hours": {"type": "number", "description": "Only if weekly hours are unknown: hours already counted as over the weekly limit."},

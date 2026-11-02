@@ -19,6 +19,11 @@ ingested Act text):
   s.38(6)  Medical discharge — lump sum of >=3 months' basic pay for each
            completed year of service, plus other accrued benefits.
 
+And, with wage_order "domestic", SI No. 49 of 2023 (the Domestic Workers
+Order): a minimum of K1,100.00 a month (para 4(1)), and on termination
+separation benefits of one month's basic pay for every two completed years of
+service, never together with gratuity (para 5).
+
 The arithmetic is deterministic Python (no model maths). Every figure carries
 its statutory basis and the formula used. Items that are fact-dependent or
 legally contested (notably gratuity on resignation) are flagged, never
@@ -28,6 +33,11 @@ asserted as a fixed entitlement.
 from __future__ import annotations
 
 from dataclasses import dataclass, field, asdict
+
+from .payroll import (DOMESTIC, DOMESTIC_MONTHLY, DOMESTIC_PARA, DOMESTIC_TEXT, ORDER_LABEL, _k,
+                      domestic_separation_terms)
+
+DOMESTIC_ALIASES = {DOMESTIC, "domestic_worker", "domestic_workers", "household", "si_49"}
 
 # NAPSA + NHIMA statutory contribution rates (employer share), used only to
 # give an INDICATIVE figure of what an employer that never remitted may owe the
@@ -86,16 +96,24 @@ def calculate_entitlements(
     unpaid_salary_amount: float | None = None,
     napsa_contributed: bool | None = None,
     nhima_contributed: bool | None = None,
+    wage_order: str | None = None,
+    completed_years_of_service: int | None = None,
 ) -> dict:
     """Compute an itemized Zambian employment-exit entitlement estimate.
 
     Returns a plain dict (see EntitlementResult) ready to serialize to the
     frontend card and to feed back to the model as a tool result.
+
+    completed_years_of_service: whole years counted from the dates, when the
+    caller has them; otherwise taken from years_of_service.
     """
     reason = (termination_reason or "").strip().lower().replace(" ", "_")
     ctype = (contract_type or "unspecified").strip().lower().replace(" ", "_")
-    pay = max(0.0, float(monthly_basic_pay or 0))
+    pay = given_pay = max(0.0, float(monthly_basic_pay or 0))
     years = max(0.0, float(years_of_service or 0))
+    domestic = (wage_order or "").strip().lower().replace(" ", "_").replace("-", "_") in DOMESTIC_ALIASES
+    if domestic and 0 < pay < DOMESTIC_MONTHLY:
+        pay = DOMESTIC_MONTHLY   # every figure below rests on the lawful basic
 
     # Transparent daily rate: annual basic / 365. Stated as an assumption so the
     # user can reconcile it with an employer that divides by 26 working days.
@@ -107,6 +125,20 @@ def calculate_entitlements(
         "Some employers use a 26-working-day divisor, which yields a higher daily rate.",
         "Figures use basic pay only; allowances and contractual top-ups are excluded.",
     ]
+    if pay > given_pay:
+        minimum = f"{ORDER_LABEL[DOMESTIC]}, {DOMESTIC_PARA['basic']}"
+        assumptions.insert(0, (
+            f"Basic pay of {_k(given_pay)} is below the domestic worker's minimum of {_k(DOMESTIC_MONTHLY)} a month "
+            f"({minimum}), so every figure here uses {_k(DOMESTIC_MONTHLY)}."))
+        items.append(LineItem(
+            item="Minimum wage shortfall",
+            status="needs_input",
+            basis=minimum,
+            formula=(f"{_k(DOMESTIC_MONTHLY - given_pay)} a month x each month paid below the minimum since "
+                     "1 January 2024"),
+            note=(f'Para 4(1): "{DOMESTIC_TEXT["minimum"]}" Give the number of months paid below it to total the '
+                  "arrears."),
+        ))
 
     # 1) Salary arrears — always owed if any wages are outstanding.
     if unpaid_salary_amount and unpaid_salary_amount > 0:
@@ -289,6 +321,24 @@ def calculate_entitlements(
             amount=gratuity_amount,
             formula=f"If a long-term contract: 25% x basic earned (~K{gratuity_amount:,.2f})",
             note="s.73 gratuity attaches to long-term contracts. Confirm the contract type; a permanent/indefinite contract does not attract statutory gratuity.",
+        ))
+
+    # 5b) A domestic worker's separation benefits (SI No. 49 of 2023, para 5).
+    if domestic:
+        # A service length derived from dates leaves out the last day worked;
+        # give it back before counting completed years.
+        done = (completed_years_of_service if completed_years_of_service is not None
+                else int(years + 1.5 / 365.25))
+        status, amount, formula, note = domestic_separation_terms(
+            pay, done, reason, [li.status for li in items if "gratuity" in li.item.lower()],
+            reason in {"redundancy", "death", "medical_discharge"})
+        items.append(LineItem(
+            item="Separation benefits (domestic worker)",
+            status=status,
+            basis=f"{ORDER_LABEL[DOMESTIC]}, {DOMESTIC_PARA['separation']}",
+            amount=amount,
+            formula=formula,
+            note=note,
         ))
 
     # 6) NAPSA / NHIMA — compliance, not a payout to the employee.

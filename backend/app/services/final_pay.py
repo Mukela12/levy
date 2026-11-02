@@ -40,6 +40,12 @@ Read from the text in Levy's library:
     s.73(1)  gratuity of at least 25% of basic pay earned, at the end of a
              long-term contract; s.73(2) prorated when the contract is
              terminated in accordance with the Code.
+  SI No. 49 of 2023, the Domestic Workers Order (wage_order "domestic")
+    para 4(1) the minimum wage is K1,100.00 a month, excluding an amount paid
+             in lieu of rations.
+    para 5   on termination, separation benefits of at least one month's basic
+             pay for every two completed years of service and any other dues;
+             but not both separation benefits and gratuity (para 5(2)).
   ZRA Practice Note No. 1 of 2026
     para 38  gratuity, redundancy pay, severance pay and salary in lieu of
              notice are exempt pension benefits; salary and commutation of
@@ -54,7 +60,9 @@ import re
 from dataclasses import asdict, dataclass, field
 from datetime import date, datetime, timedelta
 
-from .payroll import EC, NAPSA_CEILING, NAPSA_RATE, NHIMA_RATE, _k, _money, paye_bands_for, paye_monthly
+from .payroll import (DOMESTIC, DOMESTIC_MONTHLY, DOMESTIC_PARA, EC, NAPSA_CEILING, NAPSA_RATE, NHIMA_RATE,
+                      ORDER_LABEL, _k, _money, completed_years, domestic_separation_terms, paye_bands_for,
+                      paye_monthly)
 
 GRATUITY_RATE = 0.25
 PN = "ZRA Practice Note No. 1 of 2026"
@@ -78,6 +86,8 @@ _CONTRACT_ALIASES = {"long": "long_term", "fixed": "fixed_term", "fixed_duration
                      "short_term": "fixed_term", "indefinite": "permanent", "probationary": "probation"}
 # Employment ended by the employer, for notice and gratuity.
 EMPLOYER_ENDED = {"dismissal", "redundancy", "medical_discharge"}
+_DOMESTIC_ALIASES = {"domestic_worker": DOMESTIC, "domestic_workers": DOMESTIC, "household": DOMESTIC,
+                     "si_49": DOMESTIC}
 
 # Employment dates as people type them: Zambia writes day-first.
 _DATE_FORMATS = ("%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y", "%d.%m.%Y", "%d %B %Y", "%d %b %Y",
@@ -249,6 +259,7 @@ def calculate_final_pay(
     outstanding_advance: float | None = None,
     other_deductions: list[dict] | None = None,
     napsa_ceiling: float | None = None,
+    wage_order: str | None = None,
     today: date | None = None,
 ) -> dict:
     """Everything payable when a job ends, what may come off it, and the net."""
@@ -260,7 +271,10 @@ def calculate_final_pay(
     if not reason:
         raise ValueError(f"Unknown termination reason {termination_reason!r}. Use one of: {', '.join(sorted(REASONS))}.")
     ctype = _norm(contract_type, _CONTRACT_ALIASES, CONTRACT_TYPES, "unspecified")
-    basic = max(0.0, float(monthly_basic_pay or 0))
+    basic = given_basic = max(0.0, float(monthly_basic_pay or 0))
+    domestic = _norm(wage_order, _DOMESTIC_ALIASES, {DOMESTIC}, "") == DOMESTIC
+    if domestic and 0 < basic < DOMESTIC_MONTHLY:
+        basic = DOMESTIC_MONTHLY   # every figure below rests on the lawful basic
     allowances = max(0.0, float(monthly_allowances or 0))
     wages = basic + allowances
     rate = float(gratuity_rate) if gratuity_rate else GRATUITY_RATE
@@ -274,6 +288,12 @@ def calculate_final_pay(
     assumptions: list[str] = []
     res = FinalPayResult(termination_reason=reason, contract_type=ctype, termination_date=end.isoformat(),
                          monthly_basic_pay=_money(basic), monthly_allowances=_money(allowances))
+    if basic > given_basic:
+        flags.append(Flag("breach", (
+            f"Basic pay of {_k(given_basic)} is below the domestic worker's minimum of {_k(DOMESTIC_MONTHLY)} a month, "
+            f"so every figure here uses {_k(DOMESTIC_MONTHLY)}. The shortfall, {_k(DOMESTIC_MONTHLY - given_basic)} for "
+            "each month paid below the minimum since 1 January 2024, is owed as well. Money paid in lieu of rations "
+            "does not count towards the minimum."), f"{ORDER_LABEL[DOMESTIC]}, {DOMESTIC_PARA['basic']}"))
 
     # 1) Wages for the days since the last pay day.
     paid_through = parse_date(paid_through_date)
@@ -419,6 +439,27 @@ def calculate_final_pay(
             lines.append(Item("Medical discharge lump sum", "due", "owed", f"{EC}, s.38(6)",
                               _money(3 * basic * int(years)), f"3 months x {_k(basic)} x {int(years)} completed years",
                               f"In addition to other accrued benefits. Exempt from tax ({PN}, para 39).", taxable=False))
+
+    # 5b) A domestic worker's separation benefits (SI No. 49 of 2023, para 5).
+    if domestic:
+        label = "Separation benefits (domestic worker)"
+        basis = f"{ORDER_LABEL[DOMESTIC]}, {DOMESTIC_PARA['separation']}"
+        first_day = started or contract_started
+        if first_day is None:
+            needs.append("Employment start date")
+            lines.append(Item(label, "due", "needs_input", basis, None, "",
+                              "One month's basic pay for every two completed years of service: give the date "
+                              "employment began."))
+        else:
+            status, amount, formula, note = domestic_separation_terms(
+                basic, completed_years(first_day, end), reason,
+                [li.status for li in lines if li.group == "due" and "ratuity" in li.item],
+                any(li.item in ("Redundancy pay", "Severance pay (death in service)", "Medical discharge lump sum")
+                    for li in lines))
+            if amount is not None:
+                note += f" Treated like severance pay for tax, which is exempt ({PN}, para 38); confirm with ZRA."
+            lines.append(Item(label, "due", status, basis, amount, formula, note,
+                              taxable=False if amount is not None else None))
 
     # 6) Deductions from what is paid.
     owed = [li for li in lines if li.group == "due" and li.status == "owed"]
