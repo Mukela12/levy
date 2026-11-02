@@ -13,13 +13,13 @@ vm.createContext(sandbox)
 vm.runInContext(js, sandbox)
 const { attachedDocsOf, historyFor, earlierAttachments, CARRY_TURNS } = sandbox.exports
 
-const PDF = { id: 'c1081b60-3f59-4328-aba0-4f94162b9f46', title: 'Overtime claim' }
+const PDF = { id: 'aaaaaaaa-0000-0000-0000-000000000023', title: 'Overtime claim' }
 const attaching = (content, docs = [PDF]) => ({ role: 'user', content, blocks: [{ kind: 'attachments', docs }] })
 const user = (content) => ({ role: 'user', content })
 const levy = (content) => ({ role: 'assistant', content, blocks: [{ kind: 'text', text: content }] })
 
 test('the 23 October follow-up carries the PDF attached one message earlier', () => {
-  // "i attached a pdf document" went out with no attachment and no trace of one.
+  // The follow-up saying a PDF was attached went out with no attachment and no trace of one.
   const thread = [attaching('What does this say about overtime?'), levy('Nothing was pasted or attached.')]
   assert.deepEqual(plain(earlierAttachments(thread, 0)), [PDF])
 })

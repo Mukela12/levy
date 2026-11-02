@@ -5,10 +5,9 @@
  * and the composer is cleared for the next message, because session-wide
  * attachment made chips bleed into every later turn. But the model saw a
  * document only on that one turn, and the history sent with later messages is
- * text alone. On 23 October 2026 a user replied "i attached a pdf document"
- * right after attaching one; that request carried no attachment and its
- * history no trace of one, so Levy said it could not see it and opened a
- * document of its own instead. Now the history names each message's
+ * text alone. On 23 October 2026 a user's next message said they had attached
+ * a PDF; that request carried no attachment and its history no trace of one,
+ * so Levy said it could not see it and opened a document of its own instead. Now the history names each message's
  * attachments, and the next few messages send the latest ones again.
  */
 
