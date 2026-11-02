@@ -212,7 +212,7 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
             )}
             <Link href={`/chat/${s.id}`} prefetch={false} title={s.title || 'New chat'}>
               <span>{s.title || 'New chat'}</span>
-              <small>{timeAgo(s.created_at)}</small>
+              <small>{timeAgo(s.updated_at)}</small>
             </Link>
             <button
               type="button"
