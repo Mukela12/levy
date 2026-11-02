@@ -5,8 +5,10 @@ An attachment's text now goes to the model whole, so a client-supplied id for
 someone else's upload must not get through. A chunked upload was created
 public (the column default) and patched private afterwards, kept the Act
 parser's title, no page count and no text file; on 23 October 2026 its chunks
-held 9,300 of the PDF's 15,400 characters.
+held 9,300 of the PDF's 15,400 characters. And a file someone else uploaded
+first must not come back as the duplicate: the chat refuses that id.
 """
+import hashlib
 import io
 import sys
 import types
@@ -59,6 +61,13 @@ class Query:
         self.patch = patch
         return self
 
+    def insert(self, row):
+        row = {"id": f"new-{len(self.db.inserted) + 1}", **row}
+        self.db.inserted.append(row)
+        self.db.tables.setdefault(self.name, []).append(row)
+        self.rows = [row]
+        return self
+
     def execute(self):
         if self.db.fail:
             raise RuntimeError("statement timeout")
@@ -72,6 +81,7 @@ class Db:
         self.tables = {"legal_documents": list(docs)}
         self.fail = fail
         self.updates: list[dict] = []
+        self.inserted: list[dict] = []
         self.uploads: dict[str, bytes] = {}
         bucket = types.SimpleNamespace(upload=self._upload)
         self.storage = types.SimpleNamespace(from_=lambda name: bucket)
@@ -159,6 +169,61 @@ class ChunkedUpload(unittest.IsolatedAsyncioTestCase):
         self.assertIn("Page 6.", text)
         self.assertIn("doc-new.pdf", db.uploads)
         self.assertFalse(any("is_global" in u for u in db.updates))   # no public window to patch shut
+
+
+def one_page_pdf() -> bytes:
+    doc = pymupdf.open()
+    doc.new_page().insert_textbox(pymupdf.Rect(50, 50, 550, 800), "Notice of hearing. " * 40, fontsize=9)
+    return doc.tobytes()
+
+
+def copy_of(pdf: bytes, doc_id: str, owner: str | None, is_global: bool = False) -> dict:
+    return {"id": doc_id, "owner_id": owner, "is_global": is_global, "title": "Earlier upload",
+            "total_chunks": 5 if is_global else 0, "pdf_page_count": 1,
+            "pdf_hash": hashlib.sha256(pdf).hexdigest()}
+
+
+class DuplicateUpload(unittest.IsolatedAsyncioTestCase):
+    async def upload(self, pdf, rows):
+        db, ingests = Db(rows), []
+
+        def ingest(path, force=False, doc_fields=None, **kw):
+            ingests.append({"force": force, **(doc_fields or {})})
+            return {"status": "success", "document": {"id": "doc-new"}, "chunks_created": 5}
+        with patch("app.db.supabase.get_db", lambda: db), patch.object(api, "ingest_pdf", ingest):
+            res = await api.upload_document(file=UploadFile(file=io.BytesIO(pdf), filename="Hearing notice.pdf"),
+                                            user_id=None, folder_id=None, uid=ME)
+        return res, db, ingests
+
+    async def test_someone_elses_copy_is_not_handed_out_on_the_inline_tier(self):
+        pdf = one_page_pdf()
+        res, db, _ = await self.upload(pdf, [copy_of(pdf, THEIRS, THEM)])
+        self.assertEqual(res["status"], "inline")
+        mine = db.inserted[0]
+        self.assertEqual(res["document_id"], mine["id"])
+        self.assertEqual((mine["owner_id"], mine["is_global"]), (ME, False))
+
+    async def test_someone_elses_copy_is_not_handed_out_on_the_chunked_tier(self):
+        pdf = six_page_pdf()
+        res, _, ingests = await self.upload(pdf, [copy_of(pdf, THEIRS, THEM)])
+        self.assertEqual(res["document_id"], "doc-new")
+        # ingest_pdf's own duplicate check matches any owner's copy.
+        self.assertTrue(ingests[0]["force"])
+        self.assertEqual(ingests[0]["owner_id"], ME)
+
+    async def test_your_own_copy_comes_back_before_the_librarys(self):
+        pdf = one_page_pdf()
+        res, db, ingests = await self.upload(pdf, [copy_of(pdf, LIBRARY, None, is_global=True),
+                                                   copy_of(pdf, MINE, ME)])
+        self.assertEqual((res["status"], res["document_id"]), ("skipped", MINE))
+        self.assertEqual((db.inserted, ingests), ([], []))
+
+    async def test_the_librarys_copy_still_comes_back(self):
+        pdf = one_page_pdf()
+        res, db, ingests = await self.upload(pdf, [copy_of(pdf, THEIRS, THEM),
+                                                   copy_of(pdf, LIBRARY, None, is_global=True)])
+        self.assertEqual((res["status"], res["document_id"]), ("skipped", LIBRARY))
+        self.assertEqual((db.inserted, ingests), ([], []))
 
 
 if __name__ == "__main__":

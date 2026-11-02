@@ -1527,14 +1527,19 @@ async def upload_document(
         size_bytes = len(content)
         pdf_hash = hashlib.sha256(content).hexdigest()
 
-        # Dedup by hash — same bytes always map to the same document.
-        existing = (
+        # Dedup by hash among the documents this user may attach: their own
+        # uploads first, then the library. Another user's private copy of the
+        # same file used to come back here, and the chat then refused that id
+        # as someone else's, so the attachment was dropped without a word.
+        same_bytes = (
             db.table("legal_documents")
-            .select("id,title,total_chunks,pdf_page_count")
+            .select("id,title,total_chunks,pdf_page_count,owner_id,is_global")
             .eq("pdf_hash", pdf_hash)
             .execute()
             .data
         )
+        existing = ([d for d in same_bytes if d.get("owner_id") == uid]
+                    + [d for d in same_bytes if d.get("is_global") and d.get("owner_id") != uid])
         if existing:
             doc = existing[0]
             is_inline = (doc.get("total_chunks", 0) or 0) == 0
@@ -1620,7 +1625,10 @@ async def upload_document(
 
         # ── RAG tier (>5 pages) ────────────────────────────────────────────
         title = file.filename.rsplit(".", 1)[0] or "Document"
-        result = ingest_pdf(tmp_path, doc_fields={
+        # force: the check above already looked for this user's copy and the
+        # library's. ingest_pdf's own check matches any owner's copy, and would
+        # hand back someone else's document.
+        result = ingest_pdf(tmp_path, force=True, doc_fields={
             # Private from the first insert. The row used to take the column
             # default is_global=TRUE and be patched after chunking and
             # embedding, so the upload sat in everyone's search meanwhile, and
