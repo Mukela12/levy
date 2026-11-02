@@ -6,7 +6,8 @@ import { createClient } from '@/lib/supabase'
 export interface RecentSession {
   id: string
   title: string
-  created_at: string
+  /** When the newest message was saved; a database trigger keeps it current. */
+  updated_at: string
 }
 
 export function useChatTitle(userId: string | undefined, sessionId: string) {
@@ -34,6 +35,10 @@ const PAGE = 20
  * Loads 20 at a time. Until 12 Oct 2026 it stopped at 20 with no way past it:
  * the two heaviest users (34 and 28 chats) could not open 22 older chats, and
  * a returning user asked Levy where their first conversation had gone.
+ *
+ * Sorted by last activity. Until 2 Nov 2026 it sorted by creation, so one
+ * user's 253-message chat from May, still in daily use, sat last in their list
+ * under a generated title, and they twice reported it gone.
  */
 export function useRecentSessions(userId: string | undefined, pathname: string) {
   const [sessions, setSessions] = useState<RecentSession[]>([])
@@ -45,9 +50,9 @@ export function useRecentSessions(userId: string | undefined, pathname: string) 
     const supabase = createClient()
     const { data } = await supabase
       .from('chat_sessions')
-      .select('id, title, created_at')
+      .select('id, title, updated_at')
       .eq('user_id', userId)
-      .order('created_at', { ascending: false })
+      .order('updated_at', { ascending: false })
       .limit(limit + 1)
     if (data) {
       setHasMore(data.length > limit)

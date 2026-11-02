@@ -96,7 +96,7 @@ export async function listMatterThreads(matterId: string): Promise<MatterThread[
     .from('chat_sessions')
     .select('id, title, created_at')
     .eq('matter_id', matterId)
-    .order('created_at', { ascending: false })
+    .order('updated_at', { ascending: false })
   return (data as MatterThread[]) || []
 }
 

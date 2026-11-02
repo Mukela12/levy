@@ -98,8 +98,8 @@ export default function DocumentsPage() {
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Resolve the user's most recent thread (used as the default attach target
-  // when the user is browsing /documents directly).
+  // Resolve the user's most recently used thread (used as the default attach
+  // target when the user is browsing /documents directly).
   useEffect(() => {
     if (!user?.id) return
     ;(async () => {
@@ -110,7 +110,7 @@ export default function DocumentsPage() {
           .from('chat_sessions')
           .select('id')
           .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
+          .order('updated_at', { ascending: false })
           .limit(1)
         if (data && data[0]) setRecentSessionId(data[0].id)
       } catch {

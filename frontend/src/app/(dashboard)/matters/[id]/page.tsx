@@ -113,7 +113,7 @@ export default function MatterDetailPage({ params }: { params: Promise<{ id: str
       .select('id, title, created_at')
       .eq('user_id', user?.id)
       .is('matter_id', null)
-      .order('created_at', { ascending: false })
+      .order('updated_at', { ascending: false })
       .limit(20)
     setUnlinked((data as MatterThread[]) || [])
   }

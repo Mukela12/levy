@@ -141,7 +141,7 @@ export default function AppSidebar({ mobileSidebarOpen, onCloseMobile }: AppSide
                       {session.title || 'New chat'}
                     </div>
                     <div className="text-[10px] text-muted-foreground/40 mt-0.5">
-                      {getTimeAgo(session.created_at)}
+                      {getTimeAgo(session.updated_at)}
                     </div>
                   </Link>
 
