@@ -163,9 +163,11 @@ class Settings(BaseSettings):
     compaction_old_tool_result_max_chars: int = 800
     # Cheap, fast model for the summarisation pass itself.
     compaction_model: str = "claude-haiku-4-5-20251001"
-    # After a successful compaction, suppress further compactions in the same
-    # process for this many seconds — protects against hitting Haiku's
-    # 50K-input-tokens-per-minute rate limit when the agent loops fast.
+    # The most of the older conversation sent to that model. Haiku 4.5 reads
+    # 200K tokens; at three characters a token this stays under it.
+    compaction_summary_max_chars: int = 500_000
+    # No longer read: compaction now runs once per answer, before the first
+    # model call (agent.run_agent), so there are no back-to-back calls to space.
     compaction_cooldown_seconds: int = 60
 
     # Embedding config

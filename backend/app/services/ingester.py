@@ -15,7 +15,8 @@ from ..db.supabase import (
 )
 
 
-def ingest_pdf(pdf_path: str, force: bool = False, overrides: dict | None = None) -> dict:
+def ingest_pdf(pdf_path: str, force: bool = False, overrides: dict | None = None,
+               doc_fields: dict | None = None) -> dict:
     """
     Full ingestion pipeline for a legal PDF.
 
@@ -24,6 +25,11 @@ def ingest_pdf(pdf_path: str, force: bool = False, overrides: dict | None = None
     3. Create metadata-rich chunks
     4. Generate embeddings for all chunks
     5. Store everything in Supabase
+
+    `doc_fields` are written with the document row when it is first inserted,
+    after the parser's values: a user's upload passes is_global=False and its
+    owner here, so it is never in anyone else's search, not even while it is
+    being embedded.
 
     Returns summary of what was ingested.
     """
@@ -61,6 +67,7 @@ def ingest_pdf(pdf_path: str, force: bool = False, overrides: dict | None = None
         "document_type": "act",
         "pdf_hash": pdf_hash,
         "total_sections": len([s for s in parsed["sections"] if s.level == "section"]),
+        **(doc_fields or {}),
     })
     document_id = doc_record["id"]
     print(f"  Document ID: {document_id}")

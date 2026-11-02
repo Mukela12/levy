@@ -40,8 +40,6 @@ from .tools import (
 )
 
 
-import time as _time
-
 # claude-sonnet-4-20250514 was retired by Anthropic (now 404s); Sonnet 4.6
 # is the current replacement. Override per-request by passing `model`, or
 # fleet-wide with the AGENT_MODEL env var — no redeploy of this file needed.
@@ -173,9 +171,6 @@ def _is_stalled_draft_promise(text: str) -> bool:
     return any(p in t for p in _PROMISE_TRIGGERS)
 
 
-# Per-process cooldown bookkeeping: session_id -> monotonic timestamp of last
-# compaction. Worker restarts wipe this naturally, which is fine.
-_LAST_COMPACTION: dict[str, float] = {}
 class _NarrationGate:
     """Holds back a turn's opening text until it is provably answer, not filler.
 
@@ -1256,6 +1251,7 @@ async def run_agent(
     owner_id: str | None = None,
     session_id: str | None = None,
     attached_doc_ids: list[str] | None = None,
+    earlier_doc_ids: list[str] | None = None,
     debug_tools: bool = False,
 ) -> AsyncIterator[dict]:
     settings = get_settings()
@@ -1278,12 +1274,14 @@ async def run_agent(
             attached_doc_ids = [r["document_id"] for r in (res.data or [])]
         except Exception:
             attached_doc_ids = []
+    # Documents attached to a recent message, repeated for a follow-up question.
+    earlier_doc_ids = [d for d in (earlier_doc_ids or []) if d not in (attached_doc_ids or [])]
 
     registry = build_tool_registry(
         web_enabled=web_enabled,
         owner_id=owner_id,
         session_id=session_id,
-        attached_doc_ids=attached_doc_ids,
+        attached_doc_ids=list(attached_doc_ids or []) + earlier_doc_ids,
     )
     tool_schemas = to_anthropic_schema(registry)
     # Prompt caching: the tool definitions are identical on every model call, so
@@ -1294,47 +1292,26 @@ async def run_agent(
     if tool_schemas:
         tool_schemas[-1] = {**tool_schemas[-1], "cache_control": {"type": "ephemeral"}}
 
-    # If the user attached documents to this conversation, prepend the titles
-    # to the system prompt and explicitly tell the model to read them BEFORE
-    # reaching for the web.
-    #
-    # Two tiers:
-    #   * Inline (total_chunks == 0): small docs (≤5 pages). The full extracted
-    #     text lives at `legal-docs/<id>.txt` in storage; we inline it into the
-    #     system prompt so the model reads it directly — no tool call required.
-    #   * RAG: search_corpus already includes attached docs in its candidate
-    #     pool when attached_doc_ids is set, so the model just calls it first.
-    attachments_block = ""
-    if attached_doc_ids:
+    # Attached documents go in the user's own turn, in front of the question,
+    # with their text (services/attachments.py says why the system prompt was
+    # not enough). Kept out of the system prompt, its cached prefix no longer
+    # changes when a document is attached.
+    attachments_text = ""
+    if attached_doc_ids or earlier_doc_ids:
+        from .attachments import Attachment, attachment_turn_block, load_attachments
+        current_ids = list(attached_doc_ids or [])
         try:
             from ..db.supabase import get_db
-            db = get_db()
-            rows = (
-                db.table("legal_documents")
-                .select("id,title,short_name,pdf_page_count,total_chunks")
-                .in_("id", attached_doc_ids)
-                .execute()
-                .data
-                or []
-            )
-            if rows:
-                from .attachments import attachment_block
-                texts: dict[str, str] = {}
-                for r in rows:
-                    # Only small (unchunked, five pages at most) attachments
-                    # have a stored text file. Fetch every one, so a document
-                    # past the turn's budget is not mistaken for a scan.
-                    if (r.get("total_chunks") or 0) > 0:
-                        continue
-                    try:
-                        blob = db.storage.from_("legal-docs").download(f"{r['id']}.txt")
-                        if isinstance(blob, (bytes, bytearray)):
-                            texts[r["id"]] = blob.decode("utf-8", errors="ignore")
-                    except Exception:
-                        pass  # no text file: a scan, and the block says so
-                attachments_block = attachment_block(rows, texts)
-        except Exception:
-            attachments_block = ""
+            loaded = await asyncio.to_thread(load_attachments, get_db(), current_ids + earlier_doc_ids)
+        except Exception as e:  # noqa: BLE001
+            # Say what is attached and how to read it, rather than dropping the
+            # attachments in silence as the old block did.
+            print(f"[agent] attachments could not be loaded: {type(e).__name__}: {e}", flush=True)
+            loaded = [Attachment(id=d, name="attached document") for d in current_ids + earlier_doc_ids]
+        attachments_text = attachment_turn_block(
+            [a for a in loaded if a.id in current_ids],
+            [a for a in loaded if a.id not in current_ids],
+        )
 
     # If this session belongs to a Matter (a persistent case), inject its
     # context so Levy "remembers" the case across sessions and uses the right
@@ -1385,7 +1362,7 @@ async def run_agent(
     except Exception:  # noqa: BLE001
         updates_block = ""
     system_prompt = (SYSTEM_PROMPT + AGENT_SYSTEM_SUFFIX + ("\n\n" + updates_block if updates_block else "")
-                     + attachments_block + matter_block)
+                     + matter_block)
     # The web toggle is a preference signal, never a gate: the tools are
     # always registered. Rendered as its own small block so the big static
     # prefix above keeps one cache entry for both toggle states.
@@ -1411,10 +1388,26 @@ async def run_agent(
         cached_system.append({"type": "text", "text": documents_line})
 
     messages: list[dict] = list(history or [])
-    messages.append({"role": "user", "content": user_query})
+    messages.append({"role": "user", "content": (
+        [{"type": "text", "text": attachments_text}, {"type": "text", "text": user_query}]
+        if attachments_text else user_query
+    )})
 
     started = time.monotonic()
     yield {"type": "thinking"}
+
+    # A long thread's earlier conversation is summarised once, here, and every
+    # model call of this answer reuses the result. Compacting inside the loop
+    # sent the whole thread again on any round within the old 60-second
+    # cooldown, and cut this answer's own tool results to 800 characters each:
+    # the history the client sends is text only, so they were the only tool
+    # results there were to cut. This turn always sits in the kept tail.
+    compacted, compaction_info = await compact_if_needed(messages)
+    if compaction_info:
+        yield {"type": "compaction", **compaction_info}
+    # A copy: a short thread comes back as `messages` itself, which grows below.
+    compacted = list(compacted)
+    compacted_upto = len(messages)  # `compacted` stands in for messages[:compacted_upto]
 
     tool_calls: list[ToolCallRecord] = []
     db_sources_acc: dict[str, dict] = {}
@@ -1446,23 +1439,7 @@ async def run_agent(
                 }
             )
 
-        # Compact older history if we're approaching the model's window —
-        # but respect the per-session cooldown so back-to-back tool rounds
-        # don't trigger Haiku's 50K-input-tokens/min rate limit.
-        cooldown_key = session_id or "_anon_"
-        last_at = _LAST_COMPACTION.get(cooldown_key)
-        in_cooldown = (
-            last_at is not None
-            and (_time.monotonic() - last_at) < settings.compaction_cooldown_seconds
-        )
-        if in_cooldown:
-            compacted_messages, compaction_info = messages, None
-        else:
-            compacted_messages, compaction_info = await compact_if_needed(messages)
-            if compaction_info and not compaction_info.get("error"):
-                _LAST_COMPACTION[cooldown_key] = _time.monotonic()
-        if compaction_info:
-            yield {"type": "compaction", **compaction_info}
+        compacted_messages = compacted + messages[compacted_upto:]
 
         # Streaming call. Capture tool_use blocks as they finalize, and forward
         # text deltas as `token` events.

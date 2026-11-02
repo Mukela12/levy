@@ -81,6 +81,25 @@ def _download_corpus_pdf(document_id: str) -> bytes:
     return bytes(blob)
 
 
+def _someone_elses_upload(document_id: str, owner_id: str | None) -> bool:
+    """True when the document is another user's private upload.
+
+    Attachments now reach the model with their document_id, and the chat
+    history names them, so an id is easy to come by; reading by id must not
+    open someone else's file. Library documents and unowned private ones are
+    unaffected.
+    """
+    try:
+        rows = (get_db().table("legal_documents").select("owner_id,is_global")
+                .eq("id", document_id).limit(1).execute().data or [])
+    except Exception:  # noqa: BLE001 — the read itself will fail the same way
+        return False
+    if not rows or rows[0].get("is_global"):
+        return False
+    owner = rows[0].get("owner_id")
+    return bool(owner) and owner != owner_id
+
+
 def _pdf_page_count(pdf_bytes: bytes) -> int:
     try:
         return len(PdfReader(io.BytesIO(pdf_bytes)).pages)
@@ -261,6 +280,8 @@ async def read_pdf_pages(
     try:
         if document_id:
             label = f"library document {document_id}"
+            if await asyncio.to_thread(_someone_elses_upload, document_id, owner_id):
+                return {"result": {"error": "that document belongs to another user and cannot be read"}}
             try:
                 pdf = _download_corpus_pdf(document_id)
             except Exception:  # noqa: BLE001 — no stored file, or storage refused it

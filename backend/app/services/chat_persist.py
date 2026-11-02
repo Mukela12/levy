@@ -133,6 +133,10 @@ class RunAccumulator:
                 "tokens_before": e.get("tokens_before"),
                 "tokens_after": e.get("tokens_after"),
             }
+            # Summaries failed from 5 August to 2 November 2026 with nothing in
+            # the saved row but summarised_messages 0. Keep the reason.
+            if e.get("error"):
+                self.compaction["error"] = str(e["error"])[:300]
         elif t == "template_suggestion":
             self._upsert("templates", e.get("tool_call_id"),
                          {"kind": "templates", "toolCallId": e.get("tool_call_id"),

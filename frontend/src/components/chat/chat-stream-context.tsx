@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useMemo, useRef, useState } fro
 import { createClient } from '@/lib/supabase'
 import { AlreadyAnswering, streamQuery } from '@/lib/api'
 import { shouldWaitForAnswer } from '@/lib/stream-recovery'
+import { earlierAttachments, historyFor } from '@/lib/chat-attachments'
 import { clearAwaiting, markAwaiting } from '@/lib/session-status'
 import type { ToolCallView } from '@/components/chat/tool-call-card'
 import type { MessageBlock } from '@/components/chat/chat-message'
@@ -209,9 +210,10 @@ export function ChatStreamProvider({ children }: { children: React.ReactNode }) 
   const send = useCallback(
     (sid: string, question: string, opts: SendOptions) => {
       const cur = sessionsRef.current[sid] ?? EMPTY_SESSION
-      const history = cur.messages
-        .filter((m) => m.content)
-        .map((m) => ({ role: m.role, content: m.content }))
+      // Text only, but naming each message's attachments; and a follow-up
+      // sends the latest attachments again (lib/chat-attachments.ts).
+      const history = historyFor(cur.messages)
+      const earlier = earlierAttachments(cur.messages, opts.attachedDocIds?.length ?? 0)
 
       const userMsg: Message = {
         role: 'user',
@@ -282,6 +284,7 @@ export function ChatStreamProvider({ children }: { children: React.ReactNode }) 
           userId: opts.userId,
           sessionId: sid,
           attachedDocIds: opts.attachedDocIds,
+          earlierDocIds: earlier.map((d) => d.id),
           history,
         },
         undefined,

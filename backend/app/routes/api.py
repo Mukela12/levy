@@ -80,6 +80,10 @@ class ChatRequest(BaseModel):
     user_id: str | None = None
     session_id: str | None = None
     attached_doc_ids: list[str] | None = None
+    # Documents attached to a recent message, sent with a follow-up so the
+    # model can still read them ("I attached a PDF"). The chip stays on the
+    # message that carried them.
+    earlier_doc_ids: list[str] | None = None
     # Cloudflare Turnstile token, required for anonymous (signed-out) callers.
     # Ignored for authenticated requests.
     turnstile_token: str | None = None
@@ -93,6 +97,35 @@ class ChatRequest(BaseModel):
     # domain, landing path; frontend lib/attribution.ts). Logged with the
     # anonymous question, so a campaign's guests can be counted.
     source: dict | None = None
+
+
+_DOC_ID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.I)
+
+
+def _usable_doc_ids(doc_ids: list[str] | None, uid: str | None) -> list[str] | None:
+    """The attachment ids from a chat request that this caller may read.
+
+    The ids come from the client, and an attachment's text now goes to the
+    model whole, so an id for someone else's upload would hand its contents
+    over. Library documents and the caller's own pass, as /documents/attach
+    already requires; the rest are dropped. None stays None: the agent then
+    reads the session's attachment list itself.
+    """
+    if doc_ids is None:
+        return None
+    from ..services.attachments import MAX_ATTACHMENTS
+    ids = [d.strip() for d in dict.fromkeys(doc_ids) if isinstance(d, str) and _DOC_ID.match(d.strip())]
+    ids = ids[:MAX_ATTACHMENTS]
+    if not ids:
+        return []
+    try:
+        rows = (get_db().table("legal_documents").select("id,owner_id,is_global")
+                .in_("id", ids).execute().data or [])
+    except Exception:  # noqa: BLE001 — refuse rather than pass ids unchecked
+        logger.warning("attachment ownership check failed", exc_info=True)
+        return []
+    allowed = {r["id"] for r in rows if r.get("is_global") or (uid and r.get("owner_id") == uid)}
+    return [d for d in ids if d in allowed]
 
 
 class SearchRequest(BaseModel):
@@ -512,6 +545,8 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
         s = get_db().table("chat_sessions").select("user_id").eq("id", request.session_id).limit(1).execute()
         if s.data and s.data[0].get("user_id") == uid:
             safe_session_id = request.session_id
+    attached_ids = _usable_doc_ids(request.attached_doc_ids, uid)
+    earlier_ids = _usable_doc_ids(request.earlier_doc_ids, uid) or []
 
     def _sse(event: dict) -> str:
         # The pre-agent client expects `chunks_used` on the sources event.
@@ -553,7 +588,8 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
                 history=request.history,
                 owner_id=uid,
                 session_id=safe_session_id,
-                attached_doc_ids=request.attached_doc_ids,
+                attached_doc_ids=attached_ids,
+                earlier_doc_ids=earlier_ids,
                 debug_tools=_is_qa_probe(http_request),
             ):
                 acc.consume(event)
@@ -588,7 +624,7 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
                     # made people re-paste everything.
                     await asyncio.to_thread(
                         ensure_user_turn, safe_session_id, request.query, asked_at,
-                        request.attached_doc_ids,
+                        attached_ids,
                     )
                 except Exception:
                     logger.exception("user turn repair failed")
@@ -1446,19 +1482,6 @@ def _upload_object(db, bucket: str, key: str, content: bytes, content_type: str)
             raise
 
 
-def _extract_pdf_text(pdf_path: str) -> str:
-    """Concatenate all pages' text. Used for the inline tier (small docs)."""
-    import pdfplumber
-
-    from ..services.parser import page_text
-
-    parts: list[str] = []
-    with pdfplumber.open(pdf_path) as pdf:
-        for page in pdf.pages:
-            parts.append(page_text(page))
-    return "\n\n".join(parts).strip()
-
-
 @router.post("/documents/upload")
 async def upload_document(
     file: UploadFile = File(...),
@@ -1471,18 +1494,18 @@ async def upload_document(
     Two paths, picked by page count:
       * **Inline tier** (≤5 pages) — extract full text, store it alongside the
         PDF in storage, mark the document with `total_chunks=0`. No embeddings.
-        At chat time, the agent receives the full text in its system prompt.
-      * **RAG tier** (>5 pages) — full chunk + embed via `ingest_pdf`.
+        At chat time the full text goes in the user's turn, before the question.
+      * **RAG tier** (>5 pages) — full chunk + embed via `ingest_pdf`, and the
+        full text stored beside the PDF as in the inline tier.
 
     In both paths the PDF itself is uploaded to the `legal-docs` bucket so the
     citation viewer can render it.
     """
     import hashlib
-    import io as _io
 
-    from pypdf import PdfReader
     from ..db.supabase import get_db
-    from ..services.attachments import IMAGE_EXTS, image_to_pdf, looks_scanned
+    from ..services.attachments import IMAGE_EXTS, extract_pdf_text, image_to_pdf, looks_scanned
+    from ..services.pdf_tools import _pdf_page_count
 
     name = (file.filename or "").lower()
     is_image = name.endswith(IMAGE_EXTS)
@@ -1531,15 +1554,14 @@ async def upload_document(
             tmp.write(content)
             tmp_path = tmp.name
 
-        try:
-            page_count = len(PdfReader(_io.BytesIO(content)).pages)
-        except Exception:
-            page_count = 0
+        # pypdf, then PyMuPDF: a PDF pypdf cannot count went to the chunked
+        # tier with no page count at all.
+        page_count = _pdf_page_count(content)
 
         # ── Inline tier ────────────────────────────────────────────────────
         if 0 < page_count <= INLINE_TIER_MAX_PAGES:
             try:
-                text = _extract_pdf_text(tmp_path)
+                text = extract_pdf_text(content)[0]
             except Exception:
                 text = ""
 
@@ -1597,17 +1619,25 @@ async def upload_document(
             }
 
         # ── RAG tier (>5 pages) ────────────────────────────────────────────
-        result = ingest_pdf(tmp_path)
+        title = file.filename.rsplit(".", 1)[0] or "Document"
+        result = ingest_pdf(tmp_path, doc_fields={
+            # Private from the first insert. The row used to take the column
+            # default is_global=TRUE and be patched after chunking and
+            # embedding, so the upload sat in everyone's search meanwhile, and
+            # for good if the patch failed (its error was swallowed).
+            "is_global": False,
+            "owner_id": uid,
+            "folder_id": folder_id,
+            # The Act parser's title for a letter or a contract is junk; the
+            # chip and the model show the name the user gave the file.
+            "title": title,
+            "short_name": title,
+            "pdf_page_count": page_count or None,
+            "pdf_size_bytes": size_bytes,
+        })
         doc = (result or {}).get("document") or {}
         doc_id = doc.get("id")
         if doc_id:
-            patch: dict = {"is_global": False, "owner_id": uid}
-            if folder_id:
-                patch["folder_id"] = folder_id
-            try:
-                db.table("legal_documents").update(patch).eq("id", doc_id).execute()
-            except Exception:
-                pass
             # Upload PDF to storage so the citation viewer can render it.
             try:
                 key_pdf = f"{doc_id}.pdf"
@@ -1617,6 +1647,16 @@ async def upload_document(
                 ).eq("id", doc_id).execute()
             except Exception:
                 pass
+            # And its text, which the model is given when the document is
+            # attached. The chunks are no substitute: the Act parser keeps only
+            # what it takes for sections (9,300 of 15,400 characters on 23 Oct).
+            try:
+                full_text = extract_pdf_text(content)[0]
+                if full_text:
+                    _upload_object(db, "legal-docs", f"{doc_id}.txt",
+                                   full_text.encode("utf-8"), "text/plain; charset=utf-8")
+            except Exception:
+                logger.warning("upload text extraction failed", exc_info=True)
 
         os.unlink(tmp_path)
         return {

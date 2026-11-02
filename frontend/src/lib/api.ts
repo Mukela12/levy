@@ -860,6 +860,8 @@ export async function streamQuery(
     userId?: string
     sessionId?: string
     attachedDocIds?: string[]
+    /** Documents attached to a recent message, sent again with a follow-up. */
+    earlierDocIds?: string[]
     /** Cloudflare Turnstile token — required for signed-out visitors. */
     turnstileToken?: string | null
     /** Server-issued pass from an earlier solved challenge; replaces the token. */
@@ -888,6 +890,7 @@ export async function streamQuery(
       user_id: options?.userId,
       session_id: options?.sessionId,
       attached_doc_ids: options?.attachedDocIds,
+      earlier_doc_ids: options?.earlierDocIds?.length ? options.earlierDocIds : undefined,
       turnstile_token: options?.turnstileToken ?? undefined,
       anon_pass: options?.anonPass ?? undefined,
       turnstile_error: options?.turnstileError ?? undefined,

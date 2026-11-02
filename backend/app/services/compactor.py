@@ -151,6 +151,23 @@ def _flatten_for_summary(messages: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def _fit_for_summary(text: str, max_chars: int) -> str:
+    """The older conversation cut to what the summariser can take in.
+
+    Haiku 4.5 reads 200K tokens. From 5 August 2026 the longest thread (about a
+    million characters) no longer fitted: every summary request was refused, and
+    each of its answers went out with the whole thread. Its opening (the facts
+    as first told) and its most recent stretch are kept; the middle goes.
+    """
+    if len(text) <= max_chars:
+        return text
+    head = max_chars // 5
+    tail = max_chars - head
+    gap = len(text) - head - tail
+    return (text[:head] + f"\n\n[... {gap:,} characters from the middle of the conversation are "
+            "left out here to fit the summariser ...]\n\n" + text[-tail:])
+
+
 # ─── Public entry: compact_if_needed ─────────────────────────────────────────
 
 
@@ -209,7 +226,7 @@ async def compact_if_needed(
     tail = [_truncate_tool_results_in_place(m, old_max) for m in messages[-keep:]]
 
     # Summarise the head with Haiku.
-    flat = _flatten_for_summary(head)
+    flat = _fit_for_summary(_flatten_for_summary(head), settings.compaction_summary_max_chars)
     client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
     try:
         resp = await client.messages.create(
@@ -220,6 +237,8 @@ async def compact_if_needed(
         )
     except anthropic.APIError as e:  # noqa: BLE001
         # Compaction failed — fall back to truncated tool results, no summary.
+        # Logged, because the only other trace is summarised_messages=0.
+        print(f"[compactor] summary failed ({len(flat):,} chars): {type(e).__name__}: {e}", flush=True)
         truncated = [_truncate_tool_results_in_place(m, old_max) for m in messages]
         return truncated, {
             "tokens_before": before,
