@@ -4,6 +4,7 @@ import './globals.css'
 import { AuthProvider } from '@/components/auth/auth-provider'
 import { HumanAnalytics } from '@/components/layout/human-analytics'
 import { AppShellMount } from '@/components/native/app-shell-mount'
+import { IS_APP } from '@/lib/routes'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { UiVariantProvider, uiBootScript } from '@/lib/ui-variant'
 import { sceneBootScript } from '@/components/canopy/scene-collection'
@@ -69,6 +70,9 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  // The native apps don't zoom, like other apps; iOS would otherwise zoom
+  // into small form fields on focus. The website keeps pinch-zoom.
+  ...(IS_APP ? { maximumScale: 1, userScalable: false } : {}),
   viewportFit: 'cover',
   themeColor: '#0a0a0b',
   colorScheme: 'dark',

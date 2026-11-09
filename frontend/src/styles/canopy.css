@@ -1232,3 +1232,10 @@ html[data-app] .cp-sheet-panel { margin-left: 0; margin-right: auto; border-left
   .cp-matter-row:hover .cp-matter-chev { opacity: .55; color: var(--cp-muted); transform: none; }
   .cp-act-row > svg, .cp-act-row:hover > svg { opacity: .6; }
 }
+
+/* iOS zooms the whole page into any text field set below 16px when it gets
+   focus, which pushed the conversation sideways under the keyboard. Touch
+   screens get 16px fields. */
+@media (pointer: coarse) {
+  .cp-composer textarea, .cp-composer.is-compact textarea { font-size: 16px; }
+}
