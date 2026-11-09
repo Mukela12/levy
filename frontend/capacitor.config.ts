@@ -16,13 +16,25 @@ const config: CapacitorConfig = {
   appName: 'Levy',
   webDir: 'out',
   ...(devServer ? { server: { url: devServer, cleartext: devServer.startsWith('http://') } } : {}),
+  // Behind the web view before the first paint, so a cold start never flashes
+  // white. Matches the splash and the dark theme.
+  backgroundColor: '#0b0d0c',
+  ios: { contentInset: 'never' },
+  // Bridge logs include what plugins return, such as the stored session, so
+  // they are written only in debug builds, never in release.
+  loggingBehavior: 'debug',
   plugins: {
     SplashScreen: {
-      launchShowDuration: 0,
-      launchAutoHide: true,
-      backgroundColor: '#0a0a0b',
+      // Held until AppShell has painted the first real frame, then faded.
+      launchAutoHide: false,
+      launchShowDuration: 6000,
+      backgroundColor: '#0b0d0c',
       showSpinner: false,
+      splashFullScreen: false,
+      splashImmersive: false,
     },
+    SystemBars: { insetsHandling: 'css', style: 'DARK' },
+    Keyboard: { resizeOnFullScreen: true },
   },
 }
 

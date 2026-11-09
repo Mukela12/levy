@@ -42,3 +42,34 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return config
     }
 }
+
+/// The app's root view controller (set in Main.storyboard).
+///
+/// The app is a static export with one folder per page (chat/index.html,
+/// chat/view/index.html, ...). Capacitor's default router answers every path
+/// without a file extension with the root index.html, so a reload, or iOS
+/// restarting the web view after reclaiming its memory, would show the home
+/// page instead of the chat that was open. This router serves a folder's own
+/// index.html when it exists, the way a web host does.
+class LevyViewController: CAPBridgeViewController {
+    override func router() -> Router {
+        return StaticSiteRouter()
+    }
+}
+
+struct StaticSiteRouter: Router {
+    var basePath: String = ""
+
+    func route(for path: String) -> String {
+        if !URL(fileURLWithPath: path).pathExtension.isEmpty {
+            return basePath + path
+        }
+        if path != "/" && !path.isEmpty {
+            let index = (path.hasSuffix("/") ? path : path + "/") + "index.html"
+            if FileManager.default.fileExists(atPath: basePath + index) {
+                return basePath + index
+            }
+        }
+        return basePath + "/index.html"
+    }
+}

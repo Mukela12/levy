@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { useUiVariant } from '@/lib/ui-variant'
 import { ChevronRight, User, Lock, LogOut, Mail, Loader2 } from 'lucide-react'
 import { CanopyThemeToggle } from '@/components/canopy/theme-toggle'
+import { linkTarget } from '@/lib/native'
 
 export default function ProfilePage() {
   const { user, signOut, loading: authLoading } = useAuth()
@@ -35,7 +36,7 @@ export default function ProfilePage() {
     try {
       const supabase = createClient()
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
+        redirectTo: linkTarget('/auth/reset-password'),
       })
       if (error) throw error
       setPasswordSent(true)

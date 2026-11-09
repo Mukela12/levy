@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/components/auth/auth-provider'
 import { HumanAnalytics } from '@/components/layout/human-analytics'
+import { AppShellMount } from '@/components/native/app-shell-mount'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { UiVariantProvider, uiBootScript } from '@/lib/ui-variant'
 import { sceneBootScript } from '@/components/canopy/scene-collection'
@@ -84,6 +85,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: sceneBootScript }} />
         <UiVariantProvider>
           <AuthProvider>
+            <AppShellMount />
             <TooltipProvider>{children}</TooltipProvider>
           </AuthProvider>
         </UiVariantProvider>

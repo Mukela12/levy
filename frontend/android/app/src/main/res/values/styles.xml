@@ -16,7 +16,14 @@
     </style>
 
 
+    <!-- Launch: the Android 12+ splash is the icon on Levy's cream (dark mode:
+         values-night/colors.xml), and the window behind the web view matches
+         the splash so nothing flashes between them. -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="android:background">@drawable/splash</item>
+        <item name="windowSplashScreenBackground">@color/levySplash</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
+        <item name="android:windowBackground">@color/levySplash</item>
     </style>
 </resources>

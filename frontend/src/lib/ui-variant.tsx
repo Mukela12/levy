@@ -15,6 +15,7 @@
  */
 
 import { createContext, useCallback, useContext, useMemo, useSyncExternalStore } from 'react'
+import { IS_APP } from './routes'
 
 export type UiVariant = 'legacy' | 'canopy'
 export type UiTheme = 'dark' | 'light'
@@ -24,9 +25,12 @@ export const THEME_STORAGE_KEY = 'levy-theme'
 export const BUILD_DEFAULT_VARIANT: UiVariant =
   process.env.NEXT_PUBLIC_UI_VARIANT === 'legacy' ? 'legacy' : 'canopy'
 const CHANGE_EVENT = 'levy-ui-change'
+// The website opens dark. The app follows the phone's appearance until the
+// person picks a theme, as native apps do.
+const DEFAULT_THEME_JS = IS_APP ? "(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark')" : "'dark'"
 
 /** Inlined by the root layout so the first paint already carries the choice. */
-export const uiBootScript = `(function(){var d=document.documentElement;var q=new URLSearchParams(location.search).get('ui');var v='${BUILD_DEFAULT_VARIANT}';var t='dark';try{v=localStorage.getItem('${UI_STORAGE_KEY}')||v;t=localStorage.getItem('${THEME_STORAGE_KEY}')||t}catch(e){}if(q==='canopy'||q==='legacy'){v=q;try{localStorage.setItem('${UI_STORAGE_KEY}',q)}catch(e){}}if(v!=='canopy'&&v!=='legacy'){v='${BUILD_DEFAULT_VARIANT}'}d.dataset.ui=v;d.dataset.uiTheme=t==='light'?'light':'dark';var light=v==='canopy'&&t==='light';d.classList.toggle('dark',!light);d.style.colorScheme=light?'light':'dark'})();`
+export const uiBootScript = `(function(){var d=document.documentElement;var q=new URLSearchParams(location.search).get('ui');var v='${BUILD_DEFAULT_VARIANT}';var t=${DEFAULT_THEME_JS};try{v=localStorage.getItem('${UI_STORAGE_KEY}')||v;t=localStorage.getItem('${THEME_STORAGE_KEY}')||t}catch(e){}if(q==='canopy'||q==='legacy'){v=q;try{localStorage.setItem('${UI_STORAGE_KEY}',q)}catch(e){}}if(v!=='canopy'&&v!=='legacy'){v='${BUILD_DEFAULT_VARIANT}'}d.dataset.ui=v;d.dataset.uiTheme=t==='light'?'light':'dark';var light=v==='canopy'&&t==='light';d.classList.toggle('dark',!light);d.style.colorScheme=light?'light':'dark'})();`
 
 interface UiVariantValue {
   variant: UiVariant

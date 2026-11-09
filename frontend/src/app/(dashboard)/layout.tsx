@@ -91,7 +91,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
           bar / notch. env() is 0 on desktop, so the desktop bar is unchanged. */}
       <header
         className="min-h-12 border-b border-white/[0.06] px-4 flex items-center justify-between flex-shrink-0 bg-background z-30"
-        style={{ paddingTop: 'env(safe-area-inset-top)' }}
+        style={{ paddingTop: 'var(--safe-area-inset-top, env(safe-area-inset-top))' }}
       >
         {/* Left: hamburger (mobile) / case name (desktop) */}
         <div className="flex items-center gap-3">

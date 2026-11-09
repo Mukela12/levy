@@ -424,7 +424,7 @@ function TourFrame({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.18 }}
-        className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/72 backdrop-blur-sm px-4 pb-[max(16px,env(safe-area-inset-bottom))]"
+        className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/72 backdrop-blur-sm px-4 pb-[max(16px,var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))]"
       >
         <motion.div
           ref={tooltipRef}

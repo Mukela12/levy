@@ -11,6 +11,7 @@ import { LevyLogo } from '@/components/ui/levy-logo'
 import { CanopyThemeToggle } from './theme-toggle'
 import dynamic from 'next/dynamic'
 import { BookArt } from '@/components/canopy/rive-auth-scene'
+import { IS_APP, linkTarget, siteRoute } from '@/lib/native'
 
 // The Rive runtime is WASM: keep it out of SSR, and mount it only when the
 // art panel can actually be seen, so phones never fetch it.
@@ -54,7 +55,7 @@ export function CanopyAuthScreen({ mode }: { mode: 'login' | 'signup' | 'reset' 
     try {
       const client = createClient()
       if (recovery) {
-        const result = await client.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/auth/reset-password` })
+        const result = await client.auth.resetPasswordForEmail(email.trim(), { redirectTo: linkTarget('/auth/reset-password') })
         if (result.error) throw result.error
         setNotice('If an account exists for this address, check your inbox for a recovery link.')
         tellScene('success')
@@ -69,7 +70,7 @@ export function CanopyAuthScreen({ mode }: { mode: 'login' | 'signup' | 'reset' 
         const result = await signUp(email.trim(), password, name.trim())
         if (result.error) throw result.error
         if (result.session?.access_token) {
-          void fetch('/api/email/welcome', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${result.session.access_token}` }, body: JSON.stringify({ fullName: name.trim() }) }).catch(() => {})
+          void fetch(siteRoute('/api/email/welcome'), { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${result.session.access_token}` }, body: JSON.stringify({ fullName: name.trim() }) }).catch(() => {})
           router.push('/chat')
         } else setNotice('Check your email to confirm your account before signing in.')
         tellScene('success')
@@ -107,7 +108,8 @@ export function CanopyAuthScreen({ mode }: { mode: 'login' | 'signup' | 'reset' 
         {mode === 'login' && <button className="cp-auth-text" type="button" onClick={() => { setRecovery(!recovery); setError(''); setNotice('') }}>{recovery ? 'Back to sign in' : 'Forgot password?'}</button>}
         {!reset && <p>{signup ? 'Already have an account?' : 'New to Levy?'} <Link href={signup ? '/auth/login' : '/auth/signup'}>{signup ? 'Sign in' : 'Create an account'}</Link></p>}
         {reset && <Link href="/auth/login">Back to sign in</Link>}
-        <Link className="cp-auth-text" href="/chat">{reset ? 'Open your workspace' : 'Continue exploring without an account'}<ArrowRight size={15} /></Link>
+        {/* The app requires an account, so it offers no guest route. */}
+        {(reset || !IS_APP) && <Link className="cp-auth-text" href="/chat">{reset ? 'Open your workspace' : 'Continue exploring without an account'}<ArrowRight size={15} /></Link>}
       </section>
     </div>
   </main>

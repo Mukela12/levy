@@ -1075,7 +1075,7 @@ export default function NewChatPage() {
             {/* Floating glass dock - chat input */}
             <div className="absolute inset-x-0 bottom-0 z-20 pointer-events-none">
               <div
-                className="px-3 sm:px-4 pt-6 pb-[max(12px,env(safe-area-inset-bottom))]"
+                className="px-3 sm:px-4 pt-6 pb-[max(12px,var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))]"
                 style={{
                   background:
                     'linear-gradient(to top, rgba(10,10,11,0.95) 0%, rgba(10,10,11,0.6) 60%, transparent 100%)',

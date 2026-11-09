@@ -15,7 +15,7 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ── Tokens ─────────────────────────────────────────────────────────────── */
-.cp-auth { min-height: 100svh; background: var(--cp-bg); color: var(--cp-text); font-family: var(--cp-font); padding: 24px clamp(20px,4vw,64px); }
+.cp-auth { min-height: 100svh; background: var(--cp-bg); color: var(--cp-text); font-family: var(--cp-font); padding: calc(24px + var(--safe-area-inset-top, env(safe-area-inset-top))) clamp(20px,4vw,64px) calc(24px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))); }
 .cp-auth > header { display:flex; align-items:center; justify-content:space-between; gap:24px; max-width:1200px; margin:auto; }
 .cp-auth > header a { display:flex; gap:10px; align-items:center; font-size:28px; letter-spacing:-1px; }
 .cp-auth-layout { max-width:1100px; margin:40px auto; display:grid; grid-template-columns:1fr 1fr; gap:clamp(40px,8vw,120px); align-items:center; }
@@ -206,7 +206,7 @@
 @keyframes cp-tour-drift { 50% { transform: translateY(-5px); } }
 @media (prefers-reduced-motion: reduce) { .cp-tour-art img { animation: none; } }
 .cp-brief-backdrop { position: fixed; inset: 0; z-index: 60; background: #0008; }
-.cp-brief-drawer { position: fixed; inset: auto 0 0; z-index: 61; height: 70svh; display: flex; flex-direction: column; background: var(--cp-surface); color: var(--cp-text); border: 1px solid var(--cp-line); border-radius: 22px 22px 0 0; outline: none; padding-bottom: env(safe-area-inset-bottom); }
+.cp-brief-drawer { position: fixed; inset: auto 0 0; z-index: 61; height: 70svh; display: flex; flex-direction: column; background: var(--cp-surface); color: var(--cp-text); border: 1px solid var(--cp-line); border-radius: 22px 22px 0 0; outline: none; padding-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom)); }
 .cp-brief-drawer > .flex { min-height: 0; }
 .cp-brief-close { align-self: flex-end; flex-shrink: 0; margin: 4px 8px 0; }
 .cp-brief-drawer[data-closed], .cp-brief-backdrop[data-closed] { display: none; }
@@ -276,7 +276,7 @@
 @media (max-width: 1100px) { .cp-nav { display: none; } }
 
 /* ── Topbar ─────────────────────────────────────────────────────────────── */
-.cp-topbar { position: sticky; top: 0; z-index: 30; flex-shrink: 0; height: calc(var(--cp-topbar-h) + env(safe-area-inset-top)); padding: env(safe-area-inset-top) 38px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid color-mix(in srgb, var(--cp-line) 65%, transparent); background: linear-gradient(115deg, color-mix(in srgb, var(--cp-surface) 76%, transparent), color-mix(in srgb, var(--cp-bg) 67%, transparent)); -webkit-backdrop-filter: blur(22px) saturate(135%); backdrop-filter: blur(22px) saturate(135%); box-shadow: inset 0 1px 0 #ffffff80, 0 3px 16px #233d2c04; }
+.cp-topbar { position: sticky; top: 0; z-index: 30; flex-shrink: 0; height: calc(var(--cp-topbar-h) + var(--safe-area-inset-top, env(safe-area-inset-top))); padding: var(--safe-area-inset-top, env(safe-area-inset-top)) 38px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid color-mix(in srgb, var(--cp-line) 65%, transparent); background: linear-gradient(115deg, color-mix(in srgb, var(--cp-surface) 76%, transparent), color-mix(in srgb, var(--cp-bg) 67%, transparent)); -webkit-backdrop-filter: blur(22px) saturate(135%); backdrop-filter: blur(22px) saturate(135%); box-shadow: inset 0 1px 0 #ffffff80, 0 3px 16px #233d2c04; }
 .dark .cp-topbar { background: linear-gradient(115deg, color-mix(in srgb, var(--cp-surface) 82%, transparent), color-mix(in srgb, var(--cp-bg) 74%, transparent)); box-shadow: inset 0 1px 0 #ffffff0a, 0 3px 16px #0000000a; }
 .cp-topbar-left { display: flex; align-items: center; gap: 15px; flex: 1; min-width: 0; }
 .cp-topbar-actions { display: flex; align-items: center; gap: 17px; flex-shrink: 0; }
@@ -292,7 +292,7 @@
 @media (max-width: 1150px) { .cp-topbar { padding-inline: 28px; } }
 @media (max-width: 1100px) { .cp-mobile-toggle { display: inline-flex; } .cp-brief-btn { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 11px; color: var(--cp-primary); background: transparent; } }
 @media (min-width: 1024px) { .cp-brief-btn { display: none; } }
-@media (max-width: 700px) { .cp-topbar { height: calc(58px + env(safe-area-inset-top)); padding-inline: 18px; } .cp-topbar-left { gap: 8px; } .cp-breadcrumb { font-size: 12px; gap: 7px; } .cp-breadcrumb > svg { width: 11px; } .cp-jurisdiction { display: none; } .cp-topbar-actions { gap: 8px; } }
+@media (max-width: 700px) { .cp-topbar { height: calc(58px + var(--safe-area-inset-top, env(safe-area-inset-top))); padding-inline: 18px; } .cp-topbar-left { gap: 8px; } .cp-breadcrumb { font-size: 12px; gap: 7px; } .cp-breadcrumb > svg { width: 11px; } .cp-jurisdiction { display: none; } .cp-topbar-actions { gap: 8px; } }
 @media (max-width: 600px) { .cp-breadcrumb-root, .cp-breadcrumb > svg { display: none; } .cp-topbar-left { gap: 10px; overflow: hidden; } .cp-topbar-actions { gap: 3px; } }
 @media (max-width: 370px) { .cp-topbar { padding-inline: 12px; } }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .cp-topbar { background: var(--cp-bg); } }
@@ -325,8 +325,8 @@
 .cp-dock { display: none; }
 @media (max-width: 1100px) {
   .cp-main { padding-bottom: 0; }
-  .cp-main[data-chat-route="false"] { padding-bottom: calc(var(--cp-dock-h) + env(safe-area-inset-bottom)); }
-  .cp-dock { position: fixed; z-index: 35; left: 50%; bottom: max(12px, env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; align-items: center; gap: 9px; max-width: calc(100vw - 24px); width: max-content; }
+  .cp-main[data-chat-route="false"] { padding-bottom: calc(var(--cp-dock-h) + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))); }
+  .cp-dock { position: fixed; z-index: 35; left: 50%; bottom: max(12px, var(--safe-area-inset-bottom, env(safe-area-inset-bottom))); transform: translateX(-50%); display: flex; align-items: center; gap: 9px; max-width: calc(100vw - 24px); width: max-content; }
   .cp-dock-surface, .cp-dock-more { background: var(--cp-glass-fill); border: 1px solid var(--cp-glass-edge); box-shadow: 0 8px 24px -12px #0004, inset 0 1px var(--cp-glass-edge); -webkit-backdrop-filter: blur(28px) saturate(1.2); backdrop-filter: blur(28px) saturate(1.2); }
   .cp-dock-surface { display: flex; align-items: center; gap: 2px; padding: 6px; border-radius: 32px; }
   .cp-dock-item { position: relative; isolation: isolate; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; width: 68px; min-height: 52px; padding: 0; border: 0; border-radius: 26px; background: transparent; color: var(--cp-glass-muted); flex-shrink: 0; }
@@ -342,7 +342,7 @@
   .cp-dock-item:focus-visible, .cp-dock-more:focus-visible { outline: 2px solid var(--cp-control-focus); outline-offset: 2px; }
   .dark .cp-dock-surface, .dark .cp-dock-more { box-shadow: 0 4px 18px #0004, inset 0 1px #ecf6dc26; }
   [data-chat-keyboard="true"] .cp-dock { display: none; }
-  [data-ui="canopy"]:not([data-keyboard]) .cp-turnstile { bottom: calc(var(--cp-dock-h) + env(safe-area-inset-bottom)); }
+  [data-ui="canopy"]:not([data-keyboard]) .cp-turnstile { bottom: calc(var(--cp-dock-h) + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))); }
 }
 @media (max-width: 370px) { .cp-dock { gap: 7px; } .cp-dock-surface { gap: 0; padding: 4px; } .cp-dock-more { width: 52px; } }
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) { .cp-dock-surface, .cp-dock-more, .cp-nav { background: var(--cp-surface); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; border-color: var(--cp-line); } .cp-dock-selection { border: 2px solid currentColor; } }
@@ -350,7 +350,7 @@
 /* ── Mobile navigation sheet ────────────────────────────────────────────── */
 .cp-sheet { position: fixed; inset: 0; z-index: 60; display: flex; }
 .cp-sheet-backdrop { position: absolute; inset: 0; background: color-mix(in srgb, var(--cp-bg) 60%, transparent); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
-.cp-sheet-panel { position: relative; z-index: 1; display: flex; flex-direction: column; width: min(100%, 420px); height: 100%; margin-left: auto; padding: calc(14px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom)); background: var(--cp-surface); border-left: 1px solid var(--cp-line); box-shadow: -12px 0 40px -20px #0006; overflow: auto; overscroll-behavior: contain; animation: cp-sheet-in 260ms cubic-bezier(0.22, 0.7, 0.26, 1); }
+.cp-sheet-panel { position: relative; z-index: 1; display: flex; flex-direction: column; width: min(100%, 420px); height: 100%; margin-left: auto; padding: calc(14px + var(--safe-area-inset-top, env(safe-area-inset-top))) 16px calc(16px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))); background: var(--cp-surface); border-left: 1px solid var(--cp-line); box-shadow: -12px 0 40px -20px #0006; overflow: auto; overscroll-behavior: contain; animation: cp-sheet-in 260ms cubic-bezier(0.22, 0.7, 0.26, 1); }
 .cp-sheet-head { display: flex; align-items: center; justify-content: space-between; margin: 0 0 22px; }
 .cp-sheet-head span { font-size: 13px; color: var(--cp-muted); }
 .cp-sheet .cp-nav-links a { min-height: 46px; font-size: 15px; }
@@ -676,7 +676,7 @@
 .cp-feedback-send:hover { color: var(--cp-primary, #fff); }
 .cp-compaction { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; padding: 8px 12px; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--cp-primary) 18%, var(--cp-line)); background: color-mix(in srgb, var(--cp-primary) 5%, transparent); font-size: 12px; color: var(--cp-muted); }
 /* Floating composer */
-.cp-harness-composer { position: absolute; left: 0; right: 0; bottom: 0; z-index: 20; padding: 18px 16px calc(10px + env(safe-area-inset-bottom)); pointer-events: none; background: transparent; }
+.cp-harness-composer { position: absolute; left: 0; right: 0; bottom: 0; z-index: 20; padding: 18px 16px calc(10px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))); pointer-events: none; background: transparent; }
 .cp-harness-composer > div { pointer-events: auto; max-width: 820px; margin: 0 auto; }
 .cp-jump-latest { position: absolute; left: 50%; bottom: calc(100% + 10px); transform: translateX(-50%); display: inline-flex; align-items: center; gap: 6px; min-height: 36px; white-space: nowrap; padding: 0 14px; border-radius: 999px; border: 1px solid var(--cp-control-edge); background: var(--cp-surface); color: var(--cp-primary); font-size: 12.5px; box-shadow: 0 8px 24px -12px #0005; pointer-events: auto; }
 .cp-harness-foot { width: fit-content; max-width: 100%; margin: 8px auto 0; padding: 3px 10px; border-radius: 16px; background: var(--cp-surface); text-align: center; font-size: 12px; color: var(--cp-muted); line-height: 1.5; }
@@ -1075,7 +1075,7 @@
    Measured, not guessed: the dock reserve was 98px for a 78px dock, and the
    empty composer stood 84px tall for a one-line placeholder. */
 @media (max-width: 700px) {
-  .cp-welcome { margin-bottom: calc(84px + env(safe-area-inset-bottom)); }
+  .cp-welcome { margin-bottom: calc(84px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))); }
   .cp-welcome-content { margin-top: 20px; margin-bottom: 12px; }
   .cp-welcome-signature { margin-bottom: 8px; }
   .cp-welcome-content h1 { margin-bottom: 14px; }
@@ -1194,3 +1194,41 @@
 .cp-verify-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .cp-verify-actions button { min-height: 36px; padding: 6px 12px; border-radius: 999px; border: 1px solid color-mix(in srgb, currentColor 35%, transparent); background: transparent; color: inherit; font: inherit; font-weight: 600; cursor: pointer; }
 .cp-verify-actions .cp-verify-primary { background: var(--cp-primary, #b6d7a7); border-color: transparent; color: var(--cp-on-primary, #10210f); }
+
+/* ── The iOS and Android apps (html[data-app] is set by AppShell) ──────────
+   Native apps don't let you select or long-press their chrome; answers and
+   other reading text stay selectable so people can copy from them. */
+html[data-app] { -webkit-touch-callout: none; overscroll-behavior: none; }
+html[data-app] body { overscroll-behavior: none; }
+html[data-app] :is(.cp-topbar, .cp-dock, .cp-nav, .cp-sheet-head, .cp-composer-tools, button, [role="button"], [role="tab"], label) { -webkit-user-select: none; user-select: none; }
+
+/* In the app a conversation works like a chat app: the tab dock steps aside
+   and the composer sits on the bottom edge; the conversation's title is in
+   the top bar, so the in-page title row goes. */
+@media (max-width: 1100px) {
+  html[data-app] .cp-app[data-thread="true"] .cp-dock { display: none; }
+  html[data-app] .cp-app[data-thread="true"] .cp-harness-composer { bottom: 0; padding: 10px 10px calc(8px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom))); }
+  html[data-app] .cp-app[data-thread="true"] .cp-composer.is-compact { padding: 12px 12px 8px; }
+  html[data-app][data-keyboard] .cp-app[data-thread="true"] .cp-harness-composer { padding-bottom: 8px; }
+  /* Answers scroll under the composer; fade them out instead of showing through. */
+  html[data-app] .cp-app[data-thread="true"] .cp-harness-composer { background: linear-gradient(to bottom, color-mix(in srgb, var(--cp-bg) 0%, transparent), var(--cp-bg) 22px); }
+  html[data-app] .cp-app[data-thread="true"] .cp-composer.is-compact textarea { min-height: 26px; }
+  html[data-app] .cp-harness-heading { justify-content: flex-end; border-bottom: 0; padding-bottom: 0; margin-bottom: 6px; }
+  html[data-app] .cp-harness-heading > span { display: none; }
+  html[data-app] .cp-harness-heading:not(:has(button)) { display: none; }
+  html[data-app] .cp-breadcrumb strong { display: block; max-width: 62vw; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+}
+/* The menu opens from the side its button is on. */
+html[data-app] .cp-sheet-panel { margin-left: 0; margin-right: auto; border-left: 0; border-right: 1px solid var(--cp-line); box-shadow: 12px 0 40px -20px #0006; animation-name: cp-sheet-in-left; }
+@keyframes cp-sheet-in-left { from { transform: translateX(-28px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Touch screens have no hover. On iOS a hover rule that reveals something
+   turns the first tap into a hover and only the second into a click, so a
+   tap on a recent chat showed its delete button instead of opening it. Show
+   those controls quietly all the time instead. */
+@media (hover: none) {
+  .cp-nav-history-row .cp-delete,
+  .cp-nav-history-row:hover .cp-delete { opacity: 0.55; }
+  .cp-matter-row:hover .cp-matter-chev { opacity: .55; color: var(--cp-muted); transform: none; }
+  .cp-act-row > svg, .cp-act-row:hover > svg { opacity: .6; }
+}
