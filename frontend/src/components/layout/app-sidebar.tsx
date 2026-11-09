@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { chatPath } from '@/lib/routes'
+import { useActiveChatId } from '@/lib/active-chat'
 import { useAuth } from '@/components/auth/auth-provider'
 import { useChatStream } from '@/components/chat/chat-stream-context'
 import { useRecentSessions, timeAgo } from '@/components/chat/use-recent-sessions'
@@ -28,6 +30,7 @@ interface AppSidebarProps {
 export default function AppSidebar({ mobileSidebarOpen, onCloseMobile }: AppSidebarProps) {
   const { user, signOut } = useAuth()
   const pathname = usePathname()
+  const activeChat = useActiveChatId()
   const { streamingIds } = useChatStream()
   const { sessions, remove: deleteSession } = useRecentSessions(user?.id, pathname)
   const [casesExpanded, setCasesExpanded] = useState(true)
@@ -108,7 +111,7 @@ export default function AppSidebar({ mobileSidebarOpen, onCloseMobile }: AppSide
         {user && casesExpanded && (
           <div className="space-y-px mt-1" suppressHydrationWarning>
             {sessions.map((session) => {
-              const isActive = pathname === `/chat/${session.id}`
+              const isActive = activeChat === session.id
               const isThinking = streamingIds.includes(session.id)
               return (
                 <div
@@ -133,7 +136,7 @@ export default function AppSidebar({ mobileSidebarOpen, onCloseMobile }: AppSide
                   )}
 
                   <Link
-                    href={`/chat/${session.id}`}
+                    href={chatPath(session.id)}
                     prefetch={false}
                     className="flex-1 min-w-0"
                   >

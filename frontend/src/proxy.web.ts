@@ -43,6 +43,10 @@ export function proxy(request: NextRequest) {
   return NextResponse.next()
 }
 
+// Named `proxy.web.ts` so only the website build loads it (next.config.ts).
+// Under that name Next 16 looks for a default export, not `proxy`.
+export default proxy
+
 export const config = {
   // Everything except Next's own assets and the files crawlers must still read.
   matcher: ['/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)'],

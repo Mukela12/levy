@@ -32,10 +32,12 @@ import { LevyLogo } from '@/components/ui/levy-logo'
 import { OnboardingTour } from '@/components/onboarding/onboarding-tour'
 import { useUiVariant } from '@/lib/ui-variant'
 import { CanopyShell } from '@/components/canopy/shell'
+import { ActiveChatProbe, useActiveChatId } from '@/lib/active-chat'
 
 function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
   const pathname = usePathname()
+  const activeChat = useActiveChatId()
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const brief = useBrief()
   const pdf = usePdfViewer()
@@ -52,7 +54,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     pdf.close()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname])
+  }, [pathname, activeChat])
 
   // Lock body scroll while the mobile sidebar or brief sheet is open
   // (otherwise the chat behind scrolls and lifts the top nav on iOS).
@@ -77,7 +79,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   // No `if (!user) return null` - anonymous users get the same shell.
 
   // Derive a display name for the top bar
-  const activeCaseName = pathname.startsWith('/chat/') ? 'Active Consultation' : 'Levy Counsel'
+  const activeCaseName = activeChat ? 'Active Consultation' : 'Levy Counsel'
 
   return (
     <div className="flex flex-col h-[100dvh] overflow-hidden bg-background" style={{ overscrollBehavior: 'none' }}>
@@ -226,6 +228,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   warmScenery()
   return (
     <ChatStreamProvider>
+      <ActiveChatProbe />
       <BriefProvider>
         <PdfViewerProvider>
           <DashboardPresentation>{children}</DashboardPresentation>

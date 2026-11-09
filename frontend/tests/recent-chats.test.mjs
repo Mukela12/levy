@@ -12,7 +12,7 @@ test('chat lists sort and label chats by last activity, not by when they began',
   // (supabase/migrations/20261102000000_chat_last_activity.sql).
   assert.match(read('components/chat/use-recent-sessions.ts'), /\.order\('updated_at', \{ ascending: false \}\)/)
   for (const f of ['components/chat/use-recent-sessions.ts', 'lib/matters.ts',
-    'app/(dashboard)/matters/[id]/page.tsx', 'app/(dashboard)/documents/page.tsx']) {
+    'components/matters/matter-detail-view.tsx', 'app/(dashboard)/documents/page.tsx']) {
     for (const [, chain] of read(f).matchAll(/\.from\('chat_sessions'\)((?:\s*\.\w+\([^)]*\))*)/g)) {
       assert.ok(!chain.includes(".order('created_at'"), f + ' sorts chats by when they began')
     }

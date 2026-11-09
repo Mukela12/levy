@@ -1,8 +1,9 @@
 'use client'
 
-import { use, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { chatPath } from '@/lib/routes'
 import { useAuth } from '@/components/auth/auth-provider'
 import { createClient } from '@/lib/supabase'
 import {
@@ -15,8 +16,8 @@ import {
   Calendar, Users, Trash2, Check, Link2,
 } from 'lucide-react'
 
-export default function MatterDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
+/** One matter. Rendered by /matters/[id] on the web and /matters/view/?id= in the app. */
+export function MatterDetailView({ id }: { id: string }) {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const [matter, setMatter] = useState<Matter | null>(null)
@@ -102,7 +103,7 @@ export default function MatterDetailPage({ params }: { params: Promise<{ id: str
       .insert({ user_id: user.id, title: fields.title || 'New chat', matter_id: id })
       .select('id')
       .single()
-    if (data?.id) router.push(`/chat/${data.id}`)
+    if (data?.id) router.push(chatPath(data.id))
   }
 
   async function openLink() {
@@ -259,7 +260,7 @@ export default function MatterDetailPage({ params }: { params: Promise<{ id: str
           <div className="flex flex-col gap-1">
             {threads.map((t) => (
               <div key={t.id} className="flex items-center gap-2 group">
-                <Link href={`/chat/${t.id}`} className="flex-1 flex items-center gap-2 text-[14px] text-white/80 hover:text-white py-1.5 min-w-0">
+                <Link href={chatPath(t.id)} className="flex-1 flex items-center gap-2 text-[14px] text-white/80 hover:text-white py-1.5 min-w-0">
                   <MessageSquare className="size-3.5 text-white/30 flex-shrink-0" />
                   <span className="truncate">{t.title || 'Untitled chat'}</span>
                 </Link>

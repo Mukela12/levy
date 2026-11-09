@@ -20,6 +20,8 @@ import { usePdfViewer } from '@/components/chat/pdf-viewer-context'
 import { PdfViewer } from '@/components/chat/pdf-viewer'
 import { useRecentSessions, timeAgo } from '@/components/chat/use-recent-sessions'
 import { useCanonicalPath } from '@/lib/use-canonical-path'
+import { chatPath } from '@/lib/routes'
+import { useActiveChatId } from '@/lib/active-chat'
 import { useAwaitingSessions } from '@/lib/session-status'
 import { OnboardingTour } from '@/components/onboarding/onboarding-tour'
 import { DomainBanner } from '@/components/layout/domain-banner'
@@ -151,13 +153,13 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [navOpen])
 
-  const activeChat = pathname.match(/^\/chat\/([^/]+)$/)?.[1] ?? null
+  const activeChat = useActiveChatId()
   const section = SECTION_TITLES.find(([re]) => re.test(pathname))?.[1] ?? 'Levy'
   const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Counsel'
   const initial = (user?.user_metadata?.full_name || user?.email || 'L')[0].toUpperCase()
 
   const dockDestinations: DockDestination[] = [
-    { id: 'chat', label: 'Chat', icon: 'chat', href: activeChat ? `/chat/${activeChat}` : '/chat', tour: 'dock-chat' },
+    { id: 'chat', label: 'Chat', icon: 'chat', href: activeChat ? chatPath(activeChat) : '/chat', tour: 'dock-chat' },
     { id: 'documents', label: 'Files', icon: 'folder', href: '/documents', tour: 'dock-documents' },
     { id: 'matters', label: 'Matters', icon: 'work', href: '/matters', tour: 'dock-matters' },
   ]
@@ -198,7 +200,7 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
       <div className="cp-nav-label">Recent</div>
       {sessions.length === 0 && <p>Your conversations will appear here.</p>}
       {sessions.map((s) => {
-        const current = pathname === `/chat/${s.id}`
+        const current = activeChat === s.id
         const thinking = streamingIds.includes(s.id)
         const needsAnswer = !thinking && awaiting.includes(s.id)
         return (
@@ -210,7 +212,7 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
             ) : (
               <span className="cp-dot" aria-hidden="true" />
             )}
-            <Link href={`/chat/${s.id}`} prefetch={false} title={s.title || 'New chat'}>
+            <Link href={chatPath(s.id)} prefetch={false} title={s.title || 'New chat'}>
               <span>{s.title || 'New chat'}</span>
               <small>{timeAgo(s.updated_at)}</small>
             </Link>

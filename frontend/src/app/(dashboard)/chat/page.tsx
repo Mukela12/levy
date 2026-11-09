@@ -36,6 +36,7 @@ import { useUiVariant } from '@/lib/ui-variant'
 import { WelcomeScene } from '@/components/canopy/welcome-scene'
 import { CanopyComposer } from '@/components/canopy/composer'
 import { CanopyConversation } from '@/components/canopy/conversation'
+import { chatPath } from '@/lib/routes'
 
 function getGreeting(): string {
   const h = new Date().getHours()
@@ -306,7 +307,7 @@ export default function NewChatPage() {
           attachedDocs: pending,
         })
         setStagedAttachments([])
-        router.replace(`/chat/${sid}`, { scroll: false })
+        router.replace(chatPath(sid), { scroll: false })
       } catch (e) {
         const content =
           e instanceof Error && !e.message.startsWith('API error') && !e.message.startsWith('No response')

@@ -29,7 +29,7 @@ test('latest-response clearance follows content height, not a negative top offse
   assert.match(css, /\.cp-harness-foot \{ display: none; \}/)
 })
 test('legislation keeps its canonical server route and ungated content', () => {
-  assert.match(read('app/acts/page.tsx'), /<ActsDirectory acts=\{acts\}>/)
+  assert.match(read('app/acts/page.web.tsx'), /<ActsDirectory acts=\{acts\}>/)
   const shell = read('components/canopy/acts-shell.tsx')
   assert.ok(!shell.includes('if (!user)'))
   assert.match(shell, /<CanopyShell>\{children\}<\/CanopyShell>/)

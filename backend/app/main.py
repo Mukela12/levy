@@ -109,6 +109,10 @@ _allowed_origins = [
     "https://www.levylegal.ai",
     "http://localhost:3000",
     "http://localhost:3001",
+    # The iOS and Android apps (Capacitor) serve their bundled pages from
+    # these origins. Requests carry a bearer token, not cookies.
+    "capacitor://localhost",
+    "https://localhost",
 ]
 _extra = os.environ.get("ALLOWED_ORIGINS", "")
 if _extra:

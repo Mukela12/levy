@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, use } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth/auth-provider'
 import { createClient } from '@/lib/supabase'
@@ -22,8 +22,8 @@ import { useChatTitle } from '@/components/chat/use-recent-sessions'
 
 const EMPTY_MESSAGES: Message[] = []
 
-export default function ChatSessionPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
+/** One saved conversation. Rendered by /chat/[id] on the web and /chat/view/?id= in the app. */
+export function ChatSessionView({ id }: { id: string }) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const { user, session, loading: authLoading } = useAuth()

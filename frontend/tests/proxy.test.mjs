@@ -5,7 +5,7 @@ import vm from 'node:vm'
 import ts from 'typescript'
 
 // Only the host decision is tested here; the redirect itself is NextResponse's.
-const source = fs.readFileSync(new URL('../src/proxy.ts', import.meta.url), 'utf8')
+const source = fs.readFileSync(new URL('../src/proxy.web.ts', import.meta.url), 'utf8')
   .replace(/import[^\n]*from 'next\/server'\n/g, '')
   .replace(/import type[^\n]*\n/g, '')
 const output = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText

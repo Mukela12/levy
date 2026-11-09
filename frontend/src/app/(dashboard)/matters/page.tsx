@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth/auth-provider'
 import { listMatters, createMatter, type Matter, type MatterDate } from '@/lib/matters'
+import { matterPath } from '@/lib/routes'
 import { timeAgo } from '@/components/chat/use-recent-sessions'
 import { Plus, Loader2, ChevronRight, CalendarDays } from 'lucide-react'
 
@@ -68,7 +69,7 @@ export default function MattersPage() {
     setSaving(true)
     const m = await createMatter(user.id, form)
     setSaving(false)
-    if (m) router.push(`/matters/${m.id}`)
+    if (m) router.push(matterPath(m.id))
   }
 
   return (
@@ -171,7 +172,7 @@ export default function MattersPage() {
               const next = nextKeyDate(m)
               const meta = [m.matter_type, m.court, m.cause_number].filter(Boolean).join(' · ')
               return (
-                <Link key={m.id} href={`/matters/${m.id}`} className="cp-matter-row group">
+                <Link key={m.id} href={matterPath(m.id)} className="cp-matter-row group">
                   <span className="cp-matter-mark" aria-hidden="true">{monogram(m.title)}</span>
                   <span className="cp-matter-body">
                     <span className="cp-matter-title">{m.title}</span>

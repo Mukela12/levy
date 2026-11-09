@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Levy</string>
+    <string name="title_activity_main">Levy</string>
+    <string name="package_name">ai.levylegal.app</string>
+    <string name="custom_url_scheme">ai.levylegal.app</string>
+</resources>
