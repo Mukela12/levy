@@ -83,6 +83,63 @@ npx cap sync                      # copy out/ into both native projects
   be answered in the app.
 - **Tests:** 97/97 frontend and 3/3 for the new origin test.
 
+## Phase 1 status (10 Nov 2026, commits eebbba1 and 8b3e94a)
+
+Checked on the Pixel 9 Pro emulator and the iPhone 17 Pro simulator, signed in
+as the QA account, light and dark.
+
+**Done:**
+- No white flash on launch (the splash is held until the first screen paints).
+- Levy's own icon and splash on both platforms, generated from `frontend/assets/`.
+- Sign-in required. The session lives in Capacitor Preferences with PKCE and
+  refreshes on resume.
+- Reset links and the welcome email go to the website (`linkTarget`, `siteRoute`).
+- The theme follows the phone, and the status bar follows the theme.
+- Safe areas use Capacitor's `--safe-area-inset-*` variables, falling back to `env()`.
+- Conversation layout like a chat app: no dock, a one-line composer on the
+  bottom edge, the title in the top bar, a new-chat button, and the menu opening
+  from the left.
+- No keyboard on launch, no zoom on focus, and haptics on send.
+- Reloads keep the page: native routers (iOS `StaticSiteRouter`, Android
+  `StaticSiteWebViewClient`), proven by killing iOS's web process on an open chat.
+- The Android back button.
+- Website-only links open in the in-app browser.
+- One tap opens a recent chat on iOS.
+
+**Not done:**
+1. **Deploy the API CORS change.** Needs `railway login` as BantuRide. Until then
+   no answer, Documents or Templates load in the app; Matters and chat history do
+   (they read Supabase directly).
+2. **Deploy the website** for the welcome route's CORS and the touch fixes. This
+   needs `mobile/app` merged into `main`. The web route table is verified
+   identical.
+3. **A full streamed answer on both platforms, then backgrounding mid-answer.**
+   The existing saved-answer recovery should cover it; verify once 1 is live.
+4. **A real low-end Android phone** (Phase 3).
+
+**Gotchas found in Phase 1:**
+- **iOS root view controller.** Capacitor 8's template creates it in
+  `SceneDelegate.swift`, ignoring the storyboard's class. Overrides go there.
+- **iOS taps and hover.** A `:hover` rule that reveals something makes the first
+  tap a hover. Keep reveals inside `@media (hover: hover)` (Tailwind 4 already
+  does).
+- **iOS zoom.** iOS zooms into any focused field under 16px. Touch screens get a
+  16px composer, and the app fixes the scale.
+- **Android splash.** `SplashScreen.hide()` can be dropped if sent too early, so
+  AppShell repeats it. The Android 12+ splash colours are in
+  `res/values(-night)/colors.xml` (`levySplash`).
+- **The asset generator** also writes web app files into `public/`. Delete them
+  (the website is not a PWA).
+- **Debug bridge logs print plugin results, including the stored session.**
+  `loggingBehavior: 'debug'` keeps them out of release builds; don't share
+  debug logs.
+- **Testing signed in without typing a password:** mint a QA-probe session (the
+  project's own QA flow), then write it to Preferences.
+  - Android: CDP `Capacitor.Plugins.Preferences.set` through
+    `adb forward tcp:9333 localabstract:webview_devtools_remote_<pid>`.
+  - iOS: `xcrun simctl spawn <udid> defaults write ai.levylegal.app
+    CapacitorStorage.<key> -string <json>`.
+
 ## What the first run showed (the Phase 1 backlog)
 
 **Blockers (nothing works without these):**
