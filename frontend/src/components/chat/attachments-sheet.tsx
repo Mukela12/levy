@@ -137,7 +137,7 @@ export function AttachmentsSheet({
             ].join(' ')}
             style={{
               boxShadow: '0 32px 64px -16px rgba(0,0,0,0.6)',
-              paddingBottom: 'env(safe-area-inset-bottom)',
+              paddingBottom: 'var(--safe-area-inset-bottom, env(safe-area-inset-bottom))',
             }}
           >
             {/* Drag handle (mobile only) */}

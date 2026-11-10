@@ -12,6 +12,7 @@ import { Loader2, CheckCircle } from 'lucide-react'
 import { LevyLogo } from '@/components/ui/levy-logo'
 import { useUiVariant } from '@/lib/ui-variant'
 import { CanopyAuthScreen } from '@/components/canopy/auth-screen'
+import { siteRoute } from '@/lib/native'
 
 export default function SignUpPage() {
   const { variant } = useUiVariant()
@@ -50,7 +51,7 @@ export default function SignUpPage() {
     }
 
     if (session?.access_token) {
-      void fetch('/api/email/welcome', {
+      void fetch(siteRoute('/api/email/welcome'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

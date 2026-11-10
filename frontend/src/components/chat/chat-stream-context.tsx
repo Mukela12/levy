@@ -8,6 +8,8 @@ import { earlierAttachments, historyFor } from '@/lib/chat-attachments'
 import { clearAwaiting, markAwaiting } from '@/lib/session-status'
 import type { ToolCallView } from '@/components/chat/tool-call-card'
 import type { MessageBlock } from '@/components/chat/chat-message'
+import { connectionMessage } from '@/lib/network'
+import { IS_APP } from '@/lib/routes'
 import type {
   ApplicationPlan,
   ArtifactView,
@@ -25,6 +27,8 @@ export interface Message {
   id?: string
   role: 'user' | 'assistant'
   content: string
+  /** The question failed; the text explains why. No answer actions apply. */
+  error?: boolean
   blocks?: MessageBlock[]
   citations?: ChunkUsed[]
   webSources?: WebSource[]
@@ -269,12 +273,13 @@ export function ChatStreamProvider({ children }: { children: React.ReactNode }) 
           const msgs = [...c.messages]
           const last = msgs[msgs.length - 1]
           if (last.role === 'assistant' && !last.content) {
-            msgs[msgs.length - 1] = { ...last, content: text }
+            msgs[msgs.length - 1] = { ...last, content: text, error: true }
           }
           return { ...prev, [sid]: { ...c, status: 'error', messages: msgs } }
         })
-      const STILL_WRITING =
-        'That answer is taking longer than usual. Reload the page to pick it up.'
+      const STILL_WRITING = IS_APP
+        ? 'That answer is taking longer than usual. Open this chat again in a minute to pick it up.'
+        : 'That answer is taking longer than usual. Reload the page to pick it up.'
 
       streamQuery(
         question,
@@ -542,9 +547,10 @@ export function ChatStreamProvider({ children }: { children: React.ReactNode }) 
         }
       }).catch((e) => {
         const friendly =
-          e instanceof Error && !e.message.startsWith('API error') && !e.message.startsWith('No response')
+          connectionMessage(e) ??
+          (e instanceof Error && !e.message.startsWith('API error') && !e.message.startsWith('No response')
             ? e.message
-            : 'Sorry, I encountered an error. Please try again.'
+            : 'Sorry, I encountered an error. Please try again.')
         // A run outlives the connection that started it, so a lost stream does
         // not mean a lost answer. While it can still be recovered the thread
         // stays 'streaming': that keeps the composer locked, and unlocking it

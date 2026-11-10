@@ -24,5 +24,5 @@ test('Matter persistence rejects errors and zero-row updates', () => {
   const source = read('lib/matters.ts').split('export async function updateMatter')[1].split('export async function deleteMatter')[0]
   assert.match(source, /if \(error\) throw error/)
   assert.match(source, /if \(!data\) throw new Error/)
-  assert.match(read('app/(dashboard)/matters/[id]/page.tsx'), /if \(await persist\(\{ parties: next \}\)\)/)
+  assert.match(read('components/matters/matter-detail-view.tsx'), /if \(await persist\(\{ parties: next \}\)\)/)
 })

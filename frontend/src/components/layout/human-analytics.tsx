@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
+import { IS_APP } from '@/lib/routes'
 
 /**
  * Count people, not page loads.
@@ -24,7 +25,7 @@ export function HumanAnalytics() {
   const [touched, setTouched] = useState(false)
 
   useEffect(() => {
-    if (touched) return
+    if (touched || IS_APP) return
     const onInput = (event: Event) => {
       if (event.isTrusted) setTouched(true)   // a script's own dispatchEvent does not count
     }
@@ -34,7 +35,8 @@ export function HumanAnalytics() {
     }
   }, [touched])
 
-  if (!touched) return null
+  // The app has no Vercel host to report to; its own analytics come later.
+  if (!touched || IS_APP) return null
   return (
     <>
       <Analytics />

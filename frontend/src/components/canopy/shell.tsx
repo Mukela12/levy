@@ -11,15 +11,18 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { LogOut, PanelLeft, Trash2, X } from 'lucide-react'
+import { LogOut, PanelLeft, SquarePen, Trash2, X } from 'lucide-react'
 import { useAuth } from '@/components/auth/auth-provider'
 import { useBrief } from '@/components/chat/brief-context'
 import { CanopyBriefDrawer } from './brief-drawer'
 import { useChatStream } from '@/components/chat/chat-stream-context'
 import { usePdfViewer } from '@/components/chat/pdf-viewer-context'
 import { PdfViewer } from '@/components/chat/pdf-viewer'
-import { useRecentSessions, timeAgo } from '@/components/chat/use-recent-sessions'
+import { useChatTitle, useRecentSessions, timeAgo } from '@/components/chat/use-recent-sessions'
 import { useCanonicalPath } from '@/lib/use-canonical-path'
+import { IS_APP, chatPath } from '@/lib/routes'
+import { haptic } from '@/lib/native'
+import { useActiveChatId, useConversationShowing } from '@/lib/active-chat'
 import { useAwaitingSessions } from '@/lib/session-status'
 import { OnboardingTour } from '@/components/onboarding/onboarding-tour'
 import { DomainBanner } from '@/components/layout/domain-banner'
@@ -151,13 +154,25 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [navOpen])
 
-  const activeChat = pathname.match(/^\/chat\/([^/]+)$/)?.[1] ?? null
+  const activeChat = useActiveChatId()
+  const conversationShowing = useConversationShowing()
+  // In the app a saved chat is a query (/chat/view/?id=), so going from one
+  // chat to another keeps the pathname and the effect above never fired: the
+  // menu stayed open over the chat just picked. Close on a chat change too.
+  useEffect(() => {
+    setNavOpen(false)
+    pdf.close()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeChat])
   const section = SECTION_TITLES.find(([re]) => re.test(pathname))?.[1] ?? 'Levy'
+  // In the app an open conversation is titled in the top bar, as chat apps do.
+  const chatTitle = useChatTitle(IS_APP && activeChat ? user?.id : undefined, activeChat ?? '')
+  const barTitle = IS_APP && activeChat ? chatTitle : section
   const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Counsel'
   const initial = (user?.user_metadata?.full_name || user?.email || 'L')[0].toUpperCase()
 
   const dockDestinations: DockDestination[] = [
-    { id: 'chat', label: 'Chat', icon: 'chat', href: activeChat ? `/chat/${activeChat}` : '/chat', tour: 'dock-chat' },
+    { id: 'chat', label: 'Chat', icon: 'chat', href: activeChat ? chatPath(activeChat) : '/chat', tour: 'dock-chat' },
     { id: 'documents', label: 'Files', icon: 'folder', href: '/documents', tour: 'dock-documents' },
     { id: 'matters', label: 'Matters', icon: 'work', href: '/matters', tour: 'dock-matters' },
   ]
@@ -198,7 +213,7 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
       <div className="cp-nav-label">Recent</div>
       {sessions.length === 0 && <p>Your conversations will appear here.</p>}
       {sessions.map((s) => {
-        const current = pathname === `/chat/${s.id}`
+        const current = activeChat === s.id
         const thinking = streamingIds.includes(s.id)
         const needsAnswer = !thinking && awaiting.includes(s.id)
         return (
@@ -210,7 +225,7 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
             ) : (
               <span className="cp-dot" aria-hidden="true" />
             )}
-            <Link href={`/chat/${s.id}`} prefetch={false} title={s.title || 'New chat'}>
+            <Link href={chatPath(s.id)} prefetch={false} title={s.title || 'New chat'}>
               <span>{s.title || 'New chat'}</span>
               <small>{timeAgo(s.updated_at)}</small>
             </Link>
@@ -284,7 +299,7 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
   )
 
   return (
-    <div className="cp-app" data-rail={rail ? 'true' : 'false'}>
+    <div className="cp-app" data-rail={rail ? 'true' : 'false'} data-thread={activeChat || conversationShowing ? 'true' : 'false'}>
       <DomainBanner />
       <a className="cp-skip" href="#cp-main">
         Skip to content
@@ -340,11 +355,21 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
               <CanopyMenuToggle open={navOpen} />
             </button>
             <span className="cp-breadcrumb">
-              <strong>{section}</strong>
+              <strong>{barTitle}</strong>
             </span>
           </div>
           <div className="cp-topbar-actions">
-            <CanopyThemeToggle dark={theme === 'dark'} onChange={(d) => setTheme(d ? 'dark' : 'light')} />
+            {IS_APP ? (
+              // The app's top-right is a new conversation, as in chat apps;
+              // the theme switch lives in the menu.
+              activeChat && (
+                <Link href="/chat" className="cp-icon-btn" aria-label="New conversation" prefetch={false} onClick={() => haptic()}>
+                  <SquarePen size={20} />
+                </Link>
+              )
+            ) : (
+              <CanopyThemeToggle dark={theme === 'dark'} onChange={(d) => setTheme(d ? 'dark' : 'light')} />
+            )}
             {!user && (
               <Link href="/auth/login" className="cp-signin">
                 Sign in
@@ -364,6 +389,7 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
         moreOpen={navOpen}
         onMore={() => setNavOpen(true)}
         go={(item) => {
+          haptic()
           setNavOpen(false)
           router.push(item.href)
         }}
@@ -375,7 +401,8 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
           <div className="cp-sheet-panel">
             <div className="cp-sheet-head">
               <Brand />
-              <button type="button" className="cp-icon-btn" aria-label="Close navigation" onClick={() => setNavOpen(false)} autoFocus>
+              {IS_APP && <span style={{ marginLeft: 'auto', marginRight: 6 }}><CanopyThemeToggle dark={theme === 'dark'} onChange={(d) => setTheme(d ? 'dark' : 'light')} /></span>}
+              <button type="button" className="cp-icon-btn" aria-label="Close navigation" onClick={() => setNavOpen(false)} autoFocus={!IS_APP}>
                 <X size={20} />
               </button>
             </div>

@@ -27,15 +27,18 @@ import { ChatStreamProvider } from '@/components/chat/chat-stream-context'
 import { PdfViewerProvider, usePdfViewer } from '@/components/chat/pdf-viewer-context'
 import { PdfViewer } from '@/components/chat/pdf-viewer'
 import { Scale, Loader2, X } from 'lucide-react'
+import { CanopyLoader } from '@/components/canopy/loader'
 import { CTA } from '@/components/ui/cta'
 import { LevyLogo } from '@/components/ui/levy-logo'
 import { OnboardingTour } from '@/components/onboarding/onboarding-tour'
 import { useUiVariant } from '@/lib/ui-variant'
 import { CanopyShell } from '@/components/canopy/shell'
+import { ActiveChatProbe, useActiveChatId } from '@/lib/active-chat'
 
 function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
   const pathname = usePathname()
+  const activeChat = useActiveChatId()
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const brief = useBrief()
   const pdf = usePdfViewer()
@@ -52,7 +55,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     pdf.close()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname])
+  }, [pathname, activeChat])
 
   // Lock body scroll while the mobile sidebar or brief sheet is open
   // (otherwise the chat behind scrolls and lifts the top nav on iOS).
@@ -77,7 +80,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   // No `if (!user) return null` - anonymous users get the same shell.
 
   // Derive a display name for the top bar
-  const activeCaseName = pathname.startsWith('/chat/') ? 'Active Consultation' : 'Levy Counsel'
+  const activeCaseName = activeChat ? 'Active Consultation' : 'Levy Counsel'
 
   return (
     <div className="flex flex-col h-[100dvh] overflow-hidden bg-background" style={{ overscrollBehavior: 'none' }}>
@@ -89,7 +92,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
           bar / notch. env() is 0 on desktop, so the desktop bar is unchanged. */}
       <header
         className="min-h-12 border-b border-white/[0.06] px-4 flex items-center justify-between flex-shrink-0 bg-background z-30"
-        style={{ paddingTop: 'env(safe-area-inset-top)' }}
+        style={{ paddingTop: 'var(--safe-area-inset-top, env(safe-area-inset-top))' }}
       >
         {/* Left: hamburger (mobile) / case name (desktop) */}
         <div className="flex items-center gap-3">
@@ -213,7 +216,7 @@ function DashboardPresentation({ children }: { children: React.ReactNode }) {
     if (loading) {
       return (
         <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--cp-bg, #0a0a0b)' }}>
-          <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--cp-primary, #22c55e)' }} />
+          <CanopyLoader />
         </div>
       )
     }
@@ -226,6 +229,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   warmScenery()
   return (
     <ChatStreamProvider>
+      <ActiveChatProbe />
       <BriefProvider>
         <PdfViewerProvider>
           <DashboardPresentation>{children}</DashboardPresentation>

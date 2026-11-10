@@ -36,6 +36,7 @@ import {
   List,
   LayoutGrid,
 } from 'lucide-react'
+import { CanopyLoader } from '@/components/canopy/loader'
 
 // Sentinel ids used to address the two non-user-folder pseudo-folders.
 const FOLDER_GLOBAL = '__global__'
@@ -73,7 +74,7 @@ function formatPages(n?: number) {
   return n ? `${n} page${n === 1 ? '' : 's'}` : '-'
 }
 function formatChunks(n?: number) {
-  return n ? `${n} chunk${n === 1 ? '' : 's'}` : '-'
+  return n ? `${n} passage${n === 1 ? '' : 's'}` : '-'
 }
 
 export default function DocumentsPage() {
@@ -375,7 +376,7 @@ export default function DocumentsPage() {
           <>
             {loading ? (
               <div className="flex items-center justify-center py-16">
-                <Loader2 className="size-5 text-emerald-400 animate-spin" />
+                <CanopyLoader />
               </div>
             ) : (
               <div className={canopy ? 'cp-library-shelf' : 'grid grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3 mb-8'}>
@@ -426,8 +427,9 @@ export default function DocumentsPage() {
             </div>
 
             {loading ? (
-              <div className="flex items-center justify-center py-16">
-                <Loader2 className="size-5 text-emerald-400 animate-spin" />
+              // The folder shelf above already shows the loader when it is on screen.
+              (canopy || !activeFolder) ? null : <div className="flex items-center justify-center py-16">
+                <CanopyLoader />
               </div>
             ) : filteredDocs.length === 0 ? (
               <EmptyFolder

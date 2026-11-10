@@ -311,7 +311,7 @@ export function CanopyMessage(props: ChatMessageProps) {
         {!isStreaming && (
           <AnswerSources citations={citations} webSources={webSources} blocks={blocks} onOpenPassage={(p) => onOpenCitation?.(p)} onOpenDocument={open} />
         )}
-        {!isStreaming && (content || rendered.length > 0) && (
+        {!isStreaming && !props.isError && (content || rendered.length > 0) && (
           <div className="cp-result-actions">
             {brief.available && (
               <button type="button" onClick={() => brief.setOpen(true)} className="cp-brief-action"><ActionArt kind="irac" size={24} /> IRAC analysis</button>

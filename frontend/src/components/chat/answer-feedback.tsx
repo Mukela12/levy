@@ -1,8 +1,20 @@
 'use client'
 
 import { useState } from 'react'
-import { ThumbsUp, ThumbsDown } from 'lucide-react'
+import { Flag, ThumbsUp, ThumbsDown } from 'lucide-react'
 import { submitFeedback, clearFeedback } from '@/lib/api'
+import { IS_APP } from '@/lib/routes'
+
+// Google Play's AI-generated content policy wants a way to report an
+// offensive answer without leaving the app. A report is stored as a
+// thumbs-down whose reason starts with [report:<kind>], so it shows up
+// wherever feedback is already read.
+const REPORT_REASONS = [
+  { id: 'harmful', label: 'Harmful or offensive' },
+  { id: 'wrong', label: 'Wrong about the law' },
+  { id: 'other', label: 'Something else' },
+] as const
+type ReportKind = (typeof REPORT_REASONS)[number]['id']
 
 /**
  * Thumbs up/down on one of Levy's answers.
@@ -25,6 +37,10 @@ export function AnswerFeedback({ messageId }: { messageId: string }) {
   const [reason, setReason] = useState('')
   const [sent, setSent] = useState(false)
   const [failed, setFailed] = useState(false)
+  const [reporting, setReporting] = useState(false)
+  const [reportKind, setReportKind] = useState<ReportKind | null>(null)
+  const [reportText, setReportText] = useState('')
+  const [reported, setReported] = useState(false)
 
   async function vote(next: 'up' | 'down') {
     setFailed(false)
@@ -63,6 +79,19 @@ export function AnswerFeedback({ messageId }: { messageId: string }) {
     }
   }
 
+  async function sendReport() {
+    if (!reportKind) return
+    setFailed(false)
+    try {
+      await submitFeedback(messageId, 'down', `[report:${reportKind}] ${reportText.trim()}`.trim())
+      setRating('down')
+      setReporting(false)
+      setReported(true)
+    } catch {
+      setFailed(true)
+    }
+  }
+
   const base = 'cp-feedback-btn'
 
   return (
@@ -87,11 +116,55 @@ export function AnswerFeedback({ messageId }: { messageId: string }) {
         >
           <ThumbsDown className="w-4 h-4" />
         </button>
-        {sent && <span className="cp-feedback-note">Thanks, noted.</span>}
+        {IS_APP && !reported && (
+          <button
+            type="button"
+            onClick={() => { setReporting((r) => !r); setAskReason(false) }}
+            aria-label="Report this answer"
+            aria-expanded={reporting}
+            className={`${base}${reporting ? ' is-down' : ''}`}
+          >
+            <Flag className="w-4 h-4" />
+          </button>
+        )}
+        {reported && <span className="cp-feedback-note">Report sent. Thank you.</span>}
+        {sent && !reported && <span className="cp-feedback-note">Thanks, noted.</span>}
         {failed && (
           <span className="cp-feedback-note">Could not save that. Your answer is unaffected.</span>
         )}
       </div>
+
+      {reporting && (
+        <div className="cp-report" role="group" aria-label="Report this answer">
+          <span className="cp-report-title">What is wrong with this answer?</span>
+          <div className="cp-report-reasons">
+            {REPORT_REASONS.map((r) => (
+              <button
+                key={r.id}
+                type="button"
+                aria-pressed={reportKind === r.id}
+                onClick={() => setReportKind(r.id)}
+                className="cp-report-reason"
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
+          <div className="cp-feedback-reason">
+            <input
+              value={reportText}
+              onChange={(e) => setReportText(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') sendReport() }}
+              placeholder="Tell us more (optional)"
+              maxLength={1900}
+              className="cp-feedback-input"
+            />
+            <button type="button" onClick={sendReport} disabled={!reportKind} className="cp-feedback-send">
+              Send report
+            </button>
+          </div>
+        </div>
+      )}
 
       {askReason && (
         <div className="cp-feedback-reason">

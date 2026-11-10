@@ -241,6 +241,20 @@ export async function clearFeedback(messageId: string): Promise<void> {
   if (!r.ok) throw new Error(`feedback-clear ${r.status}`)
 }
 
+/**
+ * Delete the signed-in user's account and everything it owns. The server
+ * removes the data first and the sign-in last; repeating after a failure is
+ * safe and finishes the job.
+ */
+export async function deleteAccount(): Promise<void> {
+  const r = await fetch(`${API_URL}/api/account`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
+    body: JSON.stringify({ confirm: 'delete' }),
+  })
+  if (!r.ok) throw new Error(`account-delete ${r.status}`)
+}
+
 // ─── Folders ────────────────────────────────────────────────────────────────
 
 export interface FolderRow {

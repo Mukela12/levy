@@ -108,7 +108,7 @@ export default function StudyPage() {
               onChange={(e) => setTopic(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') start() }}
               aria-label="Narrow it down (optional)"
-              placeholder="Narrow it down (optional): constructive dismissal, bail…"
+              placeholder="Optional, e.g. constructive dismissal"
             />
           </div>
         </section>

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
+import { useActiveChatId } from '@/lib/active-chat'
 
 export interface RecentSession {
   id: string
@@ -42,6 +43,7 @@ const PAGE = 20
  */
 export function useRecentSessions(userId: string | undefined, pathname: string) {
   const [sessions, setSessions] = useState<RecentSession[]>([])
+  const activeChat = useActiveChatId()
   const [limit, setLimit] = useState(PAGE)
   const [hasMore, setHasMore] = useState(false)
 
@@ -80,10 +82,9 @@ export function useRecentSessions(userId: string | undefined, pathname: string) 
   // Pull in a freshly created chat so it appears the moment the user lands on
   // its route, without waiting for a refresh.
   useEffect(() => {
-    const match = pathname.match(/^\/chat\/([^/]+)$/)
-    if (match && userId && !sessions.some((s) => s.id === match[1])) void load()
+    if (activeChat && userId && !sessions.some((s) => s.id === activeChat)) void load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname, userId])
+  }, [pathname, activeChat, userId])
 
   const remove = useCallback(async (id: string) => {
     const supabase = createClient()

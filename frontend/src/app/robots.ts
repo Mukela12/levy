@@ -1,5 +1,8 @@
 import type { MetadataRoute } from 'next'
 
+// Static in both builds; the app's static export requires saying so.
+export const dynamic = 'force-static'
+
 const SITE_URL = 'https://www.levylegal.ai'
 
 // Index the public content (Acts, answers, study); keep the app + private,

@@ -79,6 +79,7 @@ export function ScenePicture({ scene, className = '', priority = false, thumbnai
         fetchPriority={priority ? 'high' : 'auto'}
         decoding="async"
         draggable={false}
+        onError={(e) => { e.currentTarget.style.visibility = 'hidden' }}
       />
     </picture>
   )

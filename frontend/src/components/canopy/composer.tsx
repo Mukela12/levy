@@ -13,6 +13,7 @@ import { ArrowUp, Globe, Library, Loader2, LogIn, Upload, UserPlus } from 'lucid
 import { ChoiceSelect } from './choice-select'
 import LordIcon from '@/components/ui/lord-icon'
 import { CANOPY_ICON } from './icons'
+import { IS_APP, haptic } from '@/lib/native'
 
 export type ComposerMode = 'research' | 'review'
 
@@ -96,14 +97,30 @@ export function CanopyComposer({
   useEffect(() => {
     const el = textareaRef.current
     if (!el) return
-    el.style.height = 'auto'
-    const min = compact ? 48 : 84
-    el.style.height = `${Math.min(200, Math.max(min, el.scrollHeight))}px`
+    // The app's conversation composer starts as one line and grows, as in
+    // native chat apps; the website keeps its roomier box.
+    const min = compact ? (IS_APP ? 26 : 48) : 84
+    const fit = () => {
+      el.style.height = 'auto'
+      el.style.height = `${Math.min(200, Math.max(min, el.scrollHeight))}px`
+    }
+    fit()
+    // Measure again when the box changes width: measured mid-layout, the
+    // placeholder can wrap and leave the box two lines tall for good.
+    let width = el.clientWidth
+    const observer = new ResizeObserver(() => {
+      if (el.clientWidth !== width) { width = el.clientWidth; fit() }
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
   }, [message, compact])
 
-  // Seed the box and put the caret at the end. An empty seed only focuses.
+  // Seed the box and put the caret at the end. An empty seed only focuses,
+  // except the first one on a touch screen: focusing there opens the keyboard
+  // over the page before anyone has asked for it.
   useEffect(() => {
     if (!seed) return
+    if (!seed.text && seed.nonce === 0 && window.matchMedia('(pointer: coarse)').matches) return
     if (seed.text) setMessage(seed.text)
     const el = textareaRef.current
     if (el) {
@@ -134,6 +151,7 @@ export function CanopyComposer({
 
   const submit = () => {
     if (message.trim() && !disabled && !uploadingFile) {
+      haptic()
       onSend(message.trim(), { webSearch })
       setMessage('')
       if (textareaRef.current) textareaRef.current.style.height = 'auto'

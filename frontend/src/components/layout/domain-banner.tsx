@@ -2,6 +2,7 @@
 
 import { useState, useSyncExternalStore } from 'react'
 import { X, ArrowRight } from 'lucide-react'
+import { IS_APP } from '@/lib/routes'
 
 const DISMISS_KEY = 'levy_domain_banner_v1'
 const OFFICIAL_HOST = 'levylegal.ai'
@@ -10,6 +11,7 @@ const subscribe = (notify: () => void) => {
   return () => window.removeEventListener('storage', notify)
 }
 function shouldShow() {
+  if (IS_APP) return false   // the app is not a website with a bookmark
   const host = window.location.hostname
   if (host === OFFICIAL_HOST || host.endsWith(`.${OFFICIAL_HOST}`)) return false
   try { return window.localStorage.getItem(DISMISS_KEY) !== '1' } catch { return true }

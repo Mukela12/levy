@@ -17,6 +17,7 @@ import { useBrief } from '@/components/chat/brief-context'
 import { usePdfViewer } from '@/components/chat/pdf-viewer-context'
 import { useReducedMotion } from 'framer-motion'
 import { CanopyComposer, type CanopyComposerProps } from './composer'
+import { useRegisterConversation } from '@/lib/active-chat'
 
 export interface CanopyConversationProps {
   title: string
@@ -29,6 +30,7 @@ export interface CanopyConversationProps {
 }
 
 export function CanopyConversation({ title, messages, loading, onSend, composer, footNote }: CanopyConversationProps) {
+  useRegisterConversation()
   const pdf = usePdfViewer()
   const brief = useBrief()
   const reducedMotion = useReducedMotion()
@@ -108,6 +110,7 @@ export function CanopyConversation({ title, messages, loading, onSend, composer,
                   <ChatMessage
                     onAskAnswer={i === messages.length - 1 ? onSend : undefined}
                     messageId={msg.id}
+                    isError={msg.error}
                     role={msg.role}
                     content={msg.content}
                     blocks={msg.blocks}

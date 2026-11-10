@@ -29,9 +29,11 @@ import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth/auth-provider'
 import { createClient } from '@/lib/supabase'
-import { ArrowRight, X } from 'lucide-react'
+import { ArrowRight, Pause, Play, X } from 'lucide-react'
 import { LevyLogo } from '@/components/ui/levy-logo'
 import { useUiVariant } from '@/lib/ui-variant'
+import { IS_APP } from '@/lib/routes'
+import { currentAiConsent } from '@/lib/ai-providers'
 
 /**
  * Completion is tracked in TWO places so it survives the right things:
@@ -220,6 +222,9 @@ export function OnboardingTour({
           .catch(() => {})
         return
       }
+      // In the app the AI-services consent comes first; agreeing updates the
+      // account, which re-runs this effect and opens the tour then.
+      if (IS_APP && !currentAiConsent(user.user_metadata)) return
       if (pathname.startsWith('/chat')) {
         setOpen(true)
         setStep(0)
@@ -424,7 +429,7 @@ function TourFrame({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.18 }}
-        className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/72 backdrop-blur-sm px-4 pb-[max(16px,env(safe-area-inset-bottom))]"
+        className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/72 backdrop-blur-sm px-4 pb-[max(16px,var(--safe-area-inset-bottom,env(safe-area-inset-bottom)))]"
       >
         <motion.div
           ref={tooltipRef}
@@ -618,7 +623,10 @@ function TourArt({ name, compact = false }: { name: string; compact?: boolean })
   return <div className={'cp-tour-art' + (compact ? ' is-compact' : '')} data-paused={paused}>
     {/* eslint-disable-next-line @next/next/no-img-element */}
     <img src={`/canopy/onboarding/${name}.webp`} alt="" width={128} height={128} decoding="async" />
-    <button type="button" onClick={() => setPaused((value) => !value)} aria-pressed={paused}>{paused ? 'Resume illustration' : 'Pause illustration'}</button>
+    {/* WCAG 2.2.2: moving art can be stopped. A labelled icon, not a line of stray text. */}
+    <button type="button" onClick={() => setPaused((value) => !value)} aria-pressed={paused} aria-label={paused ? 'Resume illustration' : 'Pause illustration'} title={paused ? 'Resume illustration' : 'Pause illustration'}>
+      {paused ? <Play size={12} aria-hidden="true" /> : <Pause size={12} aria-hidden="true" />}
+    </button>
   </div>
 }
 
