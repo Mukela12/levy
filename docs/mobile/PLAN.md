@@ -112,13 +112,17 @@ as the QA account, light and dark.
 - Backgrounding mid-answer on iOS: Home pressed 4 s into the answer, app
   reopened 30+ s later, the answer was complete with its sources.
 
+**Merged and deployed 10 Nov 2026:** `mobile/app` merged into `main` as
+24b9d4b. Backend live on Railway (deployment cccde555, /health 24b9d4b,
+rollback 4edeec3f = 44d934c); `DELETE /api/account` answers 401 without a
+token. Website live on Vercel (aliased to www.levylegal.ai, rollback
+dpl_24hZFi9HjHP4w7JYXs967Qjc1LGC from 2 Nov); `/support` is up. `origin/main`
+is still f73dd37 until a push is approved.
+
 **Still not done:**
-1. **Deploy the website** for the welcome route's CORS, the touch fixes and the
-   privacy policy reading the shared AI list. Needs `mobile/app` merged into
-   `main`. The web route table is verified identical (40 lines, proxy intact).
-2. **Deploy the backend's `DELETE /api/account`** (on this branch, 39cd9cb). The
-   app's delete button fails politely until then.
-3. **A real low-end Android phone** (Phase 3) and **a real iPhone** (see the
+1. **An end-to-end deletion on production** with a throwaway account (make it
+   on the website, delete it from Your account, confirm sign-in fails).
+2. **A real low-end Android phone** (Phase 3) and **a real iPhone** (see the
    first-tap note below).
 
 ## Commercial readiness (10 Nov 2026, commits 39cd9cb and 1bfe0d4)
