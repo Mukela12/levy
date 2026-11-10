@@ -7,12 +7,10 @@ import { AiServicesSheet } from '@/components/native/ai-consent'
 import { currentAiConsent } from '@/lib/ai-providers'
 import { SITE_URL, openInBrowser } from '@/lib/native'
 
-export const SUPPORT_EMAIL = 'mukelakatungu@levylegal.ai'
-
 /**
  * The app's About block in Account: the privacy policy, the AI services and
- * what was agreed, a way to reach a person, and the version (store reviewers
- * and support both ask for it).
+ * what was agreed, help and a way to reach a person (the website's /support
+ * page), and the version (store reviewers and support both ask for it).
  */
 export function AppAbout() {
   const { user } = useAuth()
@@ -46,11 +44,11 @@ export function AppAbout() {
           </button>
         </li>
         <li>
-          <a href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('Levy app')}`}>
+          <button type="button" onClick={() => openInBrowser(`${SITE_URL}/support`)}>
             <LifeBuoy size={18} aria-hidden="true" />
-            <span>Contact support</span>
+            <span>Help and support</span>
             <ChevronRight size={16} aria-hidden="true" />
-          </a>
+          </button>
         </li>
       </ul>
       <p className="cp-about-note">

@@ -16,6 +16,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/acts`, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${SITE_URL}/study`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${SITE_URL}/auth/signup`, changeFrequency: 'monthly', priority: 0.4 },
+    { url: `${SITE_URL}/support`, changeFrequency: 'monthly', priority: 0.3 },
   ]
   for (const a of answers) {
     entries.push({ url: `${SITE_URL}/answers/${a.slug}`, changeFrequency: 'monthly', priority: 0.7 })

@@ -16,7 +16,7 @@ export const SITE_URL = 'https://www.levylegal.ai'
  * Pages only the website has (they need its server). In the app, links to
  * them open in the in-app browser instead of the bundled copy.
  */
-export const WEB_ONLY_PATH = /^\/(acts|answers|privacy|admin|llms\.txt|api)(\/|$)/
+export const WEB_ONLY_PATH = /^\/(acts|answers|privacy|support|admin|llms\.txt|api)(\/|$)/
 
 /**
  * Where an emailed link (password reset, sign-up confirmation) should land.

@@ -35,7 +35,7 @@ test('the app sends emailed links and route calls to the website', () => {
 
 test('website-only pages are recognised, the app pages are not', () => {
   const { WEB_ONLY_PATH } = load('app')
-  for (const p of ['/acts', '/acts/', '/acts/employment-code-act', '/answers/x', '/privacy', '/api/email/welcome', '/llms.txt'])
+  for (const p of ['/acts', '/acts/', '/acts/employment-code-act', '/answers/x', '/privacy', '/support', '/support/', '/api/email/welcome', '/llms.txt'])
     assert.ok(WEB_ONLY_PATH.test(p), p)
   for (const p of ['/chat/', '/chat/view/', '/matters/', '/documents/', '/actsy', '/study/'])
     assert.ok(!WEB_ONLY_PATH.test(p), p)

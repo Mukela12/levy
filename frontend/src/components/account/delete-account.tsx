@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Trash2 } from 'lucide-react'
 import { useAuth } from '@/components/auth/auth-provider'
 import { deleteAccount } from '@/lib/api'
-import { haptic } from '@/lib/native'
+import { SITE_URL, haptic } from '@/lib/native'
 
 export const ACCOUNT_DELETED_KEY = 'levy-account-deleted'
 
@@ -45,7 +45,8 @@ export function DeleteAccountSection() {
       <h2 id="cp-delete-title">Delete account</h2>
       <p>
         This permanently deletes your chats, uploaded documents, matters and templates, and your sign-in. It can&apos;t
-        be undone.
+        be undone.{' '}
+        <a className="cp-inline-link" href={`${SITE_URL}/support#delete-account`}>What is deleted and kept</a>
       </p>
       {!open ? (
         <button type="button" className="cp-btn danger" onClick={() => { setOpen(true); haptic('medium') }}>

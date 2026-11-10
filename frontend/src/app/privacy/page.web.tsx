@@ -1,15 +1,14 @@
 import type { Metadata } from 'next'
 import { SITE_URL } from '@/lib/server/corpus'
 import { AI_PROVIDERS } from '@/lib/ai-providers'
+import { ADDRESS, OPERATOR, SUPPORT_EMAIL, SUPPORT_PHONE } from '@/lib/contact'
 
 // The ECT Act 2021 s.64(2)(d) wants every marketing email to point here, and
 // the Data Protection Act 2021 wants people told who holds their data, where
 // it goes and how to object. Keep the sub-processor table in step with the
 // services the backend actually calls (backend/app/config.py keys).
-const OPERATOR = 'Fluxium Tech Business, the trading name of Mukela Katungu (TPIN 2003851084)'
-const ADDRESS = 'Kulima Tower, 11th Floor, Room 1107, Lusaka, Zambia'
-const PHONE = '+260 771 699 187'
-const EMAIL = 'mukelakatungu@levylegal.ai'
+const PHONE = SUPPORT_PHONE
+const EMAIL = SUPPORT_EMAIL
 const UPDATED = '12 October 2026'
 
 export const metadata: Metadata = {
