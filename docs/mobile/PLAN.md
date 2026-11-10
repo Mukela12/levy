@@ -106,16 +106,48 @@ as the QA account, light and dark.
 - Website-only links open in the in-app browser.
 - One tap opens a recent chat on iOS.
 
-**Not done:**
-1. **Deploy the API CORS change.** Needs `railway login` as BantuRide. Until then
-   no answer, Documents or Templates load in the app; Matters and chat history do
-   (they read Supabase directly).
-2. **Deploy the website** for the welcome route's CORS and the touch fixes. This
-   needs `mobile/app` merged into `main`. The web route table is verified
-   identical.
-3. **A full streamed answer on both platforms, then backgrounding mid-answer.**
-   The existing saved-answer recovery should cover it; verify once 1 is live.
-4. **A real low-end Android phone** (Phase 3).
+**Since done (10 Nov, later):**
+- The API CORS change is live (44d934c on Railway; local `main` only, not pushed).
+- Streamed answers work on both platforms (Android 1, iOS 2 questions).
+- Backgrounding mid-answer on iOS: Home pressed 4 s into the answer, app
+  reopened 30+ s later, the answer was complete with its sources.
+
+**Still not done:**
+1. **Deploy the website** for the welcome route's CORS, the touch fixes and the
+   privacy policy reading the shared AI list. Needs `mobile/app` merged into
+   `main`. The web route table is verified identical (40 lines, proxy intact).
+2. **Deploy the backend's `DELETE /api/account`** (on this branch, 39cd9cb). The
+   app's delete button fails politely until then.
+3. **A real low-end Android phone** (Phase 3) and **a real iPhone** (see the
+   first-tap note below).
+
+## Commercial readiness (10 Nov 2026, commits 39cd9cb and 1bfe0d4)
+
+| Requirement | What the app does |
+|---|---|
+| Apple 5.1.1(v), Play account deletion | Account > Delete account, two steps (open, type "delete"). `DELETE /api/account` removes chats, messages, feedback, artifacts, uploads (rows, chunks, keyword rows, files), folders, templates, matters, then the sign-in. Library documents the user owns stay, with no owner. 9 backend tests. |
+| Apple 5.1.2(i) AI consent | One-time screen before the first question naming Anthropic, OpenAI, Google (Gemini API), Moonshot AI and OpenRouter, Tavily, with where each is. Saved on the account (`user_metadata.ai_consent`), checked with the server before asking, so one phone is enough. Raise `AI_CONSENT_VERSION` in `lib/ai-providers.ts` when a provider is added. Reviewable in Account. |
+| Play AI content reporting | A flag next to the thumbs: harmful or offensive, wrong about the law, something else, optional note. Stored as a thumbs-down whose reason starts `[report:<kind>]`; read reports where feedback is read. |
+| Privacy and support links | Account > About Levy: AI services, privacy policy (in-app browser), Contact support (mailto), version. |
+| Apple privacy manifest | `ios/App/App/PrivacyInfo.xcprivacy`: email, name, other user content (app functionality, linked, no tracking); UserDefaults reason CA92.1. Must match the App Privacy answers. |
+| iOS settings | Camera and photo purpose strings, `ITSAppUsesNonExemptEncryption` false, iPhone portrait only, 1.0.0 (1). Device family is still iPhone and iPad: iPad needs 13-inch screenshots, or set it to iPhone only. |
+| Android release | 1.0.0 (1). Release signing reads `android/keystore.properties` (git-ignored; see `keystore.properties.example`). `allowBackup` off so the stored session is not copied to cloud backups. |
+
+**Mukela's part before submitting:** the Apple team in Xcode (Signing), the
+Android upload key (`keytool` line in the example file) and its passwords,
+the App Store Connect and Play Console listings, a review demo account, the
+age-rating answers, the Data safety form, a support URL (a `/support` page on
+the website would do), and the Play account type.
+
+**iOS first tap (simulator only, open):** after a cold launch the first tap
+did nothing in 9 of 13 tries; Android never missed. The touch reaches the
+app's window (a temporary `UIWindow.sendEvent` logger showed it), and in the
+4 tries that worked, a log stream had been started or a screenshot taken
+seconds before; WebKit then logged "Synthetic click completed". Not the splash
+(it still failed with the splash off) and not the analytics listener (removed
+from the app anyway). Settings took its first tap. Suspect the simulator's
+touch injection, unproven: check on a real iPhone in the first TestFlight
+build before spending more time.
 
 **Gotchas found in Phase 1:**
 - **iOS root view controller.** Capacitor 8's template creates it in
@@ -230,9 +262,12 @@ as the QA account, light and dark.
   - fastlane for signing and uploads.
   - Sentry for crashes.
 
-## Decisions waiting on Mukela
+## Decisions
 
-1. **App id `ai.levylegal.app`.** It is permanent after the first store upload.
-2. **The Google Play account:** personal (the 12-tester rule applies if it was created after 13 Nov 2023) or organisation (needs a D-U-N-S number).
-3. **Sign-in in app v1:** email and password only (recommended). Google sign-in would also need Sign in with Apple on iOS.
-4. **Guests:** sign-in required in the app (recommended), or guest questions as on the web.
+Decided 10 Nov ("go with your recommendations"): app id `ai.levylegal.app`
+(permanent after the first upload), email and password sign-in only in v1,
+sign-in required in the app.
+
+Still waiting on Mukela:
+1. **The Google Play account:** personal (the 12-tester rule applies if it was created after 13 Nov 2023) or organisation (needs a D-U-N-S number).
+2. **iPad:** ship v1 for iPhone and iPad (needs iPad screenshots) or iPhone only.
