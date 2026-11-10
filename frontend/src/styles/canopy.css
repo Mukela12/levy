@@ -1360,3 +1360,34 @@ html[data-app] .cp-nav-new:active { filter: brightness(.92); }
 .cp-offline::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--cp-attn, #b3801f); flex-shrink: 0; }
 @keyframes cp-offline-in { from { opacity: 0; transform: translate(-50%, -6px); } to { opacity: 1; transform: translate(-50%, 0); } }
 @media (prefers-reduced-motion: reduce) { .cp-offline { animation: none; } }
+
+/* ── Welcome: centred on every phone height (10 Nov 2026) ──────────────────
+   The welcome block used to sit at the top with a fixed margin, so tall
+   phones (20:9 Android, Pro Max) left an empty lower half above the photo
+   credit. Auto margins now share the spare height above and below the block;
+   on a short phone they fall to zero and the layout is the top-aligned one it
+   always was, so nothing is pushed off screen. The bottom padding is a touch
+   larger than the top, lifting the block just above true centre, where the
+   eye expects the middle to be.
+   While typing, the block returns to the top: the suggestion folds away on
+   the first keystroke, and a centred block would slide the composer under the
+   finger. With the keyboard up there is no spare height anyway. */
+@media (max-width: 700px) {
+  /* The minimum gaps equal the old fixed margins (20px above, 12px below),
+     so a short phone, where the auto margins are zero, lays out exactly as
+     before: measured overflow at 360x640 and 375x667 is unchanged. */
+  .cp-welcome-frame { padding-top: 20px; }
+  .cp-welcome-content { margin-top: auto; margin-bottom: auto; padding-bottom: 12px; }
+  .cp-scene-footer { margin-top: 0; }
+  [data-keyboard] .cp-welcome-frame { padding-top: 0; }
+  [data-keyboard] .cp-welcome-content { margin-top: 16px; margin-bottom: 12px; padding-bottom: 0; }
+  [data-keyboard] .cp-scene-footer { margin-top: auto; }
+}
+@media (max-width: 700px) and (max-height: 640px) {
+  .cp-welcome-frame { padding-top: 16px; }
+}
+/* With height to spare, a slightly larger floor below lifts the block just
+   above true centre, where the eye expects the middle to be. */
+@media (max-width: 700px) and (min-height: 760px) {
+  .cp-welcome-content { padding-bottom: 28px; }
+}
