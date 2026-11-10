@@ -35,6 +35,7 @@ import {
   List,
   LayoutGrid,
 } from 'lucide-react'
+import { CanopyLoader } from '@/components/canopy/loader'
 import { CTA } from '@/components/ui/cta'
 
 const ACCEPT = '.docx,.pdf,.txt,.md'
@@ -331,7 +332,7 @@ export default function TemplatesPage() {
           <>
             {loading ? (
               <div className="flex items-center justify-center py-16">
-                <Loader2 className="size-5 text-emerald-400 animate-spin" />
+                <CanopyLoader />
               </div>
             ) : (
               <div className={canopy ? 'cp-library-shelf' : 'grid grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3 mb-8'}>
@@ -381,8 +382,9 @@ export default function TemplatesPage() {
             </div>
 
             {loading ? (
-              <div className="flex items-center justify-center py-16">
-                <Loader2 className="size-5 text-emerald-400 animate-spin" />
+              // The folder shelf above already shows the loader when it is on screen.
+              (canopy || !activeFolder) ? null : <div className="flex items-center justify-center py-16">
+                <CanopyLoader />
               </div>
             ) : filtered.length === 0 ? (
               query.trim() ? <p role="status" className="py-10 text-sm">No templates match your search. Try another name or clear the filter.</p> : <EmptyState onUpload={() => fileInputRef.current?.click()} />
@@ -625,7 +627,7 @@ function EmptyState({ onUpload }: { onUpload: () => void }) {
       <Upload size={20} className="mx-auto mb-2.5 text-white/25" />
       <p className="text-[13px] text-white/65">No templates yet.</p>
       <p className="text-[11.5px] text-white/30 mt-1 max-w-sm mx-auto leading-snug">
-        Drop in a .docx, .pdf, .txt, or .md you reuse. Offer letters, NDAs, demand letters all work.
+        Add a .docx, .pdf, .txt or .md you reuse. Offer letters, NDAs, demand letters all work.
       </p>
       <button
         onClick={onUpload}

@@ -156,6 +156,14 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
 
   const activeChat = useActiveChatId()
   const conversationShowing = useConversationShowing()
+  // In the app a saved chat is a query (/chat/view/?id=), so going from one
+  // chat to another keeps the pathname and the effect above never fired: the
+  // menu stayed open over the chat just picked. Close on a chat change too.
+  useEffect(() => {
+    setNavOpen(false)
+    pdf.close()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeChat])
   const section = SECTION_TITLES.find(([re]) => re.test(pathname))?.[1] ?? 'Levy'
   // In the app an open conversation is titled in the top bar, as chat apps do.
   const chatTitle = useChatTitle(IS_APP && activeChat ? user?.id : undefined, activeChat ?? '')

@@ -110,6 +110,7 @@ export function CanopyConversation({ title, messages, loading, onSend, composer,
                   <ChatMessage
                     onAskAnswer={i === messages.length - 1 ? onSend : undefined}
                     messageId={msg.id}
+                    isError={msg.error}
                     role={msg.role}
                     content={msg.content}
                     blocks={msg.blocks}

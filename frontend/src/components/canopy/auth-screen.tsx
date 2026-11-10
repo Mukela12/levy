@@ -111,13 +111,16 @@ export function CanopyAuthScreen({ mode }: { mode: 'login' | 'signup' | 'reset' 
         {error && <p role="alert" className="cp-auth-error">{error}</p>}
         {notice && <p role="status" className="cp-auth-notice">{notice}</p>}
         {!(notice && (reset || signup)) && <form onSubmit={submit}>
-          {signup && !recovery && <label>Your name<input autoComplete="name" required maxLength={100} value={name} onChange={e => setName(e.target.value)} /></label>}
-          {!reset && <label>Email address<input type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} onFocus={() => setSceneField('email')} onBlur={() => setSceneField('idle')} /></label>}
-          {!recovery && <label>Password<div className="cp-password"><input type={show ? 'text' : 'password'} autoComplete={signup || reset ? 'new-password' : 'current-password'} minLength={signup || reset ? 8 : undefined} required value={password} onChange={e => setPassword(e.target.value)} onFocus={() => setSceneField('password')} onBlur={() => setSceneField('idle')} /><button type="button" aria-label={show ? 'Hide password' : 'Show password'} onClick={() => setShow(!show)}>{show ? <EyeOff size={18} /> : <Eye size={18} />}</button></div>{(signup || reset) && <small>At least 8 characters.</small>}</label>}
+          {signup && !recovery && <label>Your name<input autoComplete="name" autoCapitalize="words" enterKeyHint="next" required maxLength={100} value={name} onChange={e => setName(e.target.value)} /></label>}
+          {!reset && <label>Email address<input type="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} inputMode="email" enterKeyHint={recovery ? 'send' : 'next'} required value={email} onChange={e => setEmail(e.target.value)} onFocus={() => setSceneField('email')} onBlur={() => setSceneField('idle')} /></label>}
+          {!recovery && <label>Password<div className="cp-password"><input type={show ? 'text' : 'password'} autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="go" autoComplete={signup || reset ? 'new-password' : 'current-password'} minLength={signup || reset ? 8 : undefined} required value={password} onChange={e => setPassword(e.target.value)} onFocus={() => setSceneField('password')} onBlur={() => setSceneField('idle')} /><button type="button" aria-label={show ? 'Hide password' : 'Show password'} onClick={() => setShow(!show)}>{show ? <EyeOff size={18} /> : <Eye size={18} />}</button></div>{(signup || reset) && <small>At least 8 characters.</small>}</label>}
           <button className="cp-btn primary" disabled={busy} type="submit">{busy ? 'Please wait…' : recovery ? 'Send recovery link' : reset ? 'Update password' : signup ? 'Create account' : 'Sign in'}<ArrowRight size={16} /></button>
         </form>}
         {mode === 'login' && <button className="cp-auth-text" type="button" onClick={() => { setRecovery(!recovery); setError(''); setNotice('') }}>{recovery ? 'Back to sign in' : 'Forgot password?'}</button>}
         {!reset && <p>{signup ? 'Already have an account?' : 'New to Levy?'} <Link href={signup ? '/auth/login' : '/auth/signup'}>{signup ? 'Sign in' : 'Create an account'}</Link></p>}
+        {/* Reachable before an account exists: the privacy policy (App Store
+            5.1.1(i)) and help for someone who can't get in. */}
+        <p className="cp-auth-legal"><a href="/privacy">Privacy policy</a><span aria-hidden="true">·</span><a href="/support">Help and support</a></p>
         {reset && <Link href="/auth/login">Back to sign in</Link>}
         {/* The app requires an account, so it offers no guest route. */}
         {(reset || !IS_APP) && <Link className="cp-auth-text" href="/chat">{reset ? 'Open your workspace' : 'Continue exploring without an account'}<ArrowRight size={15} /></Link>}

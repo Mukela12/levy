@@ -5,6 +5,8 @@ import { usePathname, useRouter } from 'next/navigation'
 import { App } from '@capacitor/app'
 import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core'
 import { SplashScreen } from '@capacitor/splash-screen'
+import { Network } from '@capacitor/network'
+import { setNativeConnected } from '@/lib/network'
 import { useAuth } from '@/components/auth/auth-provider'
 import { createClient } from '@/lib/supabase'
 import { SITE_URL, WEB_ONLY_PATH, openInBrowser } from '@/lib/native'
@@ -51,6 +53,20 @@ export function AppShell() {
     const observer = new MutationObserver(apply)
     observer.observe(d, { attributes: true, attributeFilter: ['data-ui-theme'] })
     return () => observer.disconnect()
+  }, [])
+
+  // Say plainly when the phone has no connection: lists that won't load and a
+  // question that fails make sense once you know why.
+  // The native status, because Android's WebView never reports offline.
+  const [offline, setOffline] = useState(false)
+  useEffect(() => {
+    const apply = (connected: boolean) => {
+      setNativeConnected(connected)
+      setOffline(!connected)
+    }
+    void Network.getStatus().then((st) => apply(st.connected)).catch(() => {})
+    const listener = Network.addListener('networkStatusChange', (st) => apply(st.connected))
+    return () => { void listener.then((l) => l.remove()) }
   }, [])
 
   // The app needs an account: Levy's guest check is built for the website.
@@ -143,6 +159,7 @@ export function AppShell() {
     return () => { cancelled = true }
   }, [needsConsent, userId, consentCheckedFor])
 
-  if (needsConsent) return <AiServicesSheet mode={consentCheckedFor === userId ? 'ask' : 'checking'} />
-  return null
+  const notice = offline ? <div className="cp-offline" role="status">You&apos;re offline</div> : null
+  if (needsConsent) return <>{notice}<AiServicesSheet mode={consentCheckedFor === userId ? 'ask' : 'checking'} /></>
+  return notice
 }

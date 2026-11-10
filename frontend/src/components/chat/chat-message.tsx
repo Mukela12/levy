@@ -61,6 +61,8 @@ export type MessageBlock =
 export interface ChatMessageProps {
   /** Row id of the saved message; enables the feedback control. */
   messageId?: string
+  /** A failed question: shown as a notice, without answer actions. */
+  isError?: boolean
   role: 'user' | 'assistant'
   content: string
   blocks?: MessageBlock[]

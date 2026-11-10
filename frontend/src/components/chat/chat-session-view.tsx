@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase'
 import { uploadDocument, promoteDocument } from '@/lib/api'
 import { ChatInput } from '@/components/chat/chat-input'
 import { ChatMessage, ThinkingGlow } from '@/components/chat/chat-message'
+import { CanopyPageLoader } from '@/components/canopy/loader'
 import { BriefPanel } from '@/components/chat/brief-panel'
 import { useRegisterBrief } from '@/components/chat/brief-context'
 import { useChatStream, type Message } from '@/components/chat/chat-stream-context'
@@ -133,9 +134,7 @@ export function ChatSessionView({ id }: { id: string }) {
 
   if (initialLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="w-6 h-6 text-emerald-400 animate-spin" />
-      </div>
+      <CanopyPageLoader />
     )
   }
 

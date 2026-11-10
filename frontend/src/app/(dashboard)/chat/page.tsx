@@ -37,6 +37,7 @@ import { WelcomeScene } from '@/components/canopy/welcome-scene'
 import { CanopyComposer } from '@/components/canopy/composer'
 import { CanopyConversation } from '@/components/canopy/conversation'
 import { chatPath } from '@/lib/routes'
+import { connectionMessage } from '@/lib/network'
 
 function getGreeting(): string {
   const h = new Date().getHours()
@@ -128,6 +129,9 @@ export default function NewChatPage() {
   const [webSearch, setWebSearch] = useState(false)
   // Seed payload for the input box. An empty `text` focuses the box without
   // filling it (see chat-input.tsx).
+  // A question that never left the phone goes back into the conversation's
+  // composer. Its own seed, so the welcome composer is never pre-filled with it.
+  const [retrySeed, setRetrySeed] = useState<{ text: string; nonce: number }>({ text: '', nonce: 0 })
   const [inputSeed, setInputSeed] = useState<{ text: string; nonce: number }>({
     text: '',
     nonce: 0,
@@ -309,15 +313,20 @@ export default function NewChatPage() {
         setStagedAttachments([])
         router.replace(chatPath(sid), { scroll: false })
       } catch (e) {
+        const offline = connectionMessage(e, true)
         const content =
-          e instanceof Error && !e.message.startsWith('API error') && !e.message.startsWith('No response')
+          offline ??
+          (e instanceof Error && !e.message.startsWith('API error') && !e.message.startsWith('No response')
             ? e.message
-            : 'Sorry, I encountered an error processing your question. Please try again.'
+            : 'Sorry, I encountered an error processing your question. Please try again.')
+        // Nothing reached Levy, so give the question back instead of making them retype it.
+        if (offline) setRetrySeed({ text: rawQuestion, nonce: Date.now() })
         setMessages((prev) => {
           const last = prev[prev.length - 1]
           const errorMsg: Message = {
             role: 'assistant',
             content,
+            error: true,
           }
           if (last && last.role === 'assistant' && last.content === '') {
             return [...prev.slice(0, -1), errorMsg]
@@ -634,12 +643,16 @@ export default function NewChatPage() {
         throw e
       }
     } catch (e) {
+      const offline = connectionMessage(e, true)
+      if (offline) setRetrySeed({ text: rawQuestion, nonce: Date.now() })
       const errorMsg: Message = {
         role: 'assistant',
+        error: true,
         content:
-          e instanceof Error && !e.message.startsWith('API error') && !e.message.startsWith('No response')
+          offline ??
+          (e instanceof Error && !e.message.startsWith('API error') && !e.message.startsWith('No response')
             ? e.message
-            : 'Sorry, I encountered an error processing your question. Please try again.',
+            : 'Sorry, I encountered an error processing your question. Please try again.'),
       }
       setMessages((prev) => {
         const last = prev[prev.length - 1]
@@ -827,6 +840,7 @@ export default function NewChatPage() {
               onUploadFile: user ? handleUploadFile : undefined,
               attachNeedsAccount: !user,
               attachmentCount: stagedAttachments.length,
+              ...(retrySeed.nonce ? { seed: retrySeed } : {}),
             }}
             footNote={composerNote ?? undefined}
           />

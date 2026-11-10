@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { useUiVariant } from '@/lib/ui-variant'
 import { ChevronRight, User, Lock, LogOut, Mail, Loader2 } from 'lucide-react'
+import { CanopyPageLoader } from '@/components/canopy/loader'
 import { CanopyThemeToggle } from '@/components/canopy/theme-toggle'
 import { linkTarget } from '@/lib/native'
 import { IS_APP } from '@/lib/routes'
@@ -71,7 +72,7 @@ export default function ProfilePage() {
     { icon: User, label: 'Full Name', value: fullName },
   ]
 
-  if (authLoading || !user) return <p role="status" className="p-8">Loading your account…</p>
+  if (authLoading || !user) return <CanopyPageLoader label="Loading your account" />
   if (variant === 'canopy') return <div className="cp-account">
     <header><span className="cp-eyebrow">Make yourself at home</span><h1>Your account</h1><p>Manage your details and reading preferences.</p></header>
     <div className="cp-account-banner"><span aria-hidden="true">{initials}</span><div><h2>{fullName}</h2><p>{email}</p></div></div>

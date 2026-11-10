@@ -6,6 +6,7 @@ import { useAuth } from '@/components/auth/auth-provider'
 import { createClient } from '@/lib/supabase'
 import { AI_CONSENT_VERSION, AI_PROVIDERS, type AiConsentRecord } from '@/lib/ai-providers'
 import { SITE_URL, haptic, openInBrowser } from '@/lib/native'
+import { CanopyLoader } from '@/components/canopy/loader'
 
 function formatDate(iso: string) {
   const d = new Date(iso)
@@ -43,7 +44,7 @@ export function AiServicesSheet({ mode, consent, onClose }: {
 
   // While the account is being checked, hold the screen without content so
   // nothing can be asked before the answer is known, and nothing flashes.
-  if (mode === 'checking') return <div className="cp-consent" aria-busy="true" />
+  if (mode === 'checking') return <div className="cp-consent" aria-busy="true"><CanopyLoader /></div>
 
   return (
     <div className="cp-consent" role="dialog" aria-modal="true" aria-labelledby="cp-consent-title">

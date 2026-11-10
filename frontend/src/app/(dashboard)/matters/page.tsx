@@ -8,6 +8,7 @@ import { listMatters, createMatter, type Matter, type MatterDate } from '@/lib/m
 import { matterPath } from '@/lib/routes'
 import { timeAgo } from '@/components/chat/use-recent-sessions'
 import { Plus, Loader2, ChevronRight, CalendarDays } from 'lucide-react'
+import { CanopyPageLoader } from '@/components/canopy/loader'
 
 const FILLER = /^(v|vs|and|the|of|in|re|ex|parte|ltd|limited|plc|&)$/i
 
@@ -144,9 +145,7 @@ export default function MattersPage() {
         </div>}
 
         {busy ? (
-          <div className="flex items-center gap-2 text-white/40 text-[14px] py-12 justify-center">
-            <Loader2 className="size-4 animate-spin" /> Loading your matters…
-          </div>
+          <CanopyPageLoader label="Loading your matters" />
         ) : !user ? (
           <MattersEmpty
             title="Matters live in your account"

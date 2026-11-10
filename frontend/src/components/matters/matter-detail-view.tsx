@@ -12,9 +12,10 @@ import {
   type Matter, type MatterParty, type MatterDate, type MatterThread, type MatterDraft,
 } from '@/lib/matters'
 import {
-  ArrowLeft, Loader2, Plus, X, MessageSquare, FileText,
+  ArrowLeft, Plus, X, MessageSquare, FileText,
   Calendar, Users, Trash2, Check, Link2,
 } from 'lucide-react'
+import { CanopyPageLoader } from '@/components/canopy/loader'
 
 /** One matter. Rendered by /matters/[id] on the web and /matters/view/?id= in the app. */
 export function MatterDetailView({ id }: { id: string }) {
@@ -137,9 +138,7 @@ export function MatterDetailView({ id }: { id: string }) {
   if (!authLoading && !user) return <div className="p-8"><p>Sign in to open your matters.</p><Link href="/auth/login">Sign in</Link></div>
   if (loading) {
     return (
-      <div className="flex items-center gap-2 text-white/40 text-[14px] py-16 justify-center">
-        <Loader2 className="size-4 animate-spin" /> Loading matter…
-      </div>
+      <CanopyPageLoader label="Opening the matter" />
     )
   }
   if (!matter) {

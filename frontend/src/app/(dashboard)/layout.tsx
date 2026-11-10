@@ -27,6 +27,7 @@ import { ChatStreamProvider } from '@/components/chat/chat-stream-context'
 import { PdfViewerProvider, usePdfViewer } from '@/components/chat/pdf-viewer-context'
 import { PdfViewer } from '@/components/chat/pdf-viewer'
 import { Scale, Loader2, X } from 'lucide-react'
+import { CanopyLoader } from '@/components/canopy/loader'
 import { CTA } from '@/components/ui/cta'
 import { LevyLogo } from '@/components/ui/levy-logo'
 import { OnboardingTour } from '@/components/onboarding/onboarding-tour'
@@ -215,7 +216,7 @@ function DashboardPresentation({ children }: { children: React.ReactNode }) {
     if (loading) {
       return (
         <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--cp-bg, #0a0a0b)' }}>
-          <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--cp-primary, #22c55e)' }} />
+          <CanopyLoader />
         </div>
       )
     }
