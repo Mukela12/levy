@@ -1309,6 +1309,30 @@ def clear_feedback(message_id: str, uid: str = Depends(require_user)):
     return {"status": "ok"}
 
 
+class DeleteAccountRequest(BaseModel):
+    confirm: str
+
+
+@router.delete("/account")
+def delete_my_account(request: DeleteAccountRequest, uid: str = Depends(require_user)):
+    """Delete the caller's account and everything it owns (App Store 5.1.1(v),
+    Google Play account deletion). The body must say "delete" so a stray call
+    can't do it. Safe to repeat: a retry after a failure finishes the job."""
+    from ..services.account_deletion import delete_account
+
+    if request.confirm.strip().lower() != "delete":
+        raise HTTPException(status_code=400, detail='send {"confirm": "delete"} to delete your account')
+    try:
+        report = delete_account(get_db(), uid)
+    except Exception:
+        logger.exception("account deletion failed for %s…", uid[:8])
+        raise HTTPException(
+            status_code=500,
+            detail="Your account could not be fully deleted. Please try again; nothing is lost by retrying.",
+        )
+    return {"status": "deleted", **report.as_dict()}
+
+
 @router.get("/admin/feedback-stats")
 def feedback_stats(days: int = 7, authorization: str | None = Header(default=None)):
     """Aggregate answer-feedback + anonymous-funnel counts, for unattended reads.
