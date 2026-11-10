@@ -22,7 +22,7 @@ import { useChatTitle, useRecentSessions, timeAgo } from '@/components/chat/use-
 import { useCanonicalPath } from '@/lib/use-canonical-path'
 import { IS_APP, chatPath } from '@/lib/routes'
 import { haptic } from '@/lib/native'
-import { useActiveChatId } from '@/lib/active-chat'
+import { useActiveChatId, useConversationShowing } from '@/lib/active-chat'
 import { useAwaitingSessions } from '@/lib/session-status'
 import { OnboardingTour } from '@/components/onboarding/onboarding-tour'
 import { DomainBanner } from '@/components/layout/domain-banner'
@@ -155,6 +155,7 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
   }, [navOpen])
 
   const activeChat = useActiveChatId()
+  const conversationShowing = useConversationShowing()
   const section = SECTION_TITLES.find(([re]) => re.test(pathname))?.[1] ?? 'Levy'
   // In the app an open conversation is titled in the top bar, as chat apps do.
   const chatTitle = useChatTitle(IS_APP && activeChat ? user?.id : undefined, activeChat ?? '')
@@ -290,7 +291,7 @@ export function CanopyShell({ children }: { children: React.ReactNode }) {
   )
 
   return (
-    <div className="cp-app" data-rail={rail ? 'true' : 'false'} data-thread={activeChat ? 'true' : 'false'}>
+    <div className="cp-app" data-rail={rail ? 'true' : 'false'} data-thread={activeChat || conversationShowing ? 'true' : 'false'}>
       <DomainBanner />
       <a className="cp-skip" href="#cp-main">
         Skip to content

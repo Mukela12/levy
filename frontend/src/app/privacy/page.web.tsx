@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { SITE_URL } from '@/lib/server/corpus'
+import { AI_PROVIDERS } from '@/lib/ai-providers'
 
 // The ECT Act 2021 s.64(2)(d) wants every marketing email to point here, and
 // the Data Protection Act 2021 wants people told who holds their data, where
@@ -17,12 +18,9 @@ export const metadata: Metadata = {
   alternates: { canonical: `${SITE_URL}/privacy` },
 }
 
+// The AI services come from the list the app's consent screen shows.
 const PROCESSORS: Array<[string, string, string]> = [
-  ['Anthropic', 'Writes answers and drafts (Claude models)', 'United States'],
-  ['OpenAI', 'Turns questions and uploaded documents into search vectors', 'United States'],
-  ['Google (Gemini API)', 'Backup search vectors when OpenAI is unavailable', 'United States'],
-  ['Moonshot AI and OpenRouter', 'Backup answer models when Anthropic is unavailable', 'China and the United States'],
-  ['Tavily', 'Web searches when Levy looks beyond its library', 'United States'],
+  ...AI_PROVIDERS.map((p): [string, string, string] => [p.name, p.what, p.where]),
   ['Supabase', 'Database, sign-in and file storage', 'United States (North Virginia)'],
   ['Railway', "Runs Levy's server", 'Singapore'],
   ['Vercel', 'Hosts the website; page-view and speed analytics without advertising cookies', 'United States'],

@@ -8,6 +8,9 @@ import { useUiVariant } from '@/lib/ui-variant'
 import { ChevronRight, User, Lock, LogOut, Mail, Loader2 } from 'lucide-react'
 import { CanopyThemeToggle } from '@/components/canopy/theme-toggle'
 import { linkTarget } from '@/lib/native'
+import { IS_APP } from '@/lib/routes'
+import { DeleteAccountSection } from '@/components/account/delete-account'
+import { AppAbout } from '@/components/account/app-about'
 
 export default function ProfilePage() {
   const { user, signOut, loading: authLoading } = useAuth()
@@ -76,7 +79,9 @@ export default function ProfilePage() {
     {profileStatus && <p role="status">{profileStatus}</p>}
     <section><h2>Personal details</h2><form onSubmit={saveProfile}><label>Name<input autoComplete="name" required maxLength={100} value={nameDraft ?? fullName} onChange={e => setNameDraft(e.target.value)} /></label><label>Email<input type="email" value={email} readOnly /><small>Your account email is shown here for reference.</small></label><button type="submit" className="cp-btn primary" disabled={saving || !(nameDraft ?? fullName).trim()}>{saving ? 'Saving…' : 'Save details'}</button></form></section>
     <section><h2>Reading preferences</h2><div className="cp-preference"><div><strong>Dark appearance</strong><p>A quieter canvas for evening research.</p></div><CanopyThemeToggle dark={theme === 'dark'} onChange={dark => setTheme(dark ? 'dark' : 'light')} /></div><div className="cp-preference"><div><strong>Password and access</strong><p>{passwordSent ? 'Check your inbox for a recovery link.' : 'Send a recovery link to your account email.'}</p></div><button className="cp-btn" onClick={handleChangePassword} disabled={changingPassword || passwordSent}>{changingPassword ? 'Sending…' : passwordSent ? 'Link sent' : 'Reset password'}</button></div><div className="cp-preference"><div><strong>Workspace tour</strong><p>A short introduction to Levy’s tools.</p></div><button className="cp-btn" onClick={() => { window.dispatchEvent(new Event('levy-replay-tour')); router.push('/chat') }}>Replay tour</button></div></section>
-    <button className="cp-btn" onClick={handleSignOut}><LogOut size={16} />Sign out</button>
+    {IS_APP && <AppAbout />}
+    <button className="cp-btn cp-account-signout" onClick={handleSignOut}><LogOut size={16} />Sign out</button>
+    <DeleteAccountSection />
   </div>
   return (
     <div className="flex-1 overflow-y-auto px-6 py-8" style={{ overscrollBehavior: 'none' }}>

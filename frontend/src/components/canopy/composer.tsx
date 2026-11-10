@@ -97,11 +97,22 @@ export function CanopyComposer({
   useEffect(() => {
     const el = textareaRef.current
     if (!el) return
-    el.style.height = 'auto'
     // The app's conversation composer starts as one line and grows, as in
     // native chat apps; the website keeps its roomier box.
     const min = compact ? (IS_APP ? 26 : 48) : 84
-    el.style.height = `${Math.min(200, Math.max(min, el.scrollHeight))}px`
+    const fit = () => {
+      el.style.height = 'auto'
+      el.style.height = `${Math.min(200, Math.max(min, el.scrollHeight))}px`
+    }
+    fit()
+    // Measure again when the box changes width: measured mid-layout, the
+    // placeholder can wrap and leave the box two lines tall for good.
+    let width = el.clientWidth
+    const observer = new ResizeObserver(() => {
+      if (el.clientWidth !== width) { width = el.clientWidth; fit() }
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
   }, [message, compact])
 
   // Seed the box and put the caret at the end. An empty seed only focuses,

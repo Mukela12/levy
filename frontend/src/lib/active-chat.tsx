@@ -43,3 +43,32 @@ export function useActiveChatId(): string | null {
   const fromQuery = useSyncExternalStore(subscribe, () => current, () => null)
   return IS_APP ? fromQuery : activeChatId(pathname)
 }
+
+// A conversation can be on screen before it has an id: the first question is
+// shown at once while the chat is still being saved. The conversation view
+// registers itself here so the shell can switch to its chat layout without
+// waiting for the saved route.
+let conversations = 0
+const conversationListeners = new Set<() => void>()
+
+function subscribeConversation(listener: () => void) {
+  conversationListeners.add(listener)
+  return () => { conversationListeners.delete(listener) }
+}
+
+/** Call from the conversation view: marks a conversation as on screen while mounted. */
+export function useRegisterConversation() {
+  useEffect(() => {
+    conversations += 1
+    conversationListeners.forEach((l) => l())
+    return () => {
+      conversations -= 1
+      conversationListeners.forEach((l) => l())
+    }
+  }, [])
+}
+
+/** True while a conversation (saved or not yet saved) is on screen. */
+export function useConversationShowing(): boolean {
+  return useSyncExternalStore(subscribeConversation, () => conversations > 0, () => false)
+}

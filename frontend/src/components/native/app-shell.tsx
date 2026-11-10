@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { App } from '@capacitor/app'
 import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core'
@@ -8,10 +8,13 @@ import { SplashScreen } from '@capacitor/splash-screen'
 import { useAuth } from '@/components/auth/auth-provider'
 import { createClient } from '@/lib/supabase'
 import { SITE_URL, WEB_ONLY_PATH, openInBrowser } from '@/lib/native'
+import { currentAiConsent } from '@/lib/ai-providers'
+import { AiServicesSheet } from './ai-consent'
 
 /**
  * Native behaviour for the iOS and Android apps. Mounted only in the app build
- * (see the root layout); renders nothing.
+ * (see the root layout). Renders nothing, except the one-time AI services
+ * consent for a signed-in account that hasn't agreed to the current list.
  */
 export function AppShell() {
   const { user, loading } = useAuth()
@@ -120,5 +123,26 @@ export function AppShell() {
     }
   }, [])
 
+  // The saved session carries the profile from its last refresh, so consent
+  // given on another phone may not be in it yet. Ask the server before asking
+  // the person; if they already agreed, refresh the session to pick it up.
+  const needsConsent = !loading && !!user && !pathname.startsWith('/auth') && !currentAiConsent(user.user_metadata)
+  const [consentCheckedFor, setConsentCheckedFor] = useState<string | null>(null)
+  const userId = user?.id ?? null
+  useEffect(() => {
+    if (!needsConsent || !userId || consentCheckedFor === userId) return
+    let cancelled = false
+    const auth = createClient().auth
+    const done = () => { if (!cancelled) setConsentCheckedFor(userId) }
+    auth.getUser()
+      .then(async ({ data }) => {
+        if (data.user && currentAiConsent(data.user.user_metadata)) await auth.refreshSession()
+      })
+      .catch(() => {})
+      .finally(done)
+    return () => { cancelled = true }
+  }, [needsConsent, userId, consentCheckedFor])
+
+  if (needsConsent) return <AiServicesSheet mode={consentCheckedFor === userId ? 'ask' : 'checking'} />
   return null
 }

@@ -25,7 +25,7 @@ export function HumanAnalytics() {
   const [touched, setTouched] = useState(false)
 
   useEffect(() => {
-    if (touched) return
+    if (touched || IS_APP) return
     const onInput = (event: Event) => {
       if (event.isTrusted) setTouched(true)   // a script's own dispatchEvent does not count
     }

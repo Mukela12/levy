@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { ACCOUNT_DELETED_KEY } from '@/components/account/delete-account'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Eye, EyeOff } from 'lucide-react'
@@ -47,6 +48,16 @@ export function CanopyAuthScreen({ mode }: { mode: 'login' | 'signup' | 'reset' 
   const [notice, setNotice] = useState('')
   const signup = mode === 'signup'
   const reset = mode === 'reset'
+
+  // After an account is deleted the app lands here; say it worked, once.
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem(ACCOUNT_DELETED_KEY)) {
+        sessionStorage.removeItem(ACCOUNT_DELETED_KEY)
+        setNotice('Your account and everything in it have been deleted.')
+      }
+    } catch { /* storage off: no notice */ }
+  }, [])
 
   async function submit(event: React.FormEvent) {
     event.preventDefault()
