@@ -18,6 +18,7 @@ import { usePdfViewer } from '@/components/chat/pdf-viewer-context'
 import { useReducedMotion } from 'framer-motion'
 import { CanopyComposer, type CanopyComposerProps } from './composer'
 import { useRegisterConversation } from '@/lib/active-chat'
+import { readingStart, readingStep } from '@/lib/reading-mode'
 
 export interface CanopyConversationProps {
   title: string
@@ -68,6 +69,22 @@ export function CanopyConversation({ title, messages, loading, onSend, composer,
     check()
     el.addEventListener('scroll', check, { passive: true })
     return () => el.removeEventListener('scroll', check)
+  }, [])
+  // Reading mode: scrolling down through the conversation hides the dock so the
+  // answer gets the room; scrolling up, or reaching the top, brings it back
+  // (lib/reading-mode.ts). The dock and the composer move in CSS.
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const root = document.documentElement
+    let state = readingStart(el.scrollTop)
+    const onScroll = () => {
+      const next = readingStep(state, el.scrollTop, el.scrollHeight - el.clientHeight)
+      if (next.reading !== state.reading) root.toggleAttribute('data-chat-reading', next.reading)
+      state = next
+    }
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => { el.removeEventListener('scroll', onScroll); root.removeAttribute('data-chat-reading') }
   }, [])
   useEffect(() => {
     // Stream updates follow immediately; repeated smooth scrolls fight the reader.

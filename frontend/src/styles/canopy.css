@@ -344,6 +344,12 @@
   .cp-dock-item:focus-visible, .cp-dock-more:focus-visible { outline: 2px solid var(--cp-control-focus); outline-offset: 2px; }
   .dark .cp-dock-surface, .dark .cp-dock-more { box-shadow: 0 4px 18px #0004, inset 0 1px #ecf6dc26; }
   [data-chat-keyboard="true"] .cp-dock { display: none; }
+  /* Reading: scrolling down through an answer slides the dock away and the
+     composer down into its place; scrolling up brings both back (conversation.tsx
+     sets data-chat-reading). On a phone the header, composer, dock and the
+     browser's own bar left about half the screen for the answer. */
+  .cp-dock { transition: transform 280ms cubic-bezier(0.32, 0.72, 0, 1), opacity 180ms ease-out, visibility 0s; }
+  [data-chat-reading] .cp-dock { transform: translate(-50%, calc(100% + 28px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))); opacity: 0; visibility: hidden; pointer-events: none; transition: transform 220ms ease-out, opacity 160ms ease-out, visibility 0s linear 220ms; }
 }
 @media (max-width: 370px) { .cp-dock { gap: 7px; } .cp-dock-surface { gap: 0; padding: 4px; } .cp-dock-more { width: 52px; } }
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) { .cp-dock-surface, .cp-dock-more, .cp-nav { background: var(--cp-surface); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; border-color: var(--cp-line); } .cp-dock-selection { border: 2px solid currentColor; } }
@@ -686,7 +692,16 @@
 /* Brief aside (desktop) */
 .cp-brief-aside { display: none; }
 @media (min-width: 1024px) { .cp-brief-aside { display: flex; flex-direction: column; width: 300px; flex-shrink: 0; border-left: 1px solid var(--cp-line); background: var(--cp-side); overflow: hidden; } }
-@media (max-width: 1100px) { .cp-harness-scroll { padding: 16px 20px 230px; } .cp-harness-composer { bottom: calc(var(--cp-dock-h) - 6px); } [data-chat-keyboard="true"] .cp-harness-composer { bottom: 0; } }
+@media (max-width: 1100px) {
+  .cp-harness-scroll { padding: 16px 20px 230px; }
+  .cp-harness-composer { bottom: calc(var(--cp-dock-h) - 6px); transition: transform 280ms cubic-bezier(0.32, 0.72, 0, 1); }
+  [data-chat-keyboard="true"] .cp-harness-composer { bottom: 0; }
+  /* The answer scrolls under the composer and must not come back into view
+     in the gap between the composer and the dock. */
+  .cp-harness-composer::before { content: ''; position: absolute; z-index: -1; left: 0; right: 0; top: 64px; bottom: calc(-1 * var(--cp-dock-h)); background: var(--cp-bg); }
+  [data-chat-reading] .cp-harness-composer { transform: translateY(calc(var(--cp-dock-h) - 6px)); transition: transform 220ms ease-out; }
+}
+@media (max-width: 1100px) and (prefers-reduced-motion: reduce) { .cp-dock, [data-chat-reading] .cp-dock, .cp-harness-composer, [data-chat-reading] .cp-harness-composer { transition: none; } }
 @media (max-width: 700px) { .cp-harness-heading { margin-bottom: 20px; } .cp-question { max-width: 93%; padding: 12px 15px; } .cp-question-group { padding-left: 20px; margin-bottom: 24px; } .cp-answer-surface { padding: 16px 16px 12px; } .cp-answer-body { font-size: 15px; } .cp-result-actions { gap: 12px; } .cp-harness-scroll { padding-inline: 12px; } .cp-harness-composer { padding-inline: 10px; } }
 @media (max-width: 370px) { .cp-harness-scroll { padding-inline: 8px; } }
 @media (prefers-reduced-motion: reduce) { .cp-cursor, .cp-working .cp-ping::before { animation: none; } }
