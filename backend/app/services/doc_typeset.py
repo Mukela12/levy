@@ -172,7 +172,13 @@ _COURT_LINE = re.compile(r"^(?:IN THE (?!MATTER\b).*|AT\b.*|.*\bHOLDEN AT\b.*|FO
 _COURT_NAME = re.compile(r"IN THE .*COURT|COURT OF APPEAL|TRIBUNAL", re.I)
 _CAUSE = re.compile(r"^(?P<label>(?:(?:CIVIL|CRIMINAL)\s+)?(?:CAUSE|COMP(?:LAINT)?|APPEAL|PETITION|CASE|SUIT|APP(?:LICATION)?)\.?\s*"
                     r"(?:NO|NUMBER)\b\.?\s*:?)\s*(?P<num>.*)$", re.I)
-_BARE_CAUSE = re.compile(r"^\[?\d{4}\]?\s*/\s*\[?[A-Za-z]{2,8}\]?\s*/.{1,40}$")
+# A cause number standing alone: "2026/HP/0123", "CAZ/08/35/2018", "[YEAR]/HP/[NUMBER]".
+_SEGMENT = r"(?:\[[^\[\]]{1,40}\]|[A-Za-z0-9.]{1,12})"
+_BARE_CAUSE = re.compile(rf"^{_SEGMENT}(?:\s*/\s*{_SEGMENT}){{1,4}}$")
+# Or not yet known and left as a blank on a line of its own: "[CAUSE NUMBER]".
+# The first statement of claim drafted on the new layouts in production wrote
+# exactly that, and its whole heading went unrecognised.
+_BLANK_ALONE = re.compile(r"^\[[^\[\]]{2,60}\]$")
 _BETWEEN = re.compile(r"^B\s?E\s?T\s?W\s?E\s?E\s?N\s?:?$", re.I)
 _MATTER = re.compile(r"^(?:AND\s+)?IN THE MATTER OF\b", re.I)
 _DESCRIPTION = re.compile(r"\s*\((?=[^)]*[a-z])")   # "(suing as administrator of ...)", not "(Z) LIMITED"
@@ -326,7 +332,7 @@ def _read_caption(root, title_hint: str = "") -> bool:
             elif _MATTER.match(ln):
                 state = "matter"
                 matters.append(ln)
-            elif _CAUSE.match(ln) or _BARE_CAUSE.match(ln):
+            elif _CAUSE.match(ln) or _BARE_CAUSE.match(ln) or (court and not cause and _BLANK_ALONE.match(ln)):
                 cause = _cause_text(ln)
             elif _COURT_LINE.match(ln):
                 court.append(ln if ln.startswith("(") else ln.upper())

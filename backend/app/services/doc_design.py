@@ -328,7 +328,10 @@ def formal_layout_of(body_md: str) -> str | None:
 # ("[DESCRIBE ROLE, e.g. student counselling]"). "[SI No. 49 of 2023, para 8]"
 # and "[APP No. 171 of 2019]" are citations: their capitals stop at a
 # lower-case word with no comma before it.
-BLANK = re.compile(r"\[[A-Z][A-Z0-9 '’/&.+%-]{1,90}(?:[,:(][^\]\n]{0,140})?\]")
+# A blank may open with an ordinal ("[1ST DEFENDANT ADDRESS]"): the first live
+# statement of claim on the new layouts had two such blanks that were neither
+# marked on the page nor listed for the user. "[2024] ZMCA 278" still is not one.
+BLANK = re.compile(r"\[(?:\d{1,2}(?:ST|ND|RD|TH) )?[A-Z][A-Z0-9 '’/&.+%-]{1,90}(?:[,:(][^\]\n]{0,140})?\]")
 # "[__]": a number or reference to write in, with no name to ask for.
 UNNAMED_BLANK = re.compile(r"\[_{1,12}\]")
 # Marks for a hand to complete on paper: not facts Levy can be given.

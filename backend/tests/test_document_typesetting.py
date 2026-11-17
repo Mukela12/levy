@@ -131,6 +131,19 @@ class Heading(unittest.TestCase):
         self.assertIn('<td class="role">2ND COMPLAINANT</td>', out)
         self.assertIn('<div class="doc-title">NOTICE OF COMPLAINT</div>', out)
 
+    def test_a_cause_number_not_yet_known_does_not_stop_the_heading_being_read(self):
+        # the heading exactly as the prompt asks for it, as the first live draft wrote it
+        for number in ("[CAUSE NUMBER]", "2026/HP/[NUMBER]", "[YEAR]/HPC/[NUMBER]", "CAZ/08/35/2018", "2026/HP/........"):
+            body = ("IN THE HIGH COURT FOR ZAMBIA\nAT THE PRINCIPAL REGISTRY\nHOLDEN AT LUSAKA\n(Civil Jurisdiction)\n\n"
+                    f"{number}\n\nBETWEEN:\n\nMWILA HARDWARE LIMITED ........ PLAINTIFF\n\nAND\n\n"
+                    "TEMBO CONSTRUCTION LIMITED ........ 1ST DEFENDANT\n\nPETER TEMBO ........ 2ND DEFENDANT\n\n"
+                    "## STATEMENT OF CLAIM\n\n**The parties**\n\n1. The Plaintiff is a company.\n")
+            out = set_(body, "court")
+            self.assertIn('<table class="caption">', out, number)
+            self.assertEqual(out.count('<td class="party">'), 3, number)
+            self.assertIn('<div class="doc-title">STATEMENT OF CLAIM</div>', out, number)
+        self.assertIn('<td class="cause">2026/HP/<span class="rule dots"', out)      # the last one: dots to write the number on
+
     def test_what_is_not_a_heading_is_left_alone(self):
         memo = "# Which court\n\nThe claim belongs IN THE HIGH COURT FOR ZAMBIA, not the Subordinate Court.\n\nBETWEEN the two, cost decides."
         self.assertNotIn("caption", set_(memo, "court"))
@@ -280,6 +293,14 @@ class Signing(unittest.TestCase):
 
     def test_what_a_hand_completes_is_not_asked_for(self):
         self.assertEqual(d.find_blanks("[COMMISSIONER FOR OATHS] [JUDGE] [FIRM NAME]"), ["[FIRM NAME]"])
+
+    def test_a_blank_named_for_the_first_or_second_defendant_is_a_blank(self):
+        body = "resides at [2ND DEFENDANT ADDRESS], office at [1ST DEFENDANT REGISTERED OFFICE]; see [2024] ZMCA 278 and [1975] AC 396."
+        self.assertEqual(d.find_blanks(body), ["[2ND DEFENDANT ADDRESS]", "[1ST DEFENDANT REGISTERED OFFICE]"])
+        out, filled, missed = d.fill_blanks(body, {"2nd defendant address": "12 Ibex Hill, Lusaka"})
+        self.assertIn("resides at 12 Ibex Hill, Lusaka,", out)
+        self.assertEqual((filled, missed), (["[2ND DEFENDANT ADDRESS]"], []))
+        self.assertEqual(d.mark_blanks("<p>" + body + "</p>").count('<span class="blank">'), 2)
 
 
 class CourtTools(unittest.IsolatedAsyncioTestCase):
