@@ -316,6 +316,18 @@ class LiveRunFixes(unittest.TestCase):
             self.assertIn('<ol start="5" style="counter-reset: list-item 4">', html)
         self.assertEqual(doc_design.number_lists("<ol><li>a</li></ol>"), "<ol><li>a</li></ol>")
 
+    def test_word_sets_a_numbered_paragraph_beside_its_number(self):
+        import io
+        import docx
+        from app.services import docx_tools
+        body = "Dear Sir,\n\n1. We act for the landlord.\n\n2. Rent is unpaid.\n\n   It has been for three months.\n\n- one\n- two\n"
+        doc = docx.Document(io.BytesIO(docx_tools.render_docx_bytes(title="Letter", body_md=body, legal=True, layout="letter")))
+        rows = [(p.style.name, p.text) for p in doc.paragraphs]
+        self.assertIn(("List Number", "We act for the landlord."), rows)
+        self.assertIn(("List Number", "Rent is unpaid."), rows)
+        self.assertIn(("List Bullet", "one"), rows)
+        self.assertNotIn("", [t for _, t in rows])            # no number left alone on a line
+
     def test_each_open_blank_comes_with_the_words_around_it(self):
         from app.services import doc_design
         body = ("Mary Banda\n[LANDLORD ADDRESS]\nLusaka\n\n[TENANT FULL NAME]\n[FLAT NUMBER], Kabulonga\n\n"

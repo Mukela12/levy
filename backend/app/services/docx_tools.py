@@ -74,6 +74,7 @@ class _HtmlToDocx(HTMLParser):
         self.cur_cell: list[str] | None = None
         self.cell_header = False
         self.after_break = False               # the last thing written was a line break
+        self.li_open = False                   # a list item has begun and holds no text yet
 
     # -- helpers --
     def _flush_para(self) -> None:
@@ -92,8 +93,8 @@ class _HtmlToDocx(HTMLParser):
         if self.in_table and self.cur_cell is not None:
             self.cur_cell.append(text)
             return
-        if not text.strip() and self.para is None:
-            return
+        if not text.strip() and (self.para is None or not self.para.runs):
+            return                               # white space between tags never opens a paragraph
         if "code" not in self.inline:
             # A line end inside a paragraph is a space in HTML. Written to Word
             # as it stands it becomes a second line break after every <br>, and
@@ -142,6 +143,10 @@ class _HtmlToDocx(HTMLParser):
             self.para = self.doc.add_heading("", level=level)
             if self.layout == "court" or (self.layout == "agreement" and level == 1):
                 self.para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        elif tag == "p" and self.li_open and self.para is not None and not self.para.runs:
+            # Numbered paragraphs set apart by blank lines arrive as <li><p>…</p></li>.
+            # The text belongs beside its number, not in a paragraph under it.
+            self.li_open = False
         elif tag == "p":
             self.para = self.doc.add_paragraph()
             if a.get("class") == "valediction":
@@ -172,6 +177,7 @@ class _HtmlToDocx(HTMLParser):
                 self.para = self.doc.add_paragraph(style=style)
             except KeyError:
                 self.para = self.doc.add_paragraph()
+            self.li_open = True
         elif tag == "blockquote":
             try:
                 self.para = self.doc.add_paragraph(style="Quote")
@@ -198,6 +204,8 @@ class _HtmlToDocx(HTMLParser):
     def handle_endtag(self, tag):
         if tag in self.BLOCK_HEADINGS:
             self.heading = 0
+        if tag == "li":
+            self.li_open = False
         if tag in self.BLOCK_HEADINGS or tag in ("p", "li", "blockquote", "div"):
             self._flush_para()
         elif tag in ("strong", "b") and "b" in self.inline:
