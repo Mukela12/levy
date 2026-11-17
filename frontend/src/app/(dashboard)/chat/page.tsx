@@ -109,6 +109,16 @@ const quickActions = [
 // Where a question waits while its asker signs in (see continueSignedIn).
 const PENDING_QUESTION_KEY = 'levy-pending-question'
 
+// The server's refusal when a guest's browser check produced nothing usable.
+const isVerifyFailure = (e: unknown) => e instanceof Error && /verify your browser/i.test(e.message)
+
+// What the check card says when the check failed, by the reason the widget gave.
+function checkFailureTitle(reason: string | null): string {
+  if (reason === 'script_error' || reason === 'timeout:script') return 'The security check could not load on this connection.'
+  if (reason === 'unsupported') return 'This browser cannot run the security check.'
+  return 'The security check did not finish.'
+}
+
 export default function NewChatPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
@@ -120,10 +130,9 @@ export default function NewChatPage() {
   // Memory only: a reload re-verifies once, which is the cost of not letting a
   // pass outlive the page it was earned on.
   const anonPassRef = useRef<string | null>(null)
-  // Failed browser checks this visit. After two (the first try and an
-  // automatic retry with the widget on screen), the visitor is offered
-  // sign-in, which skips the check, with their question kept.
-  const [verifyFailures, setVerifyFailures] = useState(0)
+  // A guest question that was not answered because the browser check failed.
+  // The check card's Try again sends it again; sign-in carries it over.
+  const [retryQuestion, setRetryQuestion] = useState('')
   const lastQuestionRef = useRef('')
   const [accentLineWidth, setAccentLineWidth] = useState(0)
   const [webSearch, setWebSearch] = useState(false)
@@ -609,15 +618,17 @@ export default function NewChatPage() {
       )
 
       lastQuestionRef.current = rawQuestion
-      const verifyFailed = (e: unknown) => e instanceof Error && /verify your browser/i.test(e.message)
-      // A failed check is retried once with a fresh widget drawn on screen,
-      // so a challenge that wanted a click is visible rather than hidden.
+      setRetryQuestion('')
+      // A token the server refused (spent or expired on the way) gets one
+      // fresh check, drawn on screen. No token at all is not retried behind
+      // the person's back: the check card already says why and offers Try
+      // again and sign-in, instead of another silent 30 seconds.
       const challenge = async () => {
+        const token = await turnstile.getToken()
         try {
-          await run(await turnstile.getToken(), null)
+          await run(token, null)
         } catch (e) {
-          if (!verifyFailed(e)) throw e
-          setVerifyFailures((n) => n + 1)
+          if (!isVerifyFailure(e) || !token) throw e
           turnstile.restart()
           await run(await turnstile.getToken(), null)
         }
@@ -630,16 +641,18 @@ export default function NewChatPage() {
             // The pass is bound to the IP it was issued to. If the visitor's
             // network changed (mobile data does this), the server refuses it
             // and nothing has streamed yet, so fall back to a fresh challenge.
-            if (!verifyFailed(e)) throw e
+            if (!isVerifyFailure(e)) throw e
             anonPassRef.current = null
             await challenge()
           }
         } else {
           await challenge()
         }
-        setVerifyFailures(0)
       } catch (e) {
-        if (verifyFailed(e)) setVerifyFailures((n) => n + 1)
+        if (isVerifyFailure(e)) {
+          setRetryQuestion(rawQuestion)
+          turnstile.fail()
+        }
         throw e
       }
     } catch (e) {
@@ -650,9 +663,11 @@ export default function NewChatPage() {
         error: true,
         content:
           offline ??
-          (e instanceof Error && !e.message.startsWith('API error') && !e.message.startsWith('No response')
-            ? e.message
-            : 'Sorry, I encountered an error processing your question. Please try again.'),
+          (isVerifyFailure(e)
+            ? 'Not answered yet: the browser check for free questions did not finish.'
+            : e instanceof Error && !e.message.startsWith('API error') && !e.message.startsWith('No response')
+              ? e.message
+              : 'Sorry, I encountered an error processing your question. Please try again.'),
       }
       setMessages((prev) => {
         const last = prev[prev.length - 1]
@@ -682,32 +697,95 @@ export default function NewChatPage() {
     router.push(path)
   }
 
-  const verifyHelp =
-    !user && verifyFailures >= 2 ? (
-      <div className="cp-verify-help" role="status">
-        <p>
-          This browser could not pass the security check for free questions. Signing in skips the check,
-          and your question will be waiting for you.
-        </p>
+  // The browser check card for guests. Fixed near the top of the screen, at
+  // full widget width, outside the welcome / conversation branches: the old
+  // holder sat at `left: 50%` near the bottom, which squeezed the 300 px
+  // widget to half a phone's width, put it behind the Android keyboard or the
+  // composer, and the sign-in offer lived in a footer phones hide. Mounted
+  // once here because those branches swap composers on the first send, and a
+  // widget whose host unmounts fails every later question (error 300010).
+  const checkCard = turnstile.card
+  const checkPanel = turnstile.enabled ? (
+    <section
+      className="cp-check"
+      data-card={checkCard}
+      hidden={!turnstile.showing}
+      aria-label={checkCard === 'hidden' ? undefined : 'Security check'}
+    >
+      {checkCard !== 'hidden' && (
+        <div className="cp-check-copy" role="status" aria-live="polite">
+          {checkCard === 'interactive' && (
+            <>
+              <strong>One quick check</strong>
+              <p>Tick the box so Levy knows you are a person. Signing in skips this check.</p>
+            </>
+          )}
+          {checkCard === 'checking' && (
+            <>
+              <strong>Checking your browser…</strong>
+              <p>Free questions need a quick security check. On mobile data it can take a moment.</p>
+            </>
+          )}
+          {checkCard === 'failed' && (
+            <>
+              <strong>{checkFailureTitle(turnstile.reason)}</strong>
+              <p>
+                {retryQuestion ? 'Levy has not answered yet. ' : ''}
+                Try again, or sign in: signing in skips the check
+                {retryQuestion ? ' and your question will be waiting for you' : ''}.
+              </p>
+            </>
+          )}
+        </div>
+      )}
+      <div ref={turnstile.holderRef} className="cp-turnstile" />
+      {checkCard !== 'hidden' && (
         <div className="cp-verify-actions">
-          <button type="button" className="cp-verify-primary" onClick={() => continueSignedIn('/auth/login')}>
-            Sign in instead
-          </button>
-          <button type="button" onClick={() => continueSignedIn('/auth/signup')}>
-            Create a free account
-          </button>
+          {checkCard === 'failed' && (
+            <button
+              type="button"
+              className="cp-verify-primary"
+              onClick={() => {
+                const q = retryQuestion
+                setRetryQuestion('')
+                turnstile.restart()
+                if (q) void handleSend(q)
+              }}
+            >
+              Try again
+            </button>
+          )}
           <button
             type="button"
-            onClick={() => {
-              turnstile.restart()
-              setInputSeed({ text: lastQuestionRef.current, nonce: Date.now() })
-            }}
+            className={checkCard === 'failed' ? undefined : 'cp-verify-primary'}
+            onClick={() => continueSignedIn('/auth/login')}
           >
-            Try again
+            Sign in instead
           </button>
+          {checkCard === 'failed' && (
+            <>
+              <button type="button" onClick={() => continueSignedIn('/auth/signup')}>
+                Create a free account
+              </button>
+              <button
+                type="button"
+                className="cp-check-close"
+                onClick={() => {
+                  // Put the card away and give the question back to the composer.
+                  const q = retryQuestion
+                  setRetryQuestion('')
+                  turnstile.dismiss()
+                  if (q) setRetrySeed({ text: q, nonce: Date.now() })
+                }}
+              >
+                Not now
+              </button>
+            </>
+          )}
         </div>
-      </div>
-    ) : null
+      )}
+    </section>
+  ) : null
 
   const trialNudge =
     turnstile.enabled && trialLeft !== null ? (
@@ -740,23 +818,14 @@ export default function NewChatPage() {
       </p>
     ) : null
 
-  const composerNote = verifyHelp || trialNudge ? <>{verifyHelp}{trialNudge}</> : null
+  const composerNote = trialNudge
 
   return (
     <div className="flex flex-1 overflow-hidden" style={{ overscrollBehavior: 'none' }}>
-      {/* Cloudflare Turnstile host. Mounted ONCE here, outside the welcome /
-          conversation branches, because those swap composers when the first
-          message sends. Previously this div lived inside the welcome screen,
-          so it unmounted on the first send and every later question failed
-          with "Cannot find Widget" / error 300010. Normally invisible:
-          appearance is interaction-only, so it only draws when Cloudflare
-          actually wants the user to interact. */}
-      {turnstile.enabled && (
-        <div
-          ref={turnstile.holderRef}
-          className={`cp-turnstile fixed bottom-3 left-1/2 -translate-x-1/2 z-50 ${turnstile.showing ? '' : 'hidden'}`}
-        />
-      )}
+      {/* Cloudflare Turnstile host and its card (see checkPanel). Normally
+          empty: appearance is interaction-only, so nothing draws unless
+          Cloudflare wants the person to tick a box or a check is slow. */}
+      {checkPanel}
       {/* Main chat area */}
       <div className="flex-1 flex flex-col min-w-0 relative">
         {!hasMessages && canopy ? (
