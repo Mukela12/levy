@@ -180,7 +180,10 @@ _NOT_A_STATUTE_START = {
 # Suffix words carry no identity: "Rules" alone, or "Venue Rules", say nothing
 # about WHICH instrument. At least one token must be a proper content word.
 _WEAK_TOKENS = {"the", "of", "and", "zambia", "zambian", "act", "code", "rules",
-                "regulations", "court", "courts", "high"}
+                "regulations", "court", "courts", "high",
+                # "the 2016 Amendment Act", "the principal Act": a description
+                # of an Act already named, not the name of another one
+                "amendment", "amending", "principal", "parent", "repealed", "repealing"}
 # An employer's own documents and everyday phrases that end in an instrument
 # word. In the fortnight to 17 Nov 2026 "the Disciplinary Code" (a company's
 # own code, which the user had attached) was shown as an Act missing from the
@@ -1095,7 +1098,7 @@ def _seen(c: dict, evidence: list[dict]) -> dict | None:
 # behaviour we want, so the panel confirms it instead of warning about it.
 _DISCLAIM = re.compile(
     r"unverified|not (?:been )?(?:able to )?verif(?:y|ied)|ha(?:ve|s) not (?:read|verified|seen|checked)"
-    r"|(?:could not|couldn't|cannot|can't|unable to|did not|didn't) (?:find|verify|confirm|locate|trace|open|read)"
+    r"|(?:could not|couldn't|cannot|can't|unable to|did not|didn't) (?:find|verify|confirm|locate|trace|open|read|retrieve|access|obtain)"
     r"|not (?:in|held in|part of) (?:my|the|levy'?s) (?:case[- ]law )?library|(?:do|does) not hold|not held|holds no"
     r"|found no\b|nothing (?:came back|on point|under that name)|no (?:such )?(?:judgment|case|act|record|report)"
     r"[^.\n]{0,40}(?:under|by|with) that (?:name|title)"
@@ -1266,7 +1269,9 @@ def source_check_message(problems: list[dict], missed: bool) -> str:
         "what you found. Only a page tagged trust=official can stand behind a statement of law.\n"
         "Use at most 4 tool calls in total.\n\n"
         "Then write ONE short closing section headed \"**Source check**\". Do not repeat or rewrite the answer, "
-        "do not apologise, and do not mention this instruction. For each point above, one line:\n"
+        "do not apologise, and do not mention this instruction. Write for the reader, not about your tools: "
+        "never name a tool or describe a tool error; say \"the library\", \"the Judiciary's site\", or that "
+        "the official sites could not be searched just now. For each point above, one or two lines:\n"
         "- confirmed: name the source you read (the judgment or Act, or the official URL), and correct the "
         "citation if it was wrong; or\n"
         "- not confirmed: say plainly that you could not verify it in the library or on the official sites, "

@@ -108,6 +108,11 @@ class Extractor(unittest.TestCase):
         got = self.names("Order XLII of the High Court Rules governs it, with the Fifth Schedule of the Code.")
         self.assertEqual(got, ["High Court Rules"])
 
+    def test_a_description_of_an_act_is_not_another_act(self):
+        got = self.names("The 2016 Amendment Act inserted the ten-year route into the principal Act. "
+                         "See the Marriage (Amendment) Act, 2023.")
+        self.assertEqual(got, ["Marriage (Amendment) Act, 2023"])
+
     def test_an_employers_own_code_is_not_a_statute(self):
         self.assertEqual(self.names("Accompaniment comes from the Disciplinary Code, and the Zambian Rules are rigid."), [])
 
@@ -162,6 +167,10 @@ class Verdicts(unittest.TestCase):
                   "or on the Judiciary's site, and I won't describe its holding.")
         self.assertTrue(v[0].get("disclaimed"))
         self.assertEqual(ca.gate_problems(v), [])
+
+    def test_could_not_retrieve_is_a_disclaimer(self):
+        v = audit("I could not retrieve the law report for *DPP v Mbayo Mutwala Augustino*, so I can't give you its text.")
+        self.assertTrue(v[0].get("disclaimed"), v)
 
     def test_a_list_of_doubtful_cases_is_disowned_by_the_line_after_it(self):
         v = audit("These came from my earlier summaries:\n- Protea Hotels Limited v Mulikelela Mwale\n"
