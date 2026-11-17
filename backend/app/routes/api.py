@@ -2114,7 +2114,7 @@ async def upload_template(
     if not file_type:
         raise HTTPException(
             status_code=400,
-            detail="Unsupported file type. Use .docx, .pdf, .txt, or .md.",
+            detail="Unsupported file type. Use .docx, .pdf, .txt or .md, or a .png or .jpg logo.",
         )
 
     content = await file.read()
@@ -2179,6 +2179,9 @@ def update_template(template_id: str, req: UpdateTemplateRequest, uid: str = Dep
 
     db = get_db()
     db.table("templates").update(patch).eq("id", template_id).execute()
+    # The description of a logo is its letterhead text: print the new one at once.
+    from ..services.templates import forget_letterhead
+    forget_letterhead(uid, template_id)
     return {"status": "ok"}
 
 

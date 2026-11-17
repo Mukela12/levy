@@ -122,6 +122,7 @@ class Loop(unittest.IsolatedAsyncioTestCase):
                 patch.object(s, "source_check_enabled", False), patch.object(s, "hard_task_enabled", enabled), \
                 patch.object(s, "laws_africa_api_key", ""), \
                 patch.object(routing, "budget_ok", lambda owner_id: budget), \
+                patch("app.services.templates.list_templates_for_owner", lambda owner_id, folder_id=None: []), \
                 patch("app.services.citation_audit.audit_answer", lambda text, evidence=None: []):
             return [ev async for ev in agent.run_agent(user_query=query, owner_id=owner, model=model)]
 

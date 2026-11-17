@@ -1295,9 +1295,38 @@ def build_tool_registry(
 
     async def _generate(title, content_markdown, subtitle=None):
         return await pdf_tools.pdf_generate(
-            title, content_markdown, subtitle,
+            title, content_markdown, None,
             owner_id=owner_id, session_id=session_id,
         )
+
+    async def _fill_document(artifact_id: str, values: dict):
+        return await pdf_tools.fill_document(artifact_id, values, owner_id=owner_id, session_id=session_id)
+
+    async def _save_letterhead(document_id: str, organisation: str, details: list[str] | None = None):
+        """Keep a logo the user attached as their letterhead for every later document."""
+        if not owner_id:
+            return {"result": {"error": "Sign in to save a letterhead."}}
+        if await asyncio.to_thread(pdf_tools._someone_elses_upload, document_id, owner_id):
+            return {"result": {"error": "that attachment belongs to another account"}}
+        try:
+            pdf_bytes = await asyncio.to_thread(pdf_tools._download_corpus_pdf, document_id)
+            import pymupdf
+            doc = pymupdf.open(stream=pdf_bytes, filetype="pdf")
+            images = doc[0].get_images(full=True) if doc.page_count else []
+            if not images:
+                return {"result": {"error": "that attachment has no image in it; attach the logo as a PNG or JPEG"}}
+            logo = doc.extract_image(images[0][0])["image"]
+            lines = [str(organisation or "").strip()] + [str(d).strip() for d in (details or []) if str(d).strip()]
+            row = await asyncio.to_thread(templates_service.save_logo_template, owner_id,
+                                          f"Letterhead: {organisation}".strip(), logo, lines)
+        except ValueError as e:
+            return {"result": {"error": str(e)}}
+        except Exception:  # noqa: BLE001
+            return {"result": {"error": "the logo could not be saved; ask the user to add it under Templates"}}
+        return {"result": {"template_id": row["id"], "name": row["name"], "saved": True,
+                           "note": "Saved as a letterhead. Pass this template_id to the drafting tools; it also "
+                                   "appears under Templates for every later document."},
+                "db_sources": [], "web_sources": []}
 
     # ── Matter workspace: record durable case facts so Levy remembers them ──
     async def _create_matter(title, matter_type=None, court=None, cause_number=None,
@@ -2421,6 +2450,7 @@ def build_tool_registry(
         title: str,
         body_markdown: str,
         template_id: str | None = None,
+        layout: str | None = None,
     ):
         """Render any non-litigation Zambian legal instrument (contract,
         deed, lease, power of attorney, will, statutory declaration, board
@@ -2448,6 +2478,7 @@ def build_tool_registry(
             meta_tool="draft_legal_document",
             owner_id=owner_id,
             session_id=session_id,
+            layout=layout if layout in ("agreement", "letter") else None,
         )
 
     async def _recommend_application(
@@ -2698,11 +2729,14 @@ def build_tool_registry(
         "pdf_generate": ToolDefinition(
             name="pdf_generate",
             description=(
-                "Render a polished PDF from Markdown. Use for legal memos, "
+                "Render a formal PDF from Markdown. Use for legal memos, "
                 "IRAC briefs, summaries, or any content the user wants to "
-                "save / share. The output uses serif typography, A4 size, "
-                "automatic page numbers. Inline citations like '[Companies "
-                "Act, S.13] (p. 370)' render fine."
+                "save / share. The title is printed once, over a rule; the "
+                "body follows in a book serif on A4 with page numbers. Do "
+                "not repeat the title in the body, and do not open with a "
+                "subtitle, a tagline or a note on how to use the document. "
+                "Inline citations like '[Companies Act, S.13] (p. 370)' "
+                "render fine."
             ),
             input_schema={
                 "type": "object",
@@ -2711,10 +2745,6 @@ def build_tool_registry(
                     "content_markdown": {
                         "type": "string",
                         "description": "Body content as Markdown (headings, lists, tables, blockquotes all supported).",
-                    },
-                    "subtitle": {
-                        "type": "string",
-                        "description": "Optional grey subtitle line under the heading (e.g. matter name, date).",
                     },
                 },
                 "required": ["title", "content_markdown"],
@@ -3325,6 +3355,54 @@ def build_tool_registry(
             },
             handler=_calculate_payroll,
         ),
+        "fill_document": ToolDefinition(
+            name="fill_document",
+            description=(
+                "Complete a document Levy drafted by putting the user's details into its "
+                "blanks, and render the finished PDF. Use it whenever the user gives details "
+                "for a draft that has [BLANKS]: names, dates, addresses, amounts, numbers. It "
+                "replaces each blank everywhere it appears, exactly as given, without rewriting "
+                "the document, so it is faster and safer than drafting again. Pass every value "
+                "the user has given, in one call. The result lists what was filled and any "
+                "blanks still open. Draft again only when the user wants the wording changed."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "artifact_id": {"type": "string", "description": "The draft's artifact_id."},
+                    "values": {
+                        "type": "object",
+                        "description": "Each blank mapped to the text that fills it, keyed by the blank's own words as listed in the draft's `blanks`, e.g. {\"[EMPLOYEE FULL NAME]\": \"Mary Banda\", \"[DATE OF LETTER]\": \"18 November 2026\"}.",
+                        "additionalProperties": {"type": "string"},
+                    },
+                },
+                "required": ["artifact_id", "values"],
+            },
+            handler=_fill_document,
+        ),
+        "save_letterhead": ToolDefinition(
+            name="save_letterhead",
+            description=(
+                "Save a logo the user attached in this chat as their letterhead, so this and "
+                "every later letter or document carries it. Call it when the user attaches "
+                "their logo or asks for their letterhead on a document. `document_id` is the "
+                "attached image; `organisation` and `details` are printed beside the logo "
+                "(name, then address, phone, email, registration number). Returns a "
+                "template_id to pass to the drafting tools. A Word template with the "
+                "letterhead in its header is added under Templates instead."
+            ),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "document_id": {"type": "string", "description": "The attached logo image's document_id."},
+                    "organisation": {"type": "string", "description": "The organisation's name as it should print."},
+                    "details": {"type": "array", "items": {"type": "string"},
+                                "description": "Lines under the name: address, phone, email, registration number."},
+                },
+                "required": ["document_id", "organisation"],
+            },
+            handler=_save_letterhead,
+        ),
         "draft_legal_document": ToolDefinition(
             name="draft_legal_document",
             description=(
@@ -3364,11 +3442,16 @@ def build_tool_registry(
                     },
                     "body_markdown": {
                         "type": "string",
-                        "description": "The COMPLETE instrument as Markdown: heading, parties, recitals, numbered clauses, and the correct execution/attestation block. Headings (##), numbered lists, and bold render in the legal layout.",
+                        "description": "The COMPLETE instrument as Markdown: heading, parties, recitals, numbered clauses, and the correct execution/attestation block. Headings (##), numbered lists, and bold render in the legal layout. Put each line of an address or of a Date / Ref / To block on its own line. Only the document itself: no drafting notes, checklists or instructions to the user (those go in your reply).",
+                    },
+                    "layout": {
+                        "type": "string",
+                        "enum": ["agreement", "letter"],
+                        "description": "How to set it: 'agreement' for a contract, deed, will, resolution or other instrument (centred title, clause headings); 'letter' for a letter or notice (block format, bold RE: line). Left out, it is read off the body.",
                     },
                     "template_id": {
                         "type": "string",
-                        "description": "Optional ID of one of the user's saved templates (from suggest_templates); prepends the firm letterhead.",
+                        "description": "ID of the user's letterhead or template (listed under LETTERHEADS AND TEMPLATES ON FILE, or from suggest_templates). Prints their logo and details at the top; do not also write a letterhead line in the body.",
                     },
                 },
                 "required": ["title", "body_markdown"],

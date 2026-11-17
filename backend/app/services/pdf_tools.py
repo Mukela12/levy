@@ -31,6 +31,7 @@ from pypdf import PdfReader, PdfWriter
 from weasyprint import HTML, CSS
 
 from ..config import get_settings
+from . import doc_design
 from ..db.supabase import get_db
 
 
@@ -540,133 +541,87 @@ async def pdf_extract_pages(
 # Simple, modern stylesheet for generated legal documents. Keeps inline images
 # out (we don't fetch external resources) and uses safe system fonts so the
 # Docker image's bundled DejaVu/Liberation set always works.
-_DOCUMENT_CSS = """
-@page {
-  size: A4;
-  margin: 22mm 18mm 22mm 18mm;
-  @bottom-center {
-    content: counter(page) " / " counter(pages);
-    font-family: "Liberation Sans", "DejaVu Sans", sans-serif;
-    font-size: 9pt;
-    color: #777;
-  }
-}
-html { font-family: "Liberation Serif", "DejaVu Serif", "Times New Roman", serif; font-size: 11pt; line-height: 1.5; color: #1a1a1a; }
-h1 { font-size: 22pt; font-weight: 700; margin: 0 0 6pt 0; color: #0f3a2a; }
-h2 { font-size: 15pt; font-weight: 600; margin: 16pt 0 4pt 0; border-bottom: 1px solid #d6d6d6; padding-bottom: 4pt; }
-h3 { font-size: 12pt; font-weight: 600; margin: 10pt 0 3pt 0; color: #333; }
-p { margin: 0 0 8pt 0; text-align: justify; }
-ul, ol { margin: 0 0 8pt 18pt; padding: 0; }
-li { margin-bottom: 3pt; }
-hr { border: none; border-top: 1px solid #d6d6d6; margin: 14pt 0; }
-blockquote { border-left: 3px solid #16a34a; padding: 2pt 12pt; margin: 8pt 0; color: #444; font-style: italic; }
-code { font-family: "DejaVu Sans Mono", monospace; background: #f4f4f4; padding: 1pt 3pt; border-radius: 2pt; font-size: 10pt; }
-table { border-collapse: collapse; margin: 8pt 0; width: 100%; font-size: 10pt; }
-th, td { border: 1px solid #cfcfcf; padding: 4pt 6pt; text-align: left; }
-th { background: #f0f0f0; }
-.meta { color: #666; font-size: 9pt; margin-bottom: 14pt; }
-.cite { color: #0f3a2a; font-weight: 500; }
-"""
-
-
 def _render_markdown_pdf(title: str, body_md: str, subtitle: str | None = None) -> bytes:
+    """A memo, brief or summary: a plain title over a rule, then the body.
+
+    `subtitle` is accepted and ignored. It printed a grey line under the title
+    that restated the title or described the file ("Slide-by-slide outline,
+    revised edition"), on 35 of 170 real documents; anything a reader needs
+    belongs in the body.
+    """
     body_html = md_lib.markdown(
         body_md,
         extensions=["extra", "tables", "sane_lists", "toc"],
-    )
-    subtitle_html = (
-        f'<div class="meta">{subtitle}</div>' if subtitle else ""
     )
     full_html = f"""<!doctype html>
 <html><head><meta charset="utf-8"><title>{_html_escape(title)}</title></head>
 <body>
   <h1>{_html_escape(title)}</h1>
-  {subtitle_html}
-  {body_html}
+  {doc_design.mark_blanks(body_html)}
 </body></html>"""
 
-    pdf_bytes = HTML(string=full_html).write_pdf(stylesheets=[CSS(string=_DOCUMENT_CSS)])
+    pdf_bytes = HTML(string=full_html).write_pdf(stylesheets=[CSS(string=doc_design.MEMO_CSS)])
     return pdf_bytes or b""
 
 
-# Court-document stylesheet. Lawyers expect plain black serif text, centered
-# captions for the court header, all-caps document titles, justified prose,
-# and the cause number aligned right of the heading block.
-_LEGAL_CSS = """
-@page {
-  size: A4;
-  margin: 25mm 22mm 25mm 25mm;
-  @bottom-center {
-    content: counter(page) " of " counter(pages);
-    font-family: "Liberation Serif", "Times New Roman", serif;
-    font-size: 9pt;
-    color: #555;
-  }
-}
-html { font-family: "Liberation Serif", "Times New Roman", serif; font-size: 12pt; line-height: 1.55; color: #000; }
-p { margin: 0 0 8pt 0; text-align: justify; }
-h1, h2, h3 { font-weight: 700; text-align: center; margin: 14pt 0 8pt 0; }
-h1 { font-size: 13.5pt; letter-spacing: 0.5pt; }
-h2 { font-size: 12.5pt; letter-spacing: 0.3pt; }
-h3 { font-size: 12pt; }
-ol, ul { margin: 0 0 8pt 22pt; padding: 0; }
-li { margin-bottom: 4pt; text-align: justify; }
-hr { border: none; border-top: 1px solid #000; margin: 10pt 0; }
-table { border-collapse: collapse; margin: 0; width: 100%; }
-table.heading td { border: none; padding: 0; vertical-align: top; }
-table.parties td { border: none; padding: 2pt 0; vertical-align: top; }
-table.parties td.right { text-align: right; font-weight: 700; }
-.court-caption { text-align: center; font-weight: 700; line-height: 1.45; }
-.court-caption .line { text-transform: uppercase; letter-spacing: 0.4pt; }
-.court-caption .jurisdiction { font-weight: 400; font-style: italic; text-transform: none; }
-.cause-number { text-align: right; font-weight: 700; margin-top: 4pt; }
-.between { font-weight: 700; margin: 10pt 0 6pt 0; }
-.doc-title { text-align: center; text-transform: uppercase; font-weight: 700; font-size: 13pt; letter-spacing: 1pt; margin: 18pt 0 10pt 0; text-decoration: underline; }
-.recital { margin: 12pt 0 12pt 0; }
-.dated { margin-top: 28pt; }
-.sig-line { border-bottom: 1px solid #000; width: 60%; margin-top: 30pt; }
-.served { margin-top: 18pt; }
-.served strong { display: block; margin-bottom: 4pt; }
-"""
+def resolve_letterhead(body_md: str, owner_id: str | None) -> tuple[str, dict | None]:
+    """Swap a body's letterhead marker for the letterhead itself.
 
-
-# "Keep it brief, it should fit on one page" (8 Oct 2026): the court caption
-# and signature block alone filled a page at the standard spacing, so a short
-# skeleton ran to two. Same court format, tighter page.
-_LEGAL_COMPACT_CSS = """
-@page { margin: 14mm 16mm 14mm 18mm; }
-html { font-size: 11pt; line-height: 1.3; }
-p, li { margin-bottom: 4pt; }
-h1, h2, h3 { margin: 8pt 0 4pt 0; }
-.court-caption { line-height: 1.25; }
-.between { margin: 5pt 0 3pt 0; }
-.doc-title { margin: 8pt 0 6pt 0; font-size: 12pt; }
-.recital { margin: 6pt 0; }
-.dated { margin-top: 12pt; }
-"""
-
-
-def _render_legal_pdf(body_md: str, compact: bool = False) -> bytes:
-    """Render a court-document Markdown body into a PDF, no auto h1.
-
-    Differs from `_render_markdown_pdf` in two ways: (1) it does NOT prepend
-    an `<h1>title</h1>` — the caller controls every byte of the heading via
-    Markdown / raw HTML; (2) it ships the legal-doc CSS instead of the memo
-    stylesheet (serif throughout, centered captions, all-black text).
+    Returns the body without the marker and the letterhead (or None). When a
+    letterhead is printed, a "[COMPANY LETTERHEAD]" line the draft carried is
+    dropped: it was a stand-in for exactly this.
     """
-    body_html = md_lib.markdown(
-        body_md,
-        extensions=["extra", "tables", "sane_lists"],
-    )
+    m = doc_design.LETTERHEAD_MARK.search(body_md or "")
+    if not m:
+        return body_md, None
+    from . import templates as templates_service
+    lh = templates_service.letterhead_of(owner_id, m.group(1))
+    body = doc_design.LETTERHEAD_MARK.sub("", body_md).lstrip()
+    return (doc_design.drop_letterhead_blank(body) if lh else body), lh
+
+
+def _render_legal_pdf(body_md: str, compact: bool = False, layout: str | None = None,
+                      owner_id: str | None = None) -> bytes:
+    """Render a formal document body (court paper, agreement or letter) to PDF.
+
+    Differs from `_render_markdown_pdf` in that it does NOT prepend a title:
+    the caller controls every byte of the heading via Markdown / raw HTML.
+    `layout` picks the stylesheet (see doc_design); left out, it is read off
+    the body.
+    """
+    body_md, letterhead = resolve_letterhead(body_md, owner_id)
+    layout = layout if layout in doc_design.LAYOUTS else doc_design.infer_layout(body_md)
+    body_html = md_lib.markdown(body_md, extensions=doc_design.markdown_extensions(layout))
+    body_html = doc_design.mark_blanks(doc_design.normalise(body_html, layout))
     full_html = f"""<!doctype html>
 <html><head><meta charset="utf-8"></head>
 <body>
+  {doc_design.letterhead_html(letterhead)}
   {body_html}
 </body></html>"""
 
-    sheets = [CSS(string=_LEGAL_CSS)] + ([CSS(string=_LEGAL_COMPACT_CSS)] if compact else [])
-    pdf_bytes = HTML(string=full_html).write_pdf(stylesheets=sheets)
+    sheets = [CSS(string=c) for c in doc_design.css_for(layout, compact)]
+    document = HTML(string=full_html).render(stylesheets=sheets)
+    if layout == "letter" and len(document.pages) == 1:
+        document = HTML(string=full_html).render(stylesheets=sheets + [CSS(string=doc_design.NO_FOOTER_CSS)])
+    pdf_bytes = document.write_pdf()
     return pdf_bytes or b""
+
+
+def blanks_note(body_md: str) -> dict:
+    """What a draft tool tells the model about the blanks it left."""
+    blanks = doc_design.find_blanks(body_md)
+    if not blanks:
+        return {"blanks": [], "complete": True}
+    return {
+        "blanks": blanks[:60], "blank_count": len(blanks), "complete": False,
+        "next_step": (
+            "This document still has the blanks listed in `blanks`. In your reply, under the document, tell "
+            "the user in plain words what you need to finish it, grouped sensibly (the parties, the dates, the "
+            "money), and say that when they send those details you will fill them in and hand back the "
+            "finished document. Do not paste the bracket codes. When they send details, call fill_document "
+            "with this artifact_id and every value they gave; do not draft the document again."),
+    }
 
 
 def _html_escape(s: str) -> str:
@@ -708,8 +663,7 @@ async def pdf_generate(
     if not pdf_bytes:
         return _text_only_artifact(
             title=title, source_markdown=content_markdown,
-            meta={"tool": "pdf_generate", "subtitle": subtitle,
-                  "slug": _slug(title), "layout": "memo"},
+            meta={"tool": "pdf_generate", "slug": _slug(title), "layout": "memo"},
             owner_id=owner_id, session_id=session_id,
         )
 
@@ -728,10 +682,10 @@ async def pdf_generate(
         page_count=page_count,
         meta={
             "tool": "pdf_generate",
-            "subtitle": subtitle,
             "slug": _slug(title),
             "source_markdown": content_markdown,  # enables lazy Word (.docx) export
             "layout": "memo",
+            "blanks": doc_design.find_blanks(content_markdown),
         },
         owner_id=owner_id,
         session_id=session_id,
@@ -747,6 +701,7 @@ async def pdf_generate(
             "kind": "pdf",
             "page_count": page_count,
             "size_bytes": len(pdf_bytes),
+            **blanks_note(content_markdown),
         },
         "artifact": row,
         "db_sources": [],
@@ -775,52 +730,17 @@ _REGISTRY_INFO: dict[str, tuple[str, str, str, str]] = {
 }
 
 
-# Where a template's letterhead stops and its letter skeleton begins: a
-# placeholder, a salutation, a reference or date line, or a sign-off.
-_LETTERHEAD_END = re.compile(
-    r"\[[^\]]*\]|\{\{|<<|_{4,}"
-    r"|^(dear|to|re|ref|our ref|your ref|date|attention|attn|subject|yours|sincerely|regards)\b",
-    re.I,
-)
-
-
 def render_template_letterhead(template: dict | None) -> str:
-    """Render a chambers letterhead block from a user's template, if any.
+    """Where a user's letterhead goes in a draft, as a marker in the body.
 
-    The user uploads a Word/PDF/TXT template (their firm's letterhead, with
-    address + contact info + boilerplate). At upload time we extract a
-    preview_text (~2000 chars). Only the header lines are rendered, as a
-    centred block above the court caption: most templates are whole letter
-    skeletons, and copying their "[DATE] / Dear Sir / [BODY]" lines put an
-    empty letter on top of every draft. Line breaks are preserved so
-    addresses and contact details still read correctly.
-
-    Returns the empty string when no template is supplied or it has no
-    usable header lines.
+    The letterhead itself (a logo, the organisation's name and address, or the
+    opening lines of a text template) is read from the template when the
+    document is rendered: see templates.letterhead_of and resolve_letterhead.
+    Returns the empty string when no template is supplied.
     """
-    if not template:
+    if not template or not template.get("id"):
         return ""
-    preview = (template.get("preview_text") or "").strip()
-    if not preview:
-        return ""
-
-    head_lines: list[str] = []
-    for ln in (ln.strip() for ln in preview.splitlines()):
-        if not ln:
-            continue
-        if _LETTERHEAD_END.search(ln) or len(ln) > 90 or len(head_lines) == 8:
-            break
-        head_lines.append(ln)
-    if not head_lines:
-        return ""
-
-    inner = "<br/>".join(_html_escape(ln) for ln in head_lines)
-    return (
-        '<div style="text-align:center;font-size:10.5pt;line-height:1.4;'
-        'margin-bottom:14pt;padding-bottom:10pt;border-bottom:1px solid #000;">'
-        f'{inner}'
-        '</div>'
-    )
+    return doc_design.letterhead_marker(str(template["id"]))
 
 
 def render_court_heading(
@@ -881,6 +801,8 @@ async def pdf_generate_legal(
     owner_id: str | None = None,
     session_id: str | None = None,
     compact: bool = False,
+    layout: str | None = None,
+    extra_meta: dict | None = None,
 ) -> dict:
     """Render a Zambian court document body (caption + parties + prose) as PDF.
 
@@ -894,16 +816,19 @@ async def pdf_generate_legal(
     if not body_markdown.strip():
         return {"result": {"error": "body_markdown required"}}
 
+    plain_body = doc_design.LETTERHEAD_MARK.sub("", body_markdown)
+    fmt = layout if layout in doc_design.LAYOUTS else doc_design.infer_layout(plain_body)
+    meta = {"tool": meta_tool, "slug": _slug(title), "layout": "legal", "format": fmt,
+            "compact": bool(compact), "blanks": doc_design.find_blanks(plain_body), **(extra_meta or {})}
     # Off-load the CPU-bound render so a long court document doesn't block the
     # event loop (and everyone else's streaming) while it rasterises.
     try:
-        pdf_bytes = await asyncio.to_thread(_render_legal_pdf, body_markdown, compact)
+        pdf_bytes = await asyncio.to_thread(_render_legal_pdf, body_markdown, compact, fmt, owner_id)
     except Exception:  # noqa: BLE001 — never lose the draft to a render error
         pdf_bytes = None
     if not pdf_bytes:
         return _text_only_artifact(
-            title=title, source_markdown=body_markdown,
-            meta={"tool": meta_tool, "slug": _slug(title), "layout": "legal"},
+            title=title, source_markdown=body_markdown, meta=meta,
             owner_id=owner_id, session_id=session_id,
         )
 
@@ -919,12 +844,7 @@ async def pdf_generate_legal(
         source="generated",
         size_bytes=len(pdf_bytes),
         page_count=page_count,
-        meta={
-            "tool": meta_tool,
-            "slug": _slug(title),
-            "source_markdown": body_markdown,  # enables lazy Word (.docx) export
-            "layout": "legal",
-        },
+        meta={**meta, "source_markdown": body_markdown},   # the source enables Word export and fill_document
         owner_id=owner_id,
         session_id=session_id,
     )
@@ -939,11 +859,80 @@ async def pdf_generate_legal(
             "kind": "pdf",
             "page_count": page_count,
             "size_bytes": len(pdf_bytes),
+            **blanks_note(plain_body),
         },
         "artifact": row,
         "db_sources": [],
         "web_sources": [],
     }
+
+
+# ─── Tool: fill_document ─────────────────────────────────────────────────────
+
+
+async def fill_document(
+    artifact_id: str,
+    values: dict,
+    *,
+    owner_id: str | None = None,
+    session_id: str | None = None,
+) -> dict:
+    """Put the user's details into a draft's blanks and render it again.
+
+    145 of 170 real documents went out with blanks (17 Nov 2026 review), and
+    when the user came back with the details the next version often still had
+    as many: the model re-drafted the whole document and missed some. This
+    replaces each named blank everywhere it appears, exactly, without the
+    model rewriting a word, and says what is still blank.
+    """
+    bad = _id_error("artifact_id", artifact_id)
+    if bad:
+        return bad
+    if not isinstance(values, dict) or not values:
+        return {"result": {"error": "values required: a map of each blank to the text that fills it"}}
+    try:
+        rows = (get_db().table("artifacts").select("id,title,meta,owner_id,session_id")
+                .eq("id", artifact_id).limit(1).execute().data or [])
+    except Exception:  # noqa: BLE001
+        rows = []
+    if not rows:
+        return {"result": {"error": "no document with that artifact_id"}}
+    row = rows[0]
+    if row.get("owner_id") and row["owner_id"] != owner_id:
+        return {"result": {"error": "that document belongs to another account"}}
+    meta = row.get("meta") or {}
+    source = meta.get("source_markdown")
+    if not source:
+        return {"result": {"error": "that document has no editable text; draft it again with the details"}}
+
+    body, filled, unmatched = doc_design.fill_blanks(source, values)
+    if not filled:
+        return {"result": {
+            "error": "none of those names matched a blank in the document",
+            "blanks": doc_design.find_blanks(doc_design.LETTERHEAD_MARK.sub("", source))[:60],
+            "hint": "Use the blank's own words, for example {\"[EMPLOYEE FULL NAME]\": \"Mary Banda\"}.",
+        }}
+    title = row.get("title") or "Document"
+    if meta.get("layout") == "memo":
+        out = await pdf_generate(title, body, owner_id=owner_id, session_id=session_id or row.get("session_id"))
+    else:
+        out = await pdf_generate_legal(
+            title=title, body_markdown=body, meta_tool=meta.get("tool") or "draft_legal_document",
+            owner_id=owner_id, session_id=session_id or row.get("session_id"),
+            compact=bool(meta.get("compact")), layout=meta.get("format"),
+            extra_meta={"filled_from": artifact_id},
+        )
+    result = out.get("result") or {}
+    if "error" in result:
+        return out
+    result["filled"] = filled
+    if unmatched:
+        result["not_found"] = [f"[{k}]" for k in unmatched]
+        result["not_found_note"] = "These names matched no blank; the details were not used. Check them against `blanks`."
+    if result.get("complete"):
+        result["next_step"] = ("Every blank is filled. Say the document is complete, and name anything left to "
+                               "do by hand: signing, witnessing, dating, stamping.")
+    return out
 
 
 # ─── Tool: fill_form ─────────────────────────────────────────────────────────

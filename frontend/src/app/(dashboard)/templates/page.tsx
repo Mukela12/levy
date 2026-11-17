@@ -38,7 +38,8 @@ import {
 import { CanopyLoader } from '@/components/canopy/loader'
 import { CTA } from '@/components/ui/cta'
 
-const ACCEPT = '.docx,.pdf,.txt,.md'
+const ACCEPT = '.docx,.pdf,.txt,.md,.png,.jpg,.jpeg,.webp'
+const LOGO_TYPES = new Set(['png', 'jpg', 'webp'])
 const FOLDER_UNFILED = '__unfiled__'
 type FolderId = string
 
@@ -114,7 +115,7 @@ export default function TemplatesPage() {
       await reload()
     } catch (err) {
       console.error(err)
-      setError('Upload failed. Templates must be .docx, .pdf, .txt or .md. Please try again.')
+      setError('Upload failed. Use a .docx, .pdf, .txt or .md template, or a .png or .jpg logo.')
     } finally {
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
@@ -494,7 +495,9 @@ export default function TemplatesPage() {
             rows={3}
             value={editDescription}
             onChange={(e) => setEditDescription(e.target.value)}
-            placeholder="Short description so Levy can match it to drafting requests."
+            placeholder={editing && LOGO_TYPES.has(editing.file_type)
+              ? 'Organisation name, then address, phone and email, one per line. Printed beside the logo.'
+              : 'Short description so Levy can match it to drafting requests.'}
             className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.08] text-[13px] text-white/85 placeholder:text-white/30 focus:outline-none focus:border-emerald-500/40 resize-none"
           />
           <div className="mt-3 flex justify-end gap-2">
@@ -627,7 +630,7 @@ function EmptyState({ onUpload }: { onUpload: () => void }) {
       <Upload size={20} className="mx-auto mb-2.5 text-white/25" />
       <p className="text-[13px] text-white/65">No templates yet.</p>
       <p className="text-[11.5px] text-white/30 mt-1 max-w-sm mx-auto leading-snug">
-        Add a .docx, .pdf, .txt or .md you reuse. Offer letters, NDAs, demand letters all work.
+        Add a .docx, .pdf, .txt or .md you reuse, or your logo for a letterhead.
       </p>
       <button
         onClick={onUpload}

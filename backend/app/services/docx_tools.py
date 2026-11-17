@@ -24,7 +24,10 @@ from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
-from docx.shared import Pt, RGBColor
+from docx.enum.text import WD_COLOR_INDEX
+from docx.shared import Mm, Pt, RGBColor
+
+from . import doc_design
 
 from ..config import get_settings
 from ..db.supabase import get_db
@@ -52,10 +55,13 @@ class _HtmlToDocx(HTMLParser):
 
     BLOCK_HEADINGS = {"h1", "h2", "h3", "h4", "h5", "h6"}
 
-    def __init__(self, doc: Document, *, legal: bool) -> None:
+    def __init__(self, doc: Document, *, legal: bool, layout: str = "court", face: str = "Times New Roman") -> None:
         super().__init__(convert_charrefs=True)
         self.doc = doc
         self.legal = legal
+        self.layout = layout
+        self.face = face
+        self.heading = 0                       # level of the heading being written, 0 outside one
         self.para = None
         self.inline: list[str] = []          # active inline styles: b / i / code
         self.list_stack: list[str] = []        # ul / ol nesting
@@ -86,25 +92,48 @@ class _HtmlToDocx(HTMLParser):
         if not text.strip() and self.para is None:
             return
         para = self._ensure_para()
-        run = para.add_run(text)
-        if "b" in self.inline:
-            run.bold = True
-        if "i" in self.inline:
-            run.italic = True
-        if "code" in self.inline:
-            run.font.name = "Consolas"
+        # A blank is highlighted, as it is in the PDF, so the reader of the
+        # Word file sees what is still to be filled in.
+        pieces, last = [], 0
+        for m in doc_design.BLANK.finditer(text):
+            pieces += [(text[last:m.start()], False), (m.group(0), not doc_design._BY_HAND.match(m.group(0)))]
+            last = m.end()
+        pieces.append((text[last:], False))
+        for chunk, blank in pieces:
+            if not chunk:
+                continue
+            run = para.add_run(chunk)
+            if "b" in self.inline:
+                run.bold = True
+            if "i" in self.inline:
+                run.italic = True
+            if "code" in self.inline:
+                run.font.name = "Consolas"
+            if blank:
+                run.font.highlight_color = WD_COLOR_INDEX.YELLOW
+            if self.heading:
+                # Word's built-in heading styles are blue Calibri; a formal
+                # document's headings are the body face, in black.
+                run.font.name = self.face
+                run._element.rPr.rFonts.set(qn("w:eastAsia"), self.face)
+                run.font.color.rgb = RGBColor(0, 0, 0)
+                run.bold = True
+                run.font.size = Pt({1: 15, 2: 12}.get(self.heading, 11) if self.layout != "court" else 12)
 
     # -- parser callbacks --
     def handle_starttag(self, tag, attrs):  # noqa: C901
         a = dict(attrs)
         if tag in self.BLOCK_HEADINGS:
             level = min(int(tag[1]), 4)
+            self.heading = level
             self.para = self.doc.add_heading("", level=level)
-            if self.legal:
+            if self.layout == "court" or (self.layout == "agreement" and level == 1):
                 self.para.alignment = WD_ALIGN_PARAGRAPH.CENTER
         elif tag == "p":
             self.para = self.doc.add_paragraph()
-            if self.legal:
+            if a.get("class") == "connective" and self.layout == "agreement":
+                self.para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            elif self.legal and self.layout != "letter":
                 self.para.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
         elif tag in ("strong", "b"):
             self.inline.append("b")
@@ -149,6 +178,8 @@ class _HtmlToDocx(HTMLParser):
                 self.align = WD_ALIGN_PARAGRAPH.CENTER
 
     def handle_endtag(self, tag):
+        if tag in self.BLOCK_HEADINGS:
+            self.heading = 0
         if tag in self.BLOCK_HEADINGS or tag in ("p", "li", "blockquote", "div"):
             self._flush_para()
         elif tag in ("strong", "b") and "b" in self.inline:
@@ -181,7 +212,7 @@ class _HtmlToDocx(HTMLParser):
         cols = max(len(r) for r in rows)
         table = self.doc.add_table(rows=0, cols=cols)
         try:
-            table.style = "Light Grid Accent 1"
+            table.style = "Table Grid"      # plain ruled lines, no colour
         except KeyError:
             pass
         for r in rows:
@@ -282,29 +313,102 @@ def markdown_to_plaintext(body_md: str) -> str:
 # ─── public render ───────────────────────────────────────────────────────────
 
 
-def render_docx_bytes(*, title: str, body_md: str, subtitle: str | None = None, legal: bool = False) -> bytes:
-    """Render a Markdown body to .docx bytes."""
-    doc = Document()
-    normal = doc.styles["Normal"].font
-    if legal:
-        normal.name = "Times New Roman"
-        normal.size = Pt(12)
-    else:
-        normal.name = "Calibri"
-        normal.size = Pt(11)
+_FACES = {"court": ("Times New Roman", 12), "agreement": ("Book Antiqua", 11),
+          "letter": ("Book Antiqua", 11), "memo": ("Book Antiqua", 11)}
 
+
+def _clear_body(doc) -> None:
+    """Empty a Word template's body, keeping its page setup, header and footer."""
+    body = doc.element.body
+    for child in list(body):
+        if child.tag != qn("w:sectPr"):
+            body.remove(child)
+
+
+def _add_letterhead(doc, lh: dict, face: str) -> None:
+    """A logo and the organisation's details at the top of the first page."""
+    lines = [ln for ln in (lh.get("lines") or []) if ln.strip()]
+    logo = lh.get("logo")
+
+    def write_lines(cell_or_doc, align):
+        for i, ln in enumerate(lines):
+            para = cell_or_doc.add_paragraph()
+            para.alignment = align
+            para.paragraph_format.space_after = Pt(0)
+            run = para.add_run(ln)
+            run.font.name = face
+            run.font.size = Pt(12 if i == 0 else 9.5)
+            run.bold = i == 0
+
+    if logo and lines:
+        table = doc.add_table(rows=1, cols=2)
+        left, right = table.rows[0].cells
+        left.paragraphs[0].add_run().add_picture(io.BytesIO(logo), height=Mm(20))
+        right.paragraphs[0]._p.getparent().remove(right.paragraphs[0]._p)
+        write_lines(right, WD_ALIGN_PARAGRAPH.RIGHT)
+    elif logo:
+        para = doc.add_paragraph()
+        para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        para.add_run().add_picture(io.BytesIO(logo), height=Mm(20))
+    else:
+        write_lines(doc, WD_ALIGN_PARAGRAPH.CENTER)
+    _bottom_border(doc.add_paragraph())
+
+
+def render_docx_bytes(*, title: str, body_md: str, subtitle: str | None = None, legal: bool = False,
+                      layout: str | None = None, owner_id: str | None = None) -> bytes:
+    """Render a Markdown body to .docx bytes, set like the PDF of the same document.
+
+    A body drafted with a letterhead carries a marker for it. When that
+    letterhead is a Word template, the document is written inside the user's
+    own file, so its header, footer and page setup come through exactly; a
+    logo or a text letterhead is placed at the top of the first page.
+    `subtitle` is accepted and ignored (see pdf_tools._render_markdown_pdf).
+    """
+    letterhead = None
+    m = doc_design.LETTERHEAD_MARK.search(body_md or "")
+    if m:
+        from . import templates as templates_service
+        letterhead = templates_service.letterhead_of(owner_id, m.group(1))
+        body_md = doc_design.LETTERHEAD_MARK.sub("", body_md).lstrip()
+        if letterhead:
+            body_md = doc_design.drop_letterhead_blank(body_md)
     if not legal:
+        layout = "memo"
+    elif layout not in doc_design.LAYOUTS:
+        layout = doc_design.infer_layout(body_md)
+    face, size = _FACES[layout]
+
+    doc = None
+    if letterhead and letterhead.get("docx"):
+        try:
+            doc = Document(io.BytesIO(letterhead["docx"]))
+            _clear_body(doc)
+        except Exception:  # noqa: BLE001 — an unreadable template falls back to a plain page
+            doc = None
+    in_template = doc is not None
+    if doc is None:
+        doc = Document()
+    normal = doc.styles["Normal"].font
+    normal.name = face
+    normal.size = Pt(size)
+    try:
+        doc.styles["Normal"].element.rPr.rFonts.set(qn("w:eastAsia"), face)
+    except Exception:  # noqa: BLE001
+        pass
+    if letterhead and not in_template:
+        _add_letterhead(doc, letterhead, face)
+
+    if layout == "memo":
         h = doc.add_heading(title, level=0)
         for run in h.runs:
-            run.font.color.rgb = RGBColor(0x0F, 0x3A, 0x2A)
-        if subtitle:
-            sub = doc.add_paragraph(subtitle)
-            sub.runs[0].italic = True
-            sub.runs[0].font.color.rgb = RGBColor(0x66, 0x66, 0x66)
+            run.font.name = face
+            run.font.size = Pt(17)
+            run.font.color.rgb = RGBColor(0, 0, 0)
 
-    html = md_lib.markdown(body_md, extensions=["extra", "tables", "sane_lists"])
-    parser = _HtmlToDocx(doc, legal=legal)
-    parser.feed(html)
+    html = md_lib.markdown(body_md, extensions=doc_design.markdown_extensions(layout))
+    parser = _HtmlToDocx(doc, legal=legal, layout=layout, face=face)
+    parser.feed(doc_design.normalise(html, layout))
     parser.close()
 
     buf = io.BytesIO()
@@ -369,8 +473,9 @@ def ensure_artifact_docx(artifact_id: str) -> dict:
     data = render_docx_bytes(
         title=row.get("title") or "Document",
         body_md=source_md,
-        subtitle=meta.get("subtitle"),
         legal=(meta.get("layout") == "legal"),
+        layout=meta.get("format"),
+        owner_id=row.get("owner_id"),
     )
     storage_path = _upload_artifact_docx(artifact_id, data)
     meta = {**meta, "docx_path": storage_path}

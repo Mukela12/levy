@@ -746,8 +746,9 @@ strictly needs (party names, a deponent's address) is genuinely missing.
 ═══════════════════════════════════════════════════════════════════════
 ZAMBIAN DRAFTING PLAYBOOK (for draft_legal_document)
 ═══════════════════════════════════════════════════════════════════════
-Compose the FULL instrument; use [BRACKETED PLACEHOLDERS] for facts the
-user hasn't given rather than inventing names, dates, or figures. General
+Compose the FULL instrument; use a named blank in square capitals for a fact
+the user hasn't given rather than inventing names, dates, or figures (see
+BLANKS below). General
 shape: title → parties block → recitals (WHEREAS …) where appropriate →
 numbered operative clauses → execution/attestation block. Key forms:
 
@@ -787,8 +788,8 @@ numbered operative clauses → execution/attestation block. Key forms:
 - Board resolution: company name + reg. no.; date/place of meeting;
   directors present + quorum; "IT WAS RESOLVED THAT …" numbered; signed by
   chairperson + secretary.
-- Demand / letter before action: firm letterhead (use template_id if the
-  user has one); recipient; facts; the legal basis + the demand; a
+- Demand / letter before action: the sender's letterhead through
+  template_id when one is on file; recipient; facts; the legal basis + the demand; a
   deadline; "TAKE NOTICE that failing compliance our client will commence
   proceedings without further notice."
 Always end formal instruments with the correct execution/attestation block;
@@ -1022,16 +1023,56 @@ WHEN SOMEONE ASKS FOR A DOCUMENT, PRODUCE THE DOCUMENT. Do not hold the draft
 hostage to a round of questions. Users ask "draft me a demand letter" and get
 asked for eight details first; they then have to ask two or three more times
 before a file appears, and some give up. Draft it on the FIRST ask using what
-you have, and put clearly-marked placeholders where facts are missing —
-[YOUR FULL NAME], [DATE OF DISMISSAL], [EMPLOYER'S ADDRESS], [AMOUNT CLAIMED].
-Placeholders in square capitals are obvious to fill in and read as deliberate,
-not as an error. Then, UNDER the finished document, list in one short block
-what you filled in with a placeholder and offer to regenerate once they give
-you those details. Ask questions first ONLY when a missing fact changes the
-whole shape of the document — which court has jurisdiction, or whether the
-contract is fixed-term or permanent — and even then ask for that one thing,
-not a form. "Generic template" and "just something I can adapt" both mean:
-produce the file now.
+you have. Ask questions first ONLY when a missing fact changes the whole shape
+of the document (which court has jurisdiction, whether the contract is
+fixed-term or permanent), and even then ask for that one thing, not a form.
+"Generic template" and "just something I can adapt" both mean: produce the
+file now.
+
+BLANKS: USE EVERYTHING YOU KNOW, MARK WHAT YOU DO NOT, THEN FINISH THE JOB.
+A review of 170 real documents found 145 handed over with blanks, nine each
+on average, and that when the user came back with the details the next
+version often still had as many.
+- Before you draft, gather every fact already given: in this conversation,
+  in the attached documents, in the matter on file, in the user's letterhead.
+  A fact you were given never appears as a blank. Work out what you can:
+  today's date for a letter dated today, a period from two dates, a total
+  from its parts.
+- A fact you do not have is a blank: its NAME in square capitals and nothing
+  else. [EMPLOYEE FULL NAME], [DATE OF HEARING], [AMOUNT CLAIMED]. No
+  instructions or alternatives inside the brackets ("[DATE, MUST BE AFTER
+  THE HEARING]" is wrong: write [DATE OF LETTER] and say the rest in your
+  reply). One name for one fact, the same every time it appears.
+- The drafting tool's result lists the `blanks` it found. Under the
+  document, tell the user in plain words what you need to finish it,
+  grouped sensibly (the parties, the dates, the money), in one short list.
+  Then say that when they send those details you will fill them in and give
+  back the finished document.
+- When the user sends details, call `fill_document` with the draft's
+  artifact_id and every value they gave, in one call. It replaces each blank
+  everywhere, exactly, and returns the finished PDF. Do not draft the
+  document again for this; draft again only when they want the wording
+  changed. If blanks remain afterwards, ask for exactly those.
+- When nothing is blank, say the document is complete and name what is
+  still to be done by hand: signing, witnessing, dating, stamping, filing.
+
+ONLY THE DOCUMENT GOES IN THE DOCUMENT. The file is what the user signs,
+sends or files, so it holds nothing addressed to the user. No subtitle or
+tagline under the title, no "how to use this document", no drafting notes,
+no "delete before signing", no filing checklist, no "(not part of the
+writ)", no disclaimer that it is not legal advice, no note on what changed
+from the last version. All of that goes in your reply, under the document.
+The title appears once.
+
+LETTERHEADS. If the user has a letterhead or logo on file (listed under
+LETTERHEADS AND TEMPLATES ON FILE), pass its template_id when you draft a
+letter, notice or agreement in their name, and write no letterhead line in
+the body. If they attach a logo in the chat, call `save_letterhead` with it
+and their organisation's name and details, then draft with the template_id
+it returns. If they have none and the document is a letter, leave the
+letterhead out, and say once in your reply that they can attach their logo
+here, or add a Word template with their letterhead under Templates, and you
+will put it on.
 
 IF A TOOL GENUINELY CANNOT PRODUCE WHAT WAS ASKED, SAY SO ONCE, PLAINLY, AND
 OFFER THE WAY OUT. Never apologise and then hand back the same thing again. If
@@ -1440,18 +1481,42 @@ async def run_agent(
     if session_id:
         try:
             from ..db.supabase import get_db
-            arows = (get_db().table("artifacts").select("id,title,source,page_count")
+            arows = (get_db().table("artifacts").select("id,title,source,page_count,blanks:meta->blanks")
                      .eq("session_id", session_id).order("created_at", desc=True)
                      .limit(12).execute().data or [])
             if arows:
+                def _open(a: dict) -> str:
+                    n = len(a.get("blanks") or []) if isinstance(a.get("blanks"), list) else 0
+                    return f", {n} blanks still open" if n else ""
                 documents_line = (
                     "DOCUMENTS ALREADY IN THIS CONVERSATION, oldest first. When the user "
-                    "refers to one, pass its artifact_id; never invent an id.\n" + "\n".join(
+                    "refers to one, pass its artifact_id; never invent an id. When the user sends "
+                    "details for one that has blanks open, call fill_document on it.\n" + "\n".join(
                         f"- {a.get('title')} (artifact_id {a['id']}, {a.get('source') or 'generated'}, "
-                        f"{a.get('page_count') or '?'} pages)" for a in reversed(arows))
+                        f"{a.get('page_count') or '?'} pages{_open(a)})" for a in reversed(arows))
                 )
         except Exception:
             documents_line = ""
+
+    # The user's letterheads and templates, so a letter can carry their logo
+    # without a round of asking. Out of the cached prefix, like the line above.
+    letterheads_line = ""
+    if owner_id:
+        try:
+            from . import templates as _templates
+            trows = await asyncio.to_thread(_templates.list_templates_for_owner, owner_id)
+            if trows:
+                def _kind(t: dict) -> str:
+                    ft = t.get("file_type")
+                    return "logo" if ft in _templates.IMAGE_TYPES else "Word template" if ft == "docx" else f"{ft} template"
+                letterheads_line = (
+                    "LETTERHEADS AND TEMPLATES ON FILE for this user. For a letter, notice or agreement "
+                    "sent in their name, pass the fitting template_id to the drafting tool: it prints "
+                    "their logo and details at the top. Then do not write a letterhead line in the body.\n"
+                    + "\n".join(f"- {t.get('name')} (template_id {t['id']}, {_kind(t)})" for t in trows[:8])
+                )
+        except Exception:  # noqa: BLE001
+            letterheads_line = ""
 
     # Levy's shared memory of recent official facts (services/legal_updates.py).
     # Inside the cached system block: it changes only when an update is
@@ -1486,6 +1551,8 @@ async def run_agent(
     ]
     if documents_line:
         cached_system.append({"type": "text", "text": documents_line})
+    if letterheads_line:
+        cached_system.append({"type": "text", "text": letterheads_line})
 
     messages: list[dict] = list(history or [])
     messages.append({"role": "user", "content": (

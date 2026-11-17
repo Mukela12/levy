@@ -332,7 +332,7 @@ export interface TemplateRow {
   id: string
   name: string
   description?: string | null
-  file_type: 'docx' | 'pdf' | 'txt' | 'md'
+  file_type: 'docx' | 'pdf' | 'txt' | 'md' | 'png' | 'jpg' | 'webp'
   file_size_bytes?: number | null
   page_count?: number | null
   preview_text?: string | null
@@ -352,7 +352,7 @@ export interface TemplateSuggestion {
   id: string
   name: string
   description?: string
-  file_type: 'docx' | 'pdf' | 'txt' | 'md'
+  file_type: 'docx' | 'pdf' | 'txt' | 'md' | 'png' | 'jpg' | 'webp'
   page_count?: number | null
   preview?: string
 }
