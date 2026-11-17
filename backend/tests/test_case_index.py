@@ -194,6 +194,20 @@ class InTheAudit(Base):
         self.assertEqual(self.calls, [])
 
 
+    def test_a_generic_party_is_settled_by_an_index_title_but_not_across_years(self):
+        ev = ca.evidence_from_tool_calls([{"name": "search_case_index", "result": {"matches": [
+            {"title": "Attorney-General v Gandala (Appeal No. 4 of 1971) [1971] ZMCA 1 (20 April 1971)",
+             "url": "https://zambialii.org/akn/zm/judgment/zmca/1971/1", "summary": "costs after payment into court"},
+            {"title": "Violet Zulu v The People (Appeal 3 of 2025) [2025] ZMSC 3", "url": "https://zambialii.org/x",
+             "summary": "murder appeal"}]}}])
+        self.serve(Resp(results=[]))
+        v = self.audit("The index also returned Attorney-General v Gandala (1971), on costs. Compare Zulu v The People "
+                       "(1990-2) ZR 65.", ev)
+        by = {x["text"]: x for x in v}
+        self.assertEqual(by["Attorney-General v Gandala (1971)"]["seen"]["in"], "index")
+        self.assertNotIn("seen", next(x for t, x in by.items() if t.startswith("Zulu v The People")))
+
+
 class Tool(Base, unittest.IsolatedAsyncioTestCase):
     async def test_the_tool_labels_its_matches_and_is_rationed_per_question(self):
         self.serve(Resp(results=[item("A Ltd v B Ltd [2021] ZMSC 5", "[2021] ZMSC 5")]))

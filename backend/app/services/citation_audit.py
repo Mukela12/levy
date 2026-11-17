@@ -1084,14 +1084,36 @@ def _library_named(c: dict, index: list[dict]) -> dict | None:
     return None
 
 
+def _seen_in_index_title(c: dict, tokens: list[str], evidence: list[dict]) -> dict | None:
+    cited_years = set(re.findall(r"\b((?:19|20)\d{2})\b", c.get("cite") or ""))
+    for e in evidence:
+        if e.get("where") != "index" or not e.get("title"):
+            continue
+        title = _norm(e["title"])
+        listed_years = set(re.findall(r"\b((?:19|20)\d{2})\b", e["title"]))
+        if all(_word_at(t, title) >= 0 for t in tokens) and not (cited_years and listed_years
+                                                                 and not (cited_years & listed_years)):
+            out = {"in": "index", "tool": e["tool"], "title": e["title"]}
+            if e.get("url"):
+                out["url"] = e["url"]
+            return out
+    return None
+
+
 def _seen(c: dict, evidence: list[dict]) -> dict | None:
     """Where, in what Levy read this turn, the cited authority is named."""
     if not evidence:
         return None
     if c["kind"] == "case":
         a, b = _party_tokens(c["a"]), _party_tokens(c["b"])
-        if len(a) + len(b) < 2 or _too_generic(a, b):
+        if len(a) + len(b) < 2:
             return None
+        if _too_generic(a, b):
+            # "Attorney-General v Gandala (1971)" proves nothing by its words
+            # turning up near each other in a judgment. A ZambiaLII index
+            # entry is different: it is one case's own title, so the names in
+            # it, with the year agreeing, are that case.
+            return _seen_in_index_title(c, a + b, evidence)
         hit = lambda hay: _case_in(a, b, hay)  # noqa: E731
     else:
         name = _norm(re.sub(r"\b(?:19|20)\d{2}\b", " ", _ALIASES.get(_norm(c["name"]), c["name"])))
