@@ -15,6 +15,7 @@ to their text. python-docx (1.1.2) is already a dependency.
 from __future__ import annotations
 
 import io
+import re
 from html.parser import HTMLParser
 from html import unescape
 
@@ -72,11 +73,13 @@ class _HtmlToDocx(HTMLParser):
         self.cur_row: list[str] | None = None
         self.cur_cell: list[str] | None = None
         self.cell_header = False
+        self.after_break = False               # the last thing written was a line break
 
     # -- helpers --
     def _flush_para(self) -> None:
         self.para = None
         self.align = None
+        self.after_break = False
 
     def _ensure_para(self):
         if self.para is None:
@@ -91,6 +94,16 @@ class _HtmlToDocx(HTMLParser):
             return
         if not text.strip() and self.para is None:
             return
+        if "code" not in self.inline:
+            # A line end inside a paragraph is a space in HTML. Written to Word
+            # as it stands it becomes a second line break after every <br>, and
+            # the address block of a production letter came out double-spaced.
+            text = re.sub(r"[ \t]*\n[ \t]*", " ", text)
+        if self.after_break:
+            text = text.lstrip()
+        if not text:
+            return
+        self.after_break = False
         para = self._ensure_para()
         # A blank is highlighted, as it is in the PDF, so the reader of the
         # Word file sees what is still to be filled in.
@@ -131,7 +144,9 @@ class _HtmlToDocx(HTMLParser):
                 self.para.alignment = WD_ALIGN_PARAGRAPH.CENTER
         elif tag == "p":
             self.para = self.doc.add_paragraph()
-            if a.get("class") == "connective" and self.layout == "agreement":
+            if a.get("class") == "valediction":
+                self.para.paragraph_format.space_after = Pt(36)   # room to sign, as in the PDF
+            elif a.get("class") == "connective" and self.layout == "agreement":
                 self.para.alignment = WD_ALIGN_PARAGRAPH.CENTER
             elif self.legal and self.layout != "letter":
                 self.para.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
@@ -144,6 +159,7 @@ class _HtmlToDocx(HTMLParser):
         elif tag == "br":
             if self.para is not None:
                 self.para.add_run().add_break()
+                self.after_break = True
         elif tag == "hr":
             _bottom_border(self.doc.add_paragraph())
         elif tag == "ul":
@@ -170,6 +186,8 @@ class _HtmlToDocx(HTMLParser):
         elif tag in ("td", "th") and self.in_table:
             self.cur_cell = []
             self.cell_header = tag == "th"
+        elif tag == "div" and a.get("class") == "keep":
+            pass                                 # a grouping for the PDF's page breaks, not a paragraph
         elif tag == "div":
             self.para = self.doc.add_paragraph()
             style = a.get("style", "")

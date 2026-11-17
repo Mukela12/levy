@@ -49,7 +49,7 @@ class Layout(unittest.TestCase):
 
     def test_a_letters_sign_off_stays_with_the_name_under_it(self):
         out = d.normalise("<p>Body.</p><p>Yours faithfully,</p><p>Mutale Zimba<br/>HR Manager</p>", "letter")
-        self.assertIn('<div class="keep"><p>Yours faithfully,</p><p>Mutale Zimba<br/>HR Manager</p></div>', out)
+        self.assertIn('<div class="keep"><p class="valediction">Yours faithfully,</p><p>Mutale Zimba<br/>HR Manager</p></div>', out)
         self.assertIn(".keep { break-inside: avoid; }", d.LETTER_CSS.replace("tr, .sig-block, .attestation, .keep", ".keep"))
 
     def test_letters_and_agreements_keep_their_line_breaks(self):
@@ -234,6 +234,95 @@ class Tools(unittest.IsolatedAsyncioTestCase):
             self.assertIn("another account", other["result"]["error"])
             none = await pdf_tools.fill_document(row["id"], {"[NOT THERE]": "y"}, owner_id="u1")
             self.assertIn("[HEARING DATE]", none["result"]["blanks"])
+
+
+
+
+class LiveRunFixes(unittest.TestCase):
+    """What the first production run of these features got wrong (17 Nov 2026)."""
+
+    def test_a_backslash_left_for_signing_room_is_not_printed(self):
+        from app.services import doc_design
+        body = "Yours faithfully,\n\n\\\n\\\n..........\n**Mary Banda**\nLandlord\n"
+        tidy = doc_design.tidy_source(body)
+        self.assertNotIn("\\", tidy)
+        self.assertIn("Yours faithfully,\n\n..........\n**Mary Banda**", tidy)
+        self.assertEqual(doc_design.tidy_source(tidy), tidy)
+
+    def test_a_backslash_ending_a_line_becomes_a_line_break(self):
+        from app.services import doc_design
+        self.assertEqual(doc_design.tidy_source("Plot 45\\\nLusaka"), "Plot 45  \nLusaka")
+        self.assertEqual(doc_design.tidy_source("Costs of K1,000 \\* estimated"), "Costs of K1,000 \\* estimated")
+
+    def test_the_valediction_stands_alone_with_room_to_sign(self):
+        import markdown
+        from app.services import doc_design
+        for body in ("Dear Sir,\n\nPay.\n\nYours faithfully,\n\n**Mary Banda**\nLandlord",
+                     "Dear Sir,\n\nPay.\n\nYours faithfully,\n**Mary Banda**\nLandlord"):
+            html = doc_design.normalise(
+                markdown.markdown(body, extensions=doc_design.markdown_extensions("letter")), "letter")
+            self.assertIn('<p class="valediction">Yours faithfully,</p>', html)
+            self.assertRegex(html, r'</p>\s*<p>\s*<strong>Mary Banda</strong>')
+            self.assertEqual(html.count("<p"), html.count("</p>"))
+        self.assertIn("p.valediction", doc_design.LETTER_CSS)
+
+    def test_spacer_paragraphs_under_the_valediction_do_not_double_the_room(self):
+        import markdown
+        from app.services import doc_design
+        body = "Dear Sir,\n\nPay.\n\nYours faithfully,\n\n&nbsp;\n\n&nbsp;\n\n**Mary Banda**\nPartner"
+        html = doc_design.normalise(
+            markdown.markdown(body, extensions=doc_design.markdown_extensions("letter")), "letter")
+        self.assertRegex(html, r'<p class="valediction">Yours faithfully,</p>\s*<p><strong>Mary Banda</strong>')
+
+    def test_word_keeps_one_line_break_where_the_letter_has_one(self):
+        import io
+        import docx
+        from app.services import docx_tools
+        body = ("Mr Joseph Tembo\nPlot 9, Independence Avenue\nLusaka\n\nDear Mr Tembo,\n\nWe confirm.\n\n"
+                "Yours faithfully,\n\n**Mary Banda**\nPartner")
+        doc = docx.Document(io.BytesIO(docx_tools.render_docx_bytes(title="Letter", body_md=body, legal=True, layout="letter")))
+        texts = [p.text for p in doc.paragraphs]
+        self.assertIn("Mr Joseph Tembo\nPlot 9, Independence Avenue\nLusaka", texts)
+        self.assertIn("Mary Banda\nPartner", texts)
+        self.assertNotIn("", texts)                      # no empty paragraph before the sign-off
+        sign_off = next(p for p in doc.paragraphs if p.text == "Yours faithfully,")
+        self.assertEqual(sign_off.paragraph_format.space_after.pt, 36)
+
+    def test_each_open_blank_comes_with_the_words_around_it(self):
+        from app.services import doc_design
+        body = ("Mary Banda\n[LANDLORD ADDRESS]\nLusaka\n\n[TENANT FULL NAME]\n[FLAT NUMBER], Kabulonga\n\n"
+                "**RE: RENT FOR [FLAT NUMBER]**\n\nSee [2024] ZMCA 278. [SEAL]\n")
+        lines = doc_design.blank_contexts(body)
+        self.assertEqual([ln.split("  in: ")[0] for ln in lines],
+                         ["[LANDLORD ADDRESS]", "[TENANT FULL NAME]", "[FLAT NUMBER]"])
+        self.assertIn("[FLAT NUMBER], Kabulonga", lines[2])
+        self.assertNotIn("*", lines[2])
+
+    def test_the_model_is_told_the_date_in_zambia(self):
+        from datetime import datetime, timezone
+        from app.services import agent
+        late_utc = datetime(2026, 11, 16, 22, 30, tzinfo=timezone.utc)   # already the 17th in Lusaka
+        self.assertIn("TODAY IS Tuesday 17 November 2026", agent.today_line(late_utc))
+
+    def test_the_newest_unfinished_draft_lists_its_blanks(self):
+        from unittest import mock
+        from app.services import agent
+
+        class _Q:
+            def __getattr__(self, _):
+                return lambda *a, **k: self
+
+            def execute(self):
+                return type("R", (), {"data": [{"src": "Dear [TENANT FULL NAME],\n\nPay by [DEADLINE DATE]."}]})()
+
+        rows = [{"id": "c", "title": "Letter", "blanks": [], "filled_from": None},
+                {"id": "b", "title": "Letter", "blanks": ["[DEADLINE DATE]"], "filled_from": "a"},
+                {"id": "a", "title": "Letter", "blanks": ["[TENANT FULL NAME]", "[DEADLINE DATE]"], "filled_from": None}]
+        with mock.patch("app.db.supabase.get_db", return_value=type("D", (), {"table": lambda self, _: _Q()})()):
+            block = agent._open_blanks_block(rows)
+        self.assertIn("artifact_id b", block)          # not "a": a later draft was filled from it
+        self.assertIn("[DEADLINE DATE]  in: …", block)
+        self.assertEqual(agent._open_blanks_block([rows[0]]), "")
 
 
 if __name__ == "__main__":

@@ -3363,8 +3363,10 @@ def build_tool_registry(
                 "for a draft that has [BLANKS]: names, dates, addresses, amounts, numbers. It "
                 "replaces each blank everywhere it appears, exactly as given, without rewriting "
                 "the document, so it is faster and safer than drafting again. Pass every value "
-                "the user has given, in one call. The result lists what was filled and any "
-                "blanks still open. Draft again only when the user wants the wording changed."
+                "the user has given, in one call, under the blank's exact name. A value replaces "
+                "its blank and nothing else, so fit it to the words around the blank. The result "
+                "lists what was filled and any blanks still open. Draft again only when the "
+                "wording has to change or a blank has to come out."
             ),
             input_schema={
                 "type": "object",
@@ -3372,7 +3374,7 @@ def build_tool_registry(
                     "artifact_id": {"type": "string", "description": "The draft's artifact_id."},
                     "values": {
                         "type": "object",
-                        "description": "Each blank mapped to the text that fills it, keyed by the blank's own words as listed in the draft's `blanks`, e.g. {\"[EMPLOYEE FULL NAME]\": \"Mary Banda\", \"[DATE OF LETTER]\": \"18 November 2026\"}.",
+                        "description": "Each blank mapped to the text that fills it, keyed by the blank's exact name as listed under OPEN BLANKS or in the draft's `blanks`, e.g. {\"[EMPLOYEE FULL NAME]\": \"Mary Banda\", \"[DATE OF LETTER]\": \"18 November 2026\"}.",
                         "additionalProperties": {"type": "string"},
                     },
                 },

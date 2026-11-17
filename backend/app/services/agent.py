@@ -21,6 +21,7 @@ import asyncio
 import json
 import re
 import time
+from datetime import datetime, timedelta, timezone
 from typing import AsyncIterator
 
 import anthropic
@@ -1049,10 +1050,19 @@ version often still had as many.
   Then say that when they send those details you will fill them in and give
   back the finished document.
 - When the user sends details, call `fill_document` with the draft's
-  artifact_id and every value they gave, in one call. It replaces each blank
-  everywhere, exactly, and returns the finished PDF. Do not draft the
-  document again for this; draft again only when they want the wording
-  changed. If blanks remain afterwards, ask for exactly those.
+  artifact_id and every value they gave, in one call, under the exact names
+  listed for that draft under OPEN BLANKS. It replaces each blank everywhere,
+  exactly, and returns the finished PDF. A value replaces its blank and
+  nothing else: read the words around the blank and make the value fit them
+  (where the draft already says ", Kabulonga, Lusaka" after the blank, give
+  the street address only). If blanks remain afterwards, ask for exactly
+  those.
+- Draft the document again, once and with every detail in, only when filling
+  cannot finish it: a blank has to come out altogether (a clause the user
+  does not need), or wording away from the blanks has to change ("Dear
+  Sir/Madam" once you know the name). Do one or the other, never both: each
+  reply hands over one document, so the user is never left choosing between
+  a half-filled version and a finished one.
 - When nothing is blank, say the document is complete and name what is
   still to be done by hand: signing, witnessing, dating, stamping, filing.
 
@@ -1253,6 +1263,48 @@ Final answer format:
 # Built once from the law map, so the cached prompt stays identical for the
 # life of the process and changes only when a new map is deployed.
 from . import law_map as _law_map  # noqa: E402
+
+
+# Zambia keeps Central Africa Time (UTC+2) all year, so no zone database is needed.
+_LUSAKA = timezone(timedelta(hours=2))
+
+
+def today_line(now: datetime | None = None) -> str:
+    """Tell the model the date.
+
+    Nothing did until 17 Nov 2026, when a production letter the user asked to
+    be "dated today" came back dated the day before: the model had only its
+    own guess. Kept out of the cached prefix, since it changes at midnight.
+    """
+    now = (now or datetime.now(timezone.utc)).astimezone(_LUSAKA)
+    return (f"TODAY IS {now:%A} {now.day} {now:%B %Y} in Zambia. Use this date for \"today\", for a document "
+            "dated today, and to count deadlines, notice periods, limitation and ages. Never guess the date.")
+
+
+def _open_blanks_block(arows: list[dict]) -> str:
+    """The newest unfinished draft's blanks, by exact name, with the words around each.
+
+    The client sends the conversation as text only, so on the turn the user
+    supplies their details the model has never seen the document: in
+    production it guessed the names, filled 11 of 18 and had to draft again.
+    `arows` is newest first. A draft that a later one was filled from is done with.
+    """
+    from . import doc_design
+    superseded = {a.get("filled_from") for a in arows if a.get("filled_from")}
+    for a in arows:
+        if a["id"] in superseded or not (isinstance(a.get("blanks"), list) and a["blanks"]):
+            continue
+        try:
+            from ..db.supabase import get_db
+            src = ((get_db().table("artifacts").select("src:meta->>source_markdown")
+                    .eq("id", a["id"]).limit(1).execute().data or [{}])[0].get("src")) or ""
+        except Exception:  # noqa: BLE001
+            src = ""
+        lines = doc_design.blank_contexts(src) or [str(b) for b in a["blanks"][:40]]
+        return (f"\nOPEN BLANKS in \"{a.get('title')}\" (artifact_id {a['id']}), each with the words around "
+                "it. In fill_document use these exact names, and give each a value that fits those words:\n"
+                + "\n".join("  " + ln for ln in lines))
+    return ""
 
 AGENT_SYSTEM_SUFFIX = AGENT_SYSTEM_SUFFIX.replace(
     "{REPEALED_ACTS}",
@@ -1481,7 +1533,8 @@ async def run_agent(
     if session_id:
         try:
             from ..db.supabase import get_db
-            arows = (get_db().table("artifacts").select("id,title,source,page_count,blanks:meta->blanks")
+            arows = (get_db().table("artifacts")
+                     .select("id,title,source,page_count,blanks:meta->blanks,filled_from:meta->>filled_from")
                      .eq("session_id", session_id).order("created_at", desc=True)
                      .limit(12).execute().data or [])
             if arows:
@@ -1495,6 +1548,7 @@ async def run_agent(
                         f"- {a.get('title')} (artifact_id {a['id']}, {a.get('source') or 'generated'}, "
                         f"{a.get('page_count') or '?'} pages{_open(a)})" for a in reversed(arows))
                 )
+                documents_line += _open_blanks_block(arows)
         except Exception:
             documents_line = ""
 
@@ -1547,7 +1601,7 @@ async def run_agent(
     # calls per message. This is the single biggest cost lever for the chat.
     cached_system = [
         {"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}},
-        {"type": "text", "text": web_line},
+        {"type": "text", "text": today_line() + "\n\n" + web_line},
     ]
     if documents_line:
         cached_system.append({"type": "text", "text": documents_line})

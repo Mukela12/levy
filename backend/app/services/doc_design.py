@@ -143,6 +143,7 @@ th { text-align: left; border-bottom: 0.75pt solid #000; padding: 4pt 8pt 4pt 0;
 td { border-bottom: 0.25pt solid #777; padding: 4pt 8pt 4pt 0; vertical-align: top; }
 blockquote { margin: 8pt 0 8pt 18pt; }
 .sig-line { border-bottom: 0.75pt solid #000; width: 60%%; margin-top: 30pt; }
+p.valediction { margin-bottom: 36pt; }   /* room for a signature in ink */
 """ % {"face": SERIF_BOOK}
 
 MEMO_CSS = _SHARED + """
@@ -264,7 +265,44 @@ def fill_blanks(body_md: str, values: dict) -> tuple[str, list[str], list[str]]:
     return out, [f"[{k}]" for k in filled], [k for k in wanted if k not in filled]
 
 
+def blank_contexts(body_md: str, span: int = 45, limit: int = 40) -> list[str]:
+    """Each open blank with the words around its first appearance.
+
+    The next turn's model is not shown the document, only what the user typed
+    since. In production it guessed the blanks' names ("[TENANT NAME]" for
+    "[TENANT FULL NAME]") and filled a blank that was followed by ", Kabulonga"
+    with an address ending in Kabulonga. With the exact name and its
+    surroundings it can do both properly.
+    """
+    text = LETTERHEAD_MARK.sub("", body_md or "")
+    seen: dict[str, str] = {}
+    for m in BLANK.finditer(text):
+        tok = m.group(0)
+        if _BY_HAND.match(tok) or tok in seen:
+            continue
+        around = text[max(0, m.start() - span):m.end() + span]
+        around = re.sub(r"[*_#|>`]+", " ", around.replace("\n", " / "))
+        seen[tok] = re.sub(r"\s+", " ", around).strip(" /")
+        if len(seen) >= limit:
+            break
+    return [f"{tok}  in: …{ctx}…" for tok, ctx in seen.items()]
+
+
 # ── structure ────────────────────────────────────────────────────────────────
+
+# A model leaves room for a signature the CommonMark way, with a line holding
+# only a backslash, and ends a line with one to force a break. This Markdown
+# prints both as backslashes, which is how two of them came to sit above the
+# signature line of a production letter.
+_LONE_BACKSLASH = re.compile(r"^[ \t]*\\{1,2}[ \t]*\n", re.M)
+_TRAILING_BACKSLASH = re.compile(r"(?<=[^\\\s])\\[ \t]*$", re.M)
+
+
+def tidy_source(body_md: str) -> str:
+    """Remove line-break marks this renderer would print as text."""
+    out = _LONE_BACKSLASH.sub("", (body_md or "") + "\n")
+    return _TRAILING_BACKSLASH.sub("  ", out).rstrip("\n") + ("\n" if (body_md or "").endswith("\n") else "")
+
 
 _CONNECTIVE = re.compile(r"<p>\s*<strong>\s*((?:BETWEEN|AND|WHEREAS|NOW THEREFORE|IT IS AGREED|IT IS HEREBY AGREED)\s*:?)\s*</strong>\s*:?\s*</p>")
 _HEADING = re.compile(r"<(/?)h([1-6])\b")
@@ -275,6 +313,16 @@ _LETTERHEAD_BLANK = re.compile(r"^\s*(?:\*\*)?\[[^\]\n]{0,60}LETTERHEAD[^\]\n]{0
 def drop_letterhead_blank(body_md: str) -> str:
     """Remove a "[COMPANY LETTERHEAD]" line once a real letterhead is printed."""
     return _LETTERHEAD_BLANK.sub("", body_md or "", count=1)
+
+
+_VALEDICTION = re.compile(r"<p>\s*((?:<strong>)?\s*Yours\s+(?:faithfully|sincerely|truly)\s*,?\s*(?:</strong>)?)\s*"
+                          r"(?:</p>|(<br\s*/?>)\s*)")
+
+
+# Empty paragraphs a draft put under the valediction to leave room for the
+# signature. The stylesheet leaves that room, so these would double it.
+_SIGNING_SPACER = re.compile(r'(<p class="valediction">[^<]*(?:<(?!/p>)[^<]*)*</p>)'
+                             r"(?:\s*<p>(?:\s|&nbsp;|\xa0|<br\s*/?>)*</p>)+")
 
 
 def normalise(html: str, layout: str) -> str:
@@ -299,7 +347,12 @@ def normalise(html: str, layout: str) -> str:
         for m in re.finditer(r"<p>\s*(?:<strong>)?\s*Yours\s+(?:faithfully|sincerely|truly)", html):
             pass
         if m and len(html) - m.start() < 1500:
-            html = html[:m.start()] + '<div class="keep">' + html[m.start():] + "</div>"
+            # The valediction stands alone with room under it for the signature,
+            # however the draft happened to space it.
+            tail = _VALEDICTION.sub(lambda v: f'<p class="valediction">{v.group(1)}</p>'
+                                    + ("\n<p>" if v.group(2) else ""), html[m.start():], count=1)
+            tail = _SIGNING_SPACER.sub(r"\1", tail, count=1)
+            html = html[:m.start()] + '<div class="keep">' + tail + "</div>"
     if layout == "agreement":
         # Only one title. A body whose clauses are all top-level headings (the
         # title being a bold line, or absent) must not print each clause as one.

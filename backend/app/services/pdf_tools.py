@@ -651,6 +651,7 @@ async def pdf_generate(
         return {"result": {"error": "title required"}}
     if not content_markdown.strip():
         return {"result": {"error": "content_markdown required"}}
+    content_markdown = doc_design.tidy_source(content_markdown)
 
     # WeasyPrint is CPU-bound and can take seconds on a long document; run it off
     # the event loop so one render never freezes other users' streaming turns.
@@ -816,6 +817,7 @@ async def pdf_generate_legal(
     if not body_markdown.strip():
         return {"result": {"error": "body_markdown required"}}
 
+    body_markdown = doc_design.tidy_source(body_markdown)
     plain_body = doc_design.LETTERHEAD_MARK.sub("", body_markdown)
     fmt = layout if layout in doc_design.LAYOUTS else doc_design.infer_layout(plain_body)
     meta = {"tool": meta_tool, "slug": _slug(title), "layout": "legal", "format": fmt,
@@ -928,7 +930,9 @@ async def fill_document(
     result["filled"] = filled
     if unmatched:
         result["not_found"] = [f"[{k}]" for k in unmatched]
-        result["not_found_note"] = "These names matched no blank; the details were not used. Check them against `blanks`."
+        result["not_found_note"] = (
+            "These names matched no blank, so those details were not used. If `blanks` still lists a blank "
+            "they belong to, call fill_document once more on this new artifact_id with that blank's exact name.")
     if result.get("complete"):
         result["next_step"] = ("Every blank is filled. Say the document is complete, and name anything left to "
                                "do by hand: signing, witnessing, dating, stamping.")
