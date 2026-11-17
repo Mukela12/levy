@@ -245,6 +245,17 @@ def _party_left(text: str, end: int) -> str:
         # earlier name, not this one
         if raw.rstrip(".,;:?!")[-1:] in (_NAME_CLOSE, '"', "\u201d"):
             break
+        # "... v Bravo Stores Ltd (2019), Charlie Farms Ltd v ..." and "... Plc
+        # (2020) and Echo Motors Ltd v ...": a bracket closing on a number, or
+        # followed by a comma, ends the citation before this one. Without it
+        # only the first case of a list was audited; the rest read as one party
+        # with a stray year and were dropped. "(Z)" in "Zambia Sugar (Z) Ltd"
+        # has no digit and stays.
+        if re.search(r"\)[,;.]$|\d[^()\s]*\)[,;.]?$", raw):
+            break
+        # "**Citation:** Wilson Masauso Zulu v ...": a label ends at its colon.
+        if raw.endswith(":"):
+            break
         w = raw.strip(".,;:()[]?!" + _EDGES)
         if not w:
             break
@@ -333,6 +344,10 @@ def _stray_number(party: str) -> bool:
     toks = party.split()
     for i, t in enumerate(toks):
         if t.isdigit() and not (i + 1 < len(toks) and toks[i + 1].lower() in ("others", "other", "another", "ors")):
+            return True
+        # A sum of money is a table of figures, not a litigant ("Original
+        # K2,290.69 v Correct K2,473.40").
+        if re.fullmatch(r"(?:[KR$£]|ZMW|USD)?\d[\d,]*\.\d+|(?:[KR$£]|ZMW|USD)\d[\d,]*", t):
             return True
     return False
 
@@ -930,7 +945,11 @@ _ALIASES = {
 # is not "unverified": Levy read it, and can say where. `evidence` carries that
 # text so each not-found citation can be traced to the source it came from.
 
-_SEEN_RANK = {"library": 0, "official": 1, "institutional": 2, "news": 3, "unofficial": 4}
+# "index" is ZambiaLII's judgment index through Laws.Africa: it proves a case
+# exists and gives its citation, but holds a summary, not the judgment.
+_SEEN_RANK = {"library": 0, "official": 1, "index": 2, "institutional": 3, "news": 4, "unofficial": 5}
+INDEX_TOOL = "search_case_index"
+INDEX_LOOKUPS_PER_ANSWER = 3
 _PARTY_NOISE = {"the", "and", "of", "ltd", "limited", "plc", "others", "another", "anor", "ors",
                 "company", "co", "inc", "zambia", "t", "a", "in", "re", "ex", "parte"}
 
@@ -950,7 +969,7 @@ def evidence_from_tool_calls(tool_calls: list) -> list[dict]:
     def add(text: str, tool: str, doc_id=None, title=None, url=None) -> None:
         if not text or len(text) < 20:
             return
-        where = trust_of(url) if url else "library"
+        where = "index" if tool == INDEX_TOOL else trust_of(url) if url else "library"
         pieces.append({"tool": tool, "text": _norm(text[:400_000]), "where": where,
                        "document_id": doc_id if not url else None, "title": title, "url": url})
 
@@ -1179,7 +1198,13 @@ def gate_problems(verdicts: list[dict]) -> list[dict]:
     for v in verdicts or []:
         text = v.get("text") or ""
         if v.get("status") == "not_found":
-            if v.get("foreign") or v.get("disclaimed") or v.get("seen"):
+            seen = v.get("seen") or {}
+            if seen.get("conflict") and not v.get("disclaimed"):
+                # The case is real, but not under the number or year the answer gave.
+                out.append({"text": text, "kind": v["kind"], "problem": "citation_differs",
+                            "detail": f"ZambiaLII lists this case as {seen.get('title')}"})
+                continue
+            if v.get("foreign") or v.get("disclaimed") or seen:
                 continue
             known = v.get("known")
             if known and not known.get("year_conflict"):
@@ -1189,7 +1214,9 @@ def gate_problems(verdicts: list[dict]) -> list[dict]:
                             "detail": f"Courts cite this case as {known.get('name')}"
                                       + (f", {known['citation']}" if known.get("citation") else "")})
             else:
-                out.append({"text": text, "kind": v["kind"], "problem": "unverified"})
+                out.append({"text": text, "kind": v["kind"], "problem": "unverified",
+                            "detail": ("ZambiaLII's index does not list a case under these names"
+                                       if v.get("index_checked") else "")})
             continue
         if v.get("law_status") in ("repealed", "not in force") and not v.get("acknowledged"):
             by = ", ".join(v.get("replaced_by") or [])
@@ -1267,6 +1294,8 @@ def source_check_message(problems: list[dict], missed: bool) -> str:
         "b. The official web: gov_search (judiciaryzambia.com for judgments, parliament.gov.zm for Acts, "
         "gazettes.africa for statutory instruments and commencement), then web_fetch or read_pdf_pages to READ "
         "what you found. Only a page tagged trust=official can stand behind a statement of law.\n"
+        "c. For a case still not found, search_case_index once (ZambiaLII's index): it settles whether the "
+        "case exists and how it is cited. Its summary is not the judgment, so never quote it as the court.\n"
         "Use at most 4 tool calls in total.\n\n"
         "Then write ONE short closing section headed \"**Source check**\". Do not repeat or rewrite the answer, "
         "do not apologise, and do not mention this instruction. Write for the reader, not about your tools: "
@@ -1281,6 +1310,45 @@ def source_check_message(problems: list[dict], missed: bool) -> str:
         "search found the authority the library lacked, give what it says, quoted from the page, with the URL."
     )
     return "\n".join(lines)
+
+
+def _index_lookups(cites: list[dict], verdicts: list[dict]) -> None:
+    """Ask ZambiaLII's index about the cases nothing else could place.
+
+    Last in line, because each lookup spends one of a hundred calls a day: a
+    case goes here only when the library does not hold it, no held judgment
+    cites it, nothing Levy read this turn names it, and the answer has not
+    already disowned it. A few per answer, run side by side so a slow service
+    costs one wait, not three. A lookup that cannot be made leaves the
+    verdict exactly as it was.
+    """
+    try:
+        from . import case_index
+        if not case_index.configured():
+            return
+        todo = [(c, v) for c, v in zip(cites, verdicts)
+                if c["kind"] == "case" and v.get("status") == "not_found" and not v.get("foreign")
+                and not v.get("known") and not v.get("seen") and not v.get("disclaimed")][:INDEX_LOOKUPS_PER_ANSWER]
+        if not todo:
+            return
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=len(todo)) as pool:
+            found = list(pool.map(lambda cv: case_index.lookup_case(cv[0]["a"], cv[0]["b"], cv[0].get("cite") or ""), todo))
+        for (c, v), hit in zip(todo, found):
+            if not hit:
+                continue           # could not ask: unknown, not absent
+            if not hit.get("found"):
+                v["index_checked"] = True   # asked, and ZambiaLII does not list it
+                continue
+            seen = {"in": "index", "tool": "case_index", "title": hit["title"], "url": hit.get("url") or ""}
+            for k in ("citation", "court", "date"):
+                if hit.get(k):
+                    seen[k] = hit[k]
+            if hit.get("conflict"):
+                seen["conflict"] = True
+            v["seen"] = seen
+    except Exception:  # noqa: BLE001 — the index is a bonus check, never a dependency
+        return
 
 
 def audit_answer(text: str, evidence: list[dict] | None = None) -> list[dict]:
@@ -1381,6 +1449,7 @@ def audit_answer(text: str, evidence: list[dict] | None = None) -> list[dict]:
                         if named:
                             verdict["seen"] = named
                 out.append(verdict)
+        _index_lookups(cites, out)
         # Quotations checked against the section or judgment they are attributed
         # to. Every citation in the answer takes part in attribution, so a
         # quotation from the 21st authority is not pinned on an earlier one.

@@ -56,12 +56,14 @@ function hostOf(url?: string): string {
 function seenWhere(row: SourceRow): string {
   if (!row.seen) return 'a source Levy read'
   if (row.seen.in === 'official') return hostOf(row.seen.url) || 'an official site'
+  if (row.seen.in === 'index') return 'ZambiaLII'
   return (row.seen.title || 'a document in the library') + (row.seen.page ? `, page ${row.seen.page}` : '')
 }
 
 function badgeLabel(row: SourceRow): string {
   if (row.verification === 'verified') return 'Verified'
-  if (row.verification === 'sourced') return row.seen?.in === 'official' ? 'Read on an official site' : 'Named in a held source'
+  if (row.verification === 'sourced') return row.seen?.in === 'index' ? 'Listed on ZambiaLII' : row.seen?.in === 'official' ? 'Read on an official site' : 'Named in a held source'
+  if (row.seen?.conflict) return 'Check citation'
   if (row.verification === 'known') return `Cited in ${row.known?.cited_by ?? 0} judgments`
   if (row.quoteIssues.length) return 'Check quotation'
   if (row.treatment.length && !row.treatmentNamed) return TREATMENT_LABEL[row.treatment[0].treatment] || 'Later treatment'
@@ -129,7 +131,9 @@ function verdictHeading(row: SourceRow): string {
   if (row.treatment.length && !row.treatmentNamed) return `This case was later ${row.treatment[0].treatment}`
   if (row.verification === 'verified') return row.treatment.length ? 'Authority matched · later treatment named in the answer' : 'Authority matched in the library'
   if (row.verification === 'known') return `Not in the library · cited by ${row.known?.cited_by} judgments it holds`
+  if (row.verification === 'sourced' && row.seen?.in === 'index') return 'Not in the library · listed on ZambiaLII'
   if (row.verification === 'sourced') return row.seen?.in === 'official' ? 'Not in the library · read on an official site' : 'Not held under this name · named in a source Levy read'
+  if (row.seen?.conflict) return 'ZambiaLII lists this case under a different citation'
   if (row.known?.year_conflict) return 'The citation year differs from how courts cite this case'
   if (row.verification === 'noted' && row.disclaimed) return 'The answer says this is unverified'
   if (row.verification === 'noted') return row.lawStatus === 'not in force' ? 'Named in the answer as not yet in force' : 'Named in the answer as repealed'
@@ -165,6 +169,12 @@ function verdictBody(row: SourceRow): string {
   }
   if (row.verification === 'known') {
     return `Levy does not hold this judgment, but ${row.known?.cited_by} judgments in its library cite it${row.known?.citation ? ` as ${row.known.citation}` : ''}. That confirms the case exists and how it is cited, not that it supports the answer.`
+  }
+  if (row.verification === 'sourced' && row.seen?.in === 'index') {
+    return `Levy does not hold this judgment. ZambiaLII’s index lists it as ${row.seen.title || 'this case'}. That confirms the case exists and how it is cited, not that it supports the answer. Levy read a summary, not the judgment, so open it on ZambiaLII before relying on it.`
+  }
+  if (row.seen?.conflict) {
+    return `ZambiaLII’s index lists this case as ${row.seen.title || 'a differently cited case'}. The number or year in the answer does not match. Check the citation before relying on it.`
   }
   if (row.verification === 'sourced') {
     return row.seen?.in === 'official'
@@ -363,7 +373,7 @@ export function AnswerSources({ citations, webSources, blocks, onOpenPassage, on
                     </div>
                   ))}
                   {row.verification === 'sourced' && (
-                    <div className="cp-source-law is-noted">{row.seen?.in === 'official' ? `Read on ${seenWhere(row)}` : `Named in ${seenWhere(row)}`}</div>
+                    <div className="cp-source-law is-noted">{row.seen?.in === 'index' ? `Listed on ZambiaLII${row.seen.citation ? ` as ${row.seen.citation}` : ''}` : row.seen?.in === 'official' ? `Read on ${seenWhere(row)}` : `Named in ${seenWhere(row)}`}</div>
                   )}
                   {row.verification === 'noted' && row.disclaimed && (
                     <div className="cp-source-law is-noted">The answer says it could not verify this</div>
@@ -482,9 +492,9 @@ export function AnswerSources({ citations, webSources, blocks, onOpenPassage, on
                 Open the source it is named in <ArrowUpRight size={15} />
               </button>
             )}
-            {!detail.documentId && !detail.passages.length && detail.verification === 'sourced' && !detail.seen?.document_id && detail.seen?.url && /^https?:\/\//.test(detail.seen.url) && (
+            {!detail.documentId && !detail.passages.length && (detail.verification === 'sourced' || detail.seen?.conflict) && !detail.seen?.document_id && detail.seen?.url && /^https?:\/\//.test(detail.seen.url) && (
               <a className="cp-btn primary" style={{ marginTop: 16 }} href={detail.seen.url} target="_blank" rel="noopener noreferrer">
-                Open the official page <ArrowUpRight size={15} />
+                {detail.seen.in === 'index' ? 'Open on ZambiaLII' : 'Open the official page'} <ArrowUpRight size={15} />
               </a>
             )}
             {(detail.documentId || detail.passages.length > 0) && (

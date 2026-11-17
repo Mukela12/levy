@@ -39,6 +39,7 @@ for _r in INDEX:
 def audit(text, evidence=None, named=None):
     with patch.object(ca, "_load_index", lambda: INDEX), \
             patch.object(ca, "_library_named", lambda c, index: named), \
+            patch.object(get_settings(), "laws_africa_api_key", ""), \
             patch("app.services.citator.lookup", lambda a, b, cite="": None):
         return ca.audit_answer(text, evidence)
 
@@ -99,6 +100,17 @@ class Extractor(unittest.TestCase):
         self.assertTrue(ca._numbers_conflict("Appeal No. 116/2018", "Jackson Mooya v Nchimunya Mweemba (APP No. 268 of 2020)"))
         self.assertFalse(ca._numbers_conflict("APP No. 268 of 2020", "Jackson Mooya v Nchimunya Mweemba (APP No. 268 of 2020)"))
         self.assertFalse(ca._numbers_conflict("Supreme Court", "Jackson Mooya v Nchimunya Mweemba (APP No. 268 of 2020)"))
+
+    def test_a_list_of_cases_and_a_label_before_a_case(self):
+        got = self.names("See Alpha Mining Ltd v Bravo Stores Ltd (2019), Charlie Farms Ltd v Delta Bank Plc (2020) and "
+                         "Echo Motors Ltd v Foxtrot Hauliers Ltd (2021).\n**Citation:** Wilson Masauso Zulu v Avondale "
+                         "Housing Project Limited (1982) ZR 172.")
+        self.assertEqual(got, ["Alpha Mining Ltd v Bravo Stores Ltd (2019)", "Charlie Farms Ltd v Delta Bank Plc (2020)",
+                               "Echo Motors Ltd v Foxtrot Hauliers Ltd (2021)",
+                               "Wilson Masauso Zulu v Avondale Housing Project Limited (1982)"])
+
+    def test_a_table_of_figures_is_not_a_case(self):
+        self.assertEqual(self.names("Difference K182.71: Original K2,290.69 v Correct K2,473.40 for the month."), [])
 
     def test_a_source_bracket_starts_the_name(self):
         got = self.names("larger claims going to the High Court. [Prudent Solution Ltd v Mutale Chonta, 2024 HP 0204] (p. 9)")
@@ -271,6 +283,8 @@ class Loop(unittest.IsolatedAsyncioTestCase):
                 patch.object(get_settings(), "moonshot_api_key", ""), \
                 patch.object(get_settings(), "openrouter_api_key", ""), \
                 patch.object(get_settings(), "source_check_enabled", enabled), \
+                patch.object(get_settings(), "laws_africa_api_key", ""), \
+                patch.object(get_settings(), "hard_task_enabled", False), \
                 patch.object(ca, "_load_index", lambda: INDEX), \
                 patch.object(ca, "_library_named", lambda c, index: None), \
                 patch("app.services.citator.lookup", lambda a, b, cite="": None):

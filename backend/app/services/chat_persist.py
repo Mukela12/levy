@@ -85,11 +85,16 @@ class RunAccumulator:
         # say Kimi. Without it, answer feedback cannot be attributed to a
         # model and any A/B between tiers proves nothing.
         self.model: str | None = None
+        # Tokens and estimated cost of the run (services/pricing.py).
+        self.usage: dict | None = None
 
     def consume(self, e: dict) -> None:
         t = e.get("type")
         if t == "done" and e.get("model"):
             self.model = str(e["model"])
+        if t == "usage":
+            self.usage = e.get("usage") or None
+            return
         if t == "token":
             chunk = e.get("content", "")
             self.content += chunk
@@ -192,6 +197,10 @@ class RunAccumulator:
         """
         if not self.has_content():
             return None
+        if self.usage and not any(b.get("kind") == "usage" for b in self.blocks):
+            # Kept with the answer's other blocks: no schema change, and the
+            # client renders only the block kinds it knows.
+            self.blocks.append({"kind": "usage", **self.usage})
         res = get_db().table("chat_messages").insert({
             "session_id": session_id,
             "role": "assistant",

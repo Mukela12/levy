@@ -709,6 +709,38 @@ async def _gov_search(query: str, max_results: int = 5) -> dict:
     }
 
 
+async def _search_case_index(query: str, max_results: int = 5) -> dict:
+    """ZambiaLII's judgment index through Laws.Africa (services/case_index.py)."""
+    from . import case_index
+    res = await asyncio.to_thread(case_index.retrieve, query, max(1, min(int(max_results or 5), 5)), "search")
+    if not res.get("ok"):
+        why = res.get("error")
+        return {"result": {
+            "unavailable": True, "matches": [], "count": 0,
+            "note": ("Today's lookups of the ZambiaLII index are used up." if why == "budget" else
+                     "The ZambiaLII index could not be reached just now.")
+                    + " Carry on without it: say what you searched in the library and on the official sites, "
+                      "and do not mention this tool.",
+        }, "db_sources": [], "web_sources": []}
+    matches = [{"title": r["title"], "citation": r.get("citation"), "court": r.get("court"), "date": r.get("date"),
+                "url": r.get("url"), "summary": (r.get("summary") or r.get("flynote") or "")[:2600], "trust": "index"}
+               for r in res["results"]]
+    return {
+        "result": {
+            "matches": matches, "count": len(matches), "source": "ZambiaLII judgment index (via Laws.Africa)",
+            "note": ("Each match is a real judgment published on ZambiaLII: the title, cause number, neutral "
+                     "citation, court and date can be cited as they stand. `summary` was written by Laws.Africa, "
+                     "not by the court, and Levy has NOT read the judgment: never put its words in quotation "
+                     "marks as the court's, say \"according to the ZambiaLII summary\", and give the link so "
+                     "the reader can read the judgment. A match on a party's name alone may be a different "
+                     "case: check both parties before you rely on it."),
+        },
+        "db_sources": [],
+        "web_sources": [{"title": m["title"], "url": m["url"], "snippet": (m["summary"] or "")[:300],
+                         "domain": _extract_domain(m["url"] or ""), "trust": "index"} for m in matches if m.get("url")],
+    }
+
+
 async def _web_search(query: str, max_results: int = 5) -> dict:
     """General web search. Use only when gov_search returns nothing useful."""
     return await _tavily_search(query, max_results=max_results)
@@ -4186,6 +4218,46 @@ def build_tool_registry(
             },
             handler=_gov_search,
         )
+        from . import case_index as _case_index
+        if _case_index.configured():
+            _index_calls = {"n": 0}
+
+            async def _rationed_case_index(query: str, max_results: int = 5) -> dict:
+                # The index allows about a hundred lookups a day for everyone,
+                # so one question may spend two of them and no more.
+                _index_calls["n"] += 1
+                if _index_calls["n"] > 2:
+                    return {"result": {"unavailable": True, "matches": [], "count": 0,
+                                       "note": "The ZambiaLII index has already been searched twice for this "
+                                               "question. Work with what it returned."},
+                            "db_sources": [], "web_sources": []}
+                return await _search_case_index(query, max_results)
+
+            tools["search_case_index"] = ToolDefinition(
+                name="search_case_index",
+                description=(
+                    "Search the index of Zambian court judgments published on ZambiaLII, through "
+                    "Laws.Africa's licensed service. For each case it returns the full title with cause "
+                    "number and neutral citation, the court, the date, a summary of the facts, issues and "
+                    "holding, and the public link. It does NOT return the judgment text. Use it only after "
+                    "search_case_law has missed, for one of two jobs: (a) finding authority on a point the "
+                    "library has no case for, or (b) checking that a named case exists and getting its "
+                    "correct citation (search the parties' names). It is rationed to about a hundred "
+                    "lookups a day across every user: one well-chosen query, never a loop. The summary is "
+                    "Laws.Africa's, not the court's: never quote it as the judgment. If it reports "
+                    "unavailable, carry on without it."
+                ),
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "query": {"type": "string",
+                                  "description": "The point of law in a few words, or the parties' names."},
+                        "max_results": {"type": "integer", "description": "Default 5, max 5."},
+                    },
+                    "required": ["query"],
+                },
+                handler=_rationed_case_index,
+            )
         tools["web_search"] = ToolDefinition(
             name="web_search",
             description=(
@@ -4297,7 +4369,7 @@ def tag_trust(envelope: dict) -> dict:
         web = envelope.get("web_sources") or []
         for w in web:
             if isinstance(w, dict) and w.get("url"):
-                w["trust"] = trust_of(w["url"])
+                w.setdefault("trust", trust_of(w["url"]))
         result = envelope.get("result")
         if not isinstance(result, dict):
             return envelope
@@ -4306,9 +4378,9 @@ def tag_trust(envelope: dict) -> dict:
         if isinstance(matches, list):
             for m in matches:
                 if isinstance(m, dict) and m.get("url"):
-                    m["trust"] = trust_of(m["url"])
+                    m.setdefault("trust", trust_of(m["url"]))
                     tiers.add(m["trust"])
-            if tiers:
+            if tiers and tiers != {"index"}:
                 matches.sort(key=lambda m: 0 if isinstance(m, dict) and m.get("trust") == "official" else 1)
                 web.sort(key=lambda w: 0 if isinstance(w, dict) and w.get("trust") == "official" else 1)
                 result["source_rule"] = (

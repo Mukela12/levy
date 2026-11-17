@@ -70,7 +70,7 @@ export interface SourceRow {
 }
 
 /** A source that can stand behind an authority: the library, or an official page. */
-const trustedSeen = (c: CitationVerdict) => Boolean(c.seen && (c.seen.in === 'library' || c.seen.in === 'official'))
+const trustedSeen = (c: CitationVerdict) => Boolean(c.seen && !c.seen.conflict && (c.seen.in === 'library' || c.seen.in === 'official' || c.seen.in === 'index'))
 
 /**
  * One entry per cited section. A section the answer mentions twice counts as
@@ -257,7 +257,7 @@ export function sourceModel(input: {
     const settled = (c: CitationVerdict) => Boolean((c.status === 'verified' && c.document_id) || (c.known && !c.known.year_conflict) || trustedSeen(c) || c.disclaimed === true)
     const accounted = unmatched && !knownOnly && row.verdicts.every(settled)
     const sourcedOnly = accounted && row.verdicts.some((c) => !(c.status === 'verified' && c.document_id) && trustedSeen(c) && !c.disclaimed)
-    row.seen = row.verdicts.find(trustedSeen)?.seen
+    row.seen = row.verdicts.find(trustedSeen)?.seen ?? row.verdicts.find((c) => c.seen?.conflict)?.seen
     row.disclaimed = accounted && !sourcedOnly
     row.checked = row.verdicts.some((c) => c.checked === true)
     const misused = row.quoteIssues.length > 0 || (row.treatment.length > 0 && !row.treatmentNamed)

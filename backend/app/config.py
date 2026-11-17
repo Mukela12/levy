@@ -82,6 +82,30 @@ class Settings(BaseSettings):
     # give the model one more round to check and append a correction. Off
     # switch for an incident: SOURCE_CHECK_ENABLED=false.
     source_check_enabled: bool = True
+
+    # ZambiaLII's judgment index through Laws.Africa's licensed API
+    # (services/case_index.py). Free Sandbox plan: 100 successful calls a day,
+    # spent only on checking a cited case nothing else knows and on finding
+    # authority after the library misses. `case_index_verify_reserve` calls a
+    # day are held back for checking. No key, or CASE_INDEX_ENABLED=false,
+    # switches the whole thing off.
+    laws_africa_api_key: str = ""
+    case_index_enabled: bool = True
+    case_index_kb: str = "judgments-zm"
+    case_index_verify_reserve: int = 30
+
+    # Hard legal tasks (authority hunts, litigation drafting, advice on a
+    # client's position) go to a stronger model; everything else stays on
+    # agent_model. Signed-in users only, and capped per day, because the
+    # stronger model costs twice as much per token. HARD_TASK_ENABLED=false
+    # turns the routing off.
+    hard_task_enabled: bool = True
+    hard_task_model: str = "claude-opus-5-5"
+    # Measured 17 Nov 2026: a hard answer on the stronger model cost about
+    # $0.66 against $0.03 to $0.20 on the everyday one, so the caps bound the
+    # worst day at roughly $7.
+    hard_task_daily_cap: int = 10
+    hard_task_user_daily_cap: int = 4
     agent_tool_timeout_seconds: int = 25
     agent_max_tool_result_chars: int = 8000
     # Output ceiling per model call. This was 8192, which silently truncated or

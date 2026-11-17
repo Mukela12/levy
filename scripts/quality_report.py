@@ -32,7 +32,7 @@ from app.db.supabase import get_db  # noqa: E402
 # accounts found in the 6 Oct 2026 corrections review (hard-coded template
 # UUIDs fired repeatedly; prompts beginning "For QA only"): not real usage.
 EXCLUDE_PREFIXES = ("0bb36a24", "c391a7a2", "e49f9bea", "e1b20d71", "ffcdfb84")
-PRIMARY = ("claude-sonnet-5-5", "claude-sonnet-4-6")
+PRIMARY = ("claude-sonnet-5-5", "claude-sonnet-4-6", "claude-opus-5-5")
 REASK_MINUTES = 5
 REASK_OVERLAP = 0.5
 WORD = re.compile(r"[a-z]{4,}")
@@ -147,6 +147,66 @@ def main() -> int:
     errs = ", ".join(f"{k} {v}/{tool_runs[k]}" for k, v in tool_errors.most_common(6)) or "none"
     print(f"- tool errors: {errs}")
     print(f"- thumbs: " + (", ".join(f"{k} {v}" for k, v in ratings.items()) or "none given"))
+
+    # Is the answer's law traceable, and what did it cost? (17 Nov 2026: the
+    # source check, ZambiaLII's index and per-answer cost logging.) Each cited
+    # authority is counted once by how it was settled; "unverified" is the
+    # number to drive down.
+    settled, checks, check_kinds = Counter(), 0, Counter()
+    cost_by_model, answers_by_model, costed, routed = Counter(), Counter(), 0, Counter()
+    for m in answers:
+        blocks = m.get("blocks") or []
+        audit = next((b for b in blocks if b.get("kind") == "citation_audit"), None)
+        for c in (audit or {}).get("citations") or []:
+            if c.get("status") == "verified":
+                settled["held in the library"] += 1
+            elif c.get("foreign"):
+                settled["foreign authority"] += 1
+            elif (c.get("seen") or {}).get("in") in ("library", "official", "index") and not (c.get("seen") or {}).get("conflict"):
+                settled[{"library": "named in a held source", "official": "read on an official site",
+                         "index": "listed on ZambiaLII"}[c["seen"]["in"]]] += 1
+            elif c.get("known") and not c["known"].get("year_conflict"):
+                settled["cited by held judgments"] += 1
+            elif c.get("disclaimed"):
+                settled["flagged unverified by the answer"] += 1
+            else:
+                settled["UNVERIFIED"] += 1
+        if (audit or {}).get("check"):
+            checks += 1
+            check_kinds.update(audit["check"].get("kinds") or (["library miss, no web search"] if audit["check"].get("missed") else []))
+        usage = next((b for b in blocks if b.get("kind") == "usage"), None)
+        if usage:
+            costed += 1
+            if usage.get("routed"):
+                routed[usage["routed"]] += 1
+            for model, row in (usage.get("by_model") or {}).items():
+                cost_by_model[model] += row.get("usd_est") or 0
+                answers_by_model[model] += 1
+    total_cites = sum(settled.values())
+    print("\n## Trust")
+    if total_cites:
+        print(f"- {total_cites} authorities cited: " + ", ".join(f"{k} {v}" for k, v in settled.most_common()))
+        print(f"- unverified share: {100 * settled['UNVERIFIED'] / total_cites:.0f}%")
+    print(f"- answers sent back by the source check: {checks}"
+          + (" (" + ", ".join(f"{k} {v}" for k, v in check_kinds.most_common()) + ")" if check_kinds else ""))
+    try:
+        looks = page(db.table("case_index_lookups").select("purpose,status,latency_ms").gte("created_at", since))
+        ok = [l for l in looks if l["status"] == "ok"]
+        print(f"- ZambiaLII index: {len(looks)} calls, {len(ok)} answered"
+              + (f", median {sorted(l['latency_ms'] or 0 for l in ok)[len(ok) // 2] / 1000:.1f}s" if ok else "")
+              + "; by purpose " + (", ".join(f"{k} {v}" for k, v in Counter(l["purpose"] for l in looks).items()) or "none"))
+    except Exception:  # noqa: BLE001 — the lookups table is optional
+        print("- ZambiaLII index: no lookup log (table case_index_lookups not created)")
+    print("\n## Cost (estimated from token counts; answers saved since cost logging began)")
+    if costed:
+        total = sum(cost_by_model.values())
+        print(f"- {costed} answers costed, ${total:.2f} in all, ${total / costed:.3f} an answer")
+        for model, usd in cost_by_model.most_common():
+            print(f"  - {model}: {answers_by_model[model]} answers, ${usd:.2f}, ${usd / answers_by_model[model]:.3f} each")
+        if routed:
+            print("- sent to the stronger model: " + ", ".join(f"{k} {v}" for k, v in routed.most_common()))
+    else:
+        print("- none yet")
     return 0
 
 

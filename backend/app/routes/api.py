@@ -593,7 +593,8 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
                 debug_tools=_is_qa_probe(http_request),
             ):
                 acc.consume(event)
-                await queue.put(event)
+                if event.get("type") != "usage":   # cost is ours to know, not the reader's
+                    await queue.put(event)
         except Exception as e:  # noqa: BLE001
             run_failed = True
             logger.exception("agent run failed")
@@ -656,6 +657,8 @@ async def chat_stream(request: ChatRequest, http_request: Request, authorization
                     duration_ms=int((time.time() - run_started) * 1000),
                     had_sources=bool(acc.citations),
                     http_request=http_request,
+                    meta=({"usd_est": acc.usage.get("usd_est"), "rounds": acc.usage.get("rounds"),
+                           "model": acc.model} if acc.usage else None),
                 )
 
     # A dropped stream unlocks the composer while the detached run above keeps

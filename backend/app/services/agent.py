@@ -26,6 +26,7 @@ from typing import AsyncIterator
 import anthropic
 
 from . import kimi
+from . import pricing as _pricing
 from . import openrouter
 
 from ..config import get_settings
@@ -327,6 +328,12 @@ Every web result and fetched page carries a `trust` tag. Obey it.
 - `official` (Parliament, the Judiciary, the Government Gazette, ministries
   and statutory bodies): a statement of law may rest on it. Quote it and
   cite the URL.
+- `index` (ZambiaLII's judgment index, from `search_case_index`): proof
+  that a case exists, with its correct title, cause number, neutral
+  citation, court and date. Cite those as they stand. Its summary was
+  written by Laws.Africa, not the court, and you have not read the
+  judgment: say "according to the ZambiaLII summary", never quote it as
+  the court's words, and give the link.
 - `institutional` (law firms, professional bodies, universities, legal
   publishers): a lead or commentary. Say who says it ("a Bowmans note
   says"), and confirm the point in the library or on an official page
@@ -600,10 +607,16 @@ If the specific judgment the user wants is NOT in the library (search_case_law
 reports named_case_not_held, or nothing on point), in this order: (1)
 `gov_search` judiciaryzambia.com for it by party names and case number; (2)
 if found, `fetch_web_pdf` it so the user has the file, then `read_pdf_pages`
-it and answer from its text, citing the URL; (3) if not found, say plainly
-that you do not hold it and could not find it on the Judiciary's site, give
-only what a tool returned (related held judgments), and do not describe its
-facts or holding. You may CITE a zambialii.org URL as a reference, but you
+it and answer from its text, citing the URL; (3) if not found there, and the
+tool is available, `search_case_index` once with the parties' names or the
+point of law: it searches ZambiaLII's index and returns the case's correct
+citation, a summary and the link. Give the citation and the link, and report
+the holding only as "according to the ZambiaLII summary"; (4) if nothing
+finds it, say plainly that you do not hold it and could not find it on the
+Judiciary's site or in ZambiaLII's index, give only what a tool returned
+(related held judgments), and do not describe its facts or holding. The same
+tool is how you find authority on a point the library has no case for: one
+query, after search_case_law has missed. You may CITE a zambialii.org URL as a reference, but you
 cannot read it, so never say you will fetch it or imply you have its text.
 Do not narrate the plumbing either: a reader does not need to hear that a
 site blocks automated access. Say the judgment is not in the library, give
@@ -1328,6 +1341,21 @@ async def run_agent(
 ) -> AsyncIterator[dict]:
     settings = get_settings()
     model_name = model or DEFAULT_MODEL
+    # A hard legal task goes to the stronger model (services/routing.py):
+    # signed-in users only, never when the caller chose a model, and only
+    # while today's cap has room.
+    routed = None
+    if (model is None and owner_id and getattr(settings, "hard_task_enabled", False)
+            and settings.hard_task_model and settings.hard_task_model != model_name):
+        try:
+            from . import routing
+            _why = routing.hard_task(user_query, history)
+            if _why and await asyncio.to_thread(routing.budget_ok, owner_id):
+                model_name, routed = settings.hard_task_model, _why
+                print(f"[agent] hard task ({_why}): answering with {model_name}")
+        except Exception:  # noqa: BLE001 — routing must never block an answer
+            routed = None
+    usage_totals: dict = {}
     client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
 
     # If a session is given, fetch its currently-attached docs from the DB so
@@ -1532,7 +1560,8 @@ async def run_agent(
         streamed_any = False
         gate = _NarrationGate()
         last_error: Exception | None = None
-        model_attempts = [model_name] + [m for m in FALLBACK_MODELS if m != model_name]
+        # A routed hard task falls back to the everyday model first.
+        model_attempts = [model_name] + ([DEFAULT_MODEL] if routed else []) + list(FALLBACK_MODELS)
         # Cross-vendor last resort. Every Claude fallback shares one vendor, one
         # account and one rate limit, so a 429 or an Anthropic outage takes the
         # whole chain out at once. Kimi is a different vendor on different
@@ -1639,6 +1668,7 @@ async def run_agent(
         if final_message.usage:
             total_input_tokens += final_message.usage.input_tokens or 0
             total_output_tokens += final_message.usage.output_tokens or 0
+            _pricing.add_usage(usage_totals, model_name, final_message.usage)
 
         # Append the assistant message to the conversation as Anthropic returned it
         # (preserving any tool_use blocks so the next user turn's tool_results match).
@@ -1932,6 +1962,13 @@ async def run_agent(
         "db": list(db_sources_acc.values()),
         "web": list(web_sources_acc.values()),
     }
+
+    # Tokens and estimated cost of this answer, per model. Saved with the
+    # answer and never sent to the reader (the API route drops this event).
+    try:
+        yield {"type": "usage", "usage": _pricing.summarise(usage_totals, rounds=iterations, routed=routed)}
+    except Exception:  # noqa: BLE001
+        pass
 
     yield {
         "type": "done",

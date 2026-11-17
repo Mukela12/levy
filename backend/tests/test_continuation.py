@@ -54,6 +54,7 @@ class Continuation(unittest.IsolatedAsyncioTestCase):
         with patch.object(agent.anthropic, "AsyncAnthropic", lambda **kw: client), \
                 patch.object(get_settings(), "moonshot_api_key", ""), \
                 patch.object(get_settings(), "openrouter_api_key", ""), \
+                patch.object(get_settings(), "laws_africa_api_key", ""), \
                 patch("app.services.citation_audit.audit_answer", audit):
             return [ev async for ev in agent.run_agent(user_query="Draft my closing address", model="claude-sonnet-5-5")]
 

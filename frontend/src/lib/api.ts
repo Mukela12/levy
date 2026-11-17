@@ -77,12 +77,19 @@ export interface CitationVerdict {
 
 /** Where, in what Levy read, an authority it does not hold by name was found. */
 export interface SeenSource {
-  in: 'library' | 'official' | 'institutional' | 'news' | 'unofficial'
+  /** `index` is ZambiaLII's judgment index: the case exists, but only a summary was read. */
+  in: 'library' | 'official' | 'index' | 'institutional' | 'news' | 'unofficial'
   tool?: string
   document_id?: string
   title?: string
   url?: string
   page?: number
+  /** From the index: the neutral citation, court and date as ZambiaLII lists them. */
+  citation?: string
+  court?: string
+  date?: string
+  /** The index lists the case under a different number or year from the answer's. */
+  conflict?: boolean
 }
 
 export interface CaseTreatment {
