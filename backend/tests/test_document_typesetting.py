@@ -231,6 +231,9 @@ class Quotations(unittest.TestCase):
         self.assertIn("“the Premises” means the Tenant’s house", out)
         self.assertIn("1<sup>st</sup> and the 22<sup>nd</sup>", out)
         self.assertIn("<code>it's \"x\"</code>", out)       # what is quoted as code is not touched
+        # a defined term straight after its clause number opens with an opening mark
+        out = d.normalise('<p>(a) <strong>"the Premises"</strong> means the house;</p>', "agreement")
+        self.assertIn("</span><strong>\u201cthe Premises\u201d</strong>", out)
 
 
 class Signing(unittest.TestCase):

@@ -888,6 +888,8 @@ def _smarten(root) -> None:
             prev = walk(c, prev)
             if c.tail:
                 c.tail, prev = _curl(c.tail, prev)
+        if _has_class(el, "n"):
+            return " "                 # a clause number stands apart from its text: what follows opens afresh
         return "" if block else prev
 
     walk(root, "")

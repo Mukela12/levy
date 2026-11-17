@@ -18,3 +18,4 @@ pymupdf==1.28.2
 weasyprint==63.1
 markdown==3.7
 python-docx==1.1.2
+lxml>=5.2,<7        # doc_typeset reads and re-sets the HTML of a draft (python-docx brings it too)

@@ -13,12 +13,13 @@ read it:
                 indented from both margins in bold italic. A 40 mm left margin
                 for binding (Constitutional Court Rules 2016, r.11: A4, one
                 side, not less than 4 cm on the left).
-    agreement   a contract, deed or other instrument. A Palatino face (Book
-                Antiqua on a lawyer's own machine), a centred title, clause
-                numbers standing in their own column with the text hanging
-                beside them, defined terms in bold between real quotation
-                marks, signature blocks ruled and kept on one page, each
-                schedule on a page of its own.
+    agreement   a contract, deed or other instrument. Times at 12 point, the
+                face of the government's own agreements and forms (the 2024
+                State lease, the forms scheduled to Acts), a centred title,
+                clause numbers standing in their own column with the text
+                hanging beside them, defined terms in bold between real
+                quotation marks, signature blocks ruled and kept on one page,
+                each schedule on a page of its own.
     letter      a letter or notice. Block format: everything flush left, the
                 "RE:" line in bold and underlined, the sign-off kept together.
     memo        advice, a brief, a summary. A plain title over a rule, no
@@ -43,13 +44,16 @@ import re
 
 from . import doc_typeset
 
-# Production gets the TeX Gyre faces from the image (fonts-texgyre): Bonum is
-# a Bookman, Pagella a Palatino, Termes a Times. The names after them are the
-# same designs as they ship with Word, so the Word export opens in the face a
+# Two faces. Court documents take the face of the courts' own judgments, a
+# Bookman. Everything else takes Times, which is what the government's own
+# agreements, forms and leases are set in (Mukela's choice, 17 Nov 2026, after
+# seeing the research). Production gets both from the image (fonts-texgyre:
+# Bonum is a Bookman, Termes a Times). The names after them are the same
+# designs as they ship with Word, so the Word export opens in the face a
 # Zambian lawyer already uses.
 SERIF_COURT = ('"TeX Gyre Bonum", "Bookman Old Style", "URW Bookman", "Bookman", "Book Antiqua", '
                '"TeX Gyre Pagella", "Times New Roman", serif')
-SERIF_BOOK = '"TeX Gyre Pagella", "Palatino Linotype", "Palatino", "Book Antiqua", "Liberation Serif", serif'
+SERIF_TEXT = '"TeX Gyre Termes", "Times New Roman", "Liberation Serif", "Nimbus Roman", "Times", serif'
 _SHARED = """
 html { color: #000; font-variant-numeric: lining-nums; hyphens: none; font-kerning: normal; }
 p { orphans: 2; widows: 2; }
@@ -79,9 +83,9 @@ table.letterhead { width: 100%; border-collapse: collapse; margin: 0 0 16pt 0; b
 table.letterhead td { border: none; padding: 0 0 8pt 0; vertical-align: bottom; }
 table.letterhead td.lh-logo { width: 45%; }
 table.letterhead img { max-height: 22mm; max-width: 62mm; }
-table.letterhead td.lh-text { text-align: right; font-size: 9.5pt; line-height: 1.35; }
+table.letterhead td.lh-text { text-align: right; font-size: 10pt; line-height: 1.35; }
 table.letterhead.centred td { text-align: center; }
-table.letterhead .lh-name { font-size: 12pt; font-weight: 700; letter-spacing: 0.02em; }
+table.letterhead .lh-name { font-size: 12.5pt; font-weight: 700; letter-spacing: 0.02em; }
 """
 
 COURT_CSS = _SHARED + """
@@ -181,21 +185,21 @@ AGREEMENT_CSS = _SHARED + """
 @page {
   size: A4;
   margin: 26mm 25mm 26mm 30mm;
-  @bottom-center { content: "Page " counter(page) " of " counter(pages); font-family: %(face)s; font-size: 9pt; }
+  @bottom-center { content: "Page " counter(page) " of " counter(pages); font-family: %(face)s; font-size: 9.5pt; }
 }
-html { font-family: %(face)s; font-size: 11pt; line-height: 1.45; }
+html { font-family: %(face)s; font-size: 12pt; line-height: 1.4; }
 p { margin: 0 0 8pt 0; text-align: justify; }
 h1 { text-align: center; font-size: 15pt; text-transform: uppercase; letter-spacing: 0.08em; line-height: 1.3; margin: 0 0 20pt 0; }
-h2 { text-align: left; font-size: 11pt; text-transform: uppercase; letter-spacing: 0.04em; margin: 18pt 0 6pt 0; }
-h2.schedule { break-before: page; text-align: center; font-size: 12pt; letter-spacing: 0.08em; margin: 0 0 14pt 0; }
-h3 { text-align: left; font-size: 11pt; margin: 12pt 0 4pt 0; }
+h2 { text-align: left; font-size: 12pt; text-transform: uppercase; letter-spacing: 0.04em; margin: 18pt 0 6pt 0; }
+h2.schedule { break-before: page; text-align: center; font-size: 12.5pt; letter-spacing: 0.08em; margin: 0 0 14pt 0; }
+h3 { text-align: left; font-size: 12pt; margin: 12pt 0 4pt 0; }
 p.connective { text-align: center; font-weight: 700; letter-spacing: 0.08em; margin: 12pt 0; }
 ol, ul { margin: 0 0 8pt 0; padding-left: 26pt; }
 li { margin-bottom: 5pt; text-align: justify; padding-left: 3pt; }
 ol ol { list-style-type: lower-alpha; margin-top: 5pt; }
 ol ol ol { list-style-type: lower-roman; }
 hr { border: none; border-top: 0.5pt solid #000; margin: 14pt 0; }
-table { border-collapse: collapse; margin: 8pt 0 10pt 0; width: 100%%; font-size: 10pt; }
+table { border-collapse: collapse; margin: 8pt 0 10pt 0; width: 100%%; font-size: 11pt; }
 th { text-align: left; border-bottom: 0.75pt solid #000; padding: 4pt 8pt 4pt 0; }
 td { border-bottom: 0.25pt solid #777; padding: 4pt 8pt 4pt 0; vertical-align: top; }
 tr.blank-row td { height: 15pt; }
@@ -204,18 +208,18 @@ tr.blank-row td { height: 15pt; }
 .sig-line { border-bottom: 0.75pt solid #000; width: 60%%; margin-top: 30pt; }
 .exec { margin-top: 16pt; }
 .exec > p { text-align: left; margin-bottom: 4pt; }
-""" % {"face": SERIF_BOOK}
+""" % {"face": SERIF_TEXT}
 
 LETTER_CSS = _SHARED + """
 @page {
   size: A4;
   margin: 24mm 25mm 24mm 25mm;
-  @bottom-center { content: "Page " counter(page) " of " counter(pages); font-family: %(face)s; font-size: 9pt; }
+  @bottom-center { content: "Page " counter(page) " of " counter(pages); font-family: %(face)s; font-size: 9.5pt; }
 }
-html { font-family: %(face)s; font-size: 11pt; line-height: 1.45; }
+html { font-family: %(face)s; font-size: 12pt; line-height: 1.4; }
 p { margin: 0 0 9pt 0; text-align: left; }
-h1, h2 { text-align: left; font-size: 11.5pt; line-height: 1.35; margin: 14pt 0 10pt 0; }
-h3 { text-align: left; font-size: 11pt; margin: 12pt 0 4pt 0; }
+h1, h2 { text-align: left; font-size: 12pt; line-height: 1.35; margin: 14pt 0 10pt 0; }
+h3 { text-align: left; font-size: 12pt; margin: 12pt 0 4pt 0; }
 .re-line, .re-line strong { text-decoration: underline; text-underline-offset: 2.5pt; font-weight: 700; }
 p.re-line { margin: 12pt 0 12pt 0; }
 p.marking { font-weight: 700; letter-spacing: 0.04em; }
@@ -224,33 +228,33 @@ ol, ul { margin: 0 0 9pt 0; padding-left: 24pt; }
 li { margin-bottom: 5pt; padding-left: 3pt; }
 ol ol { list-style-type: lower-alpha; margin-top: 4pt; }
 hr { border: none; border-top: 0.5pt solid #000; margin: 16pt 0; }
-table { border-collapse: collapse; margin: 8pt 0 10pt 0; width: 100%%; font-size: 10pt; }
+table { border-collapse: collapse; margin: 8pt 0 10pt 0; width: 100%%; font-size: 11pt; }
 th { text-align: left; border-bottom: 0.75pt solid #000; padding: 4pt 8pt 4pt 0; }
 td { border-bottom: 0.25pt solid #777; padding: 4pt 8pt 4pt 0; vertical-align: top; }
 .sig-line { border-bottom: 0.75pt solid #000; width: 60%%; margin-top: 30pt; }
 p.valediction { margin-bottom: 36pt; }   /* room for a signature in ink */
-""" % {"face": SERIF_BOOK}
+""" % {"face": SERIF_TEXT}
 
 MEMO_CSS = _SHARED + """
 @page {
   size: A4;
   margin: 25mm 25mm 25mm 25mm;
-  @bottom-center { content: counter(page) " of " counter(pages); font-family: %(face)s; font-size: 9pt; }
+  @bottom-center { content: counter(page) " of " counter(pages); font-family: %(face)s; font-size: 9.5pt; }
 }
-html { font-family: %(face)s; font-size: 11pt; line-height: 1.5; }
+html { font-family: %(face)s; font-size: 12pt; line-height: 1.45; }
 h1 { font-size: 17pt; line-height: 1.25; margin: 0 0 16pt 0; padding-bottom: 8pt; border-bottom: 0.75pt solid #000; }
-h2 { font-size: 12.5pt; margin: 18pt 0 6pt 0; }
-h3 { font-size: 11pt; margin: 12pt 0 4pt 0; }
+h2 { font-size: 13pt; margin: 18pt 0 6pt 0; }
+h3 { font-size: 12pt; margin: 12pt 0 4pt 0; }
 p { margin: 0 0 8pt 0; text-align: justify; }
 ul, ol { margin: 0 0 8pt 0; padding-left: 22pt; }
 li { margin-bottom: 3pt; }
 hr { border: none; border-top: 0.5pt solid #000; margin: 14pt 0; }
 blockquote { margin: 6pt 22pt 10pt 22pt; }
-code { font-family: "DejaVu Sans Mono", monospace; font-size: 9.5pt; }
-table { border-collapse: collapse; margin: 8pt 0 12pt 0; width: 100%%; font-size: 10pt; }
+code { font-family: "DejaVu Sans Mono", monospace; font-size: 10pt; }
+table { border-collapse: collapse; margin: 8pt 0 12pt 0; width: 100%%; font-size: 11pt; }
 th { text-align: left; border-bottom: 0.75pt solid #000; padding: 4pt 8pt 4pt 0; }
 td { border-bottom: 0.25pt solid #777; padding: 4pt 8pt 4pt 0; vertical-align: top; }
-""" % {"face": SERIF_BOOK}
+""" % {"face": SERIF_TEXT}
 
 LAYOUTS = ("court", "agreement", "letter")
 # A one-page letter carries no "Page 1 of 1".

@@ -177,10 +177,10 @@ class Word(unittest.TestCase):
             title="x", legal=True,
             body_md="# SERVICE AGREEMENT\n\n**BETWEEN**\n\n## 1. Term\n\nThis runs from [START DATE].")
         doc = Document(io.BytesIO(out))
-        self.assertEqual(doc.styles["Normal"].font.name, "Book Antiqua")
+        self.assertEqual(doc.styles["Normal"].font.name, "Times New Roman")
         runs = [r for p in doc.paragraphs for r in p.runs]
         title = next(r for r in runs if r.text == "SERVICE AGREEMENT")
-        self.assertEqual((title.font.name, str(title.font.color.rgb)), ("Book Antiqua", "000000"))
+        self.assertEqual((title.font.name, str(title.font.color.rgb)), ("Times New Roman", "000000"))
         blank = next(r for r in runs if r.text == "[START DATE]")
         self.assertIsNotNone(blank.font.highlight_color)
         court = Document(io.BytesIO(docx_tools.render_docx_bytes(

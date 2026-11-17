@@ -184,7 +184,7 @@ class _HtmlToDocx(HTMLParser):
             run._element.rPr.rFonts.set(qn("w:eastAsia"), self.face)
             run.font.color.rgb = RGBColor(0, 0, 0)
             run.bold = True
-            run.font.size = Pt({1: 15, 2: 12}.get(self.heading, 11) if self.layout != "court" else self.size)
+            run.font.size = Pt({1: 15}.get(self.heading, self.size) if self.layout != "court" else self.size)
 
     def _emit_text(self, text: str) -> None:
         if self.table is not None:
@@ -595,9 +595,10 @@ def markdown_to_plaintext(body_md: str) -> str:
 
 
 # The faces a Zambian lawyer already has in Word: the courts' own judgments
-# are set in Bookman Old Style, and Book Antiqua is Word's Palatino.
-_FACES = {"court": ("Bookman Old Style", 12), "agreement": ("Book Antiqua", 11),
-          "letter": ("Book Antiqua", 11), "memo": ("Book Antiqua", 11)}
+# are set in Bookman Old Style, the government's agreements and forms in
+# Times New Roman.
+_FACES = {"court": ("Bookman Old Style", 12), "agreement": ("Times New Roman", 12),
+          "letter": ("Times New Roman", 12), "memo": ("Times New Roman", 12)}
 # top, right, bottom, left, in millimetres: the PDF's page.
 _MARGINS = {"court": (25, 20, 25, 40), "agreement": (26, 25, 26, 30), "letter": (24, 25, 24, 25),
             "memo": (25, 25, 25, 25)}
@@ -650,7 +651,7 @@ def _add_letterhead(doc, lh: dict, face: str) -> None:
             para.paragraph_format.space_after = Pt(0)
             run = para.add_run(ln)
             run.font.name = face
-            run.font.size = Pt(12 if i == 0 else 9.5)
+            run.font.size = Pt(12.5 if i == 0 else 10)
             run.bold = i == 0
 
     if logo and lines:
