@@ -1621,6 +1621,85 @@ def build_tool_registry(
         except Exception:  # noqa: BLE001
             return None
 
+    def _party_titles(mode: str, applicant_role: str | None = None,
+                      respondent_role: str | None = None) -> tuple[str, str]:
+        """The parties' titles as they stand in the action. An action begun by
+        writ keeps PLAINTIFF and DEFENDANT through every application made in
+        it; the first live affidavit (17 Nov 2026) was headed APPLICANT and
+        RESPONDENT over a body that said Plaintiff and Defendant, because the
+        title was read off the name of the application."""
+        m = (mode or "").lower()
+        if "petition" in m:
+            a, r = "PETITIONER", "RESPONDENT"
+        elif "writ" in m or "statement of claim" in m or "originating summons" in m:
+            a, r = "PLAINTIFF", "DEFENDANT"
+        elif "appeal" in m:
+            a, r = "APPELLANT", "RESPONDENT"
+        else:
+            a, r = "APPLICANT", "RESPONDENT"
+        return ((applicant_role or "").strip().upper() or a, (respondent_role or "").strip().upper() or r)
+
+    _LINE = '<span class="rule" style="width:13em"></span>'      # a line to sign on
+
+    def _as_words(title: str) -> str:
+        """ "1ST DEFENDANT" -> "1st Defendant", for use inside a sentence."""
+        return " ".join(w.lower() if w[:1].isdigit() else w.capitalize() for w in (title or "").split())
+
+    def _in_prose(names: str) -> str:
+        """Several parties given one a line or split by semicolons, as they
+        read inside a sentence: "A, B and C"."""
+        parts = [p.strip() for p in re.split(r"\s*(?:\n|;)\s*", names or "") if p.strip()]
+        if len(parts) <= 1:
+            return (names or "").strip()
+        return ", ".join(parts[:-1]) + " and " + parts[-1]
+
+    def _town_of(court_division: str | None) -> str:
+        """The town the court sits in, for "Dated at ..."."""
+        for line in pdf_tools.court_lines(court_division)[0]:
+            if line.startswith("HOLDEN AT "):
+                return line[len("HOLDEN AT "):].title()
+        return "Lusaka"
+
+    def _dated_today(town: str = "Lusaka") -> str:
+        from datetime import datetime, timedelta, timezone
+        now = datetime.now(timezone(timedelta(hours=2)))          # the date in Zambia
+        d = now.day
+        suffix = "th" if 10 <= d % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(d % 10, "th")
+        return f'<p class="dated">Dated at {town} this {d}{suffix} day of {now:%B}, {now.year}.</p>'
+
+    def _advocates_block(counsel_name: str | None, counsel_firm: str | None, for_whom: str,
+                         address: str | None = None, in_person: str | None = None) -> str:
+        """Who signs a filed document: the line, the firm (or the party, when
+        they act without an advocate), and whom they act for."""
+        firm = (counsel_firm or "").strip()
+        name = (counsel_name or "").strip()
+        if in_person:
+            lines = [f"<p><strong>{in_person.upper()}</strong></p>", f"<p>{for_whom} in person</p>"]
+        elif firm:
+            lines = [f"<p><strong>{firm.upper()}</strong></p>"]
+            if name:
+                lines.append(f"<p>Per: {name}</p>")
+            lines.append(f"<p>Advocates for the {for_whom}</p>")
+        elif name:
+            lines = [f"<p><strong>{name.upper()}</strong></p>", f"<p>Counsel for the {for_whom}</p>"]
+        else:
+            lines = ["<p><strong>[FIRM NAME]</strong></p>", f"<p>Advocates for the {for_whom}</p>"]
+        if address and address.strip():
+            lines.append(f"<p>{address.strip()}</p>")
+        return '<div class="advocates"><div class="sig-line"></div>' + "".join(lines) + "</div>"
+
+    def _bold_cases(text: str, cases: list[str]) -> str:
+        """Set the name of each listed case in bold where the argument cites
+        it, as Zambian judgments and submissions do."""
+        names = set()
+        for c in cases or []:
+            nm = re.split(r"\s*[\(\[](?=\d|[A-Z]{2,5}[\)/ ])", c, maxsplit=1)[0].strip(" ,.;")
+            if re.search(r"\sv\.?\s", nm) and 8 <= len(nm) <= 160:
+                names.add(nm)
+        for nm in sorted(names, key=len, reverse=True):
+            text = re.sub(rf"(?<![>\w]){re.escape(nm)}(?![\w<])", lambda m: f"<strong>{m.group(0)}</strong>", text)
+        return text
+
     async def _draft_summons(
         procedural_mode: str,
         court_division: str,
@@ -1638,6 +1717,10 @@ def build_tool_registry(
         respondent_address: str | None = None,
         return_date_note: str | None = None,
         template_id: str | None = None,
+        applicant_role: str | None = None,
+        respondent_role: str | None = None,
+        firm_address: str | None = None,
+        in_person: bool | None = None,
     ):
         """Draft the originating process (Summons / Notice of Motion / etc.)
         for a Zambian court application and store it as a PDF artifact.
@@ -1664,18 +1747,8 @@ def build_tool_registry(
 
         is_ex_parte = (urgency or "").strip().lower() == "ex_parte" or "ex parte" in mode.lower()
 
-        # Determine party-role labels for the parties block. Originating
-        # Summons in Zambia uses Plaintiff/Defendant; Notice of Motion uses
-        # Applicant/Respondent; Petition uses Petitioner/Respondent.
         mode_lower = mode.lower()
-        if "petition" in mode_lower:
-            applicant_role, respondent_role = "PETITIONER", "RESPONDENT"
-        elif "writ" in mode_lower or "statement of claim" in mode_lower:
-            applicant_role, respondent_role = "PLAINTIFF", "DEFENDANT"
-        elif "originating summons" in mode_lower:
-            applicant_role, respondent_role = "PLAINTIFF", "DEFENDANT"
-        else:
-            applicant_role, respondent_role = "APPLICANT", "RESPONDENT"
+        applicant_role, respondent_role = _party_titles(mode, applicant_role, respondent_role)
 
         heading_html = pdf_tools.render_court_heading(
             court_division=court_division,
@@ -1693,11 +1766,7 @@ def build_tool_registry(
         if statutory_basis:
             joined = "; ".join(s.strip() for s in statutory_basis if s and s.strip())
             if joined:
-                pursuant_line = (
-                    f'<p style="text-align:center; font-style:italic;">'
-                    f'(Pursuant to {joined})'
-                    f'</p>'
-                )
+                pursuant_line = f'<p class="pursuant">(Pursuant to {joined})</p>'
 
         ex_parte_phrase = "EX PARTE " if is_ex_parte else ""
         return_phrase = (
@@ -1709,28 +1778,28 @@ def build_tool_registry(
         if "originating summons" in mode_lower:
             opening_recital = (
                 f'<p class="recital">'
-                f'LET <strong>{respondent}</strong> '
-                f'of <em>{respondent_address or "[address for service]"}</em>, '
+                f'LET <strong>{_in_prose(respondent)}</strong> '
+                f'of {respondent_address or "[RESPONDENT ADDRESS FOR SERVICE]"}, '
                 f'within fourteen (14) days after the service of this Summons on you, '
                 f'inclusive of the day of such service, cause an appearance to be entered '
                 f'on your behalf to this Summons, which is issued at the suit of '
-                f'<strong>{applicant}</strong>, the Applicant herein, '
+                f'<strong>{_in_prose(applicant)}</strong>, the {_as_words(applicant_role)} herein, '
                 f'who seeks the following orders:'
                 f'</p>'
             )
         elif "petition" in mode_lower:
             opening_recital = (
                 f'<p class="recital">'
-                f'The Petition of <strong>{applicant}</strong> respectfully showeth that '
+                f'The Petition of <strong>{_in_prose(applicant)}</strong> respectfully showeth that '
                 f'the Petitioner seeks the following orders against '
-                f'<strong>{respondent}</strong>:'
+                f'<strong>{_in_prose(respondent)}</strong>:'
                 f'</p>'
             )
         else:
             opening_recital = (
                 f'<p class="recital">'
                 f'TAKE NOTICE that {return_phrase}, '
-                f'Counsel for the {applicant_role.capitalize()} will {ex_parte_phrase}'
+                f'Counsel for the {_as_words(applicant_role)} will {ex_parte_phrase}'
                 f'move this Honourable Court for the following orders:'
                 f'</p>'
             )
@@ -1742,7 +1811,7 @@ def build_tool_registry(
         )
 
         # Cross-reference to supporting documents.
-        deponent = (supporting_deponent or applicant).strip()
+        deponent = (supporting_deponent or re.split(r"\s*(?:\n|;)\s*", applicant)[0]).strip()
         if "originating summons" in mode_lower or "petition" in mode_lower:
             support_clause = (
                 f'<p>This {mode} is supported by the Affidavit of <strong>{deponent}</strong> '
@@ -1755,48 +1824,37 @@ def build_tool_registry(
                 f'together with Skeletal Arguments in support of the application.</p>'
             )
 
-        today = datetime.utcnow().strftime("%d{suffix} day of %B, %Y")
-        # crude ordinal — not life-critical, the law firm normally fills the
-        # day at filing anyway.
-        day = datetime.utcnow().day
-        if 10 <= day % 100 <= 20:
-            suffix = "th"
+        dated_line = _dated_today(_town_of(court_division))
+        signer = _in_prose(applicant) if in_person else None
+        signature_block = _advocates_block(counsel_name, counsel_firm, _as_words(applicant_role),
+                                           applicant_address if in_person else firm_address, signer)
+
+        # Who took the document out, and on whom it is to be served, in the
+        # words of the forms in the First Schedule to the High Court Rules
+        # ("This Summons was taken out by ... of ... Advocates for the ...";
+        # "To ... of ...").
+        if in_person:
+            taken_out = (
+                f'<p>This {mode} was taken out by <strong>{_in_prose(applicant)}</strong>, the '
+                f'{_as_words(applicant_role)} in person, of '
+                f'{(applicant_address or "").strip() or "[APPLICANT ADDRESS FOR SERVICE]"}.</p>'
+            )
         else:
-            suffix = {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
-        dated_line = (
-            f'<p class="dated">DATED at {{city}} this {today.format(suffix=suffix)}.</p>'
-        ).format(city=(applicant_address or "Lusaka"))
-
-        signature_block = (
-            '<div class="sig-line"></div>'
-            f'<p><strong>{(counsel_name or "[COUNSEL NAME]").upper()}</strong><br/>'
-            f'{counsel_firm or "[FIRM NAME / CHAMBERS]"}<br/>'
-            f'Counsel for the {applicant_role.capitalize()}</p>'
-        )
-
-        # Address for service: required for inter partes filings.
+            firm = (counsel_firm or counsel_name or "").strip() or "[FIRM NAME]"
+            taken_out = (
+                f'<p>This {mode} was taken out by <strong>{firm}</strong> of '
+                f'{(firm_address or "").strip() or "[FIRM ADDRESS FOR SERVICE]"}, '
+                f'Advocates for the {_as_words(applicant_role)}.</p>'
+            )
         if not is_ex_parte:
             served = (
-                '<div class="served">'
-                '<p><strong>To:</strong><br/>'
-                'The Registrar<br/>'
-                'High Court of Zambia<br/>'
-                'Lusaka, Zambia</p>'
-                '<p><strong>AND TO:</strong><br/>'
-                f'{respondent}<br/>'
-                f'{respondent_address or "[address for service]"}</p>'
+                '<div class="served">' + taken_out
+                + f'<p><strong>To:</strong> {_in_prose(respondent)}, the {_as_words(respondent_role)}, '
+                f'of {respondent_address or "[RESPONDENT ADDRESS FOR SERVICE]"}.</p>'
                 '</div>'
             )
         else:
-            served = (
-                '<div class="served">'
-                '<p><strong>To:</strong><br/>'
-                'The Registrar<br/>'
-                'High Court of Zambia<br/>'
-                'Lusaka, Zambia</p>'
-                '<p><em>(Ex parte application — service on the Respondent dispensed with pending the leave of the Court.)</em></p>'
-                '</div>'
-            )
+            served = '<div class="served">' + taken_out + '</div>'
 
         template = _fetch_template(template_id)
         letterhead = pdf_tools.render_template_letterhead(template)
@@ -1837,7 +1895,7 @@ def build_tool_registry(
         deponent_address: str,
         deponent_occupation: str,
         facts: list[str],
-        deponent_role: str = "Applicant",
+        deponent_role: str | None = None,
         deponent_gender: str = "adult",
         supporting_document: str | None = None,
         cause_number: str | None = None,
@@ -1845,6 +1903,8 @@ def build_tool_registry(
         commissioner_name: str | None = None,
         sworn_at_city: str | None = None,
         template_id: str | None = None,
+        applicant_role: str | None = None,
+        respondent_role: str | None = None,
     ):
         """Draft an Affidavit in Support and store as a PDF artifact.
 
@@ -1880,13 +1940,7 @@ def build_tool_registry(
         if not cleaned_facts:
             return {"result": {"error": "facts must be a non-empty list"}}
 
-        mode_lower = mode.lower()
-        if "petition" in mode_lower:
-            applicant_role, respondent_role = "PETITIONER", "RESPONDENT"
-        elif "writ" in mode_lower or "originating summons" in mode_lower:
-            applicant_role, respondent_role = "PLAINTIFF", "DEFENDANT"
-        else:
-            applicant_role, respondent_role = "APPLICANT", "RESPONDENT"
+        applicant_role, respondent_role = _party_titles(mode, applicant_role, respondent_role)
 
         heading_html = pdf_tools.render_court_heading(
             court_division=court_division,
@@ -1910,18 +1964,18 @@ def build_tool_registry(
         deposition_opening = (
             f'<p class="recital">'
             f'I, <strong>{deponent.upper()}</strong>, '
-            f'of <em>{deponent_address}</em>, '
+            f'of {deponent_address}, '
             f'in the Republic of Zambia, '
             f'{gender_article} {gender_phrase} of full legal capacity, '
             f'{deponent_occupation}, '
-            f'do solemnly and sincerely make oath and state as follows:'
+            f'make oath and say as follows:'
             f'</p>'
         )
 
         # The first numbered paragraph is canonical: identifies the deponent
         # and the source of their knowledge. We prepend it automatically so
         # the agent doesn't have to remember.
-        role = (deponent_role or "Applicant").strip()
+        role = (deponent_role or "").strip() or _as_words(applicant_role)
         first_para = (
             f"THAT I am the {role} in this matter and the facts deposed to "
             f"herein are within my personal knowledge save where stated "
@@ -1945,43 +1999,54 @@ def build_tool_registry(
             return t
 
         facts_html = (
-            "<ol>"
+            '<ol class="facts">'
             + "".join(f"<li>{_that(f)}</li>" for f in all_facts)
             + "</ol>"
         )
 
+        # The jurat. The day it is sworn is the day the deponent stands before
+        # the Commissioner, so the day and the month are left to be written in.
         sworn_city = (sworn_at_city or "Lusaka").strip()
-        day = datetime.utcnow().day
-        if 10 <= day % 100 <= 20:
-            ord_suffix = "th"
-        else:
-            ord_suffix = {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
-        today = datetime.utcnow().strftime(f"%-d{ord_suffix} day of %B, %Y")
-
+        year = datetime.utcnow().year
+        commissioner = (commissioner_name or "").strip()
         jurat = (
-            f'<p class="dated">SWORN at <strong>{sworn_city}</strong> '
-            f'this {today}.</p>'
-            '<div class="sig-line"></div>'
-            f'<p><strong>{deponent.upper()}</strong><br/>(DEPONENT)</p>'
-            '<p class="dated"><strong>BEFORE ME:</strong></p>'
-            '<div class="sig-line"></div>'
-            f'<p><strong>{(commissioner_name or "[COMMISSIONER FOR OATHS]").upper()}</strong><br/>'
-            'COMMISSIONER FOR OATHS</p>'
+            '<table class="jurat"><tr>'
+            f'<td class="sworn"><strong>SWORN</strong> by the said<br/><strong>{deponent.upper()}</strong><br/>'
+            f'at {sworn_city} this ............ day<br/>of ................................ {year}</td>'
+            '<td class="brace">)<br/>)<br/>)<br/>)</td>'
+            f'<td class="deponent">{_LINE}<br/><strong>DEPONENT</strong></td>'
+            '</tr></table>'
+            '<p class="before-me">BEFORE ME:</p>'
+            f'<p class="commissioner">{_LINE}<br/>'
+            + (f'{commissioner.upper()}<br/>' if commissioner else '')
+            + '<strong>COMMISSIONER FOR OATHS</strong></p>'
         )
+        jurat = f'<div class="keep jurat-block">{jurat}</div>'
 
-        exhibits_html = ""
-        if cleaned_exhibits:
-            rows = "".join(
-                f'<tr><td><strong>"{e["label"] or "MB" + str(i+1)}"</strong></td>'
-                f'<td>{e["description"]}</td></tr>'
-                for i, e in enumerate(cleaned_exhibits)
-            )
-            exhibits_html = (
-                '<div class="doc-title" style="font-size:11pt;text-decoration:none;margin-top:20pt;">EXHIBITS</div>'
-                '<table style="width:100%;">'
-                + rows
-                + '</table>'
-            )
+        # One sheet to mark each exhibit, to stand in front of the document it
+        # identifies when the affidavit is sworn. High Court Rules, Order V
+        # r.20(l): the certificate on an exhibit is marked with the short
+        # title of the cause.
+        def _mark(i: int, e: dict) -> str:
+            return e["label"] or "EX" + str(i + 1)
+
+        short_title = " ".join(filter(None, [
+            (cause_number or "").strip(),
+            f"{applicant} v {respondent}" if applicant and respondent else "",
+        ]))
+
+        exhibits_html = "".join(
+            '<div class="exhibit-sheet">'
+            + (f'<p class="short-title">{short_title}</p>' if short_title else '')
+            + f'<div class="mark">"{_mark(i, e)}"</div>'
+            f'<p>This is the exhibit marked "{_mark(i, e)}" referred to in the Affidavit of '
+            f'<strong>{deponent.upper()}</strong> sworn before me this ............ day of '
+            f'................................ {year}.</p>'
+            f'<p>{_LINE}<br/><strong>COMMISSIONER FOR OATHS</strong></p>'
+            + (f'<p class="exhibit-note">{e["description"]}</p>' if e["description"] else '')
+            + '</div>'
+            for i, e in enumerate(cleaned_exhibits)
+        )
 
         template = _fetch_template(template_id)
         letterhead = pdf_tools.render_template_letterhead(template)
@@ -2028,6 +2093,9 @@ def build_tool_registry(
         counsel_firm: str | None = None,
         template_id: str | None = None,
         compact: bool | None = None,
+        applicant_role: str | None = None,
+        respondent_role: str | None = None,
+        in_person: bool | None = None,
     ):
         """Draft Skeletal Arguments in support of an application.
 
@@ -2067,13 +2135,7 @@ def build_tool_registry(
         if not cleaned_subs:
             return {"result": {"error": "submissions must be a non-empty list"}}
 
-        mode_lower = mode.lower()
-        if "petition" in mode_lower:
-            applicant_role, respondent_role = "PETITIONER", "RESPONDENT"
-        elif "writ" in mode_lower or "originating summons" in mode_lower:
-            applicant_role, respondent_role = "PLAINTIFF", "DEFENDANT"
-        else:
-            applicant_role, respondent_role = "APPLICANT", "RESPONDENT"
+        applicant_role, respondent_role = _party_titles(mode, applicant_role, respondent_role)
 
         heading_html = pdf_tools.render_court_heading(
             court_division=court_division,
@@ -2092,8 +2154,9 @@ def build_tool_registry(
 
         # Sections are numbered by what is actually PRESENT, so omitting the
         # introduction doesn't leave the document starting at "3.0".
-        _H = ('<h2 style="text-align:left;letter-spacing:0;font-size:12pt;'
-              'margin-top:14pt;">{n}.0 {label}</h2>')
+        # Headings and paragraph numbers are plain here; doc_typeset stands each
+        # number in its own column and underlines the heading, as the courts do.
+        _H = '<h2>{n}.0 {label}</h2>'
         section_no = 0
 
         # Introduction (optional)
@@ -2104,7 +2167,7 @@ def build_tool_registry(
                 p.strip() for p in introduction.strip().split("\n\n") if p.strip()
             ]
             intro_section = _H.format(n=section_no, label="INTRODUCTION") + "".join(
-                f'<p><strong>{section_no}.{i+1}</strong> {p}</p>'
+                f'<p>{section_no}.{i+1} {_bold_cases(p, cases)}</p>'
                 for i, p in enumerate(intro_paragraphs)
             )
 
@@ -2113,7 +2176,7 @@ def build_tool_registry(
         if cleaned_issues:
             section_no += 1
             issues_section = _H.format(n=section_no, label="ISSUES FOR DETERMINATION") + "".join(
-                f'<p><strong>{section_no}.{i+1}</strong> {issue}</p>'
+                f'<p>{section_no}.{i+1} {issue}</p>'
                 for i, issue in enumerate(cleaned_issues)
             )
 
@@ -2123,20 +2186,14 @@ def build_tool_registry(
         sub_blocks = []
         for s_idx, sub in enumerate(cleaned_subs):
             title = sub["title"] or f"Submission {s_idx + 1}"
-            sub_blocks.append(
-                f'<h3 style="text-align:left;font-size:11.5pt;margin-top:12pt;">'
-                f'{subs_no}.{s_idx + 1} {title}</h3>'
-            )
+            sub_blocks.append(f'<h3>{subs_no}.{s_idx + 1} {title}</h3>')
             for p_idx, para in enumerate(sub["paragraphs"]):
                 sub_blocks.append(
-                    f'<p><strong>{subs_no}.{s_idx + 1}.{p_idx + 1}</strong> {para}</p>'
+                    f'<p>{subs_no}.{s_idx + 1}.{p_idx + 1} {_bold_cases(para, cases)}</p>'
                 )
             if sub["citations"]:
                 cites = "; ".join(sub["citations"])
-                sub_blocks.append(
-                    f'<p style="font-style:italic;margin-left:18pt;">'
-                    f'Authority: {cites}</p>'
-                )
+                sub_blocks.append(f'<p class="authority">Authority: {cites}</p>')
         submissions_section = (
             _H.format(n=subs_no, label="SUBMISSIONS") + "".join(sub_blocks)
         )
@@ -2147,26 +2204,23 @@ def build_tool_registry(
             section_no += 1
             prayer_section = (
                 _H.format(n=section_no, label="PRAYER")
-                + f'<p><strong>{section_no}.1</strong> {prayer.strip()}</p>'
+                + f'<p>{section_no}.1 {prayer.strip()}</p>'
             )
 
         # List of Authorities
         authorities_section_parts = []
         if cases or statutes:
-            authorities_section_parts.append(
-                '<h2 style="text-align:left;letter-spacing:0;font-size:12pt;'
-                'margin-top:14pt;">LIST OF AUTHORITIES</h2>'
-            )
+            authorities_section_parts.append('<h2>LIST OF AUTHORITIES</h2>')
         if cases:
             authorities_section_parts.append(
-                '<p style="margin-bottom:4pt;"><strong>Cases:</strong></p>'
+                '<p class="list-head"><strong>Cases referred to:</strong></p>'
             )
             authorities_section_parts.append(
                 "<ol>" + "".join(f"<li>{c}</li>" for c in cases) + "</ol>"
             )
         if statutes:
             authorities_section_parts.append(
-                '<p style="margin-bottom:4pt;"><strong>Statutes & Rules:</strong></p>'
+                '<p class="list-head"><strong>Legislation referred to:</strong></p>'
             )
             authorities_section_parts.append(
                 "<ol>" + "".join(f"<li>{s}</li>" for s in statutes) + "</ol>"
@@ -2174,12 +2228,9 @@ def build_tool_registry(
         authorities_section = "".join(authorities_section_parts)
 
         # Signature
-        signature = (
-            '<div class="sig-line"></div>'
-            f'<p><strong>{(counsel_name or "[COUNSEL NAME]").upper()}</strong><br/>'
-            f'{counsel_firm or "[FIRM NAME / CHAMBERS]"}<br/>'
-            f'Counsel for the {applicant_role.capitalize()}</p>'
-        )
+        signature = (_dated_today(_town_of(court_division))
+                     + _advocates_block(counsel_name, counsel_firm, _as_words(applicant_role),
+                                        None, _in_prose(applicant) if in_person and applicant else None))
 
         template = _fetch_template(template_id)
         letterhead = pdf_tools.render_template_letterhead(template)
@@ -2227,6 +2278,9 @@ def build_tool_registry(
         counsel_firm: str | None = None,
         firm_address: str | None = None,
         template_id: str | None = None,
+        applicant_role: str | None = None,
+        respondent_role: str | None = None,
+        in_person: bool | None = None,
     ):
         """Draft a Draft Order for endorsement and save as PDF artifact.
 
@@ -2249,13 +2303,7 @@ def build_tool_registry(
             return {"result": {"error": "orders must be a non-empty list"}}
 
         is_ex_parte = (urgency or "").strip().lower() == "ex_parte" or "ex parte" in mode.lower()
-        mode_lower = mode.lower()
-        if "petition" in mode_lower:
-            applicant_role, respondent_role = "PETITIONER", "RESPONDENT"
-        elif "writ" in mode_lower or "originating summons" in mode_lower:
-            applicant_role, respondent_role = "PLAINTIFF", "DEFENDANT"
-        else:
-            applicant_role, respondent_role = "APPLICANT", "RESPONDENT"
+        applicant_role, respondent_role = _party_titles(mode, applicant_role, respondent_role)
 
         heading_html = pdf_tools.render_court_heading(
             court_division=court_division,
@@ -2266,33 +2314,29 @@ def build_tool_registry(
             respondent_role=respondent_role,
         )
 
-        doc_title = '<div class="doc-title">DRAFT ORDER</div>'
+        doc_title = '<div class="doc-title">ORDER</div>'
 
         deponent = (supporting_deponent or applicant).strip()
         if is_ex_parte:
             hearing_clause = (
-                f"AND UPON hearing Counsel for the {applicant_role.capitalize()} ex parte"
+                f"AND UPON hearing Counsel for the {_as_words(applicant_role)} ex parte"
             )
         else:
             hearing_clause = (
-                f"AND UPON hearing Counsel for the {applicant_role.capitalize()} "
-                f"and Counsel for the {respondent_role.capitalize()} (or no appearance entered)"
+                f"AND UPON hearing Counsel for the {_as_words(applicant_role)} "
+                f"and Counsel for the {_as_words(respondent_role)} (or no appearance entered)"
             )
         upon_recital = (
             f'<p class="recital">'
             f'UPON the application by way of {mode} filed by the '
-            f'{applicant_role.capitalize()} herein '
+            f'{_as_words(applicant_role)} herein '
             f'AND UPON reading the Affidavit in Support sworn by '
             f'<strong>{deponent}</strong> together with the Skeletal Arguments '
             f'filed herewith {hearing_clause}:'
             f'</p>'
         )
 
-        ordered_heading = (
-            '<p style="text-align:center;font-weight:700;letter-spacing:1pt;'
-            'text-transform:uppercase;margin:14pt 0 8pt 0;">'
-            'IT IS HEREBY ORDERED THAT:</p>'
-        )
+        ordered_heading = '<div class="sub-title">IT IS HEREBY ORDERED THAT:</div>'
 
         orders_with_costs = list(cleaned_orders)
         if costs_direction is None or not costs_direction.strip():
@@ -2305,23 +2349,23 @@ def build_tool_registry(
             + "</ol>"
         )
 
+        from datetime import datetime as _dt
         dated_block = (
-            '<p class="dated">DATED at Lusaka this ______ day of '
-            '________________________, 20____.</p>'
-            '<div class="sig-line"></div>'
-            '<p><strong>JUDGE</strong></p>'
+            f'<p class="dated">Dated at {_town_of(court_division)} this ............ day of '
+            f'................................ {_dt.utcnow().year}.</p>'
+            '<div class="advocates"><div class="sig-line"></div><p><strong>JUDGE</strong></p></div>'
         )
 
-        drawn_by = (
-            '<div class="served">'
-            '<p><strong>Drawn by:</strong><br/>'
-            f'{counsel_name or "[COUNSEL NAME]"}<br/>'
-            f'{counsel_firm or "[FIRM NAME / CHAMBERS]"}<br/>'
-            f'{firm_address or "[FIRM ADDRESS]"}<br/>'
-            f'Counsel for the {applicant_role.capitalize()}'
-            '</p>'
-            '</div>'
-        )
+        if in_person:
+            drawn_lines = [f'{_in_prose(applicant)}', f'The {_as_words(applicant_role)} in person']
+        else:
+            drawn_lines = [(counsel_firm or "").strip() or (counsel_name or "").strip() or "[FIRM NAME]"]
+            if counsel_firm and counsel_name:
+                drawn_lines.append(counsel_name.strip())
+            drawn_lines.append((firm_address or "").strip() or "[FIRM ADDRESS FOR SERVICE]")
+            drawn_lines.append(f'Advocates for the {_as_words(applicant_role)}')
+        drawn_by = ('<div class="served"><p><strong>Drawn by:</strong><br/>' + "<br/>".join(drawn_lines)
+                    + '</p></div>')
 
         template = _fetch_template(template_id)
         letterhead = pdf_tools.render_template_letterhead(template)
@@ -2384,20 +2428,15 @@ def build_tool_registry(
         if include_cover:
             today = datetime.utcnow().strftime("%-d %B %Y")
             cover_md = "\n\n".join([
-                '<div class="court-caption">'
-                '<div class="line">IN THE HIGH COURT FOR ZAMBIA</div>'
-                + (f'<div class="line">{(court_division or "").upper()}</div>' if court_division else "")
-                + '</div>',
-                f'<div class="cause-number">Cause No. {cause_number or "[CAUSE NUMBER TO BE ALLOCATED]"}</div>',
-                '<div class="between">B E T W E E N:</div>',
-                '<table class="parties">'
-                f'<tr><td>{applicant}</td><td class="right">APPLICANT</td></tr>'
-                '<tr><td>AND</td><td></td></tr>'
-                f'<tr><td>{respondent}</td><td class="right">RESPONDENT</td></tr>'
-                '</table>',
+                pdf_tools.render_court_heading(
+                    court_division=court_division or "", cause_number=cause_number,
+                    applicant_name=applicant, respondent_name=respondent,
+                    applicant_role=_party_titles(procedural_mode or "")[0],
+                    respondent_role=_party_titles(procedural_mode or "")[1],
+                ),
                 '<div class="doc-title">APPLICATION BUNDLE</div>',
                 (
-                    '<p style="text-align:center;font-style:italic;margin-top:14pt;">'
+                    '<p class="pursuant">'
                     f'{cause_of_action or "Application"} '
                     f'{("by way of " + procedural_mode) if procedural_mode else ""}'
                     '</p>'
@@ -2478,7 +2517,7 @@ def build_tool_registry(
             meta_tool="draft_legal_document",
             owner_id=owner_id,
             session_id=session_id,
-            layout=layout if layout in ("agreement", "letter") else None,
+            layout=layout if layout in ("agreement", "letter", "court") else None,
         )
 
     async def _recommend_application(
@@ -3416,9 +3455,13 @@ def build_tool_registry(
                 "agreement, memorandum of understanding, demand / letter "
                 "before action, deed of guarantee, loan / facility "
                 "agreement, settlement / consent, and similar.\n\n"
-                "DO NOT use this for court applications — those have "
-                "dedicated tools (draft_summons / draft_affidavit / "
-                "draft_skeletal / draft_order / draft_application_bundle).\n\n"
+                "Also use it, with layout 'court', for a document filed in "
+                "court that the dedicated tools do not make: a statement of "
+                "claim, a defence, a writ, a notice of appeal, a petition, a "
+                "list of documents. An application (summons, affidavit in "
+                "support, skeleton arguments, order) goes to the dedicated "
+                "tools (draft_summons / draft_affidavit / draft_skeletal / "
+                "draft_order / draft_application_bundle).\n\n"
                 "You compose the full body as Markdown following the Zambian "
                 "drafting playbook: a parties block, recitals (WHEREAS …) "
                 "where appropriate, numbered operative clauses, and the "
@@ -3448,8 +3491,8 @@ def build_tool_registry(
                     },
                     "layout": {
                         "type": "string",
-                        "enum": ["agreement", "letter"],
-                        "description": "How to set it: 'agreement' for a contract, deed, will, resolution or other instrument (centred title, clause headings); 'letter' for a letter or notice (block format, bold RE: line). Left out, it is read off the body.",
+                        "enum": ["agreement", "letter", "court"],
+                        "description": "How to set it: 'agreement' for a contract, deed, will, resolution or other instrument (centred title, clause numbers in their own column); 'letter' for a letter or notice (block format, the RE: line underlined); 'court' for a document filed in court (the heading of the action, the name of the document between two rules, numbered paragraphs). Left out, it is read from the body.",
                     },
                     "template_id": {
                         "type": "string",
@@ -3622,7 +3665,15 @@ def build_tool_registry(
                     },
                     "respondent_name": {
                         "type": "string",
-                        "description": "The party the relief is sought against.",
+                        "description": "The party the relief is sought against. Several parties on one side: separate their names with semicolons and they are numbered 1ST, 2ND. A capacity goes in brackets after the name: 'Mary Banda (suing as administratrix of the estate of the late John Banda)'.",
+                    },
+                    "applicant_role": {
+                        "type": "string",
+                        "description": "That party's title as it stands in the action, in capitals: PLAINTIFF, PETITIONER, APPELLANT, APPLICANT. An action begun by writ keeps PLAINTIFF and DEFENDANT through every application made in it, so give it whenever the user calls the parties plaintiff and defendant. Left out, it is read from procedural_mode.",
+                    },
+                    "respondent_role": {
+                        "type": "string",
+                        "description": "The other side's title in capitals: DEFENDANT, RESPONDENT. Left out, it is read from procedural_mode.",
                     },
                     "reliefs": {
                         "type": "array",
@@ -3656,7 +3707,15 @@ def build_tool_registry(
                     },
                     "applicant_address": {
                         "type": "string",
-                        "description": "Applicant's address — used in the 'Dated at [city] ...' line; falls back to 'Lusaka'.",
+                        "description": "The applicant's own address. Printed as the address for service when the applicant acts in person.",
+                    },
+                    "firm_address": {
+                        "type": "string",
+                        "description": "The advocates' address for service, printed under the signature and in 'This Summons was taken out by ... of ...'. Leave empty for a blank to fill in.",
+                    },
+                    "in_person": {
+                        "type": "boolean",
+                        "description": "True when the party has no advocate and signs the document personally (a litigant in person).",
                     },
                     "respondent_address": {
                         "type": "string",
@@ -3688,10 +3747,12 @@ def build_tool_registry(
                 "Call AFTER `draft_summons` (or alongside it as part of the "
                 "bundle). Renders the same court caption + parties block as "
                 "the summons, then the standard Zambian deposition opening "
-                "('I, [DEPONENT], of [ADDRESS], …, do solemnly and sincerely "
-                "make oath and state as follows:'), then numbered THAT-"
-                "statements, then the jurat (SWORN at … BEFORE ME …), then "
-                "an exhibits index.\n\n"
+                "('I, [DEPONENT], of [ADDRESS], …, make oath and say as "
+                "follows:', the words of Form H.C. Civ. 15), then numbered THAT-"
+                "statements, then the jurat at the foot on the left (SWORN by "
+                "the said … at … BEFORE ME … COMMISSIONER FOR OATHS, the day "
+                "left to be written in when it is sworn), then one sheet for "
+                "each exhibit to mark it.\n\n"
                 "The first and last numbered paragraphs are added "
                 "automatically: the first one says the deponent is the "
                 "Applicant/Respondent and the facts are within their personal "
@@ -3702,8 +3763,9 @@ def build_tool_registry(
                 "missing).\n\n"
                 "Exhibits: each exhibit is {label, description}; the label is "
                 "the deponent's-initials + index (e.g. 'MB1', 'MB2'). The "
-                "tool only renders the exhibits index — the actual exhibit "
-                "PDFs are merged later by `draft_application_bundle`."
+                "tool prints a sheet for each (\"This is the exhibit marked "
+                "'MB1' referred to in the Affidavit of …\") to stand in front "
+                "of the document itself, which the user attaches."
             ),
             input_schema={
                 "type": "object",
@@ -3717,6 +3779,14 @@ def build_tool_registry(
                     },
                     "applicant_name": {"type": "string"},
                     "respondent_name": {"type": "string"},
+                    "applicant_role": {
+                        "type": "string",
+                        "description": "That party's title as it stands in the action, in capitals: PLAINTIFF, PETITIONER, APPELLANT, APPLICANT. An action begun by writ keeps PLAINTIFF and DEFENDANT through every application made in it, so give it whenever the user calls the parties plaintiff and defendant. Left out, it is read from procedural_mode.",
+                    },
+                    "respondent_role": {
+                        "type": "string",
+                        "description": "The other side's title in capitals: DEFENDANT, RESPONDENT. Left out, it is read from procedural_mode.",
+                    },
                     "cause_number": {
                         "type": "string",
                         "description": "Must match the one used by draft_summons. Leave empty for a placeholder.",
@@ -3823,6 +3893,14 @@ def build_tool_registry(
                     "court_division": {"type": "string"},
                     "applicant_name": {"type": "string"},
                     "respondent_name": {"type": "string"},
+                    "applicant_role": {
+                        "type": "string",
+                        "description": "That party's title as it stands in the action, in capitals: PLAINTIFF, PETITIONER, APPELLANT, APPLICANT. An action begun by writ keeps PLAINTIFF and DEFENDANT through every application made in it, so give it whenever the user calls the parties plaintiff and defendant. Left out, it is read from procedural_mode.",
+                    },
+                    "respondent_role": {
+                        "type": "string",
+                        "description": "The other side's title in capitals: DEFENDANT, RESPONDENT. Left out, it is read from procedural_mode.",
+                    },
                     "cause_number": {"type": "string"},
                     "supporting_document": {
                         "type": "string",
@@ -3882,6 +3960,10 @@ def build_tool_registry(
                     },
                     "counsel_name": {"type": "string"},
                     "counsel_firm": {"type": "string"},
+                    "in_person": {
+                        "type": "boolean",
+                        "description": "True when the party has no advocate and signs the document personally (a litigant in person).",
+                    },
                     "template_id": {
                         "type": "string",
                         "description": "ID of one of the user's saved templates (returned by `suggest_templates`). When provided, the tool prepends the template's letterhead above the court caption. Leave empty to render in the default house format.",
@@ -3918,6 +4000,14 @@ def build_tool_registry(
                     "court_division": {"type": "string"},
                     "applicant_name": {"type": "string"},
                     "respondent_name": {"type": "string"},
+                    "applicant_role": {
+                        "type": "string",
+                        "description": "That party's title as it stands in the action, in capitals: PLAINTIFF, PETITIONER, APPELLANT, APPLICANT. An action begun by writ keeps PLAINTIFF and DEFENDANT through every application made in it, so give it whenever the user calls the parties plaintiff and defendant. Left out, it is read from procedural_mode.",
+                    },
+                    "respondent_role": {
+                        "type": "string",
+                        "description": "The other side's title in capitals: DEFENDANT, RESPONDENT. Left out, it is read from procedural_mode.",
+                    },
                     "cause_number": {"type": "string"},
                     "urgency": {
                         "type": "string",
@@ -3938,6 +4028,10 @@ def build_tool_registry(
                     },
                     "counsel_name": {"type": "string"},
                     "counsel_firm": {"type": "string"},
+                    "in_person": {
+                        "type": "boolean",
+                        "description": "True when the party has no advocate and signs the document personally (a litigant in person).",
+                    },
                     "firm_address": {"type": "string"},
                     "template_id": {
                         "type": "string",

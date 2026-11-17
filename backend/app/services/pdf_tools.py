@@ -31,7 +31,7 @@ from pypdf import PdfReader, PdfWriter
 from weasyprint import HTML, CSS
 
 from ..config import get_settings
-from . import doc_design
+from . import doc_design, doc_typeset
 from ..db.supabase import get_db
 
 
@@ -550,14 +550,14 @@ def _render_markdown_pdf(title: str, body_md: str, subtitle: str | None = None) 
     belongs in the body.
     """
     body_html = md_lib.markdown(
-        body_md,
+        doc_design.tidy_source(body_md),
         extensions=["extra", "tables", "sane_lists", "toc"],
     )
     full_html = f"""<!doctype html>
 <html><head><meta charset="utf-8"><title>{_html_escape(title)}</title></head>
 <body>
   <h1>{_html_escape(title)}</h1>
-  {doc_design.mark_blanks(doc_design.number_lists(body_html))}
+  {doc_design.mark_blanks(doc_design.normalise(body_html, "memo"))}
 </body></html>"""
 
     pdf_bytes = HTML(string=full_html).write_pdf(stylesheets=[CSS(string=doc_design.MEMO_CSS)])
@@ -581,7 +581,7 @@ def resolve_letterhead(body_md: str, owner_id: str | None) -> tuple[str, dict | 
 
 
 def _render_legal_pdf(body_md: str, compact: bool = False, layout: str | None = None,
-                      owner_id: str | None = None) -> bytes:
+                      owner_id: str | None = None, title_hint: str = "") -> bytes:
     """Render a formal document body (court paper, agreement or letter) to PDF.
 
     Differs from `_render_markdown_pdf` in that it does NOT prepend a title:
@@ -590,9 +590,12 @@ def _render_legal_pdf(body_md: str, compact: bool = False, layout: str | None = 
     the body.
     """
     body_md, letterhead = resolve_letterhead(body_md, owner_id)
+    # A document stored before a fix to tidy_source is tidied when it is
+    # printed again, so filling its blanks or exporting it also repairs it.
+    body_md = doc_design.tidy_source(body_md)
     layout = layout if layout in doc_design.LAYOUTS else doc_design.infer_layout(body_md)
     body_html = md_lib.markdown(body_md, extensions=doc_design.markdown_extensions(layout))
-    body_html = doc_design.mark_blanks(doc_design.normalise(body_html, layout))
+    body_html = doc_design.mark_blanks(doc_design.normalise(body_html, layout, title_hint))
     full_html = f"""<!doctype html>
 <html><head><meta charset="utf-8"></head>
 <body>
@@ -645,6 +648,7 @@ async def pdf_generate(
     *,
     owner_id: str | None = None,
     session_id: str | None = None,
+    extra_meta: dict | None = None,
 ) -> dict:
     """Render a markdown body into a polished PDF artifact (memos, briefs)."""
     if not title.strip():
@@ -652,6 +656,21 @@ async def pdf_generate(
     if not content_markdown.strip():
         return {"result": {"error": "content_markdown required"}}
     content_markdown = doc_design.tidy_source(content_markdown)
+
+    # A statement of claim sent here in production (17 Nov 2026) was printed as
+    # a memo: its title over a rule, the court's name run together into one
+    # line. A document that is plainly a court paper, a letter or an agreement
+    # is set as one, whichever tool it arrived through.
+    formal = doc_design.formal_layout_of(content_markdown)
+    if formal:
+        body = content_markdown
+        if formal == "agreement" and not re.match(r"\s*(?:#|\*\*[A-Z])", body):
+            body = f"# {title.strip()}\n\n{body}"      # the memo layout would have printed the title
+        return await pdf_generate_legal(
+            title=title, body_markdown=body, meta_tool="pdf_generate", owner_id=owner_id,
+            session_id=session_id, layout=formal,
+            extra_meta={**(extra_meta or {}), **({"doc_title": title.strip()} if formal == "court" else {})},
+        )
 
     # WeasyPrint is CPU-bound and can take seconds on a long document; run it off
     # the event loop so one render never freezes other users' streaming turns.
@@ -664,7 +683,7 @@ async def pdf_generate(
     if not pdf_bytes:
         return _text_only_artifact(
             title=title, source_markdown=content_markdown,
-            meta={"tool": "pdf_generate", "slug": _slug(title), "layout": "memo"},
+            meta={"tool": "pdf_generate", "slug": _slug(title), "layout": "memo", **(extra_meta or {})},
             owner_id=owner_id, session_id=session_id,
         )
 
@@ -687,6 +706,7 @@ async def pdf_generate(
             "source_markdown": content_markdown,  # enables lazy Word (.docx) export
             "layout": "memo",
             "blanks": doc_design.find_blanks(content_markdown),
+            **(extra_meta or {}),
         },
         owner_id=owner_id,
         session_id=session_id,
@@ -713,22 +733,63 @@ async def pdf_generate(
 # ─── Helper: Zambian court-document rendering ────────────────────────────────
 
 
-_REGISTRY_INFO: dict[str, tuple[str, str, str, str]] = {
-    "Principal Registry, Civil":
-        ("PRINCIPAL REGISTRY", "LUSAKA", "HP", "Civil Jurisdiction"),
-    "Principal Registry, Commercial":
-        ("PRINCIPAL REGISTRY, COMMERCIAL DIVISION", "LUSAKA", "HPC", "Commercial Jurisdiction"),
-    "Principal Registry, Family and Children":
-        ("PRINCIPAL REGISTRY, FAMILY AND CHILDREN DIVISION", "LUSAKA", "HPF", "Family Jurisdiction"),
-    "Industrial Relations Division":
-        ("INDUSTRIAL RELATIONS DIVISION", "LUSAKA", "IRCLP", "Industrial Relations Jurisdiction"),
-    "Constitutional Court":
-        ("CONSTITUTIONAL COURT", "LUSAKA", "CCZ", "Constitutional Jurisdiction"),
-    "Court of Appeal":
-        ("COURT OF APPEAL", "LUSAKA", "CAZ", "Civil Appellate Jurisdiction"),
-    "Subordinate Court":
-        ("SUBORDINATE COURT", "LUSAKA", "SC", ""),
-}
+_TOWNS = ("Lusaka", "Kitwe", "Ndola", "Livingstone", "Kabwe", "Chipata", "Solwezi", "Kasama", "Mongu",
+          "Mansa", "Choma", "Chinsali", "Chingola", "Mufulira", "Luanshya", "Mazabuka", "Monze", "Kafue")
+# The letters in a High Court cause number say which registry issued it.
+_REGISTRY_CODES = {"Kitwe": "HK", "Ndola": "HN", "Livingstone": "HL"}
+
+
+def court_lines(court_division: str | None) -> tuple[list[str], str]:
+    """The lines that name the court at the head of a document, and the shape
+    of its cause numbers, read from however the division was described
+    ("Principal Registry, Commercial", "Kitwe District Registry",
+    "Subordinate Court at Ndola", "Constitutional Court").
+
+    The wording follows the headings of the courts' own judgments.
+    """
+    d = (court_division or "").strip()
+    low = d.lower()
+    town = next((t for t in _TOWNS if t.lower() in low), "Lusaka")
+    at = f"HOLDEN AT {town.upper()}"
+    civil = "(Civil Jurisdiction)"
+    if "constitutional" in low:
+        return (["IN THE CONSTITUTIONAL COURT OF ZAMBIA", "AT THE CONSTITUTIONAL REGISTRY", at,
+                 "(Constitutional Jurisdiction)"], "{year}/CCZ/[NUMBER]")
+    if "court of appeal" in low:
+        return ["IN THE COURT OF APPEAL OF ZAMBIA", at, civil], "CAZ/08/[NUMBER]/{year}"
+    if "supreme" in low:
+        return ["IN THE SUPREME COURT OF ZAMBIA", at, civil], "SCZ/8/[NUMBER]/{year}"
+    if "subordinate" in low or "magistrate" in low:
+        return (["IN THE SUBORDINATE COURT OF THE FIRST CLASS", f"FOR THE {town.upper()} DISTRICT", at, civil],
+                "[CAUSE NUMBER]")
+    high = "IN THE HIGH COURT FOR ZAMBIA"
+    if "industrial" in low:
+        return ([high, "INDUSTRIAL RELATIONS DIVISION", at],
+                "COMP/IRCLK/[NUMBER]/{year}" if town == "Lusaka" else "COMP/[COMPLAINT NUMBER]")
+    if "commercial" in low:
+        return [high, "AT THE COMMERCIAL REGISTRY", at, civil], "{year}/HPC/[NUMBER]"
+    if "family" in low or "children" in low or "divorce" in low or "matrimonial" in low:
+        kind = "(Divorce Jurisdiction)" if ("divorce" in low or "matrimonial" in low) else civil
+        return [high, "AT THE PRINCIPAL REGISTRY", "FAMILY COURT DIVISION", at, kind], "{year}/HPF/[NUMBER]"
+    if town != "Lusaka":
+        code = _REGISTRY_CODES.get(town)
+        return ([high, "AT THE DISTRICT REGISTRY", at, civil],
+                f"{{year}}/{code}/[NUMBER]" if code else "[CAUSE NUMBER]")
+    return [high, "AT THE PRINCIPAL REGISTRY", at, civil], "{year}/HP/[NUMBER]"
+
+
+def _ordinal_caps(n: int) -> str:
+    return f"{n}{'TH' if 10 <= n % 100 <= 20 else {1: 'ST', 2: 'ND', 3: 'RD'}.get(n % 10, 'TH')}"
+
+
+def party_rows(names: str, title: str) -> list[tuple]:
+    """One row a party. Several names (one a line, or split by semicolons)
+    become "1ST DEFENDANT", "2ND DEFENDANT"."""
+    parts = [p.strip() for p in re.split(r"\s*(?:\n|;)\s*", names or "") if p.strip()]
+    title = (title or "").strip().upper()
+    if len(parts) <= 1 or re.match(r"\d", title):
+        return [("party", " ".join(parts) or (names or "").strip(), title)]
+    return [("party", p, f"{_ordinal_caps(i)} {title}") for i, p in enumerate(parts, 1)]
 
 
 def render_template_letterhead(template: dict | None) -> str:
@@ -752,46 +813,19 @@ def render_court_heading(
     respondent_name: str,
     applicant_role: str = "APPLICANT",
     respondent_role: str = "RESPONDENT",
+    matters: list[str] | None = None,
 ) -> str:
-    """Return the Zambian court-document caption + parties block as HTML.
+    """The heading of an action as HTML: the court flush left with the cause
+    number opposite it, then BETWEEN, the parties in bold capitals with their
+    titles at the right margin (see doc_typeset.caption_html).
 
-    Pass this through to a Markdown body — the Markdown renderer keeps HTML
-    intact. The output relies on the `.court-caption`, `.cause-number`, and
-    `.parties` classes that ship with `_LEGAL_CSS`.
+    Pass this through to a Markdown body: the renderer keeps HTML intact.
     """
-    info = _REGISTRY_INFO.get(court_division)
-    if info:
-        registry, city, code, jurisdiction = info
-    else:
-        registry = court_division.upper()
-        city = "LUSAKA"
-        code = "HP"
-        jurisdiction = "Civil Jurisdiction"
-
-    cn = (cause_number or "").strip()
-    if not cn:
-        year = time.gmtime().tm_year
-        cn = f"{year}/{code}/[NUMBER]"
-
-    e = _html_escape
-    jurisdiction_html = (
-        f'<div class="jurisdiction">({e(jurisdiction)})</div>' if jurisdiction else ""
-    )
-    return (
-        '<div class="court-caption">'
-        '<div class="line">IN THE HIGH COURT FOR ZAMBIA</div>'
-        f'<div class="line">AT THE {e(registry)}</div>'
-        f'<div class="line">HOLDEN AT {e(city)}</div>'
-        f'{jurisdiction_html}'
-        '</div>'
-        f'<div class="cause-number">Cause No. {e(cn)}</div>'
-        '<div class="between">B E T W E E N:</div>'
-        '<table class="parties">'
-        f'<tr><td>{e(applicant_name)}</td><td class="right">{e(applicant_role)}</td></tr>'
-        '<tr><td>AND</td><td></td></tr>'
-        f'<tr><td>{e(respondent_name)}</td><td class="right">{e(respondent_role)}</td></tr>'
-        '</table>'
-    )
+    lines, number_form = court_lines(court_division)
+    cn = (cause_number or "").strip() or number_form.format(year=time.gmtime().tm_year)
+    parties = (party_rows(applicant_name, applicant_role) + [("and",)]
+               + party_rows(respondent_name, respondent_role))
+    return doc_typeset.caption_html(lines, cn, parties, [m.strip() for m in (matters or []) if m and m.strip()])
 
 
 async def pdf_generate_legal(
@@ -825,7 +859,8 @@ async def pdf_generate_legal(
     # Off-load the CPU-bound render so a long court document doesn't block the
     # event loop (and everyone else's streaming) while it rasterises.
     try:
-        pdf_bytes = await asyncio.to_thread(_render_legal_pdf, body_markdown, compact, fmt, owner_id)
+        pdf_bytes = await asyncio.to_thread(_render_legal_pdf, body_markdown, compact, fmt, owner_id,
+                                            str((extra_meta or {}).get("doc_title") or ""))
     except Exception:  # noqa: BLE001 — never lose the draft to a render error
         pdf_bytes = None
     if not pdf_bytes:
@@ -915,14 +950,16 @@ async def fill_document(
             "hint": "Use the blank's own words, for example {\"[EMPLOYEE FULL NAME]\": \"Mary Banda\"}.",
         }}
     title = row.get("title") or "Document"
+    carry = {"filled_from": artifact_id, **({"doc_title": meta["doc_title"]} if meta.get("doc_title") else {})}
     if meta.get("layout") == "memo":
-        out = await pdf_generate(title, body, owner_id=owner_id, session_id=session_id or row.get("session_id"))
+        out = await pdf_generate(title, body, owner_id=owner_id, session_id=session_id or row.get("session_id"),
+                                 extra_meta={"filled_from": artifact_id})
     else:
         out = await pdf_generate_legal(
             title=title, body_markdown=body, meta_tool=meta.get("tool") or "draft_legal_document",
             owner_id=owner_id, session_id=session_id or row.get("session_id"),
             compact=bool(meta.get("compact")), layout=meta.get("format"),
-            extra_meta={"filled_from": artifact_id},
+            extra_meta=carry,
         )
     result = out.get("result") or {}
     if "error" in result:

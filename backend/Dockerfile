@@ -10,8 +10,9 @@ ENV PIP_NO_CACHE_DIR=1 \
     HF_HOME=/app/.cache/hf
 
 # WeasyPrint needs Pango/Cairo/GLib + their dev headers to render PDFs.
-# fonts-texgyre: Termes (a Times) for court documents and Pagella (a Palatino)
-# for agreements, letters and memos; see app/services/doc_design.py.
+# fonts-texgyre: Bonum (a Bookman, the face of the Zambian courts' own
+# judgments) for court documents and Pagella (a Palatino) for agreements,
+# letters and memos; see app/services/doc_design.py.
 # Slim image doesn't ship these — install once at build time so cold starts
 # don't pay the cost.
 RUN apt-get update && apt-get install -y --no-install-recommends \

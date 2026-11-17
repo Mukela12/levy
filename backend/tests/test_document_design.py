@@ -13,7 +13,7 @@ from unittest.mock import patch
 
 sys.modules.setdefault("weasyprint", types.SimpleNamespace(HTML=None, CSS=None))
 
-from app.services import agent, doc_design as d, docx_tools, templates, tools  # noqa: E402
+from app.services import agent, doc_design as d, doc_typeset as ts, docx_tools, pdf_tools, templates, tools  # noqa: E402
 
 
 class Layout(unittest.TestCase):
@@ -26,11 +26,13 @@ class Layout(unittest.TestCase):
         self.assertEqual(d.infer_layout("## LEASE\n\n**THIS LEASE** is made\n\nDate: 1 May 2026"), "agreement")
 
     def test_court_papers_follow_the_rules_that_exist(self):
-        # Constitutional Court Rules 2016 r.11: A4, not less than 4 cm on the left.
+        # Supreme Court Rules r.10(1), Court of Appeal Rules O.III r.11, Constitutional Court
+        # Rules r.11: A4, one side, not less than 4 cm on the left.
         self.assertIn("size: A4", d.COURT_CSS)
-        self.assertIn("margin: 25mm 25mm 25mm 40mm", d.COURT_CSS)
+        self.assertIn("margin: 25mm 20mm 25mm 40mm", d.COURT_CSS)
         self.assertIn("font-size: 12pt", d.COURT_CSS)
-        self.assertIn("Times New Roman", d.COURT_CSS)
+        # the face of the courts' own judgments, and the name Word knows it by
+        self.assertIn('"TeX Gyre Bonum", "Bookman Old Style"', d.COURT_CSS)
 
     def test_no_layout_uses_colour(self):
         for css in (d.COURT_CSS, d.AGREEMENT_CSS, d.LETTER_CSS, d.MEMO_CSS):
@@ -42,19 +44,22 @@ class Layout(unittest.TestCase):
         out = d.normalise(html, "agreement")
         self.assertIn("<h1>SETTLEMENT AGREEMENT</h1>", out)
         self.assertIn('<p class="connective">BETWEEN</p>', out)
-        self.assertEqual(out.count("<h2>"), 2)
+        self.assertEqual(out.count("<h2"), 2)
         # clauses written as top-level headings, with no title heading, are clauses
         out = d.normalise("<p><strong>LEASE</strong></p><h2>1. Term</h2><p>x</p><h2>2. Rent</h2>", "agreement")
-        self.assertEqual((out.count("<h1>"), out.count("<h2>")), (0, 2))
+        self.assertEqual((out.count("<h1"), out.count("<h2")), (0, 2))
 
     def test_a_letters_sign_off_stays_with_the_name_under_it(self):
         out = d.normalise("<p>Body.</p><p>Yours faithfully,</p><p>Mutale Zimba<br/>HR Manager</p>", "letter")
-        self.assertIn('<div class="keep"><p class="valediction">Yours faithfully,</p><p>Mutale Zimba<br/>HR Manager</p></div>', out)
+        self.assertIn('<div class="keep"><p class="valediction">Yours faithfully,</p><p>Mutale Zimba<br>HR Manager</p></div>', out)
         self.assertIn(".keep { break-inside: avoid; }", d.LETTER_CSS.replace("tr, .sig-block, .attestation, .keep", ".keep"))
 
-    def test_letters_and_agreements_keep_their_line_breaks(self):
-        self.assertIn("nl2br", d.markdown_extensions("letter"))
-        self.assertNotIn("nl2br", d.markdown_extensions("court"))
+    def test_formal_documents_keep_their_line_breaks(self):
+        # The lines of a court heading typed one under another ran together into
+        # one in the first live statement of claim.
+        for layout in ("letter", "agreement", "court"):
+            self.assertIn("nl2br", d.markdown_extensions(layout))
+        self.assertNotIn("nl2br", d.markdown_extensions("memo"))
 
 
 class Blanks(unittest.TestCase):
@@ -180,7 +185,7 @@ class Word(unittest.TestCase):
         self.assertIsNotNone(blank.font.highlight_color)
         court = Document(io.BytesIO(docx_tools.render_docx_bytes(
             title="x", legal=True, body_md='<div class="court-caption">IN THE HIGH COURT FOR ZAMBIA</div>\n\n1. THAT I am the Applicant.')))
-        self.assertEqual(court.styles["Normal"].font.name, "Times New Roman")
+        self.assertEqual(court.styles["Normal"].font.name, "Bookman Old Style")
 
     def test_a_memo_has_no_subtitle(self):
         from docx import Document

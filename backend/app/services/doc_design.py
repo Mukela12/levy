@@ -3,26 +3,37 @@
 Four kinds of document, each set the way that kind is set by the people who
 read it:
 
-    court       a document filed in court. Times at 12 point on 1.5 spacing,
-                a 40 mm left margin for binding (Constitutional Court Rules
-                2016, r.11: A4, one side, not less than 4 cm on the left; an
-                election rule the High Court applied in 2026 asks for font
-                size 12), centred caption, numbered paragraphs, "1 of 3"
-                at the foot so a page cannot go missing unnoticed.
-    agreement   a contract, deed or other instrument. A book serif, centred
-                title, clause headings flush left, execution blocks kept on
-                one page.
+    court       a document filed in court, set the way the Zambian courts set
+                their own judgments and the way advocates set what they file:
+                a Bookman face at 12 point on 1.5 spacing, the court's name
+                flush left in bold capitals with the cause number opposite it,
+                the parties in bold capitals with their titles at the right
+                margin, the name of the document between two rules, numbered
+                paragraphs hanging beside their numbers, and a quoted passage
+                indented from both margins in bold italic. A 40 mm left margin
+                for binding (Constitutional Court Rules 2016, r.11: A4, one
+                side, not less than 4 cm on the left).
+    agreement   a contract, deed or other instrument. A Palatino face (Book
+                Antiqua on a lawyer's own machine), a centred title, clause
+                numbers standing in their own column with the text hanging
+                beside them, defined terms in bold between real quotation
+                marks, signature blocks ruled and kept on one page, each
+                schedule on a page of its own.
     letter      a letter or notice. Block format: everything flush left, the
-                "RE:" line in bold, the sign-off kept together.
+                "RE:" line in bold and underlined, the sign-off kept together.
     memo        advice, a brief, a summary. A plain title over a rule, no
                 colour, tables ruled across only.
 
-Nothing decorative: no colour, no subtitle, no tagline. A reviewer of 170
-real documents (17 Nov 2026) found the layouts sound but plain, and found
-subtitles and notes to the drafter printed inside documents.
+Nothing decorative: no colour, no subtitle, no tagline.
+
+What the court layout copies was read off judgments of the Supreme Court,
+the Court of Appeal, the Constitutional Court and the High Court held in
+Levy's own library (17 Nov 2026): every one is in Bookman Old Style, with
+the caption, the ruled title, the decimal paragraph numbers and the bold
+italic quotations described above.
 
 A blank is a fact Levy did not have, written as [CAPITALS IN SQUARE
-BRACKETS]. 145 of those 170 documents went out with blanks, nine on average.
+BRACKETS]. 145 of 170 real documents went out with blanks, nine on average.
 This module finds them, so the tool result can tell the model exactly what
 is missing and the page can show the reader where.
 """
@@ -30,21 +41,40 @@ from __future__ import annotations
 
 import re
 
-# Production gets the TeX Gyre faces from the image (fonts-texgyre): Termes
-# is a Times, Pagella a Palatino. The names after them are the same designs
-# as they ship on a Mac or Windows machine, so a local render matches.
-SERIF_COURT = '"TeX Gyre Termes", "Times New Roman", "Liberation Serif", "Nimbus Roman", serif'
-SERIF_BOOK = '"TeX Gyre Pagella", "Palatino Linotype", "Palatino", "Book Antiqua", "Liberation Serif", serif'
+from . import doc_typeset
 
+# Production gets the TeX Gyre faces from the image (fonts-texgyre): Bonum is
+# a Bookman, Pagella a Palatino, Termes a Times. The names after them are the
+# same designs as they ship with Word, so the Word export opens in the face a
+# Zambian lawyer already uses.
+SERIF_COURT = ('"TeX Gyre Bonum", "Bookman Old Style", "URW Bookman", "Bookman", "Book Antiqua", '
+               '"TeX Gyre Pagella", "Times New Roman", serif')
+SERIF_BOOK = '"TeX Gyre Pagella", "Palatino Linotype", "Palatino", "Book Antiqua", "Liberation Serif", serif'
 _SHARED = """
-html { color: #000; font-variant-numeric: lining-nums; hyphens: none; }
+html { color: #000; font-variant-numeric: lining-nums; hyphens: none; font-kerning: normal; }
 p { orphans: 2; widows: 2; }
 h1, h2, h3, h4 { break-after: avoid; font-weight: 700; }
 tr, .sig-block, .attestation, .keep { break-inside: avoid; }
 img { max-width: 100%; }
 strong { font-weight: 700; }
+sup { font-size: 0.62em; line-height: 0; vertical-align: 0.48em; }
 /* a fact still to be filled in */
 .blank { background: #fff1b8; padding: 0 1.5pt; }
+/* a numbered clause: the number stands in its own column, the text hangs beside it */
+.cl > .n { display: inline-block; text-indent: 0; font-weight: 400; }
+h1.cl > .n, h2.cl > .n, h3.cl > .n, h4.cl > .n { font-weight: 700; }
+/* a line to write or sign on */
+.rule { display: inline-block; border-bottom: 0.6pt solid #000; height: 0.85em; vertical-align: baseline; }
+.rule.dots { border-bottom: 0.9pt dotted #000; }
+table.form { width: auto; border-collapse: collapse; margin: 2pt 0 10pt 0; font-size: inherit; break-inside: avoid; }
+table.form td { border: none; padding: 7pt 0 1pt 0; vertical-align: bottom; }
+table.form td.lab { padding-right: 12pt; white-space: nowrap; width: 31mm; }
+table.form td.val { width: 78mm; }
+table.form td.open { border-bottom: 0.6pt solid #000; }
+/* a quoted passage */
+blockquote { margin: 2pt 28pt 10pt 28pt; font-size: 0.93em; line-height: 1.32; font-style: italic; }
+blockquote p { margin: 0 0 5pt 0; text-align: justify; }
+blockquote em, blockquote i { font-style: normal; }
 table.letterhead { width: 100%; border-collapse: collapse; margin: 0 0 16pt 0; border-bottom: 0.75pt solid #000; }
 table.letterhead td { border: none; padding: 0 0 8pt 0; vertical-align: bottom; }
 table.letterhead td.lh-logo { width: 45%; }
@@ -57,47 +87,94 @@ table.letterhead .lh-name { font-size: 12pt; font-weight: 700; letter-spacing: 0
 COURT_CSS = _SHARED + """
 @page {
   size: A4;
-  margin: 25mm 25mm 25mm 40mm;
-  @bottom-center { content: counter(page) " of " counter(pages); font-family: %(face)s; font-size: 10pt; }
+  margin: 25mm 20mm 25mm 40mm;
+  @bottom-center { content: counter(page) " of " counter(pages); font-family: %(face)s; font-size: 9.5pt; }
 }
 html { font-family: %(face)s; font-size: 12pt; line-height: 1.5; }
-p { margin: 0 0 8pt 0; text-align: justify; }
-h1, h2, h3 { text-align: center; margin: 14pt 0 8pt 0; }
-h1 { font-size: 13pt; letter-spacing: 0.04em; }
-h2 { font-size: 12.5pt; }
-h3 { font-size: 12pt; }
-ol, ul { margin: 0 0 8pt 0; padding-left: 28pt; }
-li { margin-bottom: 6pt; text-align: justify; padding-left: 4pt; }
+p { margin: 0 0 9pt 0; text-align: justify; }
+h1, h2, h3 { margin: 16pt 0 8pt 0; line-height: 1.35; }
+h1 { font-size: 12.5pt; text-align: center; text-transform: uppercase; }
+h2 { font-size: 12pt; text-align: left; text-transform: uppercase; text-decoration: underline; text-underline-offset: 2.5pt; }
+h2.cl { text-decoration: none; }
+h2.cl > .t { text-decoration: underline; text-underline-offset: 2.5pt; }
+h3 { font-size: 12pt; text-align: left; }
+ol, ul { margin: 0 0 9pt 0; padding-left: 30pt; }
+li { margin-bottom: 8pt; text-align: justify; padding-left: 4pt; }
+ol ol { list-style-type: lower-alpha; margin-top: 6pt; }
+ol ol ol { list-style-type: lower-roman; }
 hr { border: none; border-top: 0.75pt solid #000; margin: 12pt 0; }
 table { border-collapse: collapse; margin: 0; width: 100%%; }
-table.heading td, table.parties td { border: none; padding: 2pt 0; vertical-align: top; }
-table.parties td.right { text-align: right; font-weight: 700; }
-.court-caption { text-align: center; font-weight: 700; line-height: 1.4; }
-.court-caption .line { text-transform: uppercase; letter-spacing: 0.03em; }
-.court-caption .jurisdiction { font-weight: 400; font-style: italic; text-transform: none; }
-.cause-number { text-align: right; font-weight: 700; margin-top: 6pt; }
-.between { font-weight: 700; margin: 12pt 0 6pt 0; }
-.doc-title { text-align: center; text-transform: uppercase; font-weight: 700; font-size: 13pt; letter-spacing: 0.06em;
-             margin: 20pt 0 12pt 0; text-decoration: underline; text-underline-offset: 3pt; }
+blockquote { font-weight: 700; }
+/* the heading of the action */
+table.caption td { border: none; padding: 0; vertical-align: top; font-weight: 700; line-height: 1.4; text-transform: uppercase; }
+table.caption td.court { font-size: 11.5pt; }
+table.caption td.cause { text-align: right; white-space: nowrap; padding-left: 14pt; }
+table.caption .jurisdiction { font-weight: 400; font-style: italic; text-transform: none; }
+table.matters { margin: 12pt 0 0 0; }
+table.matters td { border: none; padding: 0 0 8pt 0; vertical-align: top; font-weight: 700; text-align: justify; }
+table.matters td.lab { width: 44mm; white-space: nowrap; text-align: left; }
+em.capacity { font-weight: 400; }
+p.caption-note { font-style: italic; margin: 8pt 0 0 0; text-align: left; }
+p.between { font-weight: 700; margin: 14pt 0 6pt 0; }
+table.parties td { border: none; padding: 3pt 0; vertical-align: bottom; }
+table.parties td.party { width: 70%%; text-align: left; }
+table.parties td.role { text-align: right; font-weight: 700; white-space: nowrap; padding-left: 14pt; }
+table.parties td.and { font-weight: 700; padding: 9pt 0; }
+table.heading td { border: none; padding: 2pt 0; vertical-align: top; }
+.doc-title { text-align: center; text-transform: uppercase; font-weight: 700; font-size: 12.5pt; letter-spacing: 0.06em;
+             line-height: 1.4; margin: 18pt 0 14pt 0; padding: 8pt 0 7pt 0;
+             border-top: 0.9pt solid #000; border-bottom: 0.9pt solid #000; break-after: avoid; }
+.sub-title { text-align: center; text-transform: uppercase; font-weight: 700; margin: 22pt 0 8pt 0; break-after: avoid; }
+p.pursuant { text-align: center; font-style: italic; margin: -4pt 0 12pt 0; }
 .recital { margin: 12pt 0; }
-.dated { margin-top: 28pt; }
-.sig-line { border-bottom: 0.75pt solid #000; width: 60%%; margin-top: 32pt; }
+.dated { margin-top: 26pt; }
+.ending { margin-top: 20pt; }
+.ending p { text-align: left; }
+p.authority { font-style: italic; font-size: 11pt; line-height: 1.35; text-align: left; }
+.sig-line { border-bottom: 0.75pt solid #000; width: 62mm; margin-top: 34pt; }
+/* who signs: at the right, as the forms in the High Court Rules place it */
+.advocates { margin: 38pt 0 0 46%%; break-inside: avoid; }
+.advocates p { margin: 0; text-align: left; }
+.advocates .sig-line { margin: 0 0 4pt 0; width: 100%%; }
+p.list-head { margin: 0 0 4pt 0; break-after: avoid; }
 .served { margin-top: 18pt; break-inside: avoid; }
+.served p { text-align: left; }
 .served strong { display: block; margin-bottom: 4pt; }
+/* an affidavit is sworn here */
+.jurat-block { break-inside: avoid; }
+ol.facts > li:last-child { break-after: avoid; }
+table.jurat { margin: 24pt 0 0 0; break-inside: avoid; table-layout: fixed; }
+table.jurat td { border: none; padding: 0; vertical-align: top; line-height: 1.9; }
+table.jurat td.sworn { width: 52%%; text-align: left; }
+table.jurat td.brace { width: 7%%; text-align: center; }
+table.jurat td.deponent { vertical-align: bottom; text-align: center; }
+/* High Court Rules, Order V r.20(g): the jurat stands at the foot, towards the left */
+p.before-me { text-align: left; font-weight: 700; margin: 16pt 0 34pt 0; break-after: avoid; }
+p.commissioner { text-align: left; break-inside: avoid; }
+/* one sheet to mark each exhibit */
+.exhibit-sheet { break-before: page; text-align: center; padding-top: 30mm; }
+.exhibit-sheet p.short-title { font-weight: 700; margin: 0 0 30mm 0; }
+.exhibit-sheet .mark { font-size: 22pt; font-weight: 700; margin-bottom: 20pt; }
+.exhibit-sheet p { text-align: center; margin: 0 0 38pt 0; }
+.exhibit-sheet p.exhibit-note { font-style: italic; margin-top: 30mm; }
 """ % {"face": SERIF_COURT}
 
 # "Keep it brief, it should fit on one page" (8 Oct 2026): same court format,
 # tighter page.
 COURT_COMPACT_CSS = """
 @page { margin: 14mm 16mm 14mm 26mm; }
-html { font-size: 11pt; line-height: 1.3; }
+html { font-size: 10.5pt; line-height: 1.3; }
 p, li { margin-bottom: 4pt; }
 h1, h2, h3 { margin: 8pt 0 4pt 0; }
-.court-caption { line-height: 1.25; }
-.between { margin: 5pt 0 3pt 0; }
-.doc-title { margin: 8pt 0 6pt 0; font-size: 12pt; }
+table.caption td { line-height: 1.25; }
+p.between { margin: 6pt 0 2pt 0; }
+table.parties td { padding: 1pt 0; }
+table.parties td.and { padding: 3pt 0; }
+.doc-title { margin: 8pt 0 6pt 0; padding: 4pt 0 3pt 0; font-size: 11pt; }
 .recital { margin: 6pt 0; }
 .dated { margin-top: 12pt; }
+.advocates { margin-top: 20pt; }
+p.authority { font-size: 9.5pt; }
 """
 
 AGREEMENT_CSS = _SHARED + """
@@ -108,20 +185,25 @@ AGREEMENT_CSS = _SHARED + """
 }
 html { font-family: %(face)s; font-size: 11pt; line-height: 1.45; }
 p { margin: 0 0 8pt 0; text-align: justify; }
-h1 { text-align: center; font-size: 15pt; text-transform: uppercase; letter-spacing: 0.08em; line-height: 1.3; margin: 0 0 18pt 0; }
-h2 { text-align: left; font-size: 11pt; text-transform: uppercase; letter-spacing: 0.05em; margin: 18pt 0 6pt 0; }
+h1 { text-align: center; font-size: 15pt; text-transform: uppercase; letter-spacing: 0.08em; line-height: 1.3; margin: 0 0 20pt 0; }
+h2 { text-align: left; font-size: 11pt; text-transform: uppercase; letter-spacing: 0.04em; margin: 18pt 0 6pt 0; }
+h2.schedule { break-before: page; text-align: center; font-size: 12pt; letter-spacing: 0.08em; margin: 0 0 14pt 0; }
 h3 { text-align: left; font-size: 11pt; margin: 12pt 0 4pt 0; }
-p.connective { text-align: center; font-weight: 700; letter-spacing: 0.08em; margin: 10pt 0; }
+p.connective { text-align: center; font-weight: 700; letter-spacing: 0.08em; margin: 12pt 0; }
 ol, ul { margin: 0 0 8pt 0; padding-left: 26pt; }
 li { margin-bottom: 5pt; text-align: justify; padding-left: 3pt; }
+ol ol { list-style-type: lower-alpha; margin-top: 5pt; }
+ol ol ol { list-style-type: lower-roman; }
 hr { border: none; border-top: 0.5pt solid #000; margin: 14pt 0; }
 table { border-collapse: collapse; margin: 8pt 0 10pt 0; width: 100%%; font-size: 10pt; }
 th { text-align: left; border-bottom: 0.75pt solid #000; padding: 4pt 8pt 4pt 0; }
 td { border-bottom: 0.25pt solid #777; padding: 4pt 8pt 4pt 0; vertical-align: top; }
-blockquote { margin: 8pt 0 8pt 18pt; }
+tr.blank-row td { height: 15pt; }
 .court-caption { text-align: center; font-weight: 700; line-height: 1.4; }
 .doc-title { text-align: center; text-transform: uppercase; font-weight: 700; font-size: 13pt; letter-spacing: 0.06em; margin: 18pt 0 12pt 0; }
 .sig-line { border-bottom: 0.75pt solid #000; width: 60%%; margin-top: 30pt; }
+.exec { margin-top: 16pt; }
+.exec > p { text-align: left; margin-bottom: 4pt; }
 """ % {"face": SERIF_BOOK}
 
 LETTER_CSS = _SHARED + """
@@ -134,14 +216,17 @@ html { font-family: %(face)s; font-size: 11pt; line-height: 1.45; }
 p { margin: 0 0 9pt 0; text-align: left; }
 h1, h2 { text-align: left; font-size: 11.5pt; line-height: 1.35; margin: 14pt 0 10pt 0; }
 h3 { text-align: left; font-size: 11pt; margin: 12pt 0 4pt 0; }
+.re-line, .re-line strong { text-decoration: underline; text-underline-offset: 2.5pt; font-weight: 700; }
+p.re-line { margin: 12pt 0 12pt 0; }
+p.marking { font-weight: 700; letter-spacing: 0.04em; }
 p.connective { font-weight: 700; }
 ol, ul { margin: 0 0 9pt 0; padding-left: 24pt; }
-li { margin-bottom: 4pt; padding-left: 3pt; }
+li { margin-bottom: 5pt; padding-left: 3pt; }
+ol ol { list-style-type: lower-alpha; margin-top: 4pt; }
 hr { border: none; border-top: 0.5pt solid #000; margin: 16pt 0; }
 table { border-collapse: collapse; margin: 8pt 0 10pt 0; width: 100%%; font-size: 10pt; }
 th { text-align: left; border-bottom: 0.75pt solid #000; padding: 4pt 8pt 4pt 0; }
 td { border-bottom: 0.25pt solid #777; padding: 4pt 8pt 4pt 0; vertical-align: top; }
-blockquote { margin: 8pt 0 8pt 18pt; }
 .sig-line { border-bottom: 0.75pt solid #000; width: 60%%; margin-top: 30pt; }
 p.valediction { margin-bottom: 36pt; }   /* room for a signature in ink */
 """ % {"face": SERIF_BOOK}
@@ -160,7 +245,7 @@ p { margin: 0 0 8pt 0; text-align: justify; }
 ul, ol { margin: 0 0 8pt 0; padding-left: 22pt; }
 li { margin-bottom: 3pt; }
 hr { border: none; border-top: 0.5pt solid #000; margin: 14pt 0; }
-blockquote { margin: 8pt 0 8pt 18pt; font-style: italic; }
+blockquote { margin: 6pt 22pt 10pt 22pt; }
 code { font-family: "DejaVu Sans Mono", monospace; font-size: 9.5pt; }
 table { border-collapse: collapse; margin: 8pt 0 12pt 0; width: 100%%; font-size: 10pt; }
 th { text-align: left; border-bottom: 0.75pt solid #000; padding: 4pt 8pt 4pt 0; }
@@ -173,11 +258,13 @@ NO_FOOTER_CSS = "@page { @bottom-center { content: none; } }"
 
 
 def markdown_extensions(layout: str) -> list[str]:
-    """Letters and agreements keep their line breaks: an address block or
-    "Date: / Ref: / To:" written on separate lines must print on separate
-    lines, where plain Markdown runs them together into one paragraph."""
+    """A formal document keeps its line breaks: an address block, "Date: /
+    Ref: / To:" or the lines of a court heading written on separate lines must
+    print on separate lines, where plain Markdown runs them together into one
+    paragraph (which is what happened to the heading of a statement of claim
+    in production)."""
     base = ["extra", "tables", "sane_lists"]
-    return base + ["nl2br"] if layout in ("letter", "agreement") else base
+    return base + ["nl2br"] if layout in LAYOUTS else base
 
 
 def css_for(layout: str, compact: bool = False) -> list[str]:
@@ -204,6 +291,31 @@ def infer_layout(body_md: str) -> str:
     return "agreement"
 
 
+_AGREEMENT_OPENING = re.compile(
+    r"\bTHIS\s+(?:[A-Z][A-Za-z]*\s+){0,5}(?:AGREEMENT|DEED|CONTRACT|LEASE|INDENTURE|MEMORANDUM OF UNDERSTANDING)\b"
+    r"[^\n]{0,80}\b(?:is made|is entered|made and entered|is dated|made this|made on)\b", re.I)
+
+
+def formal_layout_of(body_md: str) -> str | None:
+    """Is this body, sent to the memo tool, really a formal document?
+
+    Only on plain evidence: the heading of an action with its parties, a
+    letter that opens "Dear" and closes "Yours faithfully", or an instrument
+    that opens "THIS AGREEMENT is made". A memo about a case, or one that
+    mentions a letter, stays a memo.
+    """
+    text = LETTERHEAD_MARK.sub("", body_md or "")
+    head = text[:2500]
+    if _COURT_MARK.search(head[:900]) and re.search(r"^\W*B\s?E\s?T\s?W\s?E\s?E\s?N\W*$|IN THE MATTER OF", head, re.I | re.M):
+        return "court"
+    if (re.search(r"^\s*\**Dear\b", text[:1800], re.I | re.M)
+            and re.search(r"^\s*\**Yours\s+(?:faithfully|sincerely|truly)", text, re.I | re.M)):
+        return "letter"
+    if _AGREEMENT_OPENING.search(head):
+        return "agreement"
+    return None
+
+
 # ── blanks ───────────────────────────────────────────────────────────────────
 
 # [EMPLOYEE FULL NAME], [DATE OF LETTER], [AMOUNT IN KWACHA]. Starts with a
@@ -216,7 +328,8 @@ BLANK = re.compile(r"\[[A-Z][A-Z0-9 '’/&.+%-]{1,90}(?:[,:(][^\]\n]{0,140})?\]"
 # "[__]": a number or reference to write in, with no name to ask for.
 UNNAMED_BLANK = re.compile(r"\[_{1,12}\]")
 # Marks for a hand to complete on paper: not facts Levy can be given.
-_BY_HAND = re.compile(r"^\[(?:SEAL|COMMON SEAL|L\.?S\.?|SIGNATURE|SIGNED|SIGN HERE|STAMP|DATE STAMP|COURT SEAL|INITIALS?)\]$")
+_BY_HAND = re.compile(r"^\[(?:SEAL|COMMON SEAL|L\.?S\.?|SIGNATURE|SIGNED|SIGN HERE|STAMP|DATE STAMP|COURT SEAL|INITIALS?"
+                      r"|COMMISSIONER FOR OATHS|JUDGE|REGISTRAR|MAGISTRATE)\]$")
 
 
 def find_blanks(text: str) -> list[str]:
@@ -303,11 +416,21 @@ _TRAILING_BACKSLASH = re.compile(r"(?<=[^\\\s])\\[ \t]*$", re.M)
 _SIGNATURE_RULE = re.compile(r"^([ \t]*)(_{4,})[ \t]*$", re.M)
 
 
+# "Signature: ______________" inside a line. Markdown reads a run of
+# underscores as emphasis marks and prints four of the thirty, which is how
+# the signature lines of a production tenancy agreement came out as stubs.
+_INLINE_RULE = re.compile(r"(?<![\\_])_{3,}")
+
+
 def tidy_source(body_md: str) -> str:
     """Remove line-break marks this renderer would print as text, and keep a
-    line drawn for a signature as that line."""
+    line drawn for a signature as that line. Safe to run twice."""
     out = _LONE_BACKSLASH.sub("", (body_md or "") + "\n")
     out = _SIGNATURE_RULE.sub(lambda m: m.group(1) + "\\_" * min(len(m.group(2)), 34), out)
+    # Not inside a line of raw HTML (a court tool's own markup): Markdown leaves
+    # those alone, so an escape there would print as a backslash.
+    out = "\n".join(ln if ln.lstrip().startswith("<") else _INLINE_RULE.sub(lambda m: "\\_" * len(m.group(0)), ln)
+                    for ln in out.split("\n"))
     return _TRAILING_BACKSLASH.sub("  ", out).rstrip("\n") + ("\n" if (body_md or "").endswith("\n") else "")
 
 
@@ -348,8 +471,10 @@ def number_lists(html: str) -> str:
     return _OL_START.sub(lambda m: f'{m.group(0)} style="counter-reset: list-item {int(m.group(1)) - 1}"', html or "")
 
 
-def normalise(html: str, layout: str) -> str:
-    """Even out how the model happened to mark the document up.
+def normalise(html: str, layout: str, title_hint: str = "") -> str:
+    """Even out how the model happened to mark the document up, then set it
+    for its layout (doc_typeset.typeset: the heading of an action, hanging
+    clause numbers, block quotations, lines to sign on, quotation marks).
 
     One agreement arrives with its title as "#" and its clauses as "##",
     another as "##" and "###". The stylesheet styles h1 as the title and h2 as
@@ -393,7 +518,7 @@ def normalise(html: str, layout: str) -> str:
                 out.append(html[last:m.start()] + (f"<{m.group(1)}h2" if demote else m.group(0)))
                 last = m.end()
             html = "".join(out) + html[last:]
-    return html
+    return doc_typeset.typeset(html, layout, title_hint)
 
 
 # ── letterhead ───────────────────────────────────────────────────────────────
