@@ -48,7 +48,7 @@ def scripted(*turns):
 
 class Continuation(unittest.IsolatedAsyncioTestCase):
     async def run_with(self, client, audit_seen):
-        def audit(text):
+        def audit(text, evidence=None):
             audit_seen.append(text)
             return []
         with patch.object(agent.anthropic, "AsyncAnthropic", lambda **kw: client), \

@@ -121,8 +121,10 @@ class RunAccumulator:
         elif t == "citation_audit":
             # Persisted as a block so history reloads render the same verdicts
             # the live stream showed.
-            self.blocks.append({"kind": "citation_audit",
-                                "citations": e.get("citations") or []})
+            block = {"kind": "citation_audit", "citations": e.get("citations") or []}
+            if e.get("check"):
+                block["check"] = e["check"]   # the source check ran a correction round
+            self.blocks.append(block)
         elif t == "artifact":
             a = e.get("artifact")
             if a and not any(x.get("id") == a.get("id") for x in self.artifacts):

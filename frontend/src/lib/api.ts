@@ -67,6 +67,22 @@ export interface CitationVerdict {
   known?: KnownCase
   /** Quotations the answer attributes to this authority, compared with its text. */
   quotes?: QuoteCheck[]
+  /** Not held under this name, but named in a source Levy read while answering. */
+  seen?: SeenSource
+  /** The answer itself says it could not verify this authority. */
+  disclaimed?: boolean
+  /** The answer's closing "Source check" section went back to this authority. */
+  checked?: boolean
+}
+
+/** Where, in what Levy read, an authority it does not hold by name was found. */
+export interface SeenSource {
+  in: 'library' | 'official' | 'institutional' | 'news' | 'unofficial'
+  tool?: string
+  document_id?: string
+  title?: string
+  url?: string
+  page?: number
 }
 
 export interface CaseTreatment {

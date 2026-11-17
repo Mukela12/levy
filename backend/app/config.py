@@ -77,6 +77,11 @@ class Settings(BaseSettings):
 
     # Agent loop
     agent_max_iterations: int = 12
+    # After a draft answer, trace every cited authority to a source Levy read
+    # and, if one fails (or the library missed and nothing online was tried),
+    # give the model one more round to check and append a correction. Off
+    # switch for an incident: SOURCE_CHECK_ENABLED=false.
+    source_check_enabled: bool = True
     agent_tool_timeout_seconds: int = 25
     agent_max_tool_result_chars: int = 8000
     # Output ceiling per model call. This was 8192, which silently truncated or

@@ -287,31 +287,74 @@ employee's gratuity, while the user's own question "is it ok to compute early
 gratuity" went unanswered; the user left and asked again in a new chat.)
 
 RETRIEVAL CHAIN: LIBRARY, THEN OFFICIAL WEB, THEN SAY SO.
-The library is a cache of Zambian law, not the whole of it. A miss is a signal
-to go to the source, never a licence to answer from memory.
+The library is a cache of Zambian law, not the whole of it. You also have
+live internet access in every conversation, through gov_search, web_fetch,
+fetch_web_pdf and read_pdf_pages. A library miss is a signal to go to the
+source online, never a licence to answer from memory, and never the end of
+the search.
 1. Library first: `search_corpus` for statutes, rules and procedure,
    `search_case_law` for judgments. Read what came back before acting on it.
-2. On a miss, escalate without asking permission. A miss is any of: a result
-   marked library_miss or named_case_not_held; zero matches; a top similarity
-   under about 0.55 on a specific question (a fee, a deadline, a named case,
-   a named Act or SI, a current procedure, a recent ruling); or the user
-   asking for anything current. Then:
+2. On a miss, go online in the same turn, without asking permission and
+   without offering to. A miss is any of: a result marked library_miss or
+   named_case_not_held; zero matches; a top similarity under about 0.55 on a
+   specific question (a fee, a deadline, a named case, a named Act or SI, a
+   current procedure, a recent ruling); the user asking for anything
+   current; or you finding yourself about to write "not in the library",
+   "I found no authority", "I do not hold" or "I can look for it". Never
+   write one of those before you have searched online. Then:
    a. `gov_search` for the primary source: judiciaryzambia.com for judgments
-      and court rules, parliament.gov.zm for Acts, the issuing agency for
-      procedures and fees. `web_search` only if gov_search finds nothing.
+      and court rules, parliament.gov.zm for Acts, gazettes.africa for
+      statutory instruments and commencement orders, the issuing agency for
+      procedures and fees. `web_search` only to find a lead when gov_search
+      has nothing.
    b. OPEN what you found. `web_fetch` reads a page (and a PDF link's text),
       `fetch_web_pdf` stores a PDF the user should have and returns its
       opening text, `read_pdf_pages` reads any PDF page by page; scanned
       pages arrive as images, read them. Quote from the retrieved text and
       cite the URL.
    c. If the official sources also have nothing, say exactly that: what you
-      searched and that you do not hold the authority. Stop there. Do not
-      fill the gap from memory, news reports, Hansard or general knowledge.
+      searched, in the library and online, and that you do not hold the
+      authority. Stop there. Do not fill the gap from memory, news reports,
+      Hansard or general knowledge.
 3. Budget: up to 5 tool rounds; a 6th only to open a primary source you have
    already located. Then write the answer and name any remaining gap in it.
 4. Do not narrate between tool calls. Save prose for the answer.
 When the user has switched the "Search" affordance on, run gov_search
 alongside the first library search rather than after it.
+
+WHICH SOURCES CAN STAND BEHIND THE LAW.
+Every web result and fetched page carries a `trust` tag. Obey it.
+- `official` (Parliament, the Judiciary, the Government Gazette, ministries
+  and statutory bodies): a statement of law may rest on it. Quote it and
+  cite the URL.
+- `institutional` (law firms, professional bodies, universities, legal
+  publishers): a lead or commentary. Say who says it ("a Bowmans note
+  says"), and confirm the point in the library or on an official page
+  before you state it as law. If you cannot, say it is unconfirmed.
+- `news`: evidence that something happened (a Bill was signed, a judgment
+  was handed down), never of what the law says.
+- `unofficial`: a lead only. Never cite it for what Zambian law says. Use
+  it to learn the name, number or date of the real source, then go and
+  read that source.
+A statement of law in your answer must rest on the library or on an
+official page you opened in this conversation. Nothing else.
+
+YOUR ANSWER IS CHECKED BEFORE IT STANDS.
+When you finish, every case, Act and section you named is traced to what
+you actually read in this conversation: a library document, or a page a
+tool returned. An authority that nothing stands behind, a repealed or
+not-yet-commenced Act stated as current law, a quotation the source does
+not contain, a case later overturned, or a reported library miss with no
+online search, comes back to you to check and correct in front of the
+reader. So do the checking first:
+- Name an authority only if a tool returned it in this conversation. If
+  you know of a case but have not read it, either find it (case_history,
+  search_case_law, then gov_search) or name it once as unverified, in the
+  same sentence, with no holding attributed to it.
+- A case you met only as a quotation inside another judgment is cited as
+  such ("quoted in X v Y, p. 12"), never as if you had read it.
+- When an authority you rely on is doubtful, say so beside it, not in a
+  caveat at the end.
 
 IS THIS LAW STILL IN FORCE?
 The library holds repealed Acts beside the Acts that replaced them, and a
@@ -1448,11 +1491,14 @@ async def run_agent(
     continuations = 0    # times an answer cut off by the output limit was resumed
     continued_text = ""  # answer text from rounds before a continuation, for the audit
     asked_user = False   # the model handed the turn back with an ask_user question
+    source_check = None  # set once the finished draft has been through the source check
+    checked_audit = None  # the draft's verdicts, reused when the check found nothing
+    max_iterations = settings.agent_max_iterations
 
     while True:
         # If we hit the iteration cap, force a final answer with no tools so
         # the user always gets a written response from accumulated context.
-        cap_reached = iterations >= settings.agent_max_iterations
+        cap_reached = iterations >= max_iterations
         iterations += 1
 
         if cap_reached:
@@ -1460,6 +1506,10 @@ async def run_agent(
                 {
                     "role": "user",
                     "content": (
+                        "You have reached the tool-call budget. Stop calling tools and write the "
+                        "\"**Source check**\" section now from what you have. Anything you could not "
+                        "confirm, say so plainly."
+                        if source_check and source_check.get("ran") else
                         "You have reached the tool-call budget. Stop calling tools and "
                         "write your final answer now using only what you've already "
                         "gathered. Cite the sources you have. If something is missing, "
@@ -1636,6 +1686,36 @@ async def run_agent(
                     ),
                 })
                 continue
+            # SOURCE CHECK. The draft is on the reader's screen; before the turn
+            # ends, every authority it names is traced to something Levy
+            # actually read (the library, or a page a tool returned this turn),
+            # and dead law, bad quotations and overturned cases are caught. If
+            # anything fails, or the draft reports a library miss with no
+            # online search, the model gets ONE more round to check the library
+            # and the official web and to append a correction. Until 17 Nov 2026
+            # these were only badges under the answer, shown after the fact.
+            if (settings.source_check_enabled and source_check is None and not cap_reached
+                    and final_text.strip() and final_message.stop_reason != "max_tokens"):
+                source_check = {"ran": False, "problems": 0, "missed": False}
+                try:
+                    from . import citation_audit as _ca
+                    _draft = continued_text + final_text
+                    _evidence = _ca.evidence_from_tool_calls(tool_calls)
+                    checked_audit = await asyncio.to_thread(_ca.audit_answer, _draft, _evidence)
+                    _problems = _ca.gate_problems(checked_audit)
+                    _missed = _ca.missed_without_web(_draft, [t.name for t in tool_calls])
+                except Exception:  # noqa: BLE001 — the check must never break an answer
+                    _problems, _missed, checked_audit = [], False, None
+                if _problems or _missed:
+                    source_check = {"ran": True, "problems": len(_problems), "missed": _missed,
+                                    "kinds": sorted({p["problem"] for p in _problems})}
+                    print(f"[agent] source check: {len(_problems)} problem(s), missed={_missed}; one more round")
+                    continued_text += final_text + "\n\n"
+                    checked_audit = None
+                    max_iterations = iterations + 5
+                    yield {"type": "token", "content": "\n\n"}
+                    messages.append({"role": "user", "content": _ca.source_check_message(_problems, _missed)})
+                    continue
             break
 
         # Otherwise, execute every tool_use block in this assistant message
@@ -1828,12 +1908,24 @@ async def run_agent(
             getattr(b, "text", "") for b in final_message.content
             if getattr(b, "type", None) == "text"
         ) if final_message is not None else "")
-        # Off the event loop: the quote check reads section text from the database.
-        _audit = await asyncio.to_thread(audit_answer, _answer_text)
+        if checked_audit is not None:
+            _audit = checked_audit   # the source check already audited this exact text
+        else:
+            from .citation_audit import evidence_from_tool_calls
+            # Off the event loop: the quote check reads section text from the database.
+            _audit = await asyncio.to_thread(audit_answer, _answer_text, evidence_from_tool_calls(tool_calls))
     except Exception:  # noqa: BLE001 — verification must never break an answer
         _audit = []
-    if _audit:
-        yield {"type": "citation_audit", "citations": _audit}
+    if _audit or (source_check and source_check.get("ran")):
+        _event = {"type": "citation_audit", "citations": _audit}
+        if source_check and source_check.get("ran"):
+            try:
+                from .citation_audit import mark_checked
+                mark_checked(_audit, _answer_text)
+            except Exception:  # noqa: BLE001
+                pass
+            _event["check"] = source_check
+        yield _event
 
     yield {
         "type": "sources",

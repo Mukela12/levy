@@ -22,10 +22,10 @@
  *    answer did not cite is still labelled where the reader sees it (the
  *    panel offered a repealed section unmarked on 5 Oct 2026).
  */
-import type { CaseTreatment, ChunkUsed, CitationVerdict, DeadSection, KnownCase, QuoteCheck, WebSource } from '@/lib/api'
+import type { CaseTreatment, ChunkUsed, CitationVerdict, DeadSection, KnownCase, QuoteCheck, SeenSource, WebSource } from '@/lib/api'
 import type { MessageBlock } from '@/components/chat/chat-message'
 
-export type SourceVerification = 'verified' | 'known' | 'review' | 'noted' | 'none'
+export type SourceVerification = 'verified' | 'known' | 'sourced' | 'review' | 'noted' | 'none'
 
 export interface SourceRow {
   id: string
@@ -60,8 +60,17 @@ export interface SourceRow {
   treatmentNamed: boolean
   /** A case Levy does not hold that judgments in its library cite. */
   known?: KnownCase
+  /** Not held by name, but named in a library document or official page Levy read. */
+  seen?: SeenSource
+  /** The answer itself says it could not verify this authority. */
+  disclaimed?: boolean
+  /** The answer's closing "Source check" section went back to this authority. */
+  checked?: boolean
   verification: SourceVerification
 }
+
+/** A source that can stand behind an authority: the library, or an official page. */
+const trustedSeen = (c: CitationVerdict) => Boolean(c.seen && (c.seen.in === 'library' || c.seen.in === 'official'))
 
 /**
  * One entry per cited section. A section the answer mentions twice counts as
@@ -88,6 +97,8 @@ export interface SourceModel {
   verified: number
   /** Cases Levy does not hold that judgments in its library cite. */
   known: number
+  /** Authorities not held by name that Levy read in a library document or on an official page. */
+  sourced: number
   review: number
   noted: number
 }
@@ -239,19 +250,33 @@ export function sourceModel(input: {
     const unmatched = row.verdicts.some((c) => c.status !== 'verified' || !c.document_id)
     // Not held, but cited under the same citation by judgments Levy holds.
     const knownOnly = unmatched && row.verdicts.every((c) => (c.status === 'verified' && c.document_id) || (c.known && !c.known.year_conflict))
+    // Not held by name, but every such citation is accounted for: Levy read
+    // it in a library document or on an official page, or the answer itself
+    // says it could not verify it. Neither is a hidden gap, so neither is
+    // "review"; neither is "verified" either.
+    const settled = (c: CitationVerdict) => Boolean((c.status === 'verified' && c.document_id) || (c.known && !c.known.year_conflict) || trustedSeen(c) || c.disclaimed === true)
+    const accounted = unmatched && !knownOnly && row.verdicts.every(settled)
+    const sourcedOnly = accounted && row.verdicts.some((c) => !(c.status === 'verified' && c.document_id) && trustedSeen(c) && !c.disclaimed)
+    row.seen = row.verdicts.find(trustedSeen)?.seen
+    row.disclaimed = accounted && !sourcedOnly
+    row.checked = row.verdicts.some((c) => c.checked === true)
     const misused = row.quoteIssues.length > 0 || (row.treatment.length > 0 && !row.treatmentNamed)
     row.verification =
       state !== 'complete'
         ? 'none'
-        : (unmatched && !knownOnly) || row.conflict || row.foreign || unnamedDeadSection || misused
+        : (unmatched && !knownOnly && !accounted) || row.conflict || row.foreign || unnamedDeadSection || misused
           ? 'review'
           : dead
             ? repealedNamed ? 'noted' : 'review'
             : knownOnly
               ? 'known'
-              : row.verdicts.length
-                ? 'verified'
-                : 'none'
+              : sourcedOnly
+                ? 'sourced'
+                : row.disclaimed
+                  ? 'noted'
+                  : row.verdicts.length
+                    ? 'verified'
+                    : 'none'
   }
 
   const urls = new Set<string>()
@@ -287,6 +312,7 @@ export function sourceModel(input: {
     state,
     verified: rows.filter((r) => r.verification === 'verified').length,
     known: rows.filter((r) => r.verification === 'known').length,
+    sourced: rows.filter((r) => r.verification === 'sourced').length,
     review: rows.filter((r) => r.verification === 'review').length,
     noted: rows.filter((r) => r.verification === 'noted').length,
   }

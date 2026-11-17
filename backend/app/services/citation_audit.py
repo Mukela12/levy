@@ -179,16 +179,42 @@ _NOT_A_STATUTE_START = {
 }
 # Suffix words carry no identity: "Rules" alone, or "Venue Rules", say nothing
 # about WHICH instrument. At least one token must be a proper content word.
-_WEAK_TOKENS = {"the", "of", "and", "zambia", "act", "code", "rules",
+_WEAK_TOKENS = {"the", "of", "and", "zambia", "zambian", "act", "code", "rules",
                 "regulations", "court", "courts", "high"}
+# An employer's own documents and everyday phrases that end in an instrument
+# word. In the fortnight to 17 Nov 2026 "the Disciplinary Code" (a company's
+# own code, which the user had attached) was shown as an Act missing from the
+# library, twice.
+_NOT_A_STATUTE = {"disciplinary code", "grievance code", "disciplinary and grievance code",
+                  "code of conduct", "dress code", "conduct code", "house rules", "company rules",
+                  "ground rules", "service charter"}
+# "Order XLII of the High Court Rules", "the Fifth Schedule of the Code": the
+# instrument is what follows the "of".
+_PROVISION_PREFIX = re.compile(
+    r"^(?:(?:Order|Rule|Part|Section|Regulation|Form|Schedule|Division|Chapter)\s+[IVXLCDM\d]+[A-Z]?"
+    r"|(?:First|Second|Third|Fourth|Fifth|Sixth|Seventh|Eighth|Ninth|Tenth)\s+Schedule)"
+    r"(?:\s*,?\s*[Rr]ule\s+\d+)?\s+(?:of|to|in)\s+(?:the\s+)?")
+
+
+# An emphasised case name ("*Kalimbwe Kajoba v Attorney General*") marks its
+# own edges. Dropping the asterisks threw that away, and the word before the
+# name joined it: "**Leave.** In *Kalimbwe Kajoba v ...*" was audited as
+# "Leave In Kalimbwe Kajoba v Attorney General" (13 Nov 2026). The edges are
+# kept as guillemets, which the party walkers stop at.
+# Italics only: Levy sets case names in italics, and bold is mostly headings
+# ("**Legal Ownership vs. Beneficial Ownership**"), which must not be anchored.
+_EMPH_CASE = re.compile(r"(?<![*_\w])([*_])(?![*_\s])([^*_\n]{2,200}?\s(?:v|vs)\.?\s[^*_\n]{2,200}?)(?<![*_\s])\1(?![*_\w])")
+_NAME_OPEN, _NAME_CLOSE = "\u2039", "\u203a"
 
 
 def _clean(text: str) -> str:
-    # markdown emphasis splits names ("**Employment Code Act**"); drop it
-    return re.sub(r"[*_`#]+", "", text or "")
+    text = _EMPH_CASE.sub(lambda m: f"{_NAME_OPEN}{m.group(2)}{_NAME_CLOSE}", text or "")
+    # other markdown emphasis splits names ("**Employment Code Act**"); drop it
+    return re.sub(r"[*_`#]+", "", text)
 
 
 _QUOTES = "\"'\u201c\u201d\u2018\u2019"
+_EDGES = _QUOTES + _NAME_OPEN + _NAME_CLOSE
 
 
 # Heading words that open a real, frequently cited litigant's name. Without
@@ -209,20 +235,31 @@ def _all_heading(tokens: list[str]) -> bool:
 def _party_left(text: str, end: int) -> str:
     """Walk left from the pivot collecting the capitalised run."""
     tokens = []
+    anchored = False   # the name's first word is marked by emphasis
     for m in reversed(list(_WORD.finditer(text[:end]))):
         raw = m.group(0)
-        w = raw.strip(".,;:()[]" + _QUOTES)
+        # the emphasis or quotation ended at this word: it belongs to an
+        # earlier name, not this one
+        if raw.rstrip(".,;:?!")[-1:] in (_NAME_CLOSE, '"', "\u201d"):
+            break
+        w = raw.strip(".,;:()[]?!" + _EDGES)
         if not w:
             break
         if w[0].isupper() or w.isdigit() or w.lower() in _CONNECTORS:
             tokens.append(w)
-            # an opening quote starts the name; nothing before it belongs.
-            # (Brackets are kept: "Zambia Sugar (Z) Ltd" is one party.)
-            if raw[:1] in _QUOTES or len(tokens) >= 8:
+            # an opening quote, emphasis or source bracket starts the name;
+            # nothing before it belongs. (Round brackets are kept: "Zambia
+            # Sugar (Z) Ltd" is one party.)
+            if raw[:1] in _EDGES or raw[:1] == "[" or len(tokens) >= 8:
+                anchored = raw[:1] == _NAME_OPEN
                 break
         else:
             break
     tokens.reverse()
+    if anchored:
+        # "*Base Property Development Limited v ...*": the italics say where
+        # the name starts, so "Base" is the litigant, not a heading word.
+        return "" if _all_heading(tokens) else " ".join(tokens)
     # trim sentence-lead words off the left edge, then stray connectors
     while tokens and tokens[0].lower().strip(".") in _EDGE_STOP:
         tokens.pop(0)
@@ -254,9 +291,16 @@ def _party_right(text: str, start: int) -> tuple[str, int]:
     """Walk right from the pivot; returns (party, index after it)."""
     tokens = []
     pos = start
+    # Inside an italic span the name runs to the closing mark, so a full stop
+    # is an initial or "Ltd.", not the end ("... v. E.M. Storti Mining Limited").
+    close = text.find(_NAME_CLOSE, start, start + 240)
+    inside = close if close >= 0 and _NAME_OPEN not in text[start:close] and "\n" not in text[start:close] else -1
     for m in _WORD.finditer(text, start):
         raw = m.group(0)
-        w = raw.strip(".,;:()[]" + _QUOTES)
+        # a new emphasised name begins here: the party ended before it
+        if raw[:1] == _NAME_OPEN and tokens:
+            break
+        w = raw.strip(".,;:()[]?!" + _EDGES)
         low = w.lower()
         if low in _RIGHT_STOP and tokens:
             break
@@ -266,7 +310,9 @@ def _party_right(text: str, start: int) -> tuple[str, int]:
         if w and (w[0].isupper() or w.isdigit() or low in _CONNECTORS or low in ("others",)):
             tokens.append(w)
             pos = m.end()
-            if len(tokens) >= 8 or raw.endswith((",", ".", ";", ":", ")") + tuple(_QUOTES)):
+            ended = raw.endswith((",", ";", ":", ")") + tuple(_QUOTES)) or (
+                raw.endswith(".") and not (0 <= m.end() <= inside))
+            if len(tokens) >= 8 or _NAME_CLOSE in raw or ended:
                 break
         else:
             break
@@ -349,7 +395,7 @@ def extract_citations(text: str, limit: int | None = 20) -> list[dict]:
         else:
             candidates.append((nm, m.group("tail") or ""))
     for name, tail in candidates:
-        name = name.strip()
+        name = _PROVISION_PREFIX.sub("", name.strip())
         # "Under the Employment Code Act" -> "Employment Code Act"
         parts = name.split()
         while parts and parts[0].lower() in ("under", "per", "see", "within",
@@ -382,6 +428,8 @@ def extract_citations(text: str, limit: int | None = 20) -> list[dict]:
                                                         "constitutional court")):
             continue
         if name.split()[0] in _TITLECASE_STOP and len(name.split()) < 3:
+            continue
+        if _norm(name) in _NOT_A_STATUTE:
             continue
         display = (name + tail).strip(" ,")
         key = _norm(name)
@@ -614,7 +662,12 @@ _ACK_PENDING = re.compile(
     # "I could not confirm it has commenced", "may change the position if it has
     # commenced" (production answers, 7 Oct 2026)
     r"|(?:could not|cannot|can't|unable to) (?:confirm|verify) (?:that |whether )?(?:it|the act) ha(?:s|ve) (?:commenced|come into force)"
-    r"|if (?:and when )?it ha(?:s|ve) (?:commenced|come into force)", re.I)
+    r"|if (?:and when )?it ha(?:s|ve) (?:commenced|come into force)"
+    # "provides for repeal of the 2010 Act on commencement", "will be reviewed
+    # if the Immigration Control Act, 2026 ... comes into force" (10 Nov 2026:
+    # a correct answer, and a drafted clause, flagged as relying on the Act)
+    r"|(?:up)?on (?:its )?commencement|(?:if|when|once|until|unless)\b[^.\n]{0,120}?\bcomes? into (?:force|operation|effect)"
+    r"|(?:could not|cannot|can't|unable to) (?:confirm|verify|find) (?:a |any |its |the )?commencement", re.I)
 
 def _acknowledged_pending(answer: str, cited: str) -> bool:
     """Every mention of a not-yet-in-force Act sits in a block that says so.
@@ -856,8 +909,382 @@ _RECEIVED = {"limitation act", "fatal accidents act", "sale of goods act", "cont
              "law reform miscellaneous provisions act 1934"}
 
 
-def audit_answer(text: str) -> list[dict]:
-    """Return per-citation verdicts for an answer. Never raises."""
+# How answers and users shorten an Act's name. The library's titles use the
+# long form, so the short one read as "not in the library".
+_ALIASES = {
+    "anti gbv act": "Anti-Gender-Based Violence Act",
+    "gbv act": "Anti-Gender-Based Violence Act",
+    "anti gender based violence act": "Anti-Gender-Based Violence Act",
+}
+
+
+# ── what Levy read while answering ──────────────────────────────────────────
+#
+# The library index can only say whether a document is held under a name it
+# recognises. But the answer was written from what the tools returned in this
+# turn: judgments read page by page, search matches, official web pages. A
+# case that a held judgment quotes, or an instrument read on parliament.gov.zm,
+# is not "unverified": Levy read it, and can say where. `evidence` carries that
+# text so each not-found citation can be traced to the source it came from.
+
+_SEEN_RANK = {"library": 0, "official": 1, "institutional": 2, "news": 3, "unofficial": 4}
+_PARTY_NOISE = {"the", "and", "of", "ltd", "limited", "plc", "others", "another", "anor", "ors",
+                "company", "co", "inc", "zambia", "t", "a", "in", "re", "ex", "parte"}
+
+
+def evidence_from_tool_calls(tool_calls: list) -> list[dict]:
+    """Flatten a turn's tool results into pieces of source text. Never raises.
+
+    Each piece is one thing Levy read: a search match, a page range of one
+    document, a fetched web page. A piece knows where it came from (a library
+    document id, or a URL and its trust tier), so a citation found in it can
+    be shown with its source.
+    """
+    import json
+    from .source_trust import trust_of
+    pieces: list[dict] = []
+
+    def add(text: str, tool: str, doc_id=None, title=None, url=None) -> None:
+        if not text or len(text) < 20:
+            return
+        where = trust_of(url) if url else "library"
+        pieces.append({"tool": tool, "text": _norm(text[:400_000]), "where": where,
+                       "document_id": doc_id if not url else None, "title": title, "url": url})
+
+    for tc in tool_calls or []:
+        try:
+            name = getattr(tc, "name", None) or (tc.get("name") if isinstance(tc, dict) else "") or ""
+            result = getattr(tc, "result", None) if not isinstance(tc, dict) else tc.get("result")
+            db = (getattr(tc, "db_sources", None) if not isinstance(tc, dict) else tc.get("db_sources")) or []
+            web = (getattr(tc, "web_sources", None) if not isinstance(tc, dict) else tc.get("web_sources")) or []
+            if not isinstance(result, dict) or "error" in result:
+                continue
+            rest = dict(result)
+            for key, val in list(result.items()):
+                if isinstance(val, list) and val and all(isinstance(v, dict) for v in val):
+                    rest.pop(key, None)
+                    for item in val:
+                        add(json.dumps(item, ensure_ascii=False, default=str), name,
+                            doc_id=item.get("document_id") or item.get("doc_id"),
+                            title=item.get("title") or item.get("act_name") or item.get("case_name")
+                            or item.get("judgment") or item.get("name"),
+                            url=item.get("url"))
+            one_db = db[0] if len(db) == 1 and isinstance(db[0], dict) else {}
+            one_web = web[0] if len(web) == 1 and isinstance(web[0], dict) else {}
+            add(json.dumps(rest, ensure_ascii=False, default=str), name,
+                doc_id=rest.get("document_id") or one_db.get("document_id") or one_db.get("id"),
+                title=rest.get("title") or one_db.get("title") or one_web.get("title"),
+                url=rest.get("url") or one_web.get("url"))
+        except Exception:  # noqa: BLE001
+            continue
+    return pieces
+
+
+def _party_tokens(party: str) -> list[str]:
+    toks = [t for t in _norm(party).split() if t not in _PARTY_NOISE and not t.isdigit()]
+    return toks[:2] or _norm(party).split()[:2]
+
+
+def _word_at(tok: str, hay: str, start: int = 0) -> int:
+    m = re.search(r"(?<![a-z0-9])" + re.escape(tok) + r"(?![a-z0-9])", hay[start:])
+    return start + m.start() if m else -1
+
+
+def _case_in(a: list[str], b: list[str], hay: str) -> bool:
+    """Both parties named close together, the first before the second."""
+    if not a or not b:
+        return False
+    at = 0
+    while True:
+        i = _word_at(a[0], hay, at)
+        if i < 0:
+            return False
+        win = hay[i:i + 260]
+        if all(_word_at(t, win[:110]) >= 0 for t in a):
+            j = _word_at(b[0], win, len(a[0]))
+            if j > 0 and all(_word_at(t, win, max(0, j - 40)) >= 0 for t in b):
+                return True
+        at = i + len(a[0])
+
+
+_GENERIC_SIDE = {"people", "attorney", "general", "dpp", "state", "republic", "director", "public", "prosecutions"}
+
+
+_CAUSE_NO = re.compile(r"\b0*(\d{1,4})\s*(?:of|/)\s*((?:19|20)\d{2})\b")
+
+
+def _numbers_conflict(cite: str, title: str) -> bool:
+    """Both carry a cause number ("116 of 2018") and none of them agree."""
+    a, b = set(_CAUSE_NO.findall(cite or "")), set(_CAUSE_NO.findall(title or ""))
+    return bool(a and b and not (a & b))
+
+
+def _too_generic(a: list[str], b: list[str]) -> bool:
+    """A generic side ("The People", "Attorney General") needs a full name on
+    the other, or "Zulu v The People" is found in every appeal by a Zulu."""
+    for side, other in ((a, b), (b, a)):
+        if not (set(side) - _GENERIC_SIDE) and len([t for t in other if t not in _GENERIC_SIDE]) < 2:
+            return True
+    return False
+
+
+def _library_named(c: dict, index: list[dict]) -> dict | None:
+    """A held document whose text names this case, found by keyword search.
+
+    Covers what the turn's own evidence cannot: a case quoted inside a held
+    judgment and cited again later in the chat, or a judgment the library
+    files under a bare cause number. One search per citation, so the caller
+    rations it. A generic side ("The People", "Attorney General") needs a
+    full name on the other, or "Zulu v The People" would be found in every
+    criminal appeal by a Zulu.
+    """
+    try:
+        a, b = _party_tokens(c["a"]), _party_tokens(c["b"])
+        if _too_generic(a, b) or len(a) + len(b) < 3:
+            return None
+        from ..config import get_settings
+        from ..db.supabase import search_keyword
+        rpc = getattr(get_settings(), "hybrid_keyword_rpc", None) or "search_legal_chunks_keyword_v2"
+        rows = search_keyword(" ".join(a + b), None, 8, rpc_name=rpc)
+        for r in rows:
+            if _case_in(a, b, _norm(r.get("content") or "")):
+                doc = r.get("document_id")
+                held = next((x for x in index if x["id"] == doc), None)
+                if not held:   # not a public library document
+                    continue
+                out = {"in": "library", "tool": "library_text", "document_id": doc,
+                       "title": held.get("short_name") or held.get("title")}
+                if r.get("page_start"):
+                    out["page"] = r["page_start"]
+                return out
+    except Exception:  # noqa: BLE001
+        return None
+    return None
+
+
+def _seen(c: dict, evidence: list[dict]) -> dict | None:
+    """Where, in what Levy read this turn, the cited authority is named."""
+    if not evidence:
+        return None
+    if c["kind"] == "case":
+        a, b = _party_tokens(c["a"]), _party_tokens(c["b"])
+        if len(a) + len(b) < 2 or _too_generic(a, b):
+            return None
+        hit = lambda hay: _case_in(a, b, hay)  # noqa: E731
+    else:
+        name = _norm(re.sub(r"\b(?:19|20)\d{2}\b", " ", _ALIASES.get(_norm(c["name"]), c["name"])))
+        if len([t for t in name.split() if t not in _WEAK_TOKENS]) < 2:
+            return None
+        hit = lambda hay: name in hay  # noqa: E731
+    best = None
+    for e in evidence:
+        if not hit(e["text"]):
+            continue
+        if best is None or _SEEN_RANK.get(e["where"], 9) < _SEEN_RANK.get(best["where"], 9):
+            best = e
+    if not best:
+        return None
+    out = {"in": best["where"], "tool": best["tool"]}
+    for k in ("document_id", "title", "url"):
+        if best.get(k):
+            out[k] = best[k]
+    return out
+
+
+# The answer itself says it could not stand behind this authority. That is the
+# behaviour we want, so the panel confirms it instead of warning about it.
+_DISCLAIM = re.compile(
+    r"unverified|not (?:been )?(?:able to )?verif(?:y|ied)|ha(?:ve|s) not (?:read|verified|seen|checked)"
+    r"|(?:could not|couldn't|cannot|can't|unable to|did not|didn't) (?:find|verify|confirm|locate|trace|open|read)"
+    r"|not (?:in|held in|part of) (?:my|the|levy'?s) (?:case[- ]law )?library|(?:do|does) not hold|not held|holds no"
+    r"|found no\b|nothing (?:came back|on point|under that name)|no (?:such )?(?:judgment|case|act|record|report)"
+    r"[^.\n]{0,40}(?:under|by|with) that (?:name|title)"
+    r"|only seen (?:it|them|these|this)?\s*named|(?:not|never) (?:rely|cite|drop)|do not (?:rely|cite|drop)"
+    r"|check (?:it|them|this|these|the original|the citation)[^.\n]{0,40}before|verify (?:it|them|this|these|each)?"
+    r"\s*(?:against|before)|may be styled|won'?t describe|will not describe|cannot describe|as i described them",
+    re.I)
+
+
+def _disclaimed(clean: str, c: dict) -> bool:
+    """The sentence naming the authority, or the one after it, disowns it."""
+    any_mention = c["kind"] == "case"
+    if any_mention:
+        # Any mention disowning the case counts: the correction that follows a
+        # failed source check names it a second time, further down.
+        words = lambda t: r"[\s\u2039\u203a]+".join(re.escape(w) for w in t.split())  # noqa: E731
+        rx = words(c["a"]) + r"[\s\u2039\u203a]+vs?\.?\s+" + words(c["b"])
+        spans = [(m.start(), m.end()) for m in re.finditer(rx, clean, re.I)] \
+            or [(c.get("pos", 0), c.get("end", c.get("pos", 0)))]
+    else:
+        rx = r"\s+".join(re.escape(w) for w in c["name"].split())
+        spans = [(m.start(), m.end()) for m in re.finditer(rx, clean, re.I)]
+    if not spans:
+        return False
+    verdicts = []
+    for start, end in spans:
+        left = max(clean.rfind("\n", 0, start), clean.rfind(". ", 0, start)) + 1
+        nl = clean.find("\n", end)
+        line_end = nl if nl >= 0 else len(clean)
+        # The rest of this line, then the sentence that follows. A list of
+        # doubtful cases is disowned by the line before or after the list, so
+        # sibling list items are skipped in both directions.
+        item = re.compile(r"\s*(?:[-•]|\d+[.)])\s")
+        after = [ln for ln in clean[line_end:line_end + 1500].split("\n") if ln.strip()]
+        nxt = next((ln for ln in after if not item.match(ln)), "")
+        ls = clean.rfind("\n", 0, start) + 1
+        lead = ""
+        if item.match(clean[ls:line_end]):
+            before = [ln for ln in clean[max(0, ls - 1500):ls].split("\n") if ln.strip()]
+            lead = next((ln for ln in reversed(before) if not item.match(ln)), "")
+        window = lead + " " + clean[max(0, left - 120):line_end] + " " + nxt
+        verdicts.append(bool(_DISCLAIM.search(window)))
+    return any(verdicts) if any_mention else all(verdicts)
+
+
+_CHECK_HEADING = re.compile(r"^[ \t]*(?:#{1,6}\s*)?\**\s*Source check\s*\**:?[ \t]*$", re.I | re.M)
+
+
+def mark_checked(verdicts: list[dict], text: str) -> list[dict]:
+    """Flag the citations the closing "Source check" section went back to.
+
+    The draft above that section still reads as it was written, so a badge on
+    it would keep warning about something the answer has since corrected. The
+    panel shows these as checked again, and points at the section.
+    """
+    heads = list(_CHECK_HEADING.finditer(text or ""))
+    if not heads:
+        return verdicts
+    section = _norm((text or "")[heads[-1].end():])
+    for v in verdicts or []:
+        name = re.sub(r"[\(\[].*$", "", v.get("text") or "")
+        toks = [t for t in _norm(name).split() if t not in _PARTY_NOISE | _WEAK_TOKENS | {"v", "vs"} and not t.isdigit()][:3]
+        if toks and all(_word_at(t, section) >= 0 for t in toks):
+            v["checked"] = True
+    return verdicts
+
+
+# ── the source check ────────────────────────────────────────────────────────
+#
+# What a finished draft still owes the reader. Each problem is something a
+# careful lawyer would stop on: an authority nothing stands behind, dead law
+# stated as live, a quotation the source does not contain, a case later
+# overturned. The agent sends these back to the model once, to check in the
+# library and on the official web and then correct the answer.
+
+def gate_problems(verdicts: list[dict]) -> list[dict]:
+    out: list[dict] = []
+    for v in verdicts or []:
+        text = v.get("text") or ""
+        if v.get("status") == "not_found":
+            if v.get("foreign") or v.get("disclaimed") or v.get("seen"):
+                continue
+            known = v.get("known")
+            if known and not known.get("year_conflict"):
+                continue
+            if known:
+                out.append({"text": text, "kind": v["kind"], "problem": "citation_differs",
+                            "detail": f"Courts cite this case as {known.get('name')}"
+                                      + (f", {known['citation']}" if known.get("citation") else "")})
+            else:
+                out.append({"text": text, "kind": v["kind"], "problem": "unverified"})
+            continue
+        if v.get("law_status") in ("repealed", "not in force") and not v.get("acknowledged"):
+            by = ", ".join(v.get("replaced_by") or [])
+            out.append({"text": text, "kind": "statute",
+                        "problem": "repealed" if v["law_status"] == "repealed" else "not_in_force",
+                        "detail": (f"replaced by {by}" if by else "")})
+        for d in v.get("section_status") or []:
+            if not d.get("acknowledged"):
+                out.append({"text": f"{text}, section {d.get('section')}", "kind": "statute", "problem": "dead_section",
+                            "detail": f"{d.get('status') or 'repealed'} by {d.get('by') or 'a later Act'}"})
+        if v.get("treatment") and not v.get("treatment_acknowledged"):
+            t = v["treatment"][0]
+            out.append({"text": text, "kind": "case", "problem": "treatment",
+                        "detail": f"{t.get('treatment')} in {t.get('judgment')}"})
+        for q in v.get("quotes") or []:
+            if q.get("status") in ("not_found", "elsewhere"):
+                out.append({"text": text, "kind": v.get("kind"), "problem": "quote",
+                            "detail": (q.get("quote") or "")[:160]})
+    return out
+
+
+# A named source Levy does not hold: its text may be on an official site.
+_MISS_SOURCE = re.compile(
+    r"(?:is|are|was|were) not (?:in|held in|part of) (?:my|the|levy'?s) (?:case[- ]law )?library"
+    r"|library (?:does not|doesn't) (?:hold|have|contain)\b|i (?:do|did) not hold\b"
+    r"|(?:did not|didn't|could not|couldn't|cannot|can't|unable to) (?:find|retrieve|locate|open|read) "
+    r"(?:the |a |any )?(?:text|wording|statutory instrument|instrument|judgment|order|rules?|regulations?|act|gazette"
+    r"|commencement order|law report)\b", re.I)
+# No authority found at all. Only when it is the answer's headline: a caveat
+# deep in a full answer ("I found no case on this exact point") is honesty,
+# not a failed search.
+_MISS_AUTHORITY = re.compile(
+    r"(?:did not|didn't|could not|couldn't|cannot|can't|unable to) (?:find|locate|trace) "
+    r"(?:an? |any )?(?:zambian )?(?:authority|case|judgment|decision|precedent)"
+    r"|i (?:found|have) no (?:authority|case|judgment|precedent)|holds no judgment", re.I)
+WEB_TOOLS = frozenset({"gov_search", "web_search", "web_fetch", "fetch_web_pdf", "web_crawl", "news_search"})
+
+
+def missed_without_web(text: str, tool_names: list[str]) -> bool:
+    """The answer reports a library miss, and nothing online was tried.
+
+    10 Nov 2026: a law-firm user asked for authority on garnishee proceedings,
+    the library held none, and the answer said so and stopped. The official
+    web was never searched, and the user asked twice more.
+    """
+    if WEB_TOOLS & set(tool_names or []):
+        return False
+    clean = _clean(text or "")
+    return bool(_MISS_SOURCE.search(clean) or _MISS_AUTHORITY.search(clean[:500]))
+
+
+def source_check_message(problems: list[dict], missed: bool) -> str:
+    """The instruction sent back to the model after a draft fails the check."""
+    lines = ["AUTOMATIC SOURCE CHECK (from Levy's verifier, not from the user). Your answer above is already on "
+             "the reader's screen. Before it stands, these points need checking:"]
+    label = {
+        "unverified": "Nothing you read in this turn, and nothing in the library, backs this authority",
+        "citation_differs": "The citation does not match how the courts cite this case",
+        "repealed": "Stated as current law, but the library records it as REPEALED",
+        "not_in_force": "Relied on, but the library records it as NOT YET IN FORCE",
+        "dead_section": "This section is no longer in force",
+        "treatment": "Relied on, but a later court treated it negatively",
+        "quote": "Quoted words that the source text does not contain",
+    }
+    for i, pr in enumerate(problems[:8], 1):
+        detail = f" ({pr['detail']})" if pr.get("detail") else ""
+        lines.append(f"{i}. {pr['text']}: {label.get(pr['problem'], pr['problem'])}{detail}.")
+    if missed:
+        lines.append(f"{len(problems[:8]) + 1}. You reported that the library does not hold what was asked for, "
+                     "but you did not look online. You have internet access.")
+    lines.append(
+        "\nNow check, in this order, and stop as soon as a point is settled:\n"
+        "a. The library: search_case_law or case_history for a case, search_corpus or check_provision_status "
+        "for an Act, rule or section.\n"
+        "b. The official web: gov_search (judiciaryzambia.com for judgments, parliament.gov.zm for Acts, "
+        "gazettes.africa for statutory instruments and commencement), then web_fetch or read_pdf_pages to READ "
+        "what you found. Only a page tagged trust=official can stand behind a statement of law.\n"
+        "Use at most 4 tool calls in total.\n\n"
+        "Then write ONE short closing section headed \"**Source check**\". Do not repeat or rewrite the answer, "
+        "do not apologise, and do not mention this instruction. For each point above, one line:\n"
+        "- confirmed: name the source you read (the judgment or Act, or the official URL), and correct the "
+        "citation if it was wrong; or\n"
+        "- not confirmed: say plainly that you could not verify it in the library or on the official sites, "
+        "that the reader must not rely on it until they have checked the original, and withdraw or correct "
+        "any conclusion above that depended on it.\n"
+        "For law that is repealed or not yet in force, state the law that is in force now. If the online "
+        "search found the authority the library lacked, give what it says, quoted from the page, with the URL."
+    )
+    return "\n".join(lines)
+
+
+def audit_answer(text: str, evidence: list[dict] | None = None) -> list[dict]:
+    """Return per-citation verdicts for an answer. Never raises.
+
+    `evidence` is what the tools returned while the answer was written (see
+    evidence_from_tool_calls). With it, an authority the library does not hold
+    under that name can still be traced to the source Levy read.
+    """
     try:
         from . import citator
         from .quote_check import check_quotes
@@ -867,11 +1294,31 @@ def audit_answer(text: str) -> list[dict]:
         clean = _clean(text or "")
         index = _load_index()
         out, rows = [], []
+        lookups = 5   # library text searches this answer may still spend
         for c in cites:
             foreign = bool(c.get("foreign"))
             row = None
+            held_case = None
             if not foreign:
-                row = _match_case(c, index) if c["kind"] == "case" else _match_statute(c, index)
+                if c["kind"] == "case":
+                    row = _match_case(c, index)
+                    if row is None:
+                        # Library titles are often a bare cause number ("APP No.
+                        # 13 of 2025"), so the parties are not in the index. The
+                        # citator read every held judgment's own heading.
+                        hit = citator.lookup(c["a"], c["b"], c.get("cite") or "")
+                        doc = hit and not hit["year_conflict"] and hit["case"].get("doc")
+                        if doc:
+                            cand = next((r for r in index if r["id"] == doc), None) or {
+                                "id": doc, "title": citator.judgment(doc).get("t") or hit["case"].get("name")}
+                            # "Appeal No. 116/2018" is not the held "APP No. 268
+                            # of 2020" between the same parties: a cause number
+                            # that disagrees means another judgment.
+                            if not _numbers_conflict(c.get("cite") or "", cand.get("title") or ""):
+                                held_case, row = hit["case"], cand
+                else:
+                    alias = _ALIASES.get(_norm(c["name"]))
+                    row = _match_statute(dict(c, name=alias) if alias else c, index)
             rows.append(row)
             if row:
                 verdict = {"text": c["text"], "kind": c["kind"], "status": "verified",
@@ -905,6 +1352,12 @@ def audit_answer(text: str) -> list[dict]:
                     foreign = bool(year and year < 1964) or _norm(c["name"]) in _RECEIVED
                 if foreign:
                     verdict["foreign"] = True
+                else:
+                    seen = _seen(c, evidence or [])
+                    if seen:
+                        verdict["seen"] = seen
+                    if _disclaimed(clean, c):
+                        verdict["disclaimed"] = True
                 if c["kind"] == "case":
                     # Not held, but perhaps cited by judgments Levy does hold:
                     # then it is real, and they say how it is cited and used.
@@ -917,6 +1370,11 @@ def audit_answer(text: str) -> list[dict]:
                             known["year_conflict"] = True
                         verdict["known"] = known
                         verdict.update({k: v for k, v in _case_treatment(clean, c, case).items() if k != "cited_by"})
+                    elif not foreign and lookups > 0 and not verdict.get("seen") and not verdict.get("disclaimed"):
+                        lookups -= 1
+                        named = _library_named(c, index)
+                        if named:
+                            verdict["seen"] = named
                 out.append(verdict)
         # Quotations checked against the section or judgment they are attributed
         # to. Every citation in the answer takes part in attribution, so a

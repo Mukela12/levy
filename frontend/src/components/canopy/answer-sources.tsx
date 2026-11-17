@@ -47,8 +47,21 @@ function deadSectionText(d: SourceRow['deadSections'][number]): string {
 
 const TREATMENT_LABEL: Record<string, string> = { reversed: 'Reversed', 'departed from': 'Departed from', 'held per incuriam': 'Per incuriam' }
 
+/** "judiciaryzambia.com" from a URL, for naming where something was read. */
+function hostOf(url?: string): string {
+  try { return url ? new URL(url).hostname.replace(/^www\./, '') : '' } catch { return '' }
+}
+
+/** Where Levy read an authority it does not hold by name. */
+function seenWhere(row: SourceRow): string {
+  if (!row.seen) return 'a source Levy read'
+  if (row.seen.in === 'official') return hostOf(row.seen.url) || 'an official site'
+  return (row.seen.title || 'a document in the library') + (row.seen.page ? `, page ${row.seen.page}` : '')
+}
+
 function badgeLabel(row: SourceRow): string {
   if (row.verification === 'verified') return 'Verified'
+  if (row.verification === 'sourced') return row.seen?.in === 'official' ? 'Read on an official site' : 'Named in a held source'
   if (row.verification === 'known') return `Cited in ${row.known?.cited_by ?? 0} judgments`
   if (row.quoteIssues.length) return 'Check quotation'
   if (row.treatment.length && !row.treatmentNamed) return TREATMENT_LABEL[row.treatment[0].treatment] || 'Later treatment'
@@ -116,7 +129,9 @@ function verdictHeading(row: SourceRow): string {
   if (row.treatment.length && !row.treatmentNamed) return `This case was later ${row.treatment[0].treatment}`
   if (row.verification === 'verified') return row.treatment.length ? 'Authority matched · later treatment named in the answer' : 'Authority matched in the library'
   if (row.verification === 'known') return `Not in the library · cited by ${row.known?.cited_by} judgments it holds`
+  if (row.verification === 'sourced') return row.seen?.in === 'official' ? 'Not in the library · read on an official site' : 'Not held under this name · named in a source Levy read'
   if (row.known?.year_conflict) return 'The citation year differs from how courts cite this case'
+  if (row.verification === 'noted' && row.disclaimed) return 'The answer says this is unverified'
   if (row.verification === 'noted') return row.lawStatus === 'not in force' ? 'Named in the answer as not yet in force' : 'Named in the answer as repealed'
   if (row.lawStatus === 'repealed' && !row.conflict) return 'This Act has been repealed'
   if (row.lawStatus === 'not in force' && !row.conflict) return 'This Act is not shown to be in force'
@@ -130,6 +145,11 @@ function verdictHeading(row: SourceRow): string {
 }
 
 function verdictText(row: SourceRow): string {
+  const text = verdictBody(row)
+  return row.checked ? `${text} The answer went back to this authority in its “Source check” section.` : text
+}
+
+function verdictBody(row: SourceRow): string {
   const by = theActs(row.replacedBy)
   if (row.quoteIssues.length) {
     const q = row.quoteIssues[0]
@@ -145,6 +165,14 @@ function verdictText(row: SourceRow): string {
   }
   if (row.verification === 'known') {
     return `Levy does not hold this judgment, but ${row.known?.cited_by} judgments in its library cite it${row.known?.citation ? ` as ${row.known.citation}` : ''}. That confirms the case exists and how it is cited, not that it supports the answer.`
+  }
+  if (row.verification === 'sourced') {
+    return row.seen?.in === 'official'
+      ? `Levy’s library does not hold this, but Levy read it on ${seenWhere(row)} while answering. Open the page and check the wording before relying on it.`
+      : `Levy does not hold this authority under this name, but it is named in ${seenWhere(row)}, which Levy read. That shows where the answer got it, not that it supports the answer. Open that source and check the passage.`
+  }
+  if (row.verification === 'noted' && row.disclaimed) {
+    return 'The answer itself says it could not verify this authority. Do not rely on it until you have checked the original.'
   }
   if (row.known?.year_conflict) {
     return `Judgments in Levy’s library cite this case${row.known.citation ? ` as ${row.known.citation}` : ''}, with a different year from the answer. Check the report before relying on the citation.`
@@ -185,6 +213,23 @@ function verdictText(row: SourceRow): string {
 function Badge({ row, onClick }: { row: SourceRow; onClick: () => void }) {
   if (row.verification === 'none') {
     return <span className="cp-source-origin">{row.type === 'web' ? 'Web source' : 'Retrieved'}</span>
+  }
+  if (row.verification === 'noted' && row.disclaimed) {
+    // The answer already says it could not verify this; the badge confirms it.
+    return (
+      <button type="button" className="cp-citation-badge is-noted" onClick={onClick} aria-label={`Named in the answer as unverified: ${row.title}`}>
+        <History size={14} aria-hidden="true" />
+        <span>Flagged unverified</span>
+      </button>
+    )
+  }
+  if (row.verification === 'sourced') {
+    return (
+      <button type="button" className="cp-citation-badge is-known" onClick={onClick} aria-label={`${badgeLabel(row)}: ${row.title}`}>
+        {row.seen?.in === 'official' ? <Globe size={14} aria-hidden="true" /> : <FileText size={14} aria-hidden="true" />}
+        <span>{badgeLabel(row)}</span>
+      </button>
+    )
   }
   if (row.verification === 'noted') {
     // The answer already calls this Act repealed; the badge only confirms it.
@@ -270,13 +315,19 @@ export function AnswerSources({ citations, webSources, blocks, onOpenPassage, on
             {model.known} cited in held judgments
           </span>
         )}
+        {model.sourced > 0 && (
+          <span className="cp-source-known">
+            <FileText size={16} aria-hidden="true" />
+            {model.sourced} traced to a source Levy read
+          </span>
+        )}
         {model.review > 0 && (
           <button type="button" className="cp-source-attention" onClick={() => { setExpanded(true); setDetail(attention[0]) }}>
             <ReviewSeal size={19} />
             {model.review} to review <ArrowRight size={12} />
           </button>
         )}
-        {!model.verified && !model.known && !model.review && !model.noted && (
+        {!model.verified && !model.known && !model.sourced && !model.review && !model.noted && (
           <span>{model.state === 'complete' ? 'No citation verdicts returned' : 'No citation check recorded'}</span>
         )}
       </div>
@@ -311,6 +362,15 @@ export function AnswerSources({ citations, webSources, blocks, onOpenPassage, on
                       {TREATMENT_LABEL[t.treatment] || 'Later treatment'} · {treatmentSource(t)}
                     </div>
                   ))}
+                  {row.verification === 'sourced' && (
+                    <div className="cp-source-law is-noted">{row.seen?.in === 'official' ? `Read on ${seenWhere(row)}` : `Named in ${seenWhere(row)}`}</div>
+                  )}
+                  {row.verification === 'noted' && row.disclaimed && (
+                    <div className="cp-source-law is-noted">The answer says it could not verify this</div>
+                  )}
+                  {row.checked && (
+                    <div className="cp-source-law is-noted">Checked again in the answer’s Source check</div>
+                  )}
                   {row.known && (
                     <div className={'cp-source-law' + (row.known.year_conflict ? ' is-pending' : ' is-noted')}>
                       {row.known.year_conflict
@@ -417,6 +477,16 @@ export function AnswerSources({ citations, webSources, blocks, onOpenPassage, on
               </dl>
             ))}
             <div className="cp-verify-boundary"><Info size={17} /><span>Quotations are compared with the library’s text, and later reversals are flagged only once confirmed in the later judgment. Neither check proves a passage supports the answer, and repeal flags cover only the Acts and sections the library records as repealed.</span></div>
+            {!detail.documentId && !detail.passages.length && detail.verification === 'sourced' && detail.seen?.document_id && (
+              <button type="button" className="cp-btn primary" style={{ marginTop: 16 }} onClick={() => { const seen = detail.seen!; setDetail(null); onOpenDocument(seen.document_id!, seen.title || detail.title) }}>
+                Open the source it is named in <ArrowUpRight size={15} />
+              </button>
+            )}
+            {!detail.documentId && !detail.passages.length && detail.verification === 'sourced' && !detail.seen?.document_id && detail.seen?.url && /^https?:\/\//.test(detail.seen.url) && (
+              <a className="cp-btn primary" style={{ marginTop: 16 }} href={detail.seen.url} target="_blank" rel="noopener noreferrer">
+                Open the official page <ArrowUpRight size={15} />
+              </a>
+            )}
             {(detail.documentId || detail.passages.length > 0) && (
               <button type="button" className="cp-btn primary" style={{ marginTop: 16 }} onClick={() => { const row = detail; setDetail(null); open(row) }}>
                 Open the document <ArrowUpRight size={15} />

@@ -43,6 +43,7 @@ from . import kimi_tools, pdf_tools
 from . import templates as templates_service
 from .entitlements import calculate_entitlements
 from .payroll import calculate_payroll, completed_years
+from .source_trust import trust_note, trust_of
 
 
 # ─── Zambian news whitelist ──────────────────────────────────────────────────
@@ -4158,13 +4159,17 @@ def build_tool_registry(
         tools["gov_search"] = ToolDefinition(
             name="gov_search",
             description=(
-                "Web search restricted to official Zambian government and "
-                "institutional websites (parliament.gov.zm, lawsofzambia.com, "
-                "judiciaryzambia.com, pacra.org.zm, the Government Gazette archive "
-                "at gazettes.africa, etc.). Use this for context "
-                "the corpus does not contain — current procedures, fees, news, "
-                "court judgments not yet ingested. Cite returned URLs back to "
-                "the user. For a statutory instrument, a commencement order or a "
+                "Live web search of trusted Zambian sites: official ones "
+                "(parliament.gov.zm, judiciaryzambia.com, the Government Gazette "
+                "archive at gazettes.africa, ministries, ZRA, PACRA and other "
+                "statutory bodies) plus institutional ones (professional bodies, "
+                "universities, law firms). This is your internet access: use it "
+                "whenever the library misses or cannot fully support the answer, "
+                "for judgments not yet ingested, an Act or SI the library lacks, "
+                "current procedures and fees. Every match carries a `trust` tag; "
+                "only `official` pages can stand behind a statement of law. Open "
+                "the page with web_fetch before relying on it and cite the URL. "
+                "For a statutory instrument, a commencement order or a "
                 "Gazette notice the library lacks, open the Gazette directly: "
                 "web_fetch https://gazettes.africa/gazettes/zm/<year> lists that "
                 "year's gazettes and supplements with links, and read_pdf_pages "
@@ -4184,8 +4189,12 @@ def build_tool_registry(
         tools["web_search"] = ToolDefinition(
             name="web_search",
             description=(
-                "Unrestricted web search. Use only if gov_search returns no "
-                "useful results. Lower-confidence sources; always cite URLs."
+                "Unrestricted web search, for finding leads only when gov_search "
+                "returns nothing useful. Every match carries a `trust` tag. An "
+                "`unofficial` or `news` page is never authority for what Zambian "
+                "law says: use it to learn the name, number or date of the real "
+                "source, then confirm that source in the library or on an "
+                "official site, or tell the reader the point is unconfirmed."
             ),
             input_schema={
                 "type": "object",
@@ -4227,7 +4236,8 @@ def build_tool_registry(
             description=(
                 "Fetch the full text of a single web URL. Use after web_search/"
                 "gov_search when a result preview looks promising and you need "
-                "the full page content to answer accurately."
+                "the full page content to answer accurately. The result carries "
+                "`trust` and `trust_note`: follow the note."
             ),
             input_schema={
                 "type": "object",
@@ -4276,6 +4286,47 @@ def to_anthropic_schema(registry: dict[str, ToolDefinition]) -> list[dict]:
     ]
 
 
+def tag_trust(envelope: dict) -> dict:
+    """Mark every web page in a tool result with how far it can be trusted.
+
+    The model reads the tag beside each match, and the citation audit reads it
+    from web_sources, so "is this an official page?" has one answer everywhere.
+    Official matches are listed first. Never raises.
+    """
+    try:
+        web = envelope.get("web_sources") or []
+        for w in web:
+            if isinstance(w, dict) and w.get("url"):
+                w["trust"] = trust_of(w["url"])
+        result = envelope.get("result")
+        if not isinstance(result, dict):
+            return envelope
+        matches = result.get("matches")
+        tiers: set[str] = set()
+        if isinstance(matches, list):
+            for m in matches:
+                if isinstance(m, dict) and m.get("url"):
+                    m["trust"] = trust_of(m["url"])
+                    tiers.add(m["trust"])
+            if tiers:
+                matches.sort(key=lambda m: 0 if isinstance(m, dict) and m.get("trust") == "official" else 1)
+                web.sort(key=lambda w: 0 if isinstance(w, dict) and w.get("trust") == "official" else 1)
+                result["source_rule"] = (
+                    "Each match carries `trust`. Only an `official` page (or the library) can stand behind "
+                    "a statement of Zambian law. `institutional` and `news` pages are leads: name who says "
+                    "it and confirm on an official source. Never cite an `unofficial` page for the law."
+                    + ("" if "official" in tiers else " None of these matches is official.")
+                )
+        elif result.get("url") and "error" not in result and (result.get("content") or result.get("pages")
+                                                              or result.get("text")):
+            tier = trust_of(str(result["url"]))
+            result["trust"] = tier
+            result["trust_note"] = trust_note(tier)
+    except Exception:  # noqa: BLE001
+        pass
+    return envelope
+
+
 async def execute_tool(
     registry: dict[str, ToolDefinition],
     name: str,
@@ -4296,7 +4347,7 @@ async def execute_tool(
     try:
         result = await asyncio.wait_for(handler(**args), timeout=timeout_seconds)
         if isinstance(result, dict) and "result" in result:
-            return result
+            return tag_trust(result)
         return {"result": result, "db_sources": [], "web_sources": []}
     except asyncio.TimeoutError:
         return {
