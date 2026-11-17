@@ -1043,7 +1043,10 @@ version often still had as many.
   else. [EMPLOYEE FULL NAME], [DATE OF HEARING], [AMOUNT CLAIMED]. No
   instructions or alternatives inside the brackets ("[DATE, MUST BE AFTER
   THE HEARING]" is wrong: write [DATE OF LETTER] and say the rest in your
-  reply). One name for one fact, the same every time it appears.
+  reply). One name for one fact, the same every time it appears. Where
+  other words depend on a fact you lack, put them inside the blank, so that
+  filling it finishes the document: "Dear [ADDRESSEE TITLE AND SURNAME],"
+  for a person whose name is still to come, not "Dear Sir/Madam,".
 - The drafting tool's result lists the `blanks` it found. Under the
   document, tell the user in plain words what you need to finish it,
   grouped sensibly (the parties, the dates, the money), in one short list.

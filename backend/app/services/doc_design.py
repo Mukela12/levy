@@ -298,9 +298,16 @@ _LONE_BACKSLASH = re.compile(r"^[ \t]*\\{1,2}[ \t]*\n", re.M)
 _TRAILING_BACKSLASH = re.compile(r"(?<=[^\\\s])\\[ \t]*$", re.M)
 
 
+# A line of underscores is a line to sign on. Markdown reads it as a rule
+# across the whole page, which is what a production letter got.
+_SIGNATURE_RULE = re.compile(r"^([ \t]*)(_{4,})[ \t]*$", re.M)
+
+
 def tidy_source(body_md: str) -> str:
-    """Remove line-break marks this renderer would print as text."""
+    """Remove line-break marks this renderer would print as text, and keep a
+    line drawn for a signature as that line."""
     out = _LONE_BACKSLASH.sub("", (body_md or "") + "\n")
+    out = _SIGNATURE_RULE.sub(lambda m: m.group(1) + "\\_" * min(len(m.group(2)), 34), out)
     return _TRAILING_BACKSLASH.sub("  ", out).rstrip("\n") + ("\n" if (body_md or "").endswith("\n") else "")
 
 
@@ -325,6 +332,22 @@ _SIGNING_SPACER = re.compile(r'(<p class="valediction">[^<]*(?:<(?!/p>)[^<]*)*</
                              r"(?:\s*<p>(?:\s|&nbsp;|\xa0|<br\s*/?>)*</p>)+")
 
 
+# "Yours faithfully," then the firm's name in capitals: the partner signs under
+# the firm, so the room goes there.
+_FIRM_UNDER = re.compile(r'<p class="valediction">([^<]*)</p>\s*<p>(<strong>(?:[^a-z<&]|&[a-z]+;){3,80}</strong>)</p>')
+_OL_START = re.compile(r'<ol start="(\d+)"')
+
+
+def number_lists(html: str) -> str:
+    """Make a numbered list that resumes at 5 print 5.
+
+    Paragraph 4 of a production letter held the bank details as a block of
+    their own, which ends the list in Markdown; the next list is marked to
+    start at 5, but the PDF engine ignores that attribute and printed 1 and 2.
+    """
+    return _OL_START.sub(lambda m: f'{m.group(0)} style="counter-reset: list-item {int(m.group(1)) - 1}"', html or "")
+
+
 def normalise(html: str, layout: str) -> str:
     """Even out how the model happened to mark the document up.
 
@@ -334,6 +357,7 @@ def normalise(html: str, layout: str) -> str:
     used is h1. "BETWEEN" and "AND" standing alone in bold are set as the
     connectives they are.
     """
+    html = number_lists(html)
     if layout in ("agreement", "letter"):
         levels = sorted({int(m.group(2)) for m in _HEADING.finditer(html)})
         if levels and levels[0] > 1:
@@ -351,6 +375,7 @@ def normalise(html: str, layout: str) -> str:
             # however the draft happened to space it.
             tail = _VALEDICTION.sub(lambda v: f'<p class="valediction">{v.group(1)}</p>'
                                     + ("\n<p>" if v.group(2) else ""), html[m.start():], count=1)
+            tail = _FIRM_UNDER.sub(r'<p>\1</p>\n<p class="valediction">\2</p>', tail, count=1)
             tail = _SIGNING_SPACER.sub(r"\1", tail, count=1)
             html = html[:m.start()] + '<div class="keep">' + tail + "</div>"
     if layout == "agreement":

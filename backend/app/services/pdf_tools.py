@@ -557,7 +557,7 @@ def _render_markdown_pdf(title: str, body_md: str, subtitle: str | None = None) 
 <html><head><meta charset="utf-8"><title>{_html_escape(title)}</title></head>
 <body>
   <h1>{_html_escape(title)}</h1>
-  {doc_design.mark_blanks(body_html)}
+  {doc_design.mark_blanks(doc_design.number_lists(body_html))}
 </body></html>"""
 
     pdf_bytes = HTML(string=full_html).write_pdf(stylesheets=[CSS(string=doc_design.MEMO_CSS)])

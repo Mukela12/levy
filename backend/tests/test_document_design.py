@@ -288,6 +288,34 @@ class LiveRunFixes(unittest.TestCase):
         sign_off = next(p for p in doc.paragraphs if p.text == "Yours faithfully,")
         self.assertEqual(sign_off.paragraph_format.space_after.pt, 36)
 
+    def test_a_line_of_underscores_is_a_line_to_sign_on_not_a_rule(self):
+        import markdown
+        from app.services import doc_design
+        body = doc_design.tidy_source("Yours faithfully,\n\n______________________________\n**Mary Banda**\nPartner")
+        html = markdown.markdown(body, extensions=doc_design.markdown_extensions("letter"))
+        self.assertNotIn("<hr", html)
+        self.assertIn("______________________________<br", html)
+        self.assertIn("<hr", markdown.markdown(doc_design.tidy_source("Above\n\n---\n\nBelow")))
+
+    def test_the_firm_signs_under_its_own_name(self):
+        import markdown
+        from app.services import doc_design
+        body = "Dear Sir,\n\nPay.\n\nYours faithfully,\n\n**BANDA & CO.**\n\n&nbsp;\n\n**Mary Banda**\nPartner"
+        html = doc_design.normalise(
+            markdown.markdown(body, extensions=doc_design.markdown_extensions("letter")), "letter")
+        self.assertRegex(html, r'<p>Yours faithfully,</p>\s*<p class="valediction"><strong>BANDA &amp; CO\.</strong></p>'
+                               r'\s*<p><strong>Mary Banda</strong>')
+
+    def test_a_list_that_resumes_at_five_prints_five(self):
+        import markdown
+        from app.services import doc_design
+        body = "4. Pay to:\n\nAccount: 123\n\n5. Take notice.\n\n6. Send proof.\n"
+        for layout in ("letter", "court"):
+            html = doc_design.normalise(markdown.markdown(body, extensions=doc_design.markdown_extensions(layout)), layout)
+            # The PDF engine ignores `start`; the counter is what it prints (checked by hand, WeasyPrint 69).
+            self.assertIn('<ol start="5" style="counter-reset: list-item 4">', html)
+        self.assertEqual(doc_design.number_lists("<ol><li>a</li></ol>"), "<ol><li>a</li></ol>")
+
     def test_each_open_blank_comes_with_the_words_around_it(self):
         from app.services import doc_design
         body = ("Mary Banda\n[LANDLORD ADDRESS]\nLusaka\n\n[TENANT FULL NAME]\n[FLAT NUMBER], Kabulonga\n\n"
