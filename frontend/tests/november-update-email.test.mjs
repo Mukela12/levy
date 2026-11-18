@@ -19,6 +19,7 @@ const HEADINGS = [
   'Documents laid out like the real thing.',
   'Levy finishes the document.',
   'Citations traced to what Levy read.',
+  'Cases checked against ZambiaLII.',
   'Final pay and gratuity.',
   'Photograph a document.',
   '500 more judgments.',
@@ -66,12 +67,20 @@ test('a reader can unsubscribe and find the privacy policy', () => {
   assert.match(e.html, /You are receiving this because you created a Levy account\./)
 })
 
+test('the ZambiaLII check is named, credited, and described as the trial it is', () => {
+  const e = renderNovemberUpdateEmail()
+  for (const part of [e.html.replace(/&#39;/g, "'"), e.text]) {
+    assert.match(part, /ZambiaLII's index of Zambian judgments, through Laws\.Africa, the service behind ZambiaLII/)
+    assert.match(part, /This is a trial, and the index gives a summary rather than the full judgment/)
+    assert.match(part, /open the judgment itself before you rely on it/)
+  }
+})
+
 test('no em dashes, and nothing announced that is not there to use yet', () => {
   const e = renderNovemberUpdateEmail()
   const all = e.subject + e.html + e.text
   assert.ok(!all.includes('—'), 'an em dash')
-  // the outside index is on a trial plan, and the apps are not in the stores
-  assert.ok(!/ZambiaLII|Laws\.Africa|App Store|Google Play|TestFlight/i.test(all))
+  assert.ok(!/App Store|Google Play|TestFlight/i.test(all))      // the apps are not in the stores
 })
 
 test('the send route knows the edition and sends it unless told otherwise', () => {

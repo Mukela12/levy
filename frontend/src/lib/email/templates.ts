@@ -423,13 +423,16 @@ export function renderOctoberUpdateEmail({ preview = false }: AnnouncementOption
  *
  * Every line is something live on 18 November and checked against the code
  * or the database that day: 1,165 judgments on 8 October and 1,665 now, the
- * layouts shipped 17 November. Two things are left out on purpose. The index
- * Levy checks a case against outside its library is not named, because that
- * access is on a trial plan. The iPhone and Android apps are not mentioned,
- * because they are not in the stores yet.
+ * layouts shipped 17 November. The iPhone and Android apps are left out on
+ * purpose, because they are not in the stores yet.
  *
  * The third item answers a promise: September's email said that stopping Levy
  * from describing an authority it had not read was the next piece of work.
+ *
+ * The fourth names ZambiaLII and Laws.Africa at the owner's request, and says
+ * two things that keep it honest: the check is a trial (the access is on
+ * Laws.Africa's free plan for prototyping), and the index returns a summary
+ * of a judgment, not its text.
  */
 export function renderNovemberUpdateEmail({ preview = false }: AnnouncementOptions = {}): EmailTemplate {
   const title = "Levy's November update: documents laid out like Zambian court papers"
@@ -439,14 +442,15 @@ export function renderNovemberUpdateEmail({ preview = false }: AnnouncementOptio
   const updates = [
     ['Documents laid out like the real thing.', "Court papers now follow the layout of the Zambian courts' own documents: the court and cause number at the top, the parties and their titles, numbered paragraphs, quoted passages set apart, and a proper jurat at the foot of an affidavit. Agreements have numbered clauses and ruled signature blocks, and the Word download follows the same layout."],
     ['Levy finishes the document.', 'Every draft now tells you in plain words what is still missing. Send the details and Levy fills them in and returns the finished document. Upload your logo under Templates and Levy puts your letterhead on the letters it drafts.'],
-    ['Citations traced to what Levy read.', 'In September I said I was working on stopping Levy from describing an authority it had not read. It now traces each case and Act it cites back to what it actually opened while answering, corrects itself when one does not trace, and marks what it could not check. When a case is not in its library, it checks a second index of Zambian judgments and official sites, and tells you when it could not find the case.'],
+    ['Citations traced to what Levy read.', 'In September I said I was working on stopping Levy from describing an authority it had not read. It now traces each case and Act it cites back to what it actually opened while answering, corrects itself when one does not trace, and marks what it could not check.'],
+    ['Cases checked against ZambiaLII.', "When a case is not in Levy's own library, Levy now looks it up in ZambiaLII's index of Zambian judgments, through Laws.Africa, the service behind ZambiaLII. If the case is listed, the answer says so and links to it on ZambiaLII. If it is not, Levy tells you it could not find it. This is a trial, and the index gives a summary rather than the full judgment, so open the judgment itself before you rely on it."],
     ['Final pay and gratuity.', 'The pay calculator now works out what is due when a job ends: wages to the last day, leave, gratuity, notice pay and tax. It also applies the 2023 minimum wage and separation benefits for domestic workers.'],
     ['Photograph a document.', 'You can attach a photo of a letter, payslip or court paper from your phone, and Levy reads what you attach together with your question.'],
     ['500 more judgments.', 'The case law library has grown from 1,165 judgments to 1,665. Levy can now search the Government Gazette for statutory instruments and commencement notices, and there are new step-by-step guides on protection orders, divorce and getting help after gender-based violence.'],
     ['Easier to read on a phone.', 'The menu bar moves out of the way while you read an answer and returns when you scroll up, and your recent chats are ordered by when you last used them.'],
     ['Your account, your data.', 'You can delete your account and everything in it from your profile page, and the privacy policy is at levylegal.ai/privacy.'],
   ]
-  const intro = 'Documents laid out the way Zambian courts set theirs, tighter checks on the cases Levy cites, final pay calculations and 500 more judgments.'
+  const intro = 'Documents laid out the way Zambian courts set theirs, cases checked against ZambiaLII, final pay calculations and 500 more judgments.'
   const opening = "Since October's update, most of my work has gone into two things you keep asking for: documents that look like real legal documents, and tighter checks on the authorities Levy cites. Here is what changed."
   const caution = 'The layouts follow what the courts themselves publish, but a registry or a judge may ask for something different, and Levy can still get a fact or the law wrong. Read every draft, open each authority before you rely on it, and have a lawyer look at anything you will file or sign.'
   const feedback = 'If Levy gets something wrong, use the thumbs down under the answer or reply to this email. Tell me what confused you, what a document got wrong or what did not seem right. Your reply comes straight to me.'
