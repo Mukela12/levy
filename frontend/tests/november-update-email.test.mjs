@@ -17,7 +17,8 @@ const load = (path) => {
   vm.runInNewContext(out, { exports: exported, process: { env: {} }, URL, encodeURIComponent })
   return exported
 }
-const { renderNovemberUpdateEmail, renderNovemberUpdatePlainEmail } = load('../src/lib/email/templates.ts')
+const { renderNovemberUpdateEmail, renderNovemberUpdatePlainEmail, renderNovemberUpdatePersonalEmail,
+  renderNovemberUpdatePlainPersonalEmail } = load('../src/lib/email/templates.ts')
 const { getUpdate } = load('../src/lib/updates.ts')
 
 const PAGE = 'https://www.levylegal.ai/updates/november-2026'
@@ -68,6 +69,23 @@ test('the plain form is a note with no picture and no button', () => {
   assert.equal(e.text, renderNovemberUpdateEmail().text)      // one plain-text part for both
 })
 
+test('the two personal forms say the same things under the kind of subject October had', () => {
+  const personal = "Levy's November update: documents set like court papers"
+  const a = renderNovemberUpdatePersonalEmail()
+  const b = renderNovemberUpdatePlainPersonalEmail()
+  for (const e of [a, b]) {
+    assert.equal(e.subject, personal)
+    assert.match(e.html, /Hi, a short update from me on what changed in Levy since October:/)
+    assert.equal(lines(e.text).join('|'), lines(renderNovemberUpdateEmail().text).join('|'))
+    assert.equal(links(e.html).length, 3)
+    assert.ok(!(e.subject + e.html + e.text).includes('—'), 'an em dash')
+  }
+  assert.ok(!/<p[^>]*>Hi,<\/p>/.test(b.html), 'greeted twice')
+  assert.ok(!b.html.includes('<img'))
+  assert.equal(renderNovemberUpdatePersonalEmail({ preview: true }).subject, `Preview (list, personal) | ${personal}`)
+  assert.equal(renderNovemberUpdatePlainPersonalEmail({ preview: true }).subject, `Preview (plain, personal) | ${personal}`)
+})
+
 test('it is short enough to read at a glance', () => {
   const words = renderNovemberUpdateEmail().text.split(/\s+/).length
   assert.ok(words <= 110, `${words} words`)
@@ -96,6 +114,8 @@ test('the send route knows both forms and sends the designed one unless told oth
   const route = read('../src/app/api/email/product-update/route.web.ts')
   assert.match(route, /'november-2026': renderNovemberUpdateEmail,/)
   assert.match(route, /'november-2026-plain': renderNovemberUpdatePlainEmail,/)
+  assert.match(route, /'november-2026-personal': renderNovemberUpdatePersonalEmail,/)
+  assert.match(route, /'november-2026-plain-personal': renderNovemberUpdatePlainPersonalEmail,/)
   assert.match(route, /const LATEST_EDITION: keyof typeof EDITIONS = 'november-2026'/)
   assert.match(route, /'october-2026': renderOctoberUpdateEmail,/)      // earlier editions can still be re-rendered
 })
