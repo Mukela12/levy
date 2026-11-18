@@ -426,8 +426,9 @@ export function renderOctoberUpdateEmail({ preview = false }: AnnouncementOption
  * layouts shipped 17 November. The iPhone and Android apps are left out on
  * purpose, because they are not in the stores yet.
  *
- * The third item answers a promise: September's email said that stopping Levy
- * from describing an authority it had not read was the next piece of work.
+ * Kept short at the owner's request (about 425 words in plain text, where the
+ * first draft ran to 610). The third item is what September's email promised next: Levy
+ * no longer describes an authority it has not read.
  *
  * The fourth names ZambiaLII and Laws.Africa at the owner's request, and says
  * two things that keep it honest: the check is a trial (the access is on
@@ -440,20 +441,19 @@ export function renderNovemberUpdateEmail({ preview = false }: AnnouncementOptio
   const unsubscribeHref = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Unsubscribe from Levy updates')}`
   const privacyHref = `${SITE_URL.replace(/\/$/, '')}/privacy`
   const updates = [
-    ['Documents laid out like the real thing.', "Court papers now follow the layout of the Zambian courts' own documents: the court and cause number at the top, the parties and their titles, numbered paragraphs, quoted passages set apart, and a proper jurat at the foot of an affidavit. Agreements have numbered clauses and ruled signature blocks, and the Word download follows the same layout."],
-    ['Levy finishes the document.', 'Every draft now tells you in plain words what is still missing. Send the details and Levy fills them in and returns the finished document. Upload your logo under Templates and Levy puts your letterhead on the letters it drafts.'],
-    ['Citations traced to what Levy read.', 'In September I said I was working on stopping Levy from describing an authority it had not read. It now traces each case and Act it cites back to what it actually opened while answering, corrects itself when one does not trace, and marks what it could not check.'],
-    ['Cases checked against ZambiaLII.', "When a case is not in Levy's own library, Levy now looks it up in ZambiaLII's index of Zambian judgments, through Laws.Africa, the service behind ZambiaLII. If the case is listed, the answer says so and links to it on ZambiaLII. If it is not, Levy tells you it could not find it. This is a trial, and the index gives a summary rather than the full judgment, so open the judgment itself before you rely on it."],
-    ['Final pay and gratuity.', 'The pay calculator now works out what is due when a job ends: wages to the last day, leave, gratuity, notice pay and tax. It also applies the 2023 minimum wage and separation benefits for domestic workers.'],
-    ['Photograph a document.', 'You can attach a photo of a letter, payslip or court paper from your phone, and Levy reads what you attach together with your question.'],
-    ['500 more judgments.', 'The case law library has grown from 1,165 judgments to 1,665. Levy can now search the Government Gazette for statutory instruments and commencement notices, and there are new step-by-step guides on protection orders, divorce and getting help after gender-based violence.'],
-    ['Easier to read on a phone.', 'The menu bar moves out of the way while you read an answer and returns when you scroll up, and your recent chats are ordered by when you last used them.'],
-    ['Your account, your data.', 'You can delete your account and everything in it from your profile page, and the privacy policy is at levylegal.ai/privacy.'],
+    ['Documents laid out properly.', "Court papers now follow the layout of the Zambian courts' own documents, and agreements have numbered clauses and ruled signature blocks. The Word download follows the same layout."],
+    ['Levy finishes the document.', 'Each draft says what is still missing. Send the details and Levy fills them in. Upload your logo under Templates and it becomes your letterhead.'],
+    ['Citations traced to what Levy read.', 'Levy now traces each case and Act it cites to what it actually opened while answering, corrects itself when one does not trace, and marks what it could not check.'],
+    ['Cases checked against ZambiaLII.', "A case that is not in Levy's library is now looked up in ZambiaLII's index, through Laws.Africa. If it is listed, the answer links to it. If not, Levy says so. This is a trial and the index gives a summary, not the full judgment, so open the judgment before you rely on it."],
+    ['Final pay and gratuity.', "The pay calculator now works out what is due when a job ends: wages, leave, gratuity, notice pay and tax. It also covers domestic workers' 2023 minimum wage and separation benefits."],
+    ['Photograph a document.', 'Attach a photo of a letter, payslip or court paper from your phone and Levy reads it with your question.'],
+    ['500 more judgments.', 'The library has grown from 1,165 judgments to 1,665. Levy can search the Government Gazette, and there are new guides on protection orders, divorce and help after gender-based violence.'],
+    ['Two smaller things.', 'On a phone the menu bar now hides while you read, and you can delete your account and its data from your profile page.'],
   ]
-  const intro = 'Documents laid out the way Zambian courts set theirs, cases checked against ZambiaLII, final pay calculations and 500 more judgments.'
-  const opening = "Since October's update, most of my work has gone into two things you keep asking for: documents that look like real legal documents, and tighter checks on the authorities Levy cites. Here is what changed."
-  const caution = 'The layouts follow what the courts themselves publish, but a registry or a judge may ask for something different, and Levy can still get a fact or the law wrong. Read every draft, open each authority before you rely on it, and have a lawyer look at anything you will file or sign.'
-  const feedback = 'If Levy gets something wrong, use the thumbs down under the answer or reply to this email. Tell me what confused you, what a document got wrong or what did not seem right. Your reply comes straight to me.'
+  const intro = 'Documents laid out the way Zambian courts set theirs, cases checked against ZambiaLII, final pay and 500 more judgments.'
+  const opening = 'Since October, most of my work has gone into documents that look like real legal documents and tighter checks on the cases Levy cites. Here is what changed.'
+  const caution = 'A registry or a judge may ask for something different, and Levy can still get a fact or the law wrong. Read every draft, open each authority, and have a lawyer look at anything you will file or sign.'
+  const feedback = 'If Levy gets something wrong, use the thumbs down under the answer or reply to this email. It comes straight to me. If Levy has been useful, share it with a colleague or classmate.'
   const bodyHtml = `
     <p style="margin:0 0 18px;font-size:16px;line-height:1.8;color:#244233;">Hi,</p>
     <p style="margin:0 0 24px;font-size:16px;line-height:1.8;color:#244233;">${escapeHtml(opening)}</p>
@@ -468,7 +468,6 @@ export function renderNovemberUpdateEmail({ preview = false }: AnnouncementOptio
     <div style="background:#fffaf4;border:1px solid #f1dcc2;border-radius:20px;padding:22px;margin-top:14px;">
       <div style="font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#b7651d;margin-bottom:12px;">Tell me what needs work</div>
       <p style="margin:0 0 14px;font-size:15px;line-height:1.8;color:#4b3622;">${escapeHtml(feedback)}</p>
-      <p style="margin:0 0 14px;font-size:15px;line-height:1.8;color:#4b3622;">If Levy has been useful, share it with one colleague or classmate who would use it.</p>
       <p style="margin:0;font-size:15px;line-height:1.8;color:#4b3622;">Levy gives legal information, not legal advice.</p>
     </div>`
   return {
@@ -483,7 +482,7 @@ export function renderNovemberUpdateEmail({ preview = false }: AnnouncementOptio
     }),
     text: `${title}\n\nHi,\n\n${opening}\n\nWHAT IS NEW\n` +
       updates.map(([heading, copy]) => `- ${heading} ${copy}`).join('\n') +
-      `\n\nA DRAFT IS STILL A DRAFT\n${caution}\n\n${feedback}\n\nIf Levy has been useful, share it with one colleague or classmate.\n\nLevy gives legal information, not legal advice.\n\nMukela Katungu\nFounder, Levy\n\nOpen Levy: ${SITE_URL}\nPrivacy policy: ${privacyHref}\nUnsubscribe: reply to this email with "unsubscribe".`,
+      `\n\nA DRAFT IS STILL A DRAFT\n${caution}\n\n${feedback}\n\nLevy gives legal information, not legal advice.\n\nMukela Katungu\nFounder, Levy\n\nOpen Levy: ${SITE_URL}\nPrivacy policy: ${privacyHref}\nUnsubscribe: reply to this email with "unsubscribe".`,
   }
 }
 

@@ -16,15 +16,14 @@ vm.runInNewContext(output, { exports: exported, process: { env: {} }, URL, encod
 const { renderNovemberUpdateEmail } = exported
 
 const HEADINGS = [
-  'Documents laid out like the real thing.',
+  'Documents laid out properly.',
   'Levy finishes the document.',
   'Citations traced to what Levy read.',
   'Cases checked against ZambiaLII.',
   'Final pay and gratuity.',
   'Photograph a document.',
   '500 more judgments.',
-  'Easier to read on a phone.',
-  'Your account, your data.',
+  'Two smaller things.',
 ]
 
 test('the send and the preview carry their own subjects', () => {
@@ -70,10 +69,15 @@ test('a reader can unsubscribe and find the privacy policy', () => {
 test('the ZambiaLII check is named, credited, and described as the trial it is', () => {
   const e = renderNovemberUpdateEmail()
   for (const part of [e.html.replace(/&#39;/g, "'"), e.text]) {
-    assert.match(part, /ZambiaLII's index of Zambian judgments, through Laws\.Africa, the service behind ZambiaLII/)
-    assert.match(part, /This is a trial, and the index gives a summary rather than the full judgment/)
-    assert.match(part, /open the judgment itself before you rely on it/)
+    assert.match(part, /looked up in ZambiaLII's index, through Laws\.Africa\./)
+    assert.match(part, /This is a trial and the index gives a summary, not the full judgment/)
+    assert.match(part, /open the judgment before you rely on it/)
   }
+})
+
+test('it stays short', () => {
+  const words = renderNovemberUpdateEmail().text.split(/\s+/).length
+  assert.ok(words <= 450, `${words} words`)      // 425 when sent; the first draft ran to 610
 })
 
 test('no em dashes, and nothing announced that is not there to use yet', () => {
