@@ -1,8 +1,10 @@
 """Send a Levy product update to everyone with an account.
 
 The owner runs this himself. It needs the email admin token, which only he
-holds; the script asks for it at a hidden prompt, never writes it anywhere
-and never prints it. It never prints an email address either.
+holds. The script reads it from the macOS Keychain (the item he made when he
+set the token, see below), or from LEVY_EMAIL_ADMIN_TOKEN, or asks for it at
+a hidden prompt. It never writes the token anywhere and never prints it. It
+never prints an email address either.
 
     backend/.venv/bin/python scripts/send_user_update.py
         Dry run. Builds the list, asks the live site what it would send, and
@@ -20,6 +22,13 @@ addresses, the QA probe, and anyone listed in the unsubscribe file (one
 address a line; default ~/levy-research/broadcasts/unsubscribed.txt).
 
 A broadcast cannot be recalled: run the dry run and the preview first.
+
+Setting a new token (once; the site must be redeployed afterwards, because a
+deployment reads its variables when it is built):
+
+    security add-generic-password -U -a levy -s levy-email-admin-token -w "$(openssl rand -hex 32)"
+    security find-generic-password -a levy -s levy-email-admin-token -w | tr -d '\\n' \\
+        | vercel env add LEVY_EMAIL_ADMIN_TOKEN production --sensitive --force
 """
 from __future__ import annotations
 
@@ -27,6 +36,7 @@ import argparse
 import getpass
 import json
 import os
+import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -34,6 +44,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 ROUTE = "https://www.levylegal.ai/api/email/product-update"
 PRIVATE_DIR = Path.home() / "levy-research" / "broadcasts"
+KEYCHAIN = ("-a", "levy", "-s", "levy-email-admin-token")
+# The route sends one email at a time, so a request for the whole list runs
+# for half a minute. In batches, a request that is cut off loses at most one
+# batch, and the record shows exactly who had been sent to by then.
+BATCH = 15
 NOT_PEOPLE = ("levy-qa-probe@",)
 TEST_DOMAINS = ("example.com", "example.org", "example.net", "test.com")
 
@@ -81,6 +96,15 @@ def recipients(exclude: set[str]) -> tuple[list[str], dict[str, int]]:
     return out, left_out
 
 
+def admin_token() -> str:
+    """The token, from the environment, the Keychain or a hidden prompt."""
+    token = os.environ.get("LEVY_EMAIL_ADMIN_TOKEN", "").strip()
+    if not token and sys.platform == "darwin":
+        found = subprocess.run(["security", "find-generic-password", *KEYCHAIN, "-w"], capture_output=True, text=True)
+        token = found.stdout.strip() if found.returncode == 0 else ""
+    return token or getpass.getpass("Email admin token (hidden): ").strip()
+
+
 def post(token: str, payload: dict) -> dict:
     import httpx
     r = httpx.post(ROUTE, headers={"x-levy-email-token": token}, json=payload, timeout=600)
@@ -113,7 +137,7 @@ def main() -> None:
     if args.count_only:
         return
 
-    token = os.environ.get("LEVY_EMAIL_ADMIN_TOKEN") or getpass.getpass("Email admin token (hidden): ").strip()
+    token = admin_token()
     if not token:
         sys.exit("No token given.")
     base = {"edition": args.edition} if args.edition else {}
@@ -134,14 +158,34 @@ def main() -> None:
     typed = input(f"Type {len(people)} to send this to {len(people)} people. It cannot be recalled: ").strip()
     if typed != str(len(people)):
         sys.exit("Not confirmed. Nothing sent.")
-    out = post(token, {**base, "recipients": people})
     PRIVATE_DIR.mkdir(parents=True, exist_ok=True)
     record = PRIVATE_DIR / f"{dry.get('edition')}-{datetime.now():%Y-%m-%d-%H%M}.json"
-    record.write_text(json.dumps({"subject": dry.get("subject"), **out}, indent=1))
+    sent: list = []
+    failed: list = []
+    not_tried: list[str] = []
+    for start in range(0, len(people), BATCH):
+        batch = people[start:start + BATCH]
+        try:
+            out = post(token, {**base, "recipients": batch})
+        except (SystemExit, Exception) as exc:  # noqa: BLE001 - whatever stopped it, say who is left
+            not_tried = people[start:]
+            print(f"Stopped at {start} of {len(people)}: {exc}")
+            break
+        sent += out.get("results", [])
+        failed += out.get("failures", [])
+        # written after every batch, so a stop half way leaves a true account
+        record.write_text(json.dumps({"subject": dry.get("subject"), "edition": dry.get("edition"),
+                                      "results": sent, "failures": failed}, indent=1))
+        record.chmod(0o600)
+        print(f"  {min(start + BATCH, len(people))} of {len(people)}")
+    record.write_text(json.dumps({"subject": dry.get("subject"), "edition": dry.get("edition"), "results": sent,
+                                  "failures": failed, "not_tried": not_tried}, indent=1))
     record.chmod(0o600)
-    print(f"Sent {out.get('sent', 0)}, failed {out.get('failed', 0)}. The record (private, it holds addresses) is at {record}")
-    if out.get("failed"):
-        print("Some failed. The record lists them with the reason; they were not sent, so they can be retried by hand.")
+    print(f"Sent {len(sent)}, failed {len(failed)}, not tried {len(not_tried)}. "
+          f"The record (private, it holds addresses) is at {record}")
+    if failed or not_tried:
+        print("The record lists who failed and who was not tried. None of those was sent to, "
+              "so they can be sent to again without anyone getting two copies.")
 
 
 if __name__ == "__main__":
