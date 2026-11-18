@@ -424,10 +424,16 @@ export function renderOctoberUpdateEmail({ preview = false }: AnnouncementOption
  * The email is only a list. The owner found the earlier drafts hard to read
  * and pointed at Railway's weekly changelog email, which is a subject naming
  * what shipped, a few lines, and one button; the explaining is done on a page.
- * So each line here links to its section of /updates/november-2026
- * (src/lib/updates.ts), and nothing is described twice.
+ * So the lines here are the section titles of /updates/november-2026
+ * (src/lib/updates.ts), one button opens that page, and nothing is described
+ * twice. A test checks that every line is a section that exists.
  *
- * The anchors must match the section ids there: a test checks it.
+ * The lines are plain text on purpose. In the first preview each one was a
+ * link to its section (18 links in 95 words), and Gmail filed it under
+ * Promotions in the owner's own mailbox, where October's update and Railway's
+ * changelog emails sit under Updates. Railway's list is plain text with one
+ * button. The `plain` form is the fallback if a designed email still lands in
+ * Promotions: no picture, no button, the look of a note typed by a person.
  */
 const UPDATES_URL = 'https://www.levylegal.ai/updates'
 // The green mark, as a PNG: Gmail strips SVG.
@@ -446,9 +452,10 @@ type UpdateEmail = {
   items: Array<[label: string, anchor: string]>
 }
 
-function renderUpdateEmail(update: UpdateEmail, preview: boolean): EmailTemplate {
+function renderUpdateEmail(update: UpdateEmail, preview: boolean, plain = false): EmailTemplate {
   const page = `${UPDATES_URL}/${update.slug}`
-  const subject = preview ? `Preview | ${update.subject}` : update.subject
+  // A preview says which form it is, so two previews do not thread together in Gmail.
+  const subject = preview ? `Preview (${plain ? 'plain' : 'list'}) | ${update.subject}` : update.subject
   const unsubscribeHref = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Unsubscribe from Levy updates')}`
   const privacyHref = 'https://www.levylegal.ai/privacy'
   const feedback = 'Questions, or something not working? Reply to this email. It comes straight to me.'
@@ -457,10 +464,38 @@ function renderUpdateEmail(update: UpdateEmail, preview: boolean): EmailTemplate
 
   const rows = update.items
     .map(
-      ([label, anchor]) =>
-        `<tr><td style="padding:0 0 0 2px;border-top:1px solid #e3e9e0;"><a href="${page}#${anchor}" style="display:block;padding:13px 0;font-family:${sans};font-size:16px;line-height:1.4;color:#253b31;text-decoration:none;">${escapeHtml(label)}</a></td><td style="border-top:1px solid #e3e9e0;width:24px;text-align:right;font-family:${sans};font-size:16px;color:#275a42;"><a href="${page}#${anchor}" style="color:#275a42;text-decoration:none;" aria-hidden="true" tabindex="-1">&rarr;</a></td></tr>`,
+      ([label]) =>
+        `<tr><td style="padding:13px 0 13px 2px;border-top:1px solid #e3e9e0;font-family:${sans};font-size:16px;line-height:1.4;color:#253b31;">${escapeHtml(label)}</td></tr>`,
     )
     .join('')
+  const received = preview ? 'Preview of a Levy update.' : 'You are receiving this because you created a Levy account.'
+  const text =
+    `What is new in Levy\n\n${update.opening}\n\n` +
+    update.items.map(([label]) => `- ${label}`).join('\n') +
+    `\n\nRead the full update: ${page}\n\n${feedback}\n\nMukela Katungu, founder of Levy\n\n` +
+    `Levy gives legal information, not legal advice.\nPrivacy policy: ${privacyHref}\nUnsubscribe: reply to this email with "unsubscribe".`
+
+  if (plain) {
+    const p = `margin:0 0 14px;font-family:${sans};font-size:16px;line-height:1.6;color:#253b31;`
+    const html = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${escapeHtml(update.subject)}</title>
+  </head>
+  <body style="margin:0;padding:20px;background:#ffffff;color:#253b31;">
+    <p style="${p}">Hi,</p>
+    <p style="${p}">${escapeHtml(update.opening)}</p>
+    <ul style="margin:0 0 14px;padding:0 0 0 22px;font-family:${sans};font-size:16px;line-height:1.7;color:#253b31;">${update.items.map(([label]) => `<li>${escapeHtml(label)}</li>`).join('')}</ul>
+    <p style="${p}">The full update explains each one and how to use it:<br /><a href="${page}" style="color:#275a42;">${page.replace('https://', '')}</a></p>
+    <p style="${p}">${escapeHtml(feedback)}</p>
+    <p style="${p}">Mukela Katungu<br />Founder, Levy</p>
+    <p style="margin:22px 0 0;font-family:${sans};font-size:12px;line-height:1.7;color:#5d6c62;">Levy gives legal information, not legal advice. ${received} <a href="${unsubscribeHref}" style="color:#5d6c62;">Unsubscribe</a> &middot; <a href="${privacyHref}" style="color:#5d6c62;">Privacy policy</a></p>
+  </body>
+</html>`
+    return { subject, html, text }
+  }
 
   const html = `<!doctype html>
 <html lang="en">
@@ -481,10 +516,8 @@ function renderUpdateEmail(update: UpdateEmail, preview: boolean): EmailTemplate
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                   <tr>
                     <td style="vertical-align:middle;">
-                      <a href="https://www.levylegal.ai" style="text-decoration:none;color:#253b31;">
-                        <img src="${LEVY_MARK_URL}" width="30" height="30" alt="" style="display:inline-block;vertical-align:middle;border:0;width:30px;height:30px;" />
-                        <span style="display:inline-block;vertical-align:middle;padding-left:8px;font-family:${serif};font-size:24px;line-height:1;color:#253b31;">Levy</span>
-                      </a>
+                      <img src="${LEVY_MARK_URL}" width="30" height="30" alt="" style="display:inline-block;vertical-align:middle;border:0;width:30px;height:30px;" />
+                      <span style="display:inline-block;vertical-align:middle;padding-left:8px;font-family:${serif};font-size:24px;line-height:1;color:#253b31;">Levy</span>
                     </td>
                     <td style="vertical-align:middle;text-align:right;font-family:${sans};font-size:12px;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:#8a611a;">${escapeHtml(preview ? 'Preview' : update.month)}</td>
                   </tr>
@@ -518,7 +551,7 @@ function renderUpdateEmail(update: UpdateEmail, preview: boolean): EmailTemplate
             <tr>
               <td style="padding:18px 16px 0;text-align:center;font-family:${sans};font-size:12px;line-height:1.7;color:#5d6c62;">
                 Levy gives legal information, not legal advice.<br />
-                ${preview ? 'Preview of a Levy update.' : 'You are receiving this because you created a Levy account.'}
+                ${received}
                 &middot; <a href="${unsubscribeHref}" style="color:#5d6c62;text-decoration:underline;">Unsubscribe</a>
                 &middot; <a href="${privacyHref}" style="color:#5d6c62;text-decoration:underline;">Privacy policy</a>
               </td>
@@ -530,34 +563,32 @@ function renderUpdateEmail(update: UpdateEmail, preview: boolean): EmailTemplate
   </body>
 </html>`
 
-  const text =
-    `What is new in Levy\n\n${update.opening}\n\n` +
-    update.items.map(([label]) => `- ${label}`).join('\n') +
-    `\n\nRead the full update: ${page}\n\n${feedback}\n\nMukela Katungu, founder of Levy\n\n` +
-    `Levy gives legal information, not legal advice.\nPrivacy policy: ${privacyHref}\nUnsubscribe: reply to this email with "unsubscribe".`
-
   return { subject, html, text }
 }
 
+const NOVEMBER_2026: UpdateEmail = {
+  slug: 'november-2026',
+  month: 'November 2026',
+  subject: 'Documents set like court papers, ZambiaLII case checks, final pay',
+  opening: 'Here is what changed since October:',
+  items: [
+    ['Documents set like Zambian court papers', 'court-documents'],
+    ['Drafts that tell you what is missing', 'missing-details'],
+    ['Citations traced to what Levy read', 'citations'],
+    ['Cases checked against ZambiaLII', 'zambialii'],
+    ['Final pay and gratuity', 'final-pay'],
+    ['Photograph a document', 'photos'],
+    ['500 more judgments, and the Gazette', 'library'],
+  ],
+}
+
 export function renderNovemberUpdateEmail({ preview = false }: AnnouncementOptions = {}): EmailTemplate {
-  return renderUpdateEmail(
-    {
-      slug: 'november-2026',
-      month: 'November 2026',
-      subject: 'Documents set like court papers, ZambiaLII case checks, final pay',
-      opening: 'Here is what changed since October:',
-      items: [
-        ['Documents set like Zambian court papers', 'court-documents'],
-        ['Drafts that tell you what is missing', 'missing-details'],
-        ['Citations traced to what Levy read', 'citations'],
-        ['Cases checked against ZambiaLII', 'zambialii'],
-        ['Final pay and gratuity', 'final-pay'],
-        ['Photograph a document', 'photos'],
-        ['500 more judgments, and the Gazette', 'library'],
-      ],
-    },
-    preview,
-  )
+  return renderUpdateEmail(NOVEMBER_2026, preview)
+}
+
+/** The same update as a plain note, in case the designed one lands in Promotions. */
+export function renderNovemberUpdatePlainEmail({ preview = false }: AnnouncementOptions = {}): EmailTemplate {
+  return renderUpdateEmail(NOVEMBER_2026, preview, true)
 }
 
 export function renderTesterAnnouncementEmail({ preview = false }: AnnouncementOptions = {}): EmailTemplate {

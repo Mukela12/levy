@@ -3,6 +3,7 @@ import { sendLevyEmail } from '@/lib/email/resend'
 import {
   renderCitationUpdateEmail,
   renderNovemberUpdateEmail,
+  renderNovemberUpdatePlainEmail,
   renderOctoberUpdateEmail,
   renderProductUpdateEmail,
 } from '@/lib/email/templates'
@@ -32,6 +33,7 @@ const EDITIONS = {
   citations: renderCitationUpdateEmail,
   'october-2026': renderOctoberUpdateEmail,
   'november-2026': renderNovemberUpdateEmail,
+  'november-2026-plain': renderNovemberUpdatePlainEmail,
 } as const
 const LATEST_EDITION: keyof typeof EDITIONS = 'november-2026'
 
