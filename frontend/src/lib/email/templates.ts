@@ -418,6 +418,71 @@ export function renderOctoberUpdateEmail({ preview = false }: AnnouncementOption
   }
 }
 
+/**
+ * November 2026 update (the fifth broadcast; the fourth went out 8 October).
+ *
+ * Every line is something live on 18 November and checked against the code
+ * or the database that day: 1,165 judgments on 8 October and 1,665 now, the
+ * layouts shipped 17 November. Two things are left out on purpose. The index
+ * Levy checks a case against outside its library is not named, because that
+ * access is on a trial plan. The iPhone and Android apps are not mentioned,
+ * because they are not in the stores yet.
+ *
+ * The third item answers a promise: September's email said that stopping Levy
+ * from describing an authority it had not read was the next piece of work.
+ */
+export function renderNovemberUpdateEmail({ preview = false }: AnnouncementOptions = {}): EmailTemplate {
+  const title = "Levy's November update: documents laid out like Zambian court papers"
+  const subject = preview ? `Preview | ${title}` : title
+  const unsubscribeHref = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Unsubscribe from Levy updates')}`
+  const privacyHref = `${SITE_URL.replace(/\/$/, '')}/privacy`
+  const updates = [
+    ['Documents laid out like the real thing.', "Court papers now follow the layout of the Zambian courts' own documents: the court and cause number at the top, the parties and their titles, numbered paragraphs, quoted passages set apart, and a proper jurat at the foot of an affidavit. Agreements have numbered clauses and ruled signature blocks, and the Word download follows the same layout."],
+    ['Levy finishes the document.', 'Every draft now tells you in plain words what is still missing. Send the details and Levy fills them in and returns the finished document. Upload your logo under Templates and Levy puts your letterhead on the letters it drafts.'],
+    ['Citations traced to what Levy read.', 'In September I said I was working on stopping Levy from describing an authority it had not read. It now traces each case and Act it cites back to what it actually opened while answering, corrects itself when one does not trace, and marks what it could not check. When a case is not in its library, it checks a second index of Zambian judgments and official sites, and tells you when it could not find the case.'],
+    ['Final pay and gratuity.', 'The pay calculator now works out what is due when a job ends: wages to the last day, leave, gratuity, notice pay and tax. It also applies the 2023 minimum wage and separation benefits for domestic workers.'],
+    ['Photograph a document.', 'You can attach a photo of a letter, payslip or court paper from your phone, and Levy reads what you attach together with your question.'],
+    ['500 more judgments.', 'The case law library has grown from 1,165 judgments to 1,665. Levy can now search the Government Gazette for statutory instruments and commencement notices, and there are new step-by-step guides on protection orders, divorce and getting help after gender-based violence.'],
+    ['Easier to read on a phone.', 'The menu bar moves out of the way while you read an answer and returns when you scroll up, and your recent chats are ordered by when you last used them.'],
+    ['Your account, your data.', 'You can delete your account and everything in it from your profile page, and the privacy policy is at levylegal.ai/privacy.'],
+  ]
+  const intro = 'Documents laid out the way Zambian courts set theirs, tighter checks on the cases Levy cites, final pay calculations and 500 more judgments.'
+  const opening = "Since October's update, most of my work has gone into two things you keep asking for: documents that look like real legal documents, and tighter checks on the authorities Levy cites. Here is what changed."
+  const caution = 'The layouts follow what the courts themselves publish, but a registry or a judge may ask for something different, and Levy can still get a fact or the law wrong. Read every draft, open each authority before you rely on it, and have a lawyer look at anything you will file or sign.'
+  const feedback = 'If Levy gets something wrong, use the thumbs down under the answer or reply to this email. Tell me what confused you, what a document got wrong or what did not seem right. Your reply comes straight to me.'
+  const bodyHtml = `
+    <p style="margin:0 0 18px;font-size:16px;line-height:1.8;color:#244233;">Hi,</p>
+    <p style="margin:0 0 24px;font-size:16px;line-height:1.8;color:#244233;">${escapeHtml(opening)}</p>
+    <div style="background:#f7faf7;border:1px solid #dbe8dd;border-radius:20px;padding:22px 22px 6px;">
+      <div style="font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#0d6b37;margin-bottom:14px;">What is new</div>
+      <div style="font-size:15px;line-height:1.8;color:#224132;">${updates.map(([heading, copy]) => `<p style="margin:0 0 12px;"><strong>${escapeHtml(heading)}</strong> ${escapeHtml(copy)}</p>`).join('')}</div>
+    </div>
+    <div style="background:#f4f7fb;border:1px solid #d5e0ee;border-radius:20px;padding:22px;margin-top:14px;">
+      <div style="font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#1f4f86;margin-bottom:12px;">A draft is still a draft</div>
+      <p style="margin:0;font-size:15px;line-height:1.8;color:#22364d;">${escapeHtml(caution)}</p>
+    </div>
+    <div style="background:#fffaf4;border:1px solid #f1dcc2;border-radius:20px;padding:22px;margin-top:14px;">
+      <div style="font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#b7651d;margin-bottom:12px;">Tell me what needs work</div>
+      <p style="margin:0 0 14px;font-size:15px;line-height:1.8;color:#4b3622;">${escapeHtml(feedback)}</p>
+      <p style="margin:0 0 14px;font-size:15px;line-height:1.8;color:#4b3622;">If Levy has been useful, share it with one colleague or classmate who would use it.</p>
+      <p style="margin:0;font-size:15px;line-height:1.8;color:#4b3622;">Levy gives legal information, not legal advice.</p>
+    </div>`
+  return {
+    subject,
+    html: buildHtml({
+      eyebrow: preview ? 'Levy Preview Send' : 'Levy Legal AI',
+      title: 'November at Levy', intro, bodyHtml,
+      primaryCta: { href: SITE_URL, label: 'Open Levy at levylegal.ai' },
+      footerNote: (preview ? 'Preview of Levy&rsquo;s November update.' : 'You are receiving this because you created a Levy account.') +
+        ` &middot; <a href="${unsubscribeHref}" style="color:#708476;text-decoration:underline;">Unsubscribe</a>` +
+        ` &middot; <a href="${privacyHref}" style="color:#708476;text-decoration:underline;">Privacy policy</a>`,
+    }),
+    text: `${title}\n\nHi,\n\n${opening}\n\nWHAT IS NEW\n` +
+      updates.map(([heading, copy]) => `- ${heading} ${copy}`).join('\n') +
+      `\n\nA DRAFT IS STILL A DRAFT\n${caution}\n\n${feedback}\n\nIf Levy has been useful, share it with one colleague or classmate.\n\nLevy gives legal information, not legal advice.\n\nMukela Katungu\nFounder, Levy\n\nOpen Levy: ${SITE_URL}\nPrivacy policy: ${privacyHref}\nUnsubscribe: reply to this email with "unsubscribe".`,
+  }
+}
+
 export function renderTesterAnnouncementEmail({ preview = false }: AnnouncementOptions = {}): EmailTemplate {
   const subject = preview
     ? 'Preview | Levy just got better'
