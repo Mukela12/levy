@@ -428,12 +428,19 @@ export function renderOctoberUpdateEmail({ preview = false }: AnnouncementOption
  * (src/lib/updates.ts), one button opens that page, and nothing is described
  * twice. A test checks that every line is a section that exists.
  *
- * The lines are plain text on purpose. In the first preview each one was a
- * link to its section (18 links in 95 words), and Gmail filed it under
- * Promotions in the owner's own mailbox, where October's update and Railway's
- * changelog emails sit under Updates. Railway's list is plain text with one
- * button. The `plain` form is the fallback if a designed email still lands in
- * Promotions: no picture, no button, the look of a note typed by a person.
+ * What decides the tab in Gmail (tested in the owner's own mailbox on
+ * 18 November 2026, five previews from the same sender within 20 minutes):
+ * the subject and the opening, not the look. Three previews under the subject
+ * "Documents set like court papers, ZambiaLII case checks, final pay" with the
+ * opening "Here is what changed since October:" went to Promotions, whether
+ * they carried 18 links, 3 links and a button, or no picture and no button at
+ * all. Two under the subject and opening below went to Updates, designed and
+ * plain alike, as October's update had. So an update is named as Levy's update
+ * for the month and opens in the first person. The two were changed together;
+ * which of them did it is not known. One mailbox is a small test.
+ *
+ * Sent 18 November 2026 to 45 accounts, none failed. The send record calls
+ * this edition 'november-2026-personal', its name while it was being tested.
  */
 const UPDATES_URL = 'https://www.levylegal.ai/updates'
 // The green mark, as a PNG: Gmail strips SVG.
@@ -444,18 +451,17 @@ type UpdateEmail = {
   slug: string
   /** "November 2026" */
   month: string
-  /** The subject: the names of what changed, as Railway writes theirs. */
+  /** "Levy's <Month> update: <the main change>". A bare list of features went to Promotions. */
   subject: string
-  /** One line above the list. */
+  /** One line above the list, in the first person. */
   opening: string
   /** What changed: a short name and the id of its section on the page. */
   items: Array<[label: string, anchor: string]>
 }
 
-function renderUpdateEmail(update: UpdateEmail, preview: boolean, plain = false, tag = plain ? 'plain' : 'list'): EmailTemplate {
+function renderUpdateEmail(update: UpdateEmail, preview: boolean): EmailTemplate {
   const page = `${UPDATES_URL}/${update.slug}`
-  // A preview says which form it is, so two previews do not thread together in Gmail.
-  const subject = preview ? `Preview (${tag}) | ${update.subject}` : update.subject
+  const subject = preview ? `Preview | ${update.subject}` : update.subject
   const unsubscribeHref = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Unsubscribe from Levy updates')}`
   const privacyHref = 'https://www.levylegal.ai/privacy'
   const feedback = 'Questions, or something not working? Reply to this email. It comes straight to me.'
@@ -474,28 +480,6 @@ function renderUpdateEmail(update: UpdateEmail, preview: boolean, plain = false,
     update.items.map(([label]) => `- ${label}`).join('\n') +
     `\n\nRead the full update: ${page}\n\n${feedback}\n\nMukela Katungu, founder of Levy\n\n` +
     `Levy gives legal information, not legal advice.\nPrivacy policy: ${privacyHref}\nUnsubscribe: reply to this email with "unsubscribe".`
-
-  if (plain) {
-    const p = `margin:0 0 14px;font-family:${sans};font-size:16px;line-height:1.6;color:#253b31;`
-    const html = `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>${escapeHtml(update.subject)}</title>
-  </head>
-  <body style="margin:0;padding:20px;background:#ffffff;color:#253b31;">
-    ${/^Hi\b/.test(update.opening) ? '' : `<p style="${p}">Hi,</p>`}
-    <p style="${p}">${escapeHtml(update.opening)}</p>
-    <ul style="margin:0 0 14px;padding:0 0 0 22px;font-family:${sans};font-size:16px;line-height:1.7;color:#253b31;">${update.items.map(([label]) => `<li>${escapeHtml(label)}</li>`).join('')}</ul>
-    <p style="${p}">The full update explains each one and how to use it:<br /><a href="${page}" style="color:#275a42;">${page.replace('https://', '')}</a></p>
-    <p style="${p}">${escapeHtml(feedback)}</p>
-    <p style="${p}">Mukela Katungu<br />Founder, Levy</p>
-    <p style="margin:22px 0 0;font-family:${sans};font-size:12px;line-height:1.7;color:#5d6c62;">Levy gives legal information, not legal advice. ${received} <a href="${unsubscribeHref}" style="color:#5d6c62;">Unsubscribe</a> &middot; <a href="${privacyHref}" style="color:#5d6c62;">Privacy policy</a></p>
-  </body>
-</html>`
-    return { subject, html, text }
-  }
 
   const html = `<!doctype html>
 <html lang="en">
@@ -569,8 +553,8 @@ function renderUpdateEmail(update: UpdateEmail, preview: boolean, plain = false,
 const NOVEMBER_2026: UpdateEmail = {
   slug: 'november-2026',
   month: 'November 2026',
-  subject: 'Documents set like court papers, ZambiaLII case checks, final pay',
-  opening: 'Here is what changed since October:',
+  subject: "Levy's November update: documents set like court papers",
+  opening: 'Hi, a short update from me on what changed in Levy since October:',
   items: [
     ['Documents set like Zambian court papers', 'court-documents'],
     ['Drafts that tell you what is missing', 'missing-details'],
@@ -584,32 +568,6 @@ const NOVEMBER_2026: UpdateEmail = {
 
 export function renderNovemberUpdateEmail({ preview = false }: AnnouncementOptions = {}): EmailTemplate {
   return renderUpdateEmail(NOVEMBER_2026, preview)
-}
-
-/** The same update as a plain note, in case the designed one lands in Promotions. */
-export function renderNovemberUpdatePlainEmail({ preview = false }: AnnouncementOptions = {}): EmailTemplate {
-  return renderUpdateEmail(NOVEMBER_2026, preview, true)
-}
-
-/**
- * The designed list still landed in Promotions with three links, so the cause
- * is not the links. These two say the same things the way October's update
- * did, which Gmail filed under Updates: a subject that calls itself Levy's
- * update, and an opening written by a person. With the two above they show
- * whether Gmail is reacting to the look or to the words.
- */
-const NOVEMBER_2026_PERSONAL: UpdateEmail = {
-  ...NOVEMBER_2026,
-  subject: "Levy's November update: documents set like court papers",
-  opening: 'Hi, a short update from me on what changed in Levy since October:',
-}
-
-export function renderNovemberUpdatePersonalEmail({ preview = false }: AnnouncementOptions = {}): EmailTemplate {
-  return renderUpdateEmail(NOVEMBER_2026_PERSONAL, preview, false, 'list, personal')
-}
-
-export function renderNovemberUpdatePlainPersonalEmail({ preview = false }: AnnouncementOptions = {}): EmailTemplate {
-  return renderUpdateEmail(NOVEMBER_2026_PERSONAL, preview, true, 'plain, personal')
 }
 
 export function renderTesterAnnouncementEmail({ preview = false }: AnnouncementOptions = {}): EmailTemplate {
