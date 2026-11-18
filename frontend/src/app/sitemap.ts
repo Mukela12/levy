@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { listActs, SITE_URL } from '@/lib/server/corpus'
 import { answers } from '@/lib/server/answers'
+import { updates } from '@/lib/updates'
 
 export const revalidate = 21600
 
@@ -17,7 +18,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/study`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${SITE_URL}/auth/signup`, changeFrequency: 'monthly', priority: 0.4 },
     { url: `${SITE_URL}/support`, changeFrequency: 'monthly', priority: 0.3 },
+    { url: `${SITE_URL}/updates`, changeFrequency: 'monthly', priority: 0.6 },
   ]
+  for (const u of updates) {
+    entries.push({ url: `${SITE_URL}/updates/${u.slug}`, lastModified: u.date, changeFrequency: 'yearly', priority: 0.5 })
+  }
   for (const a of answers) {
     entries.push({ url: `${SITE_URL}/answers/${a.slug}`, changeFrequency: 'monthly', priority: 0.7 })
   }

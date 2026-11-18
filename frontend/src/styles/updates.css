@@ -1,0 +1,142 @@
+/*
+ * The updates pages (/updates and /updates/<month>).
+ *
+ * Set like a printed page, in the colours of the Levy app: a light ground,
+ * dark green ink, one column of text. The title of an update stands between
+ * two rules, the way the name of a document stands on a Zambian court paper.
+ * Rules and type carry the structure; there are no cards or tinted panels.
+ *
+ * Faces already load site-wide: Instrument Serif for titles, Public Sans for
+ * text (globals.css and canopy.css).
+ */
+
+html:has(.lu-page) { background: #f7f9f5; color-scheme: light; }
+
+.lu-page {
+  --lu-ground: #f7f9f5;
+  --lu-paper: #ffffff;
+  --lu-ink: #253b31;
+  --lu-muted: #5d6c62;
+  --lu-line: #d6ded3;
+  --lu-forest: #275a42;
+  --lu-brass: #8a611a;
+  --lu-serif: 'Instrument Serif', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  --lu-sans: 'Public Sans', var(--font-sans), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  background: var(--lu-ground);
+  color: var(--lu-ink);
+  font-family: var(--lu-sans);
+  font-size: 17px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+.lu-page ::selection { background: #d9e8dc; }
+.lu-page a { color: var(--lu-forest); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.lu-page a:focus-visible, .lu-page summary:focus-visible { outline: 2px solid var(--lu-forest); outline-offset: 3px; border-radius: 3px; }
+@media (hover: hover) { .lu-page a:hover { color: #173a2a; text-decoration-thickness: 2px; } }
+
+.lu-wrap { width: 100%; max-width: 728px; margin: 0 auto; padding: 0 24px; }
+@media (max-width: 480px) {
+  .lu-page { font-size: 16.5px; }
+  .lu-wrap { padding: 0 20px; }
+}
+
+/* ── top and foot of the page ─────────────────────────────────────────────── */
+.lu-top { border-bottom: 1px solid var(--lu-line); padding-top: env(safe-area-inset-top); }
+.lu-top .lu-wrap { display: flex; align-items: center; justify-content: space-between; min-height: 64px; }
+.lu-page a.lu-brand { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; color: var(--lu-ink); text-decoration: none; font-family: var(--lu-serif); font-size: 26px; line-height: 1; }
+.lu-page a.lu-open { display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 10px; background: var(--lu-forest); color: #ffffff; font-size: 15px; font-weight: 600; text-decoration: none; transition: background-color 150ms ease-out; }
+@media (hover: hover) { .lu-page a.lu-open:hover { background: #1f4a36; color: #ffffff; } }
+.lu-page a.lu-open:active { transform: scale(0.97); }
+
+.lu-main { flex: 1; padding: 56px 0 88px; }
+@media (max-width: 480px) { .lu-main { padding: 36px 0 64px; } }
+
+.lu-foot { border-top: 1px solid var(--lu-line); padding: 28px 0 calc(32px + env(safe-area-inset-bottom)); font-size: 14px; line-height: 1.6; color: var(--lu-muted); }
+.lu-foot nav { display: flex; flex-wrap: wrap; gap: 0 22px; margin-bottom: 8px; }
+.lu-page .lu-foot a { color: var(--lu-muted); display: inline-flex; align-items: center; min-height: 44px; }
+.lu-foot p { margin: 0; max-width: 60ch; }
+
+/* ── the list of updates ──────────────────────────────────────────────────── */
+.lu-index-title { margin: 0; font-family: var(--lu-serif); font-weight: 400; font-size: clamp(44px, 9vw, 64px); line-height: 1.02; letter-spacing: -0.01em; }
+.lu-index-lede { margin: 14px 0 0; font-size: 19px; line-height: 1.55; color: var(--lu-muted); max-width: 34ch; }
+.lu-list { list-style: none; margin: 44px 0 0; padding: 0; border-top: 1px solid var(--lu-ink); }
+.lu-list > li { border-bottom: 1px solid var(--lu-line); }
+.lu-page a.lu-entry { display: block; padding: 30px 0 32px; color: inherit; text-decoration: none; }
+.lu-month { display: block; font-size: 13px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--lu-brass); font-variant-numeric: tabular-nums; }
+.lu-entry-title { display: block; margin-top: 8px; font-family: var(--lu-serif); font-size: clamp(27px, 5.4vw, 34px); line-height: 1.14; text-wrap: balance; }
+.lu-entry-summary { display: block; margin-top: 10px; color: var(--lu-muted); max-width: 60ch; }
+.lu-entry-more { display: inline-block; margin-top: 14px; font-size: 15px; font-weight: 600; color: var(--lu-forest); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+@media (hover: hover) {
+  .lu-page a.lu-entry:hover .lu-entry-title { color: var(--lu-forest); }
+  .lu-page a.lu-entry:hover .lu-entry-more { text-decoration-thickness: 2px; }
+}
+
+/* ── one update ───────────────────────────────────────────────────────────── */
+.lu-back { font-size: 15px; }
+.lu-page a.lu-back-link { display: inline-flex; align-items: center; min-height: 44px; color: var(--lu-muted); }
+
+.lu-head { margin-top: 20px; text-align: center; }
+/* the name of the document, between two rules */
+.lu-title { margin: 14px 0 0; padding: 22px 0 24px; border-top: 1px solid var(--lu-ink); border-bottom: 1px solid var(--lu-ink); font-family: var(--lu-serif); font-weight: 400; font-size: clamp(33px, 7.2vw, 50px); line-height: 1.08; letter-spacing: -0.005em; text-wrap: balance; }
+.lu-date { margin: 14px 0 0; font-size: 14px; color: var(--lu-muted); }
+.lu-intro { margin: 36px 0 0; font-size: 20px; line-height: 1.6; }
+@media (max-width: 480px) { .lu-intro { font-size: 18.5px; margin-top: 28px; } }
+
+.lu-contents { margin: 36px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--lu-line); counter-reset: lu; }
+.lu-contents li { border-bottom: 1px solid var(--lu-line); counter-increment: lu; }
+.lu-page .lu-contents a { display: flex; align-items: baseline; gap: 14px; min-height: 48px; padding: 11px 0; color: var(--lu-ink); text-decoration: none; line-height: 1.4; }
+.lu-contents a::before { content: counter(lu); flex: none; width: 1.3em; font-size: 14px; font-weight: 600; color: var(--lu-brass); font-variant-numeric: tabular-nums; }
+@media (hover: hover) { .lu-page .lu-contents a:hover { color: var(--lu-forest); text-decoration: underline; text-underline-offset: 3px; } }
+
+.lu-section { margin-top: 72px; scroll-margin-top: 24px; }
+@media (max-width: 480px) { .lu-section { margin-top: 56px; } }
+.lu-section h2 { margin: 0; font-family: var(--lu-serif); font-weight: 400; font-size: clamp(28px, 6vw, 36px); line-height: 1.12; letter-spacing: -0.005em; text-wrap: balance; }
+.lu-section p { margin: 18px 0 0; }
+.lu-section strong { font-weight: 600; }
+
+/* a page of a document, shown as paper lying on the ground colour */
+.lu-figure { margin: 26px 0 8px; }
+.lu-figure img { display: block; width: 100%; height: auto; background: var(--lu-paper); border: 1px solid var(--lu-line); border-radius: 4px; box-shadow: 0 1px 2px rgba(39, 90, 66, 0.08), 0 22px 44px -28px rgba(39, 90, 66, 0.42); }
+.lu-figure figcaption { margin-top: 12px; font-size: 14px; line-height: 1.5; color: var(--lu-muted); }
+
+.lu-how { margin-top: 26px; }
+.lu-label { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--lu-brass); }
+.lu-how p { margin-top: 6px; }
+.lu-how ol { margin: 8px 0 0; padding: 0; list-style: none; counter-reset: step; }
+.lu-how ol li { position: relative; padding-left: 34px; margin-top: 8px; counter-increment: step; }
+.lu-how ol li::before { content: counter(step) '.'; position: absolute; left: 0; top: 0; width: 24px; font-weight: 600; color: var(--lu-brass); font-variant-numeric: tabular-nums; }
+.lu-how ol li p { margin: 0; }
+
+/* a question to try: opens in Levy's message box, ready to send */
+.lu-page a.lu-try { display: flex; align-items: center; gap: 16px; margin-top: 22px; padding: 14px 18px; min-height: 56px; background: var(--lu-paper); border: 1px solid var(--lu-line); border-radius: 10px; color: var(--lu-ink); text-decoration: none; transition: border-color 150ms ease-out; }
+.lu-try-text { flex: 1; line-height: 1.5; }
+.lu-try-text small { display: block; font-size: 13px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--lu-brass); margin-bottom: 2px; }
+.lu-try-arrow { flex: none; font-size: 20px; line-height: 1; color: var(--lu-forest); }
+@media (hover: hover) { .lu-page a.lu-try:hover { border-color: var(--lu-forest); color: var(--lu-ink); } }
+.lu-page a.lu-try:active { transform: scale(0.99); }
+
+.lu-note { margin-top: 24px; padding-left: 16px; border-left: 2px solid var(--lu-brass); color: var(--lu-muted); font-size: 16px; line-height: 1.6; }
+.lu-note p { margin: 0; }
+
+.lu-smaller { margin: 18px 0 0; padding: 0; list-style: none; }
+.lu-smaller li { position: relative; padding-left: 22px; margin-top: 10px; }
+.lu-smaller li::before { content: ''; position: absolute; left: 2px; top: 0.72em; width: 8px; height: 1px; background: var(--lu-ink); }
+
+.lu-end { margin-top: 80px; padding-top: 28px; border-top: 1px solid var(--lu-ink); }
+.lu-end p { margin: 0; }
+.lu-end p + p { margin-top: 10px; color: var(--lu-muted); font-size: 15px; }
+.lu-pager { display: flex; justify-content: space-between; gap: 24px; margin-top: 36px; font-size: 15px; }
+.lu-page .lu-pager a { display: inline-flex; flex-direction: column; justify-content: center; min-height: 48px; color: var(--lu-ink); text-decoration: none; max-width: 46%; }
+.lu-pager a small { font-size: 13px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--lu-brass); }
+.lu-pager a:last-child { text-align: right; margin-left: auto; align-items: flex-end; }
+@media (hover: hover) { .lu-page .lu-pager a:hover span { text-decoration: underline; text-underline-offset: 3px; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .lu-page a.lu-open, .lu-page a.lu-try { transition: none; }
+  .lu-page a.lu-open:active, .lu-page a.lu-try:active { transform: none; }
+}

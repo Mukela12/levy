@@ -36,6 +36,7 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
             <Link href="/acts" className="hover:text-white/70">All Acts</Link>
             <Link href="/study" className="hover:text-white/70">Study mode</Link>
             <Link href="/chat" className="hover:text-white/70">Ask a question</Link>
+            <Link href="/updates" className="hover:text-white/70">Updates</Link>
             <Link href="/support" className="hover:text-white/70">Help and support</Link>
             <Link href="/privacy" className="hover:text-white/70">Privacy</Link>
           </div>

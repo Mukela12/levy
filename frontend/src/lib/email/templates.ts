@@ -421,69 +421,143 @@ export function renderOctoberUpdateEmail({ preview = false }: AnnouncementOption
 /**
  * November 2026 update (the fifth broadcast; the fourth went out 8 October).
  *
- * Every line is something live on 18 November and checked against the code
- * or the database that day: 1,165 judgments on 8 October and 1,665 now, the
- * layouts shipped 17 November. The iPhone and Android apps are left out on
- * purpose, because they are not in the stores yet.
+ * The email is only a list. The owner found the earlier drafts hard to read
+ * and pointed at Railway's weekly changelog email, which is a subject naming
+ * what shipped, a few lines, and one button; the explaining is done on a page.
+ * So each line here links to its section of /updates/november-2026
+ * (src/lib/updates.ts), and nothing is described twice.
  *
- * Kept short at the owner's request (about 425 words in plain text, where the
- * first draft ran to 610). The third item is what September's email promised next: Levy
- * no longer describes an authority it has not read.
- *
- * The fourth names ZambiaLII and Laws.Africa at the owner's request, and says
- * two things that keep it honest: the check is a trial (the access is on
- * Laws.Africa's free plan for prototyping), and the index returns a summary
- * of a judgment, not its text.
+ * The anchors must match the section ids there: a test checks it.
  */
-export function renderNovemberUpdateEmail({ preview = false }: AnnouncementOptions = {}): EmailTemplate {
-  const title = "Levy's November update: documents laid out like Zambian court papers"
-  const subject = preview ? `Preview | ${title}` : title
+const UPDATES_URL = 'https://www.levylegal.ai/updates'
+// The green mark, as a PNG: Gmail strips SVG.
+const LEVY_MARK_URL = 'https://www.levylegal.ai/levy-eagle-email.png'
+
+type UpdateEmail = {
+  /** The slug of the article at /updates/<slug>. */
+  slug: string
+  /** "November 2026" */
+  month: string
+  /** The subject: the names of what changed, as Railway writes theirs. */
+  subject: string
+  /** One line above the list. */
+  opening: string
+  /** What changed: a short name and the id of its section on the page. */
+  items: Array<[label: string, anchor: string]>
+}
+
+function renderUpdateEmail(update: UpdateEmail, preview: boolean): EmailTemplate {
+  const page = `${UPDATES_URL}/${update.slug}`
+  const subject = preview ? `Preview | ${update.subject}` : update.subject
   const unsubscribeHref = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Unsubscribe from Levy updates')}`
-  const privacyHref = `${SITE_URL.replace(/\/$/, '')}/privacy`
-  const updates = [
-    ['Documents laid out properly.', "Court papers now follow the layout of the Zambian courts' own documents, and agreements have numbered clauses and ruled signature blocks. The Word download follows the same layout."],
-    ['Levy finishes the document.', 'Each draft says what is still missing. Send the details and Levy fills them in. Upload your logo under Templates and it becomes your letterhead.'],
-    ['Citations traced to what Levy read.', 'Levy now traces each case and Act it cites to what it actually opened while answering, corrects itself when one does not trace, and marks what it could not check.'],
-    ['Cases checked against ZambiaLII.', "A case that is not in Levy's library is now looked up in ZambiaLII's index, through Laws.Africa. If it is listed, the answer links to it. If not, Levy says so. This is a trial and the index gives a summary, not the full judgment, so open the judgment before you rely on it."],
-    ['Final pay and gratuity.', "The pay calculator now works out what is due when a job ends: wages, leave, gratuity, notice pay and tax. It also covers domestic workers' 2023 minimum wage and separation benefits."],
-    ['Photograph a document.', 'Attach a photo of a letter, payslip or court paper from your phone and Levy reads it with your question.'],
-    ['500 more judgments.', 'The library has grown from 1,165 judgments to 1,665. Levy can search the Government Gazette, and there are new guides on protection orders, divorce and help after gender-based violence.'],
-    ['Two smaller things.', 'On a phone the menu bar now hides while you read, and you can delete your account and its data from your profile page.'],
-  ]
-  const intro = 'Documents laid out the way Zambian courts set theirs, cases checked against ZambiaLII, final pay and 500 more judgments.'
-  const opening = 'Since October, most of my work has gone into documents that look like real legal documents and tighter checks on the cases Levy cites. Here is what changed.'
-  const caution = 'A registry or a judge may ask for something different, and Levy can still get a fact or the law wrong. Read every draft, open each authority, and have a lawyer look at anything you will file or sign.'
-  const feedback = 'If Levy gets something wrong, use the thumbs down under the answer or reply to this email. It comes straight to me. If Levy has been useful, share it with a colleague or classmate.'
-  const bodyHtml = `
-    <p style="margin:0 0 18px;font-size:16px;line-height:1.8;color:#244233;">Hi,</p>
-    <p style="margin:0 0 24px;font-size:16px;line-height:1.8;color:#244233;">${escapeHtml(opening)}</p>
-    <div style="background:#f7faf7;border:1px solid #dbe8dd;border-radius:20px;padding:22px 22px 6px;">
-      <div style="font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#0d6b37;margin-bottom:14px;">What is new</div>
-      <div style="font-size:15px;line-height:1.8;color:#224132;">${updates.map(([heading, copy]) => `<p style="margin:0 0 12px;"><strong>${escapeHtml(heading)}</strong> ${escapeHtml(copy)}</p>`).join('')}</div>
-    </div>
-    <div style="background:#f4f7fb;border:1px solid #d5e0ee;border-radius:20px;padding:22px;margin-top:14px;">
-      <div style="font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#1f4f86;margin-bottom:12px;">A draft is still a draft</div>
-      <p style="margin:0;font-size:15px;line-height:1.8;color:#22364d;">${escapeHtml(caution)}</p>
-    </div>
-    <div style="background:#fffaf4;border:1px solid #f1dcc2;border-radius:20px;padding:22px;margin-top:14px;">
-      <div style="font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#b7651d;margin-bottom:12px;">Tell me what needs work</div>
-      <p style="margin:0 0 14px;font-size:15px;line-height:1.8;color:#4b3622;">${escapeHtml(feedback)}</p>
-      <p style="margin:0;font-size:15px;line-height:1.8;color:#4b3622;">Levy gives legal information, not legal advice.</p>
-    </div>`
-  return {
-    subject,
-    html: buildHtml({
-      eyebrow: preview ? 'Levy Preview Send' : 'Levy Legal AI',
-      title: 'November at Levy', intro, bodyHtml,
-      primaryCta: { href: SITE_URL, label: 'Open Levy at levylegal.ai' },
-      footerNote: (preview ? 'Preview of Levy&rsquo;s November update.' : 'You are receiving this because you created a Levy account.') +
-        ` &middot; <a href="${unsubscribeHref}" style="color:#708476;text-decoration:underline;">Unsubscribe</a>` +
-        ` &middot; <a href="${privacyHref}" style="color:#708476;text-decoration:underline;">Privacy policy</a>`,
-    }),
-    text: `${title}\n\nHi,\n\n${opening}\n\nWHAT IS NEW\n` +
-      updates.map(([heading, copy]) => `- ${heading} ${copy}`).join('\n') +
-      `\n\nA DRAFT IS STILL A DRAFT\n${caution}\n\n${feedback}\n\nLevy gives legal information, not legal advice.\n\nMukela Katungu\nFounder, Levy\n\nOpen Levy: ${SITE_URL}\nPrivacy policy: ${privacyHref}\nUnsubscribe: reply to this email with "unsubscribe".`,
-  }
+  const privacyHref = 'https://www.levylegal.ai/privacy'
+  const feedback = 'Questions, or something not working? Reply to this email. It comes straight to me.'
+  const serif = "Georgia,'Times New Roman',serif"
+  const sans = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
+
+  const rows = update.items
+    .map(
+      ([label, anchor]) =>
+        `<tr><td style="padding:0 0 0 2px;border-top:1px solid #e3e9e0;"><a href="${page}#${anchor}" style="display:block;padding:13px 0;font-family:${sans};font-size:16px;line-height:1.4;color:#253b31;text-decoration:none;">${escapeHtml(label)}</a></td><td style="border-top:1px solid #e3e9e0;width:24px;text-align:right;font-family:${sans};font-size:16px;color:#275a42;"><a href="${page}#${anchor}" style="color:#275a42;text-decoration:none;" aria-hidden="true" tabindex="-1">&rarr;</a></td></tr>`,
+    )
+    .join('')
+
+  const html = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light" />
+    <title>${escapeHtml(update.subject)}</title>
+  </head>
+  <body style="margin:0;padding:0;background:#f7f9f5;color:#253b31;">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;">What changed in Levy in ${escapeHtml(update.month)}, and how to use it.</div>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f7f9f5;">
+      <tr>
+        <td align="center" style="padding:28px 16px 36px;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border:1px solid #dce3d9;border-radius:14px;">
+            <tr>
+              <td style="padding:26px 32px 0;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                  <tr>
+                    <td style="vertical-align:middle;">
+                      <a href="https://www.levylegal.ai" style="text-decoration:none;color:#253b31;">
+                        <img src="${LEVY_MARK_URL}" width="30" height="30" alt="" style="display:inline-block;vertical-align:middle;border:0;width:30px;height:30px;" />
+                        <span style="display:inline-block;vertical-align:middle;padding-left:8px;font-family:${serif};font-size:24px;line-height:1;color:#253b31;">Levy</span>
+                      </a>
+                    </td>
+                    <td style="vertical-align:middle;text-align:right;font-family:${sans};font-size:12px;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:#8a611a;">${escapeHtml(preview ? 'Preview' : update.month)}</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:30px 32px 0;">
+                <h1 style="margin:0;font-family:${serif};font-weight:400;font-size:32px;line-height:1.15;color:#253b31;">What is new in Levy</h1>
+                <p style="margin:14px 0 0;font-family:${sans};font-size:16px;line-height:1.6;color:#253b31;">${escapeHtml(update.opening)}</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:20px 32px 0;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-bottom:1px solid #e3e9e0;">${rows}</table>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:28px 32px 0;">
+                <a href="${page}" style="display:block;background:#275a42;color:#ffffff;text-decoration:none;font-family:${sans};font-size:16px;font-weight:700;line-height:1.2;padding:16px 22px;border-radius:10px;text-align:center;">Read the full update</a>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:26px 32px 30px;">
+                <p style="margin:0;font-family:${sans};font-size:15px;line-height:1.6;color:#253b31;">${escapeHtml(feedback)}</p>
+                <p style="margin:14px 0 0;font-family:${sans};font-size:15px;line-height:1.6;color:#5d6c62;">Mukela Katungu, founder of Levy</p>
+              </td>
+            </tr>
+          </table>
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;">
+            <tr>
+              <td style="padding:18px 16px 0;text-align:center;font-family:${sans};font-size:12px;line-height:1.7;color:#5d6c62;">
+                Levy gives legal information, not legal advice.<br />
+                ${preview ? 'Preview of a Levy update.' : 'You are receiving this because you created a Levy account.'}
+                &middot; <a href="${unsubscribeHref}" style="color:#5d6c62;text-decoration:underline;">Unsubscribe</a>
+                &middot; <a href="${privacyHref}" style="color:#5d6c62;text-decoration:underline;">Privacy policy</a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`
+
+  const text =
+    `What is new in Levy\n\n${update.opening}\n\n` +
+    update.items.map(([label]) => `- ${label}`).join('\n') +
+    `\n\nRead the full update: ${page}\n\n${feedback}\n\nMukela Katungu, founder of Levy\n\n` +
+    `Levy gives legal information, not legal advice.\nPrivacy policy: ${privacyHref}\nUnsubscribe: reply to this email with "unsubscribe".`
+
+  return { subject, html, text }
+}
+
+export function renderNovemberUpdateEmail({ preview = false }: AnnouncementOptions = {}): EmailTemplate {
+  return renderUpdateEmail(
+    {
+      slug: 'november-2026',
+      month: 'November 2026',
+      subject: 'Documents set like court papers, ZambiaLII case checks, final pay',
+      opening: 'Here is what changed since October:',
+      items: [
+        ['Documents set like Zambian court papers', 'court-documents'],
+        ['Drafts that tell you what is missing', 'missing-details'],
+        ['Citations traced to what Levy read', 'citations'],
+        ['Cases checked against ZambiaLII', 'zambialii'],
+        ['Final pay and gratuity', 'final-pay'],
+        ['Photograph a document', 'photos'],
+        ['500 more judgments, and the Gazette', 'library'],
+      ],
+    },
+    preview,
+  )
 }
 
 export function renderTesterAnnouncementEmail({ preview = false }: AnnouncementOptions = {}): EmailTemplate {

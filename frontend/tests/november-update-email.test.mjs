@@ -1,5 +1,6 @@
 // November 2026 user update (renderNovemberUpdateEmail in src/lib/email/templates.ts).
-// A broadcast cannot be recalled, so what it says and how it is addressed are
+// The email is a short list that links to the article at /updates/november-2026.
+// A broadcast cannot be recalled, so what it says and where it points are
 // pinned here before it goes anywhere.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -8,83 +9,66 @@ import vm from 'node:vm'
 import ts from 'typescript'
 
 const read = (path) => fs.readFileSync(new URL(path, import.meta.url), 'utf8')
-const output = ts.transpileModule(read('../src/lib/email/templates.ts'), {
-  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
-}).outputText
-const exported = {}
-vm.runInNewContext(output, { exports: exported, process: { env: {} }, URL, encodeURIComponent })
-const { renderNovemberUpdateEmail } = exported
+const load = (path) => {
+  const out = ts.transpileModule(read(path), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
+  }).outputText
+  const exported = {}
+  vm.runInNewContext(out, { exports: exported, process: { env: {} }, URL, encodeURIComponent })
+  return exported
+}
+const { renderNovemberUpdateEmail } = load('../src/lib/email/templates.ts')
+const { getUpdate } = load('../src/lib/updates.ts')
 
-const HEADINGS = [
-  'Documents laid out properly.',
-  'Levy finishes the document.',
-  'Citations traced to what Levy read.',
-  'Cases checked against ZambiaLII.',
-  'Final pay and gratuity.',
-  'Photograph a document.',
-  '500 more judgments.',
-  'Two smaller things.',
-]
+const PAGE = 'https://www.levylegal.ai/updates/november-2026'
 
-test('the send and the preview carry their own subjects', () => {
-  const title = "Levy's November update: documents laid out like Zambian court papers"
-  assert.equal(renderNovemberUpdateEmail().subject, title)
-  assert.equal(renderNovemberUpdateEmail({ preview: true }).subject, `Preview | ${title}`)
-  assert.match(renderNovemberUpdateEmail({ preview: true }).html, /Preview of Levy&rsquo;s November update\./)
+test('the subject names what changed, and a preview says it is one', () => {
+  const subject = 'Documents set like court papers, ZambiaLII case checks, final pay'
+  assert.equal(renderNovemberUpdateEmail().subject, subject)
+  assert.equal(renderNovemberUpdateEmail({ preview: true }).subject, `Preview | ${subject}`)
+  assert.match(renderNovemberUpdateEmail({ preview: true }).html, /Preview of a Levy update\./)
 })
 
-test('every update is in the HTML and in the plain text', () => {
+test('every line of the list opens its own section of the article', () => {
   const e = renderNovemberUpdateEmail()
-  for (const heading of HEADINGS) {
-    assert.ok(e.html.includes(`<strong>${heading}</strong>`), `html lacks ${heading}`)
-    assert.ok(e.text.includes(`- ${heading} `), `text lacks ${heading}`)
-  }
-  assert.equal((e.html.match(/<strong>/g) || []).length, HEADINGS.length)
-})
-
-test('the library figures are the ones measured on 18 November 2026', () => {
-  const e = renderNovemberUpdateEmail()
-  for (const part of [e.html, e.text]) {
-    assert.match(part, /from 1,165 judgments to 1,665/)
-  }
-  assert.equal(1665 - 1165, 500)
-})
-
-test('it says a draft is still a draft, and that Levy is not legal advice', () => {
-  const e = renderNovemberUpdateEmail()
-  for (const part of [e.html, e.text]) {
-    assert.match(part, /have a lawyer look at anything you will file or sign/)
-    assert.match(part, /Levy gives legal information, not legal advice\./)
+  const article = getUpdate('november-2026')
+  const sections = new Map(article.sections.map((s) => [s.id, s.title]))
+  const links = [...e.html.matchAll(/<a href="https:\/\/www\.levylegal\.ai\/updates\/november-2026#([a-z-]+)"[^>]*>([^<&][^<]*)<\/a>/g)]
+  assert.equal(links.length, 7)
+  for (const [, anchor, label] of links) {
+    assert.ok(sections.has(anchor), `no section #${anchor} on the page`)
+    assert.equal(sections.get(anchor), label.replace(/&#39;/g, "'"), `the email calls #${anchor} something the page does not`)
+    assert.ok(e.text.includes(`- ${label}`), `text lacks ${label}`)
   }
 })
 
-test('a reader can unsubscribe and find the privacy policy', () => {
+test('one button, to the full update', () => {
   const e = renderNovemberUpdateEmail()
+  assert.match(e.html, new RegExp(`<a href="${PAGE}" style="display:block;background:#275a42;[^"]*">Read the full update</a>`))
+  assert.ok(e.text.includes(`Read the full update: ${PAGE}`))
+})
+
+test('it is short enough to read at a glance', () => {
+  const words = renderNovemberUpdateEmail().text.split(/\s+/).length
+  assert.ok(words <= 110, `${words} words`)
+})
+
+test('a reader can reply, unsubscribe and find the privacy policy', () => {
+  const e = renderNovemberUpdateEmail()
+  assert.match(e.html, /Reply to this email\. It comes straight to me\./)
   assert.match(e.html, /href="mailto:[^"]+\?subject=Unsubscribe%20from%20Levy%20updates"[^>]*>Unsubscribe<\/a>/)
-  assert.match(e.html, /href="https:\/\/levylegal\.ai\/privacy"[^>]*>Privacy policy<\/a>/)
+  assert.match(e.html, /href="https:\/\/www\.levylegal\.ai\/privacy"[^>]*>Privacy policy<\/a>/)
   assert.match(e.text, /Unsubscribe: reply to this email with "unsubscribe"\./)
   assert.match(e.html, /You are receiving this because you created a Levy account\./)
+  for (const part of [e.html, e.text]) assert.match(part, /Levy gives legal information, not legal advice\./)
 })
 
-test('the ZambiaLII check is named, credited, and described as the trial it is', () => {
+test('no em dashes, and the images are ones Gmail will show', () => {
   const e = renderNovemberUpdateEmail()
-  for (const part of [e.html.replace(/&#39;/g, "'"), e.text]) {
-    assert.match(part, /looked up in ZambiaLII's index, through Laws\.Africa\./)
-    assert.match(part, /This is a trial and the index gives a summary, not the full judgment/)
-    assert.match(part, /open the judgment before you rely on it/)
-  }
-})
-
-test('it stays short', () => {
-  const words = renderNovemberUpdateEmail().text.split(/\s+/).length
-  assert.ok(words <= 450, `${words} words`)      // 425 when sent; the first draft ran to 610
-})
-
-test('no em dashes, and nothing announced that is not there to use yet', () => {
-  const e = renderNovemberUpdateEmail()
-  const all = e.subject + e.html + e.text
-  assert.ok(!all.includes('—'), 'an em dash')
-  assert.ok(!/App Store|Google Play|TestFlight/i.test(all))      // the apps are not in the stores
+  assert.ok(!(e.subject + e.html + e.text).includes('—'), 'an em dash')
+  const images = [...e.html.matchAll(/<img src="([^"]+)"/g)].map((m) => m[1])
+  assert.deepEqual(images, ['https://www.levylegal.ai/levy-eagle-email.png'])      // a PNG: Gmail strips SVG
+  assert.ok(fs.existsSync(new URL('../public/levy-eagle-email.png', import.meta.url)))
 })
 
 test('the send route knows the edition and sends it unless told otherwise', () => {
