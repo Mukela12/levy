@@ -1,7 +1,9 @@
 'use client'
 
 /**
- * Onboarding tour for new and returning Levy users.
+ * Onboarding tour for people with a Levy account. It opens by itself once,
+ * after sign-up; a visitor who has not signed in never gets it unasked
+ * (lib/tour-gate.ts says why).
  *
  * One spotlight engine for every viewport:
  *   • A dimmed SVG-masked backdrop with a rounded cutout around the anchor.
@@ -34,11 +36,11 @@ import { LevyLogo } from '@/components/ui/levy-logo'
 import { useUiVariant } from '@/lib/ui-variant'
 import { IS_APP } from '@/lib/routes'
 import { currentAiConsent } from '@/lib/ai-providers'
+import { tourOpensUnasked } from '@/lib/tour-gate'
 
 /**
  * Completion is tracked in TWO places so it survives the right things:
- *   • localStorage flag — browser-scoped; survives reloads and re-visits
- *     even for anonymous users, and is the only signal we have for them.
+ *   • localStorage flag — browser-scoped; survives reloads and re-visits.
  *   • Supabase user_metadata.onboarded_at — account-scoped; survives across
  *     browsers and devices once the user is signed in.
  *
@@ -222,18 +224,19 @@ export function OnboardingTour({
           .catch(() => {})
         return
       }
-      // In the app the AI-services consent comes first; agreeing updates the
-      // account, which re-runs this effect and opens the tour then.
-      if (IS_APP && !currentAiConsent(user.user_metadata)) return
-      if (pathname.startsWith('/chat')) {
-        setOpen(true)
-        setStep(0)
-      }
-      return
     }
 
-    // Anonymous: localStorage is all we have.
-    if (!localSeen && pathname.startsWith('/chat')) {
+    // In the app the AI-services consent comes first; agreeing updates the
+    // account, which re-runs this effect and opens the tour then. A visitor
+    // who has not signed in gets no tour unasked (lib/tour-gate.ts).
+    const opens = tourOpensUnasked({
+      signedIn: Boolean(user),
+      seenOnAccount: Boolean(user?.user_metadata?.[METADATA_FIELD]),
+      seenInBrowser: localSeen,
+      onChat: pathname.startsWith('/chat'),
+      awaitingConsent: Boolean(user) && IS_APP && !currentAiConsent(user?.user_metadata),
+    })
+    if (opens) {
       setOpen(true)
       setStep(0)
     }
